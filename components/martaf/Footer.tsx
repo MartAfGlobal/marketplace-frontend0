@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Instagram, Linkedin, X } from "lucide-react";
+import { Facebook, Twitter, Instagram, Linkedin, X, Mail } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -18,6 +18,7 @@ const Footer = () => {
           <a href="#" aria-label="Twitter"><Twitter className="w-5 h-5 hover:text-[#7C2AE8]" /></a>
         </div>
       </div>
+      <div className="border-t border-gray-700 max-w-7xl mx-auto w-full mb-2 pb-5"></div>
       {/* Middle: 5 columns */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-8 max-w-7xl mx-auto w-full mb-6">
         <div>
@@ -58,13 +59,25 @@ const Footer = () => {
         </div>
         <div>
           <div className="font-semibold mb-3">Newsletter</div>
-          <form className="bg-[#232326] rounded-lg p-4 flex flex-col gap-2">
-            <input type="email" placeholder="Your email address" className="rounded px-3 py-2 text-black w-full focus:outline-none mb-2" />
-            <button type="submit" className="bg-[#7C2AE8] text-white rounded px-4 py-2 font-semibold hover:bg-[#5a1bb0] w-full mb-2">Subscribe</button>
+          <form className="bg-[#232326] rounded-xl p-4 flex flex-col gap-3">
+            <div className="relative">
+              <input
+                type="email"
+                placeholder="Your email address"
+                className="rounded w-full px-3 py-1.5 pr-10 text-black bg-white focus:outline-none"
+              />
+              <Mail className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            </div>
             <label className="flex items-center gap-2 text-xs">
               <input type="checkbox" className="accent-[#7C2AE8]" />
               I agree with privacy terms and policy
             </label>
+            <button
+              type="submit"
+              className="mt-2 w-full border border-white text-white bg-black rounded-full px-4 py-2 font-semibold hover:bg-[#18181B] transition"
+            >
+              Subscribe
+            </button>
           </form>
         </div>
       </div>
