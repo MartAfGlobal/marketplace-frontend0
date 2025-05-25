@@ -1,6 +1,6 @@
 "use client";
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
@@ -21,9 +21,9 @@ const sizeData = [
 
 export function SizeGuideDrawer({ open, onOpenChange }: SizeGuideDrawerProps) {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-screen p-0">
-        <SheetHeader className="border-b p-4">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="h-screen p-0">
+        <DrawerHeader className="border-b p-4">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -33,11 +33,11 @@ export function SizeGuideDrawer({ open, onOpenChange }: SizeGuideDrawerProps) {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <SheetTitle className="text-lg font-semibold">
+            <DrawerTitle className="text-lg font-semibold">
               Size guide
-            </SheetTitle>
+            </DrawerTitle>
           </div>
-        </SheetHeader>
+        </DrawerHeader>
 
         <div className="flex-1 overflow-y-auto p-4">
           {/* Subtitle */}
@@ -169,7 +169,7 @@ export function SizeGuideDrawer({ open, onOpenChange }: SizeGuideDrawerProps) {
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 } 

@@ -1,15 +1,46 @@
-import { Card } from "@/components/ui/card";
+"use client";
+
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
-export function ForgotPasswordPopup({ onBack }: { onBack: () => void }) {
+interface ForgotPasswordPopupProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onBack: () => void;
+}
+
+export function ForgotPasswordPopup({ open, onOpenChange, onBack }: ForgotPasswordPopupProps) {
   const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{email?: string}>({});
 
-  const handleForgotPassword = async () => {
+  const validateForm = () => {
+    const newErrors: {email?: string} = {};
+    
+    if (!email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleResetPassword = async () => {
+    if (!validateForm()) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
     try {
-      console.log("Starting password reset process...");
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}reset-password/`, {
         method: 'POST',
         headers: {
@@ -18,50 +49,109 @@ export function ForgotPasswordPopup({ onBack }: { onBack: () => void }) {
         body: JSON.stringify({ email }),
       });
 
-      console.log("Password reset response:", response);
+      const data = await response.json();
 
       if (response.ok) {
-        console.log("Password reset email sent successfully");
-        toast.success("Password reset instructions have been sent to your email.");
-        onBack();
+        toast.success("Password reset email sent! Please check your inbox.");
+        setEmail("");
+        onBack(); // Go back to sign up
       } else {
-        const error = await response.json();
-        console.error("Password reset failed:", error);
-        toast.error(error.message || "Failed to send password reset email. Please try again.");
+        if (data.email) {
+          setErrors(prev => ({ ...prev, email: data.email[0] }));
+        }
+        toast.error(data.message || data.detail || "Failed to send reset email. Please try again.");
       }
     } catch (error) {
-      console.error("Password reset error:", error);
-      toast.error("An unexpected error occurred. Please try again.");
+      console.error("Reset password error:", error);
+      toast.error("Network error. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleClose = () => {
+    setEmail("");
+    setErrors({});
+    setIsLoading(false);
+    onOpenChange(false);
+  };
+
   return (
-    <Card className="w-full max-w-md p-8 mx-auto">
-      <h2 className="text-3xl font-bold mb-2">Forgot Password</h2>
-      <p className="mb-6 text-lg text-muted-foreground">Enter your email address and we'll send you instructions to reset your password.</p>
-      
-      <label className="block mb-2 text-base font-medium">Email address</label>
-      <div className="mb-6 relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">📧</span>
-        <Input 
-          type="email" 
-          placeholder="Email address" 
-          className="pl-10" 
-          value={email} 
-          onChange={e => setEmail(e.target.value)} 
-        />
-      </div>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-w-md mx-auto">
+        <DrawerHeader className="border-b p-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-1 hover:bg-gray-100"
+              onClick={() => !isLoading && onBack()}
+              disabled={isLoading}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <DrawerTitle className="text-lg font-semibold">
+              Reset Password
+            </DrawerTitle>
+          </div>
+        </DrawerHeader>
 
-      <Button 
-        className="w-full mb-4 bg-[#FF715B] text-white rounded-lg py-3 text-base font-semibold hover:bg-[#ff4d2d] border-none shadow-none" 
-        onClick={handleForgotPassword}
-      >
-        Send Reset Instructions
-      </Button>
+        <div className="p-6">
+          <div className="text-center mb-6">
+            <p className="text-sm text-gray-600">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <Input 
+                type="email" 
+                placeholder="Email address" 
+                value={email} 
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) {
+                    setErrors(prev => ({ ...prev, email: undefined }));
+                  }
+                }}
+                className={`h-12 rounded-lg ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
+                disabled={isLoading}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
 
-      <div className="text-center text-base">
-        Remember your password? <span className="text-primary font-semibold cursor-pointer" onClick={onBack}>Back to Sign In</span>
-      </div>
-    </Card>
+            <Button 
+              className="w-full h-12 bg-[#FF715B] text-white rounded-lg font-medium hover:bg-[#ff4d2d] disabled:opacity-50 disabled:cursor-not-allowed" 
+              onClick={handleResetPassword}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Sending Reset Link...
+                </div>
+              ) : (
+                "Send Reset Link"
+              )}
+            </Button>
+
+            <div className="text-center text-sm text-gray-600">
+              Remember your password?{" "}
+              <span 
+                className={`text-[#FF715B] font-medium ${
+                  isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:underline'
+                }`}
+                onClick={() => !isLoading && onBack()}
+              >
+                Back to Sign In
+              </span>
+            </div>
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 } 

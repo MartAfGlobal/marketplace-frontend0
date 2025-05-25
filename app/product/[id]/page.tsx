@@ -10,11 +10,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Heart, Share2, Star, Shield, RotateCcw, MessageCircle, Phone, MapPin, ChevronRight } from "lucide-react";
+import { Heart, Share2, Star, Shield, RotateCcw, MessageCircle, Phone, MapPin, ChevronRight, Facebook, Twitter, Link, Copy } from "lucide-react";
 import Image from "next/image";
 import { ProductCard } from "@/components/martaf/ProductCard";
 import { RatingsReviewsDrawer } from "@/components/martaf/RatingsReviewsDrawer";
 import { SizeGuideDrawer } from "@/components/martaf/SizeGuideDrawer";
+import Header from "@/components/martaf/Header";
 import { useState, use, useEffect } from "react";
 
 // Mock data for similar products
@@ -70,56 +71,256 @@ const similarProducts = [
   },
 ];
 
-// Mock review data
+// Mock review data with images and videos
 const mockReviews = [
   {
     id: "1",
-    customerName: "Customer Name",
-    date: "Jan 02, 2024",
-    rating: 4,
-    comment: "there should probably something nice this guy will write that will sound sweet in the ear for people to buy the product.",
+    customerName: "Sarah Johnson",
+    date: "Jan 15, 2024",
+    rating: 5,
+    comment: "Absolutely love these shoes! The quality is outstanding and they're so comfortable. Perfect for both casual and formal occasions.",
     verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
   },
   {
     id: "2",
-    customerName: "Customer Name",
-    date: "Jan 02, 2024",
+    customerName: "Mike Chen",
+    date: "Jan 12, 2024",
     rating: 4,
-    comment: "there should probably something nice this guy will write that will sound sweet in the ear for people to buy the product.",
+    comment: "Great shoes, very comfortable and stylish. The delivery was fast and packaging was excellent.",
     verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
   },
   {
     id: "3",
-    customerName: "Customer Name",
-    date: "Jan 02, 2024",
-    rating: 4,
-    comment: "there should probably something nice this guy will write that will sound sweet in the ear for people to buy the product.",
+    customerName: "Emma Wilson",
+    date: "Jan 10, 2024",
+    rating: 5,
+    comment: "Perfect fit and amazing quality! I've been wearing them daily and they still look brand new.",
     verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
   },
   {
     id: "4",
-    customerName: "Customer Name",
-    date: "Jan 02, 2024",
+    customerName: "David Rodriguez",
+    date: "Jan 08, 2024",
     rating: 4,
-    comment: "there should probably something nice this guy will write that will sound sweet in the ear for people to buy the product.",
+    comment: "Good quality shoes, comfortable to wear. The color is exactly as shown in the pictures.",
     verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
   },
   {
     id: "5",
-    customerName: "Customer Name",
-    date: "Jan 02, 2024",
+    customerName: "Lisa Thompson",
+    date: "Jan 05, 2024",
     rating: 5,
-    comment: "there should probably something nice this guy will write that will sound sweet in the ear for people to buy the product.",
+    comment: "Excellent shoes! Very comfortable and the design is beautiful. Highly recommend!",
     verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
   },
+  {
+    id: "6",
+    customerName: "James Miller",
+    date: "Jan 03, 2024",
+    rating: 4,
+    comment: "Nice shoes, good value for money. The sizing is accurate and they arrived quickly.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+  },
+  {
+    id: "7",
+    customerName: "Anna Garcia",
+    date: "Dec 28, 2023",
+    rating: 5,
+    comment: "Amazing quality and super comfortable! I love the design and they go with everything.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"
+  },
+  {
+    id: "8",
+    customerName: "Robert Lee",
+    date: "Dec 25, 2023",
+    rating: 4,
+    comment: "Good shoes, comfortable fit. The material feels premium and durable.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+  },
+  {
+    id: "9",
+    customerName: "Maria Santos",
+    date: "Dec 22, 2023",
+    rating: 5,
+    comment: "Perfect shoes! Exactly what I was looking for. Great quality and fast shipping.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4"
+  },
+  {
+    id: "10",
+    customerName: "Kevin Brown",
+    date: "Dec 20, 2023",
+    rating: 4,
+    comment: "Nice shoes, good build quality. They're comfortable for long walks.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+  },
+  {
+    id: "11",
+    customerName: "Jennifer Davis",
+    date: "Dec 18, 2023",
+    rating: 5,
+    comment: "Love these shoes! They're stylish, comfortable, and well-made. Will definitely buy again.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4"
+  },
+  {
+    id: "12",
+    customerName: "Thomas Anderson",
+    date: "Dec 15, 2023",
+    rating: 4,
+    comment: "Good quality shoes. They fit well and are comfortable for daily wear.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4"
+  },
+  {
+    id: "13",
+    customerName: "Rachel Green",
+    date: "Dec 12, 2023",
+    rating: 5,
+    comment: "Excellent shoes! Perfect fit, great quality, and they look amazing. Highly recommend!",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+  },
+  {
+    id: "14",
+    customerName: "Mark Taylor",
+    date: "Dec 10, 2023",
+    rating: 4,
+    comment: "Nice shoes, good value. They're comfortable and the design is appealing.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+  },
+  {
+    id: "15",
+    customerName: "Sophie Clark",
+    date: "Dec 08, 2023",
+    rating: 5,
+    comment: "Amazing shoes! They exceeded my expectations. Great quality, comfort, and style.",
+    verified: true,
+    images: [
+      "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop"
+    ],
+    video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+  }
 ];
 
 const ratingBreakdown = {
-  5: 8,
-  4: 7,
-  3: 3,
+  5: 9,
+  4: 4,
+  3: 1,
   2: 1,
-  1: 1,
+  1: 0,
 };
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -131,11 +332,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
+  const [lastQuantityAction, setLastQuantityAction] = useState<'increment' | 'decrement' | null>(null);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
   
   // Loading states
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isSimilarProductsLoading, setIsSimilarProductsLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
+  const [hasMoreProducts, setHasMoreProducts] = useState(true);
+  const [displayedSimilarProducts, setDisplayedSimilarProducts] = useState(similarProducts.slice(0, 6));
 
   // Product images array
   const productImages = [
@@ -164,10 +372,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const incrementQuantity = () => {
     setQuantity(prev => prev + 1);
+    setLastQuantityAction('increment');
   };
 
   const decrementQuantity = () => {
     setQuantity(prev => prev > 1 ? prev - 1 : 1);
+    setLastQuantityAction('decrement');
   };
 
   // Simulate loading product data
@@ -194,30 +404,69 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     // You can add success toast here
   };
 
+  // Load more similar products
+  const loadMoreSimilarProducts = () => {
+    if (isLoadingMoreProducts || !hasMoreProducts) return;
+    
+    setIsLoadingMoreProducts(true);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      const currentLength = displayedSimilarProducts.length;
+      
+      // Create more products by duplicating with unique IDs
+      const additionalProducts: typeof similarProducts = [];
+      for (let i = 0; i < 4; i++) {
+        const baseProduct = similarProducts[i % similarProducts.length];
+        // Use timestamp and index to ensure unique keys
+        const uniqueId = `${baseProduct.id}-${Date.now()}-${currentLength + i}`;
+        additionalProducts.push({
+          ...baseProduct,
+          id: uniqueId,
+        });
+      }
+      
+      setDisplayedSimilarProducts(prev => [...prev, ...additionalProducts]);
+      setIsLoadingMoreProducts(false);
+      
+      // Stop loading after showing many products
+      if (displayedSimilarProducts.length > 18) {
+        setHasMoreProducts(false);
+      }
+    }, 1200);
+  };
+
+  // Load more products when scrolling near bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 1000) {
+        loadMoreSimilarProducts();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [displayedSimilarProducts.length, isLoadingMoreProducts, hasMoreProducts]);
+
+  // Close share dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showShareOptions) {
+        const target = event.target as Element;
+        if (!target.closest('.share-dropdown')) {
+          setShowShareOptions(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showShareOptions]);
+
   // Loading skeleton component
   const LoadingSkeleton = () => (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-[#6B46C1] text-white p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-            <span className="text-[#6B46C1] font-bold text-sm">M</span>
-          </div>
-          <span className="font-semibold">MARTAF</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9" />
-            </svg>
-          </div>
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <div className="w-6 h-6 bg-green-500 rounded-full"></div>
-        </div>
-      </div>
+      <Header />
 
       {/* Loading Content */}
       <div className="animate-pulse">
@@ -291,36 +540,27 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-[#6B46C1] text-white p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
-            <span className="text-[#6B46C1] font-bold text-sm">M</span>
-          </div>
-          <span className="font-semibold">MARTAF</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9" />
-            </svg>
-          </div>
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <div className="w-6 h-6 bg-green-500 rounded-full"></div>
-        </div>
-      </div>
+      <Header />
 
       {/* Product Images */}
       <div className="relative">
         {/* Main Image with Advanced Zoom */}
         <div 
-          className="aspect-square bg-gray-100 relative overflow-hidden cursor-crosshair group"
+          className="aspect-square bg-gray-100 relative overflow-hidden cursor-crosshair group md:cursor-crosshair cursor-pointer"
           onMouseMove={handleMouseMove}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          onClick={(e) => {
+            // Mobile touch support
+            if (window.innerWidth < 768) {
+              if (isZooming) {
+                handleMouseLeave();
+              } else {
+                handleMouseEnter();
+                handleMouseMove(e);
+              }
+            }
+          }}
         >
           {/* Main Image */}
           <Image
@@ -389,7 +629,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className={`absolute bottom-4 left-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm backdrop-blur-sm transition-opacity duration-300 ${
             isZooming ? 'opacity-0' : 'opacity-100'
           }`}>
-            Hover to zoom
+            <span className="hidden md:inline">Hover to zoom</span>
+            <span className="md:hidden">Click to zoom</span>
           </div>
         </div>
         
@@ -423,13 +664,86 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       <div className="p-4">
         <div className="flex items-start justify-between mb-2">
           <h1 className="text-lg font-semibold flex-1">Product Name</h1>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" className="p-2">
-              <Heart className="w-5 h-5" />
+          <div className="flex gap-2 relative">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="p-2"
+              onClick={() => setIsWishlisted(!isWishlisted)}
+            >
+              <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
             </Button>
-            <Button variant="ghost" size="sm" className="p-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="p-2"
+              onClick={() => setShowShareOptions(!showShareOptions)}
+            >
               <Share2 className="w-5 h-5" />
             </Button>
+            
+            {/* Share Options Dropdown */}
+            {showShareOptions && (
+              <div className="absolute top-full right-0 mt-2 bg-white border rounded-lg shadow-lg p-2 z-10 min-w-[200px] share-dropdown">
+                <div className="text-sm font-medium mb-2 text-gray-700">Share this product</div>
+                <div className="space-y-1">
+                  <button 
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-100 rounded-md"
+                    onClick={() => {
+                      navigator.share?.({
+                        title: 'Product Name',
+                        text: 'Check out this amazing product!',
+                        url: window.location.href
+                      }) || navigator.clipboard.writeText(window.location.href);
+                      setShowShareOptions(false);
+                    }}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share via...
+                  </button>
+                  <button 
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-100 rounded-md"
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      setShowShareOptions(false);
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy link
+                  </button>
+                  <button 
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-100 rounded-md"
+                    onClick={() => {
+                      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+                      setShowShareOptions(false);
+                    }}
+                  >
+                    <Facebook className="w-4 h-4 text-blue-600" />
+                    Facebook
+                  </button>
+                  <button 
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-100 rounded-md"
+                    onClick={() => {
+                      window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=Check out this amazing product!`, '_blank');
+                      setShowShareOptions(false);
+                    }}
+                  >
+                    <Twitter className="w-4 h-4 text-blue-400" />
+                    Twitter
+                  </button>
+                  <button 
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-100 rounded-md"
+                    onClick={() => {
+                      window.open(`whatsapp://send?text=Check out this amazing product! ${window.location.href}`, '_blank');
+                      setShowShareOptions(false);
+                    }}
+                  >
+                    <MessageCircle className="w-4 h-4 text-green-500" />
+                    WhatsApp
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -447,7 +761,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             ))}
           </div>
           <span className="text-sm font-medium">4.5/5</span>
-          <span className="text-sm text-gray-500">(20 reviews)</span>
+          <span className="text-sm text-gray-500">(15 reviews)</span>
         </div>
 
         {/* Quantity Selector */}
@@ -455,7 +769,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <Button
             variant="outline"
             size="sm"
-            className="w-8 h-8 p-0 rounded-full"
+            className={`w-8 h-8 p-0 rounded-full ${
+              lastQuantityAction === 'decrement' 
+                ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' 
+                : ''
+            }`}
             onClick={decrementQuantity}
             disabled={quantity <= 1}
           >
@@ -465,7 +783,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <Button
             variant="outline"
             size="sm"
-            className="w-8 h-8 p-0 rounded-full bg-orange-500 text-white border-orange-500 hover:bg-orange-600"
+            className={`w-8 h-8 p-0 rounded-full ${
+              lastQuantityAction === 'increment' 
+                ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600' 
+                : ''
+            }`}
             onClick={incrementQuantity}
           >
             <span className="text-lg font-medium">+</span>
@@ -570,8 +892,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
               </div>
             </div>
-            <Button variant="outline" size="sm">
-              Follow
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsFollowing(!isFollowing)}
+              className={isFollowing ? "bg-blue-50 border-blue-500 text-blue-600 hover:bg-red-50 hover:border-red-500 hover:text-red-600" : ""}
+              onMouseEnter={(e) => {
+                if (isFollowing) {
+                  e.currentTarget.textContent = "Unfollow";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (isFollowing) {
+                  e.currentTarget.textContent = "Following";
+                }
+              }}
+            >
+              {isFollowing ? "Following" : "Follow"}
             </Button>
           </div>
           
@@ -699,7 +1036,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
-              {similarProducts.map((product) => (
+              {displayedSimilarProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   id={product.id}
@@ -716,6 +1053,20 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           )}
         </div>
+
+        {/* Loading Spinner for More Products */}
+        {(isLoadingMoreProducts || hasMoreProducts) && !isSimilarProductsLoading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B46C1]"></div>
+          </div>
+        )}
+
+        {/* End of products message */}
+        {!hasMoreProducts && !isLoadingMoreProducts && !isSimilarProductsLoading && (
+          <div className="text-center py-8 text-gray-500">
+            <p>You've reached the end of similar products</p>
+          </div>
+        )}
       </div>
 
       {/* Ratings & Reviews Drawer */}
@@ -723,7 +1074,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         open={ratingsOpen}
         onOpenChange={setRatingsOpen}
         averageRating={4.8}
-        totalReviews={20}
+        totalReviews={15}
         ratingBreakdown={ratingBreakdown}
         reviews={mockReviews}
       />

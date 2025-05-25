@@ -41,6 +41,7 @@ export default function Home() {
   const [displayedProducts, setDisplayedProducts] = useState(products);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   const handleCategoryClick = (slug: string) => {
     router.push(`/categories/${slug}`);
@@ -86,6 +87,17 @@ export default function Home() {
     }, 1500);
   };
 
+  // Simulate initial page loading
+  useEffect(() => {
+    const loadPageData = async () => {
+      // Simulate API call for initial data
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      setIsPageLoading(false);
+    };
+
+    loadPageData();
+  }, []);
+
   // Load more products when scrolling near bottom
   useEffect(() => {
     const handleScroll = () => {
@@ -97,6 +109,79 @@ export default function Home() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [displayedProducts.length, isLoading, hasMore]);
+
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="bg-[#faf9fb] min-h-screen flex flex-col">
+      <div className="animate-pulse">
+        {/* Header Skeleton */}
+        <div className="bg-[#6B46C1] p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-white/20 rounded"></div>
+              <div className="w-16 h-4 bg-white/20 rounded"></div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-6 h-6 bg-white/20 rounded"></div>
+              <div className="w-6 h-6 bg-white/20 rounded"></div>
+              <div className="w-6 h-6 bg-white/20 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search Bar Skeleton */}
+        <div className="px-4 py-3">
+          <div className="h-12 bg-gray-200 rounded-lg"></div>
+        </div>
+
+        {/* Banner Skeleton */}
+        <div className="px-4 mb-4">
+          <div className="h-32 bg-gray-200 rounded-xl"></div>
+        </div>
+
+        {/* Categories Skeleton */}
+        <div className="px-4 mb-6">
+          <div className="h-6 bg-gray-200 rounded w-1/2 mb-3"></div>
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0">
+                <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
+                <div className="w-12 h-3 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Product Sections Skeleton */}
+        {[...Array(2)].map((_, sectionIndex) => (
+          <div key={sectionIndex} className="px-4 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="aspect-square bg-gray-200 rounded-lg"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* Loading Spinner */}
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B46C1]"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isPageLoading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <div className="bg-[#faf9fb] min-h-screen flex flex-col">

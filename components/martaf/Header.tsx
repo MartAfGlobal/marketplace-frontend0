@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Menu, ShoppingCart, User, ChevronDown, X, Globe, DollarSign, Anchor } from "lucide-react";
 import Image from "next/image";
 import { SignUpPopup } from "@/components/martaf/AuthPopups/SignUpPopup";
@@ -72,11 +72,11 @@ const Header = () => {
       <div className="flex items-center justify-between px-4 py-3">
         {/* Hamburger for mobile */}
         <div className="sm:hidden flex items-center">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <button aria-label="Open menu"><Menu className="w-8 h-8" /></button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[90vw] max-w-xs p-0">
+          <button aria-label="Open menu" onClick={() => setOpen(true)}>
+            <Menu className="w-8 h-8" />
+          </button>
+          <Drawer open={open} onOpenChange={setOpen}>
+            <DrawerContent className="w-[90vw] max-w-xs p-0 h-screen">
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between px-4 py-4 border-b">
                   <span className="flex items-center gap-2">
@@ -123,14 +123,14 @@ const Header = () => {
                   <Button className="flex-1 bg-[#FF715B] text-white hover:bg-[#ff4d2d]">Sign up</Button>
                 </div>
               </div>
-            </SheetContent>
-          </Sheet>
+            </DrawerContent>
+          </Drawer>
         </div>
         {/* Logo */}
-        <span className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2 cursor-pointer">
           <span className="text-2xl font-black">M</span>
           <span className="font-bold text-xl tracking-wide">MARTAF</span>
-        </span>
+        </a>
         {/* Right icons */}
         <div className="flex items-center gap-4">
           <div className="relative">
@@ -140,42 +140,58 @@ const Header = () => {
           {/* Profile/User icon triggers auth drawer */}
           <div>
             <User className="w-6 h-6 cursor-pointer" onClick={() => { setAuthOpen(true); setAuthStep('signup'); }} />
-            <Sheet open={authOpen} onOpenChange={setAuthOpen}>
-              <SheetContent side="bottom" className="max-w-md w-full max-h-[90vh] mx-auto rounded-t-2xl shadow-xl p-0 flex justify-center items-start">
-                {/* Auth flow popups */}
-                {authStep === 'signup' && (
-                  <SignUpPopup
-                    onSignIn={handleSignIn}
-                    onGoogleSignIn={handleGoogleSignIn}
-                    onSignInLink={handleSignInLink}
-                  />
-                )}
-                {authStep === 'verify' && (
-                  <VerifyEmailPopup
-                    onBack={handleVerifyBack}
-                  />
-                )}
-                {authStep === 'checkinbox' && (
-                  <CheckInboxPopup
-                    onBack={handleCheckInboxBack}
-                  />
-                )}
-                {authStep === 'forgot' && (
-                  <ForgotPasswordPopup
-                    onBack={handleForgotBack}
-                  />
-                )}
-                {authStep === 'reset' && (
-                  <ResetPasswordPopup onBack={handleResetBack} />
-                )}
-                {authStep === 'updated' && (
-                  <PasswordUpdatedPopup onBack={handlePasswordUpdatedBack} />
-                )}
-                {authStep === 'done' && (
-                  <AllDonePopup onBack={handleAllDoneBack} />
-                )}
-              </SheetContent>
-            </Sheet>
+            {/* Auth flow popups */}
+            {authStep === 'signup' && (
+              <SignUpPopup
+                open={authOpen}
+                onOpenChange={setAuthOpen}
+                onSignIn={handleSignIn}
+                onGoogleSignIn={handleGoogleSignIn}
+                onSignInLink={handleSignInLink}
+              />
+            )}
+            {authStep === 'verify' && (
+              <VerifyEmailPopup
+                open={authOpen}
+                onOpenChange={setAuthOpen}
+                onBack={handleVerifyBack}
+              />
+            )}
+            {authStep === 'checkinbox' && (
+              <CheckInboxPopup
+                open={authOpen}
+                onOpenChange={setAuthOpen}
+                onBack={handleCheckInboxBack}
+              />
+            )}
+            {authStep === 'forgot' && (
+              <ForgotPasswordPopup
+                open={authOpen}
+                onOpenChange={setAuthOpen}
+                onBack={handleForgotBack}
+              />
+            )}
+            {authStep === 'reset' && (
+              <ResetPasswordPopup 
+                open={authOpen}
+                onOpenChange={setAuthOpen}
+                onBack={handleResetBack} 
+              />
+            )}
+            {authStep === 'updated' && (
+              <PasswordUpdatedPopup 
+                open={authOpen}
+                onOpenChange={setAuthOpen}
+                onBack={handlePasswordUpdatedBack} 
+              />
+            )}
+            {authStep === 'done' && (
+              <AllDonePopup 
+                open={authOpen}
+                onOpenChange={setAuthOpen}
+                onBack={handleAllDoneBack} 
+              />
+            )}
           </div>
           <div className="flex items-center gap-1">
             <span className="text-base font-semibold">NG</span>
