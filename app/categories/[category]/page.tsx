@@ -7,12 +7,6 @@ import { SearchIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
-interface CategoryPageProps {
-  params: Promise<{
-    category: string;
-  }>;
-}
-
 // Mock products data
 const products = [
   { 
@@ -105,7 +99,7 @@ const categoryImages: { [key: string]: string } = {
   beauty: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=800&q=80",
 };
 
-export default function CategoryPage({ params }: CategoryPageProps) {
+export default function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
   const router = useRouter();
   const [displayedProducts, setDisplayedProducts] = useState(products.slice(0, 6));
   const [isLoading, setIsLoading] = useState(false);

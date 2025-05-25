@@ -15,13 +15,7 @@ import Image from "next/image";
 import { ProductCard } from "@/components/martaf/ProductCard";
 import { RatingsReviewsDrawer } from "@/components/martaf/RatingsReviewsDrawer";
 import { SizeGuideDrawer } from "@/components/martaf/SizeGuideDrawer";
-import { useState } from "react";
-
-interface ProductPageProps {
-  params: {
-    id: string;
-  };
-}
+import { useState, use, useEffect } from "react";
 
 // Mock data for similar products
 const similarProducts = [
@@ -128,7 +122,8 @@ const ratingBreakdown = {
   1: 1,
 };
 
-export default function ProductPage({ params }: ProductPageProps) {
+export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [ratingsOpen, setRatingsOpen] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -136,6 +131,11 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
+  
+  // Loading states
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isSimilarProductsLoading, setIsSimilarProductsLoading] = useState(true);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   // Product images array
   const productImages = [
@@ -169,6 +169,125 @@ export default function ProductPage({ params }: ProductPageProps) {
   const decrementQuantity = () => {
     setQuantity(prev => prev > 1 ? prev - 1 : 1);
   };
+
+  // Simulate loading product data
+  useEffect(() => {
+    const loadProductData = async () => {
+      // Simulate API call for product data
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setIsPageLoading(false);
+      
+      // Load similar products after main product loads
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setIsSimilarProductsLoading(false);
+    };
+
+    loadProductData();
+  }, [id]);
+
+  // Handle add to cart with loading
+  const handleAddToCart = async () => {
+    setIsAddingToCart(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsAddingToCart(false);
+    // You can add success toast here
+  };
+
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <div className="bg-[#6B46C1] text-white p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+            <span className="text-[#6B46C1] font-bold text-sm">M</span>
+          </div>
+          <span className="font-semibold">MARTAF</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-4 h-4 flex items-center justify-center">1</span>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9" />
+            </svg>
+          </div>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <div className="w-6 h-6 bg-green-500 rounded-full"></div>
+        </div>
+      </div>
+
+      {/* Loading Content */}
+      <div className="animate-pulse">
+        {/* Image Skeleton */}
+        <div className="aspect-square bg-gray-200"></div>
+        
+        {/* Thumbnails Skeleton */}
+        <div className="p-4">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Product Info Skeleton */}
+        <div className="p-4 space-y-4">
+          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          
+          {/* Quantity Skeleton */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+            <div className="w-8 h-4 bg-gray-200 rounded"></div>
+            <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+          </div>
+
+          {/* Size Options Skeleton */}
+          <div className="space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="flex gap-2">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="w-10 h-8 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Color Options Skeleton */}
+          <div className="space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="flex gap-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="w-8 h-8 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Cards Skeleton */}
+          <div className="space-y-4">
+            <div className="h-24 bg-gray-200 rounded-lg"></div>
+            <div className="h-32 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+
+        {/* Loading Spinner */}
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B46C1]"></div>
+        </div>
+      </div>
+
+      {/* Bottom padding */}
+      <div className="h-20"></div>
+    </div>
+  );
+
+  if (isPageLoading) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -562,22 +681,40 @@ export default function ProductPage({ params }: ProductPageProps) {
         {/* Similar Products Section */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-4">Similar products</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {similarProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                originalPrice={product.originalPrice}
-                image={product.image}
-                badge={product.badge}
-                freeShipping={product.freeShipping}
-                onFavorite={() => console.log(`Added ${product.name} to favorites`)}
-                onClick={() => console.log(`Clicked on ${product.name}`)}
-              />
-            ))}
-          </div>
+          {isSimilarProductsLoading ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-square bg-gray-200 rounded-lg mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-1"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-center items-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#6B46C1]"></div>
+                <span className="ml-2 text-sm text-gray-600">Loading similar products...</span>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {similarProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  originalPrice={product.originalPrice}
+                  image={product.image}
+                  badge={product.badge}
+                  freeShipping={product.freeShipping}
+                  onFavorite={() => console.log(`Added ${product.name} to favorites`)}
+                  onClick={() => console.log(`Clicked on ${product.name}`)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -607,8 +744,19 @@ export default function ProductPage({ params }: ProductPageProps) {
           </Button>
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">{quantity}</span>
         </div>
-        <Button className="flex-1 bg-orange-500 hover:bg-orange-600">
-          Add to cart
+        <Button 
+          className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50" 
+          onClick={handleAddToCart}
+          disabled={isAddingToCart}
+        >
+          {isAddingToCart ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Adding...
+            </div>
+          ) : (
+            "Add to cart"
+          )}
         </Button>
         <Button className="flex-1 bg-red-500 hover:bg-red-600">
           Buy now

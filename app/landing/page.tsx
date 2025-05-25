@@ -1,3 +1,5 @@
+"use client";
+
 import Header from "@/components/martaf/Header";
 import HeroSection from "@/components/martaf/HeroSection";
 import Categories from "@/components/martaf/Categories";

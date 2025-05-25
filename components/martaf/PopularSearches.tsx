@@ -1,36 +1,36 @@
 import React from "react";
-import ProductCard from "./ProductCard";
+import { ProductCard } from "./ProductCard";
 
 const products = [
   {
+    id: "1",
     name: "Diamond Earrings",
-    img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
-    price: "$23.45",
-    rating: 4,
+    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
+    price: 23.45,
   },
   {
+    id: "2",
     name: "Gold Ring",
-    img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
-    price: "$23.45",
-    rating: 5,
+    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
+    price: 23.45,
   },
   {
+    id: "3",
     name: "Yellow Heels",
-    img: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80",
-    price: "$23.45",
-    rating: 4,
+    image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80",
+    price: 23.45,
   },
   {
+    id: "4",
     name: "Trendy Caps",
-    img: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80",
-    price: "$23.45",
-    rating: 3,
+    image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80",
+    price: 23.45,
   },
   {
+    id: "5",
     name: "Leather Wallet",
-    img: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
-    price: "$23.45",
-    rating: 4,
+    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
+    price: 23.45,
   },
 ];
 
