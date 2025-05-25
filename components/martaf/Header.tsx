@@ -79,24 +79,24 @@ const Header = () => {
           <button aria-label="Open menu" onClick={() => setOpen(true)}>
             <Menu className="w-8 h-8" />
           </button>
-          <Drawer open={open} onOpenChange={setOpen}>
+          <Drawer open={open} onOpenChange={setOpen} direction="left">
             <DrawerContent className="w-[90vw] max-w-xs p-0 h-screen">
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between px-4 py-4 border-b">
                   <span className="flex items-center gap-2">
-                    <span className="text-[#7C2AE8] font-black text-2xl">M</span>
-                    <span className="font-bold text-xl text-black">MARTAF</span>
+                    <span className="text-[#7C2AE8] font-bold text-2xl">M</span>
+                    <span className="font-semibold text-xl text-black">MARTAF</span>
                   </span>
                   <button onClick={() => setOpen(false)}><X className="w-7 h-7 text-black" /></button>
                 </div>
                 <div className="overflow-y-auto flex-1 px-4 pb-4">
-                  <div className="text-2xl font-bold mt-4 mb-2 text-black">Categories</div>
+                  <div className="text-2xl font-semibold mt-4 mb-2 text-black">Categories</div>
                   <div className="flex flex-col gap-3 mb-6">
                     {categories.map((cat) => (
                       <div key={cat.name}>
                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setExpanded(expanded === cat.name ? null : cat.name)}>
                           <Image src={cat.icon} alt={cat.name} width={36} height={36} className="rounded-full object-cover" />
-                          <span className="font-semibold text-base text-black flex-1">{cat.name}</span>
+                          <span className="font-medium text-base text-black flex-1">{cat.name}</span>
                           {cat.sub.length > 0 && <ChevronDown className={`w-5 h-5 text-black transition-transform ${expanded === cat.name ? 'rotate-180' : ''}`} />}
                         </div>
                         {cat.sub.length > 0 && expanded === cat.name && (
@@ -109,9 +109,9 @@ const Header = () => {
                       </div>
                     ))}
                   </div>
-                  <div className="text-xl font-bold mb-2 text-black">Settings</div>
+                  <div className="text-xl font-semibold mb-2 text-black">Settings</div>
                   <div className="flex items-center gap-2 mb-4 text-black"><DollarSign className="w-5 h-5" /> Currency</div>
-                  <div className="text-xl font-bold mb-2 text-black">Language</div>
+                  <div className="text-xl font-semibold mb-2 text-black">Language</div>
                   <div className="flex flex-col gap-2 mb-4">
                     {languages.map((lang) => (
                       <div key={lang.name} className="flex items-center gap-2 text-black">
@@ -143,8 +143,8 @@ const Header = () => {
         </div>
         {/* Logo */}
         <a href="/" className="flex items-center gap-2 cursor-pointer">
-          <span className="text-2xl font-black">M</span>
-          <span className="font-bold text-xl tracking-wide">MARTAF</span>
+          <span className="text-2xl font-bold">M</span>
+          <span className="font-semibold text-xl tracking-wide">MARTAF</span>
         </a>
         {/* Right icons */}
         <div className="flex items-center gap-4">
@@ -219,7 +219,7 @@ const Header = () => {
             )}
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-base font-semibold">NG</span>
+            <span className="text-base font-medium">NG</span>
             <Image src={selectedCountry.flag} alt="flag" width={24} height={24} className="rounded-full" />
           </div>
         </div>
