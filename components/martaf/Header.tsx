@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Menu, ShoppingCart, User, ChevronDown, X, Globe, DollarSign, Anchor } from "lucide-react";
 import Image from "next/image";
+import { SignUpPopup } from "@/components/martaf/AuthPopups/SignUpPopup";
+import { VerifyEmailPopup } from "@/components/martaf/AuthPopups/VerifyEmailPopup";
+import { CheckInboxPopup } from "@/components/martaf/AuthPopups/CheckInboxPopup";
+import { ForgotPasswordPopup } from "@/components/martaf/AuthPopups/ForgotPasswordPopup";
+import { ResetPasswordPopup } from "@/components/martaf/AuthPopups/ResetPasswordPopup";
+import { PasswordUpdatedPopup } from "@/components/martaf/AuthPopups/PasswordUpdatedPopup";
+import { AllDonePopup } from "@/components/martaf/AuthPopups/AllDonePopup";
 
 const countries = [
   { code: "NG", name: "Nigeria", flag: "https://flagcdn.com/ng.svg" },
@@ -44,6 +51,20 @@ const Header = () => {
   const [selectedCountry] = useState(countries[0]);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Auth drawer state
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authStep, setAuthStep] = useState<'signup'|'verify'|'checkinbox'|'forgot'|'reset'|'updated'|'done'>("signup");
+  
+  // Handlers for popup transitions
+  const handleSignIn = () => setAuthStep("checkinbox"); // Go directly to check inbox after signup
+  const handleGoogleSignIn = () => setAuthStep("checkinbox");
+  const handleSignInLink = () => setAuthStep("signup");
+  const handleVerifyBack = () => setAuthStep("signup");
+  const handleCheckInboxBack = () => setAuthStep("signup");
+  const handleForgotBack = () => setAuthStep("signup");
+  const handleResetBack = () => setAuthStep("signup");
+  const handlePasswordUpdatedBack = () => setAuthStep("signup");
+  const handleAllDoneBack = () => setAuthOpen(false);
 
   return (
     <header className="w-full bg-[#7C2AE8] text-white flex flex-col">
@@ -116,7 +137,46 @@ const Header = () => {
             <ShoppingCart className="w-6 h-6" />
             <span className="absolute -top-2 -right-2 bg-[#FF715B] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">1</span>
           </div>
-          <User className="w-6 h-6" />
+          {/* Profile/User icon triggers auth drawer */}
+          <div>
+            <User className="w-6 h-6 cursor-pointer" onClick={() => { setAuthOpen(true); setAuthStep('signup'); }} />
+            <Sheet open={authOpen} onOpenChange={setAuthOpen}>
+              <SheetContent side="bottom" className="max-w-md w-full max-h-[90vh] mx-auto rounded-t-2xl shadow-xl p-0 flex justify-center items-start">
+                {/* Auth flow popups */}
+                {authStep === 'signup' && (
+                  <SignUpPopup
+                    onSignIn={handleSignIn}
+                    onGoogleSignIn={handleGoogleSignIn}
+                    onSignInLink={handleSignInLink}
+                  />
+                )}
+                {authStep === 'verify' && (
+                  <VerifyEmailPopup
+                    onBack={handleVerifyBack}
+                  />
+                )}
+                {authStep === 'checkinbox' && (
+                  <CheckInboxPopup
+                    onBack={handleCheckInboxBack}
+                  />
+                )}
+                {authStep === 'forgot' && (
+                  <ForgotPasswordPopup
+                    onBack={handleForgotBack}
+                  />
+                )}
+                {authStep === 'reset' && (
+                  <ResetPasswordPopup onBack={handleResetBack} />
+                )}
+                {authStep === 'updated' && (
+                  <PasswordUpdatedPopup onBack={handlePasswordUpdatedBack} />
+                )}
+                {authStep === 'done' && (
+                  <AllDonePopup onBack={handleAllDoneBack} />
+                )}
+              </SheetContent>
+            </Sheet>
+          </div>
           <div className="flex items-center gap-1">
             <span className="text-base font-semibold">NG</span>
             <Image src={selectedCountry.flag} alt="flag" width={24} height={24} className="rounded-full" />
