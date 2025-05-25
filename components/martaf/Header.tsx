@@ -6,6 +6,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { Menu, ShoppingCart, User, ChevronDown, X, Globe, DollarSign, Anchor } from "lucide-react";
 import Image from "next/image";
 import { SignUpPopup } from "@/components/martaf/AuthPopups/SignUpPopup";
+import { SignInPopup } from "@/components/martaf/AuthPopups/SignInPopup";
 import { VerifyEmailPopup } from "@/components/martaf/AuthPopups/VerifyEmailPopup";
 import { CheckInboxPopup } from "@/components/martaf/AuthPopups/CheckInboxPopup";
 import { ForgotPasswordPopup } from "@/components/martaf/AuthPopups/ForgotPasswordPopup";
@@ -53,17 +54,20 @@ const Header = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   // Auth drawer state
   const [authOpen, setAuthOpen] = useState(false);
-  const [authStep, setAuthStep] = useState<'signup'|'verify'|'checkinbox'|'forgot'|'reset'|'updated'|'done'>("signup");
+  const [authStep, setAuthStep] = useState<'signin'|'signup'|'verify'|'checkinbox'|'forgot'|'reset'|'updated'|'done'>("signin");
   
   // Handlers for popup transitions
-  const handleSignIn = () => setAuthStep("checkinbox"); // Go directly to check inbox after signup
+  const handleSignUpSuccess = () => setAuthStep("checkinbox"); // Go to check inbox after signup
+  const handleSignInSuccess = () => setAuthOpen(false); // Close drawer after successful sign in
   const handleGoogleSignIn = () => setAuthStep("checkinbox");
-  const handleSignInLink = () => setAuthStep("signup");
+  const handleSignInToSignUp = () => setAuthStep("signup");
+  const handleSignUpToSignIn = () => setAuthStep("signin");
+  const handleForgotPassword = () => setAuthStep("forgot");
   const handleVerifyBack = () => setAuthStep("signup");
   const handleCheckInboxBack = () => setAuthStep("signup");
-  const handleForgotBack = () => setAuthStep("signup");
-  const handleResetBack = () => setAuthStep("signup");
-  const handlePasswordUpdatedBack = () => setAuthStep("signup");
+  const handleForgotBack = () => setAuthStep("signin");
+  const handleResetBack = () => setAuthStep("signin");
+  const handlePasswordUpdatedBack = () => setAuthStep("signin");
   const handleAllDoneBack = () => setAuthOpen(false);
 
   return (
@@ -119,8 +123,19 @@ const Header = () => {
                   <div className="flex items-center gap-2 mb-4 text-black"><Anchor className="w-5 h-5" /> Ship to</div>
                 </div>
                 <div className="flex gap-2 p-4 border-t">
-                  <Button className="flex-1 bg-white text-[#FF715B] border border-[#FF715B] hover:bg-[#FF715B] hover:text-white" variant="outline">Sign in</Button>
-                  <Button className="flex-1 bg-[#FF715B] text-white hover:bg-[#ff4d2d]">Sign up</Button>
+                  <Button 
+                    className="flex-1 bg-white text-[#FF715B] border border-[#FF715B] hover:bg-[#FF715B] hover:text-white" 
+                    variant="outline"
+                    onClick={() => { setOpen(false); setAuthOpen(true); setAuthStep('signin'); }}
+                  >
+                    Sign in
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-[#FF715B] text-white hover:bg-[#ff4d2d]"
+                    onClick={() => { setOpen(false); setAuthOpen(true); setAuthStep('signup'); }}
+                  >
+                    Sign up
+                  </Button>
                 </div>
               </div>
             </DrawerContent>
@@ -139,15 +154,25 @@ const Header = () => {
           </div>
           {/* Profile/User icon triggers auth drawer */}
           <div>
-            <User className="w-6 h-6 cursor-pointer" onClick={() => { setAuthOpen(true); setAuthStep('signup'); }} />
+            <User className="w-6 h-6 cursor-pointer" onClick={() => { setAuthOpen(true); setAuthStep('signin'); }} />
             {/* Auth flow popups */}
+            {authStep === 'signin' && (
+              <SignInPopup
+                open={authOpen}
+                onOpenChange={setAuthOpen}
+                onSignUp={handleSignInToSignUp}
+                onForgotPassword={handleForgotPassword}
+                onGoogleSignIn={handleGoogleSignIn}
+                onSuccess={handleSignInSuccess}
+              />
+            )}
             {authStep === 'signup' && (
               <SignUpPopup
                 open={authOpen}
                 onOpenChange={setAuthOpen}
-                onSignIn={handleSignIn}
+                onSignIn={handleSignUpSuccess}
                 onGoogleSignIn={handleGoogleSignIn}
-                onSignInLink={handleSignInLink}
+                onSignInLink={handleSignUpToSignIn}
               />
             )}
             {authStep === 'verify' && (
