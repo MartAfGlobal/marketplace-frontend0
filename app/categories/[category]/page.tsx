@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ProductCard } from "@/components/martaf/ProductCard";
 import { SearchIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/martaf/Header";
 import Image from "next/image";
 
 // Mock products data
@@ -178,7 +177,6 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
   // Loading skeleton component
   const LoadingSkeleton = () => (
     <div className="min-h-screen bg-white">
-      <Header />
       <div className="animate-pulse">
 
         {/* Search Bar Skeleton */}
@@ -242,7 +240,6 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
 
       {/* Search bar */}
       <div className="px-4 py-3 bg-white">

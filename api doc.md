@@ -779,88 +779,136 @@
 
 **\===============================**  
    	**PRODUCT API DOCS**  
-**\===============================**  
-**\-------------------------------**  
-**📦 CREATE PRODUCT**  
-**\-------------------------------**  
-**POST  /products/add-product**
+**\===============================**
 
-**Content-Type: multipart/form-data**    
-**Auth: Required (Admin/Manufacturer)**
+**Overview:**  
+**\---------**  
+**This API manages products with support for categories, images, stock tracking, and optional product variations.**
+
+**Serializer: ProductSerializer**
 
 **Fields:**  
-**\- name: string**  
-**\- description: string**  
-**\- price: float**  
-**\- discount\_percent: int (optional)**  
-**\- stock: int (optional, if no variations)**  
-**\- category: JSON string (name \+ optional parent)**  
-**\- images: multiple files (optional)**  
-**\- variations: JSON string (optional, if no stock)**
+**\-------**  
+**\- id (int, read-only): Auto-generated product ID.**  
+**\- manufacturer (read-only): Set from context; the owner of the product.**  
+**\- name (string, required): Name of the product.**  
+**\- description (string, optional): Description of the product.**  
+**\- price (decimal, required): Base price of the product.**  
+**\- discount\_percent (float, optional): Discount percentage (e.g., 10 for 10%).**  
+**\- discount\_price (decimal, optional): Price after discount.**  
+**\- category (object, required): Nested category object. Includes:**  
+	**\- name (string)**  
+	**\- parent (object, optional): { name: string }**  
+**\- stock (int, optional, write-only): Used if no variations are provided.**  
+**\- is\_active (boolean, optional): Indicates if the product is available.**  
+**\- images (list of image files, optional, write-only): Uploaded product images.**  
+**\- variations (list of dicts, optional, write-only): Variations like size/color/stock. Example:**  
+	**\[**  
+    	**{ "size": "M", "color": "Red", "stock": 10 },**  
+    	**{ "size": "L", "color": "Blue", "stock": 5 }**  
+	**\]**
 
-**✅ At least one of \`stock\` or \`variations\` is required.**
-
-**Request (form-data):**  
-**\- name \= "iPhone 14"**  
-**\- description \= "Latest model"**  
-**\- price \= 999.99**  
-**\- discount\_percent \= 10**  
-**\- stock \= 10**  
-**\- category \= {"name": "Phones", "parent": {"name": "Electronics"}}**  
-**\- images \= \[image1.jpg, image2.jpg\]**  
-**\- variations \= \[{"size": "128GB", "color": "Black", "stock": 5}, {"size": "256GB", "color": "Silver", "stock": 5}\]**
-
-**📌 Note: \`category\` and \`variations\` must be JSON strings.**
-
-**Response:**  
-**{**  
-  **"id": 1,**  
-  **"manufacturer": 3,**  
-  **"name": "iPhone 14",**  
-  **"description": "Latest model",**  
-  **"price": 999.99,**  
-  **"discount\_percent": 10,**  
-  **"discount\_price": 899.99,**  
-  **"category": {**  
-	**"id": 2,**  
-	**"name": "Phones",**  
-	**"parent": 1**  
-  **},**  
-  **"stock": null,**  
-  **"is\_active": true**  
-**}**
-
-**\-------------------------------**  
-**🛠 UPDATE PRODUCT**  
-**\-------------------------------**  
-**PATCH /products/update-product/{id}/**
-
-**Content-Type: multipart/form-data**    
-**Auth: Required (Admin/Manufacturer)**
-
-**Fields (partial update allowed):**  
-**\- name, description, price, discount\_percent, category, stock**  
-**\- images (replaces all)**  
-**\- variations (replaces all)**
+**Validation:**  
+**\-----------**  
+**\- Either \`stock\` or at least one \`variation\` must be provided when creating a product.**  
+**\- Automatically calculates total inventory from variations or uses stock.**
 
 **Behavior:**  
-**\- Updates inventory by summing variation stock or using provided stock.**  
-**\- Replaces all images and variations if new ones are provided.**
+**\---------**  
+**\- Category is created or retrieved based on name and parent.**  
+**\- If stock falls below DEFAULT\_LOW\_STOCK\_THRESHOLD and manufacturer exists, a low stock email is sent.**  
+**\- Images and variations are created or updated accordingly.**  
+**\- On update, existing images/variations are cleared and replaced if new ones are given.**
 
-**Request (form-data):**  
-**\- name \= "iPhone 14 Pro"**  
-**\- price \= 1099.99**  
-**\- stock \= 15**  
-**\- images \= \[image1.jpg\]**  
-**\- variations \= \[{"size": "512GB", "color": "Gold", "stock": 15}\]**
+**Endpoints:**  
+**\----------**
 
-**Response:**  
+**POST /products/add-product/**  
+**\--------------------**  
+**Create a new product.**
+
+**Example Request (using stock):**  
 **{**  
-  **"id": 1,**  
-  **"manufacturer": 3,**  
-  **"name": "iPhone 14 Pro",**  
-  **...**  
+  **"name": "Shoes",**  
+  **"description": "Running shoes",**  
+  **"price": 5000,**  
+  **"discount\_percent": 20,**  
+  **"category": {**  
+	**"name": "Footwear",**  
+	**"parent": {**  
+  	**"name": "Men"**  
+	**}**  
+  **},**  
+  **"stock": 12,**  
+  **"images": \[uploaded image files\]**  
 **}**
+
+**Example Request (using variations):**  
+**{**  
+  **"name": "T-Shirt",**  
+  **"description": "Comfortable cotton T-shirt",**  
+  **"price": 2000,**  
+  **"category": {**  
+	**"name": "Tops"**  
+  **},**  
+  **"variations": \[**  
+	**{ "size": "S", "color": "Black", "stock": 5 },**  
+	**{ "size": "M", "color": "White", "stock": 10 }**  
+  **\],**  
+  **"images": \[uploaded image files\]**  
+**}**
+
+**PATCH /products/update-product/{id}/**  
+**\------------------------**  
+**Update an existing product. Handles:**  
+**\- Category partial update (leaves old data intact if not changed)**  
+**\- Update segment of variations or images**  
+**\- Update inventory**  
+**\- Resetting low stock flag if restocked**
+
+**Low Stock Notification:**  
+**\-----------------------**  
+**If inventory \<= DEFAULT\_LOW\_STOCK\_THRESHOLD:**  
+**\- Email is sent to manufacturer (if available)**  
+**\- Example message:**  
+	**Subject: Low Stock Alert: {product.name}**  
+	**Body:**  
+	**Hello {manufacturer.first\_name},**
+
+	**Your product "{product.name}" is low on stock: {inventory} left.**
+
+	**Please restock soon.**
+
+**Errors:**  
+**\-------**  
+**\- "You must provide either a stock value or at least one variation."**  
+  **Raised during creation if both stock and variations are missing.**
+
+**PUT /products/put-product/{id}/**  
+**\------------------------**  
+**Update an existing product. Handles:**  
+**\- Category change**  
+**\- Replacing variations or images**  
+**\- Adjusting inventory**  
+**\- Resetting low stock flag if restocked**
+
+**Low Stock Notification:**  
+**\-----------------------**  
+**If inventory \<= DEFAULT\_LOW\_STOCK\_THRESHOLD:**  
+**\- Email is sent to manufacturer (if available)**  
+**\- Example message:**  
+	**Subject: Low Stock Alert: {product.name}**  
+	**Body:**  
+	**Hello {manufacturer.first\_name},**
+
+	**Your product "{product.name}" is low on stock: {inventory} left.**
+
+	**Please restock soon.**
+
+**Errors:**  
+**\-------**  
+**\- "You must provide either a stock value or at least one variation."**  
+  **Raised during creation if both stock and variations are missing.**
 
 **\-------------------------------**  
 **🗑 DELETE PRODUCT**  

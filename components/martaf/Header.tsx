@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Menu, ShoppingCart, User, ChevronDown, X, Globe, DollarSign, Anchor } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { SignUpPopup } from "@/components/martaf/AuthPopups/SignUpPopup";
 import { SignInPopup } from "@/components/martaf/AuthPopups/SignInPopup";
 import { VerifyEmailPopup } from "@/components/martaf/AuthPopups/VerifyEmailPopup";
@@ -95,7 +96,9 @@ const Header = () => {
                     {categories.map((cat) => (
                       <div key={cat.name}>
                         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setExpanded(expanded === cat.name ? null : cat.name)}>
-                          <Image src={cat.icon} alt={cat.name} width={36} height={36} className="rounded-full object-cover" />
+                          <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                            <Image src={cat.icon} alt={cat.name} width={36} height={36} className="w-full h-full object-cover" />
+                          </div>
                           <span className="font-medium text-base text-black flex-1">{cat.name}</span>
                           {cat.sub.length > 0 && <ChevronDown className={`w-5 h-5 text-black transition-transform ${expanded === cat.name ? 'rotate-180' : ''}`} />}
                         </div>
@@ -148,10 +151,10 @@ const Header = () => {
         </a>
         {/* Right icons */}
         <div className="flex items-center gap-4">
-          <div className="relative">
+          <Link href="/cart" className="relative">
             <ShoppingCart className="w-6 h-6" />
             <span className="absolute -top-2 -right-2 bg-[#FF715B] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">1</span>
-          </div>
+          </Link>
           {/* Profile/User icon triggers auth drawer */}
           <div>
             <User className="w-6 h-6 cursor-pointer" onClick={() => { setAuthOpen(true); setAuthStep('signin'); }} />

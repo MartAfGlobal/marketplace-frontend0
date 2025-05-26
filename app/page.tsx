@@ -1,6 +1,5 @@
 "use client";
 
-import Header from "@/components/martaf/Header";
 import Footer from "@/components/martaf/Footer";
 import { ProductCard } from "@/components/martaf/ProductCard";
 import Image from "next/image";
@@ -114,20 +113,6 @@ export default function Home() {
   const LoadingSkeleton = () => (
     <div className="bg-[#faf9fb] min-h-screen flex flex-col">
       <div className="animate-pulse">
-        {/* Header Skeleton */}
-        <div className="bg-[#6B46C1] p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white/20 rounded"></div>
-              <div className="w-16 h-4 bg-white/20 rounded"></div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-6 h-6 bg-white/20 rounded"></div>
-              <div className="w-6 h-6 bg-white/20 rounded"></div>
-              <div className="w-6 h-6 bg-white/20 rounded-full"></div>
-            </div>
-          </div>
-        </div>
 
         {/* Search Bar Skeleton */}
         <div className="px-4 py-3">
@@ -185,7 +170,6 @@ export default function Home() {
 
   return (
     <div className="bg-[#faf9fb] min-h-screen flex flex-col">
-      <Header />
       {/* Search bar */}
       <div className="px-4 py-3">
         <div className="flex items-center w-full rounded-lg px-4 py-2 text-base focus-within:outline-none focus-within:ring-2 focus-within:ring-[#6C1EB1] shadow-md bg-white border-0">

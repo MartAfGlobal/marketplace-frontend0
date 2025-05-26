@@ -15,7 +15,6 @@ import Image from "next/image";
 import { ProductCard } from "@/components/martaf/ProductCard";
 import { RatingsReviewsDrawer } from "@/components/martaf/RatingsReviewsDrawer";
 import { SizeGuideDrawer } from "@/components/martaf/SizeGuideDrawer";
-import Header from "@/components/martaf/Header";
 import { useState, use, useEffect } from "react";
 
 // Mock data for similar products
@@ -466,8 +465,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   // Loading skeleton component
   const LoadingSkeleton = () => (
     <div className="min-h-screen bg-white">
-      <Header />
-
       {/* Loading Content */}
       <div className="animate-pulse">
         {/* Image Skeleton */}
@@ -540,7 +537,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
 
       {/* Product Images */}
       <div className="relative">
