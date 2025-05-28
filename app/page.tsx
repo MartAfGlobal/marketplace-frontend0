@@ -3,20 +3,20 @@
 import Footer from "@/components/martaf/Footer";
 import { ProductCard } from "@/components/martaf/ProductCard";
 import Image from "next/image";
+import Link from "next/link";
 import { SearchIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { apiService, Product } from "@/lib/api";
 import { toast } from "sonner";
 
 // Reusable category circle component
-const CategoryCircle = ({ name, icon, onClick }: { name: string; icon: string; onClick: () => void }) => (
-  <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={onClick}>
+const CategoryCircle = ({ name, icon, href }: { name: string; icon: string; href: string }) => (
+  <Link href={href} className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
     <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden relative">
       <Image src={icon} alt={name} fill className="object-cover" />
     </div>
     <span className="text-xs font-medium text-gray-700">{name}</span>
-  </div>
+  </Link>
 );
 
 const categories = [
@@ -39,7 +39,6 @@ const fallbackProducts = [
 ];
 
 export default function Home() {
-  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [displayedProducts, setDisplayedProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,14 +46,6 @@ export default function Home() {
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
-  const handleCategoryClick = (slug: string) => {
-    router.push(`/categories/${slug}`);
-  };
-
-  const handleProductClick = (productId: string | number) => {
-    router.push(`/product/${productId}`);
-  };
 
   const handleFavorite = (productId: string | number) => {
     console.log(`Added product ${productId} to favorites`);
@@ -243,7 +234,7 @@ export default function Home() {
               <CategoryCircle 
                 name={cat.name} 
                 icon={cat.icon} 
-                onClick={() => handleCategoryClick(cat.slug)}
+                href={`/categories/${cat.slug}`}
               />
             </div>
           ))}
@@ -261,7 +252,6 @@ export default function Home() {
               key={product.id} 
               {...product} 
               onFavorite={() => handleFavorite(product.id)}
-              onClick={() => handleProductClick(product.id)}
             />
           ))}
         </div>
@@ -277,7 +267,6 @@ export default function Home() {
               key={product.id} 
               {...product} 
               onFavorite={() => handleFavorite(product.id)}
-              onClick={() => handleProductClick(product.id)}
             />
           ))}
         </div>
@@ -295,7 +284,6 @@ export default function Home() {
                 key={product.id} 
                 {...product} 
                 onFavorite={() => handleFavorite(product.id)}
-                onClick={() => handleProductClick(product.id)}
               />
             ))}
           </div>

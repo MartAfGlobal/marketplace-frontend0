@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
-import { useRouter } from "next/navigation";
 import { ProductCard } from "@/components/martaf/ProductCard";
-import { SearchIcon, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
+import { SearchIcon } from "lucide-react";
+import { useState, useEffect, use } from "react";
+import { apiService, Product } from "@/lib/api";
+import { toast } from "sonner";
 
 // Mock products data
 const products = [
@@ -100,7 +101,6 @@ const categoryImages: { [key: string]: string } = {
 };
 
 export default function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
-  const router = useRouter();
   const [displayedProducts, setDisplayedProducts] = useState(products.slice(0, 6));
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -165,10 +165,6 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [displayedProducts.length, isLoading, hasMore]);
-
-  const handleProductClick = (productId: string) => {
-    router.push(`/product/${productId}`);
-  };
 
   const handleFavorite = (productId: string) => {
     console.log(`Added product ${productId} to favorites`);
@@ -255,19 +251,19 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
       {/* Breadcrumb */}
       <div className="px-4 py-2 bg-gray-50">
         <div className="flex items-center gap-2 text-sm text-gray-600">
-          <button 
-            onClick={() => router.push('/')}
+          <Link 
+            href="/"
             className="hover:text-gray-800"
           >
             Home
-          </button>
+          </Link>
           <span>›</span>
-          <button 
-            onClick={() => router.push('/categories')}
+          <Link 
+            href="/categories"
             className="hover:text-gray-800"
           >
             All Categories
-          </button>
+          </Link>
           <span>›</span>
           <span className="text-gray-800 font-medium">{categoryName}</span>
         </div>
@@ -326,7 +322,6 @@ export default function CategoryPage({ params }: { params: Promise<{ category: s
               badge={product.badge}
               freeShipping={product.freeShipping}
               onFavorite={() => handleFavorite(product.id)}
-              onClick={() => handleProductClick(product.id)}
             />
           ))}
         </div>
