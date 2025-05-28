@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 interface SignUpPopupProps {
   open: boolean;
@@ -22,6 +23,7 @@ export function SignUpPopup({
   onGoogleSignIn, 
   onSignInLink 
 }: SignUpPopupProps) {
+  const { register } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -57,40 +59,20 @@ export function SignUpPopup({
     setErrors({});
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}accounts/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          is_customer: true,
-          is_manufacturer: false
-        }),
+      await register({
+        email,
+        password,
+        is_customer: true,
+        is_manufacturer: false
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success("Registration successful! Please check your email to verify your account.");
-        onSignIn(email);
-        // Reset form
-        setEmail("");
-        setPassword("");
-      } else {
-        // Handle specific field errors
-        if (data.email) {
-          setErrors(prev => ({ ...prev, email: data.email[0] }));
-        }
-        if (data.password) {
-          setErrors(prev => ({ ...prev, password: data.password[0] }));
-        }
-        toast.error(data.message || data.detail || "Registration failed. Please try again.");
-      }
+      
+      onSignIn(email);
+      // Reset form
+      setEmail("");
+      setPassword("");
     } catch (error) {
       console.error("Registration error:", error);
-      toast.error("Network error. Please check your connection and try again.");
+      // Error handling is done in the auth context
     } finally {
       setIsLoading(false);
     }

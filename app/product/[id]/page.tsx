@@ -16,6 +16,8 @@ import { ProductCard } from "@/components/martaf/ProductCard";
 import { RatingsReviewsDrawer } from "@/components/martaf/RatingsReviewsDrawer";
 import { SizeGuideDrawer } from "@/components/martaf/SizeGuideDrawer";
 import { useState, use, useEffect } from "react";
+import { apiService, Product } from "@/lib/api";
+import { toast } from "sonner";
 
 // Mock data for similar products
 const similarProducts = [
@@ -324,6 +326,7 @@ const ratingBreakdown = {
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const [product, setProduct] = useState<Product | null>(null);
   const [ratingsOpen, setRatingsOpen] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -344,15 +347,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [displayedSimilarProducts, setDisplayedSimilarProducts] = useState(similarProducts.slice(0, 6));
 
-  // Product images array
-  const productImages = [
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=800&h=800&fit=crop"
-  ];
+  // Product images array - use real product images or fallback
+  const productImages = product?.images?.length 
+    ? product.images.map(img => img.image)
+    : [
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=800&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=800&h=800&fit=crop",
+        "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=800&h=800&fit=crop"
+      ];
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -379,16 +384,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     setLastQuantityAction('decrement');
   };
 
-  // Simulate loading product data
+  // Load product data from API
   useEffect(() => {
     const loadProductData = async () => {
-      // Simulate API call for product data
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setIsPageLoading(false);
-      
-      // Load similar products after main product loads
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setIsSimilarProductsLoading(false);
+      try {
+        setIsPageLoading(true);
+        const productData = await apiService.getProduct(id);
+        setProduct(productData);
+        
+        // Load similar products after main product loads
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setIsSimilarProductsLoading(false);
+      } catch (error) {
+        console.error("Failed to load product:", error);
+        toast.error("Failed to load product details");
+      } finally {
+        setIsPageLoading(false);
+      }
     };
 
     loadProductData();
@@ -659,7 +671,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       {/* Product Info */}
       <div className="p-4">
         <div className="flex items-start justify-between mb-2">
-          <h1 className="text-lg font-semibold flex-1">Product Name</h1>
+          <h1 className="text-lg font-semibold flex-1">{product?.name || "Product Name"}</h1>
           <div className="flex gap-2 relative">
             <Button 
               variant="ghost" 
@@ -743,8 +755,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        <div className="text-2xl font-bold text-green-600 mb-2">$45.00</div>
-        <div className="text-sm text-green-600 mb-4">In stock</div>
+        <div className="text-2xl font-bold text-green-600 mb-2">
+          ${Number(product?.discount_price || product?.price || 45.00).toFixed(2)}
+        </div>
+        <div className="text-sm text-green-600 mb-4">
+          {product?.inventory && product.inventory > 0 ? "In stock" : "Out of stock"}
+        </div>
 
         {/* Rating - Single row, clickable */}
         <div 

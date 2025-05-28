@@ -3,9 +3,11 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { Menu, ShoppingCart, User, ChevronDown, X, Globe, DollarSign, Anchor } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Menu, ShoppingCart, User, ChevronDown, X, Globe, DollarSign, Anchor, LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { SignUpPopup } from "@/components/martaf/AuthPopups/SignUpPopup";
 import { SignInPopup } from "@/components/martaf/AuthPopups/SignInPopup";
 import { VerifyEmailPopup } from "@/components/martaf/AuthPopups/VerifyEmailPopup";
@@ -50,6 +52,7 @@ const languages = [
 ];
 
 const Header = () => {
+  const { user, isAuthenticated, logout } = useAuth();
   const [selectedCountry] = useState(countries[0]);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -126,19 +129,34 @@ const Header = () => {
                   <div className="flex items-center gap-2 mb-4 text-black"><Anchor className="w-5 h-5" /> Ship to</div>
                 </div>
                 <div className="flex gap-2 p-4 border-t">
-                  <Button 
-                    className="flex-1 bg-white text-[#FF715B] border border-[#FF715B] hover:bg-[#FF715B] hover:text-white" 
-                    variant="outline"
-                    onClick={() => { setOpen(false); setAuthOpen(true); setAuthStep('signin'); }}
-                  >
-                    Sign in
-                  </Button>
-                  <Button 
-                    className="flex-1 bg-[#FF715B] text-white hover:bg-[#ff4d2d]"
-                    onClick={() => { setOpen(false); setAuthOpen(true); setAuthStep('signup'); }}
-                  >
-                    Sign up
-                  </Button>
+                  {isAuthenticated ? (
+                    <div className="flex-1 space-y-2">
+                      <div className="text-sm font-medium text-black">{user?.email}</div>
+                      <Button 
+                        className="w-full bg-red-600 text-white hover:bg-red-700"
+                        onClick={() => { setOpen(false); logout(); }}
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Button 
+                        className="flex-1 bg-white text-[#FF715B] border border-[#FF715B] hover:bg-[#FF715B] hover:text-white" 
+                        variant="outline"
+                        onClick={() => { setOpen(false); setAuthOpen(true); setAuthStep('signin'); }}
+                      >
+                        Sign in
+                      </Button>
+                      <Button 
+                        className="flex-1 bg-[#FF715B] text-white hover:bg-[#ff4d2d]"
+                        onClick={() => { setOpen(false); setAuthOpen(true); setAuthStep('signup'); }}
+                      >
+                        Sign up
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </DrawerContent>
@@ -155,70 +173,91 @@ const Header = () => {
             <ShoppingCart className="w-6 h-6" />
             <span className="absolute -top-2 -right-2 bg-[#FF715B] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">1</span>
           </Link>
-          {/* Profile/User icon triggers auth drawer */}
+          {/* Profile/User icon - shows dropdown if authenticated, auth drawer if not */}
           <div>
-            <User className="w-6 h-6 cursor-pointer" onClick={() => { setAuthOpen(true); setAuthStep('signin'); }} />
-            {/* Auth flow popups */}
-            {authStep === 'signin' && (
-              <SignInPopup
-                open={authOpen}
-                onOpenChange={setAuthOpen}
-                onSignUp={handleSignInToSignUp}
-                onForgotPassword={handleForgotPassword}
-                onGoogleSignIn={handleGoogleSignIn}
-                onSuccess={handleSignInSuccess}
-              />
-            )}
-            {authStep === 'signup' && (
-              <SignUpPopup
-                open={authOpen}
-                onOpenChange={setAuthOpen}
-                onSignIn={handleSignUpSuccess}
-                onGoogleSignIn={handleGoogleSignIn}
-                onSignInLink={handleSignUpToSignIn}
-              />
-            )}
-            {authStep === 'verify' && (
-              <VerifyEmailPopup
-                open={authOpen}
-                onOpenChange={setAuthOpen}
-                onBack={handleVerifyBack}
-              />
-            )}
-            {authStep === 'checkinbox' && (
-              <CheckInboxPopup
-                open={authOpen}
-                onOpenChange={setAuthOpen}
-                onBack={handleCheckInboxBack}
-              />
-            )}
-            {authStep === 'forgot' && (
-              <ForgotPasswordPopup
-                open={authOpen}
-                onOpenChange={setAuthOpen}
-                onBack={handleForgotBack}
-              />
-            )}
-            {authStep === 'reset' && (
-              <ResetPasswordPopup 
-                open={authOpen}
-                onOpenChange={setAuthOpen}
-                onBack={handleResetBack} 
-              />
-            )}
-            {authStep === 'updated' && (
-              <PasswordUpdatedPopup 
-                open={authOpen}
-                onOpenChange={setAuthOpen}
-                onBack={handlePasswordUpdatedBack} 
-              />
-            )}
-            {authStep === 'done' && (
-              <AllDonePopup 
-                open={authOpen}
-                onOpenChange={setAuthOpen}
-                onBack={handleAllDoneBack} 
-              />
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-1 h-auto">
+                    <User className="w-6 h-6 text-white" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem disabled className="text-sm font-medium">
+                    {user?.email}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="text-red-600">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <User className="w-6 h-6 cursor-pointer" onClick={() => { setAuthOpen(true); setAuthStep('signin'); }} />
+                {/* Auth flow popups */}
+                {authStep === 'signin' && (
+                  <SignInPopup
+                    open={authOpen}
+                    onOpenChange={setAuthOpen}
+                    onSignUp={handleSignInToSignUp}
+                    onForgotPassword={handleForgotPassword}
+                    onGoogleSignIn={handleGoogleSignIn}
+                    onSuccess={handleSignInSuccess}
+                  />
+                )}
+                {authStep === 'signup' && (
+                  <SignUpPopup
+                    open={authOpen}
+                    onOpenChange={setAuthOpen}
+                    onSignIn={handleSignUpSuccess}
+                    onGoogleSignIn={handleGoogleSignIn}
+                    onSignInLink={handleSignUpToSignIn}
+                  />
+                )}
+                {authStep === 'verify' && (
+                  <VerifyEmailPopup
+                    open={authOpen}
+                    onOpenChange={setAuthOpen}
+                    onBack={handleVerifyBack}
+                  />
+                )}
+                {authStep === 'checkinbox' && (
+                  <CheckInboxPopup
+                    open={authOpen}
+                    onOpenChange={setAuthOpen}
+                    onBack={handleCheckInboxBack}
+                  />
+                )}
+                {authStep === 'forgot' && (
+                  <ForgotPasswordPopup
+                    open={authOpen}
+                    onOpenChange={setAuthOpen}
+                    onBack={handleForgotBack}
+                  />
+                )}
+                {authStep === 'reset' && (
+                  <ResetPasswordPopup 
+                    open={authOpen}
+                    onOpenChange={setAuthOpen}
+                    onBack={handleResetBack} 
+                  />
+                )}
+                {authStep === 'updated' && (
+                  <PasswordUpdatedPopup 
+                    open={authOpen}
+                    onOpenChange={setAuthOpen}
+                    onBack={handlePasswordUpdatedBack} 
+                  />
+                )}
+                {authStep === 'done' && (
+                  <AllDonePopup 
+                    open={authOpen}
+                    onOpenChange={setAuthOpen}
+                    onBack={handleAllDoneBack} 
+                  />
+                )}
+              </>
             )}
           </div>
           <div className="flex items-center gap-1">

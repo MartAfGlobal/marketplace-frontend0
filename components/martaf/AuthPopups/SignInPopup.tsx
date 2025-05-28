@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 interface SignInPopupProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function SignInPopup({
   onGoogleSignIn,
   onSuccess
 }: SignInPopupProps) {
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -59,42 +61,20 @@ export function SignInPopup({
     setErrors({});
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}accounts/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          remember_me: rememberMe
-        }),
+      await login({
+        email,
+        password,
+        remember_me: rememberMe
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success("Welcome back! You've been signed in successfully.");
-        // Store the access token (you might want to use a more secure method)
-        localStorage.setItem('access_token', data.access);
-        onSuccess();
-        // Reset form
-        setEmail("");
-        setPassword("");
-        setRememberMe(false);
-      } else {
-        // Handle specific field errors
-        if (data.email) {
-          setErrors(prev => ({ ...prev, email: data.email[0] }));
-        }
-        if (data.password) {
-          setErrors(prev => ({ ...prev, password: data.password[0] }));
-        }
-        toast.error(data.message || data.detail || "Invalid email or password. Please try again.");
-      }
+      
+      onSuccess();
+      // Reset form
+      setEmail("");
+      setPassword("");
+      setRememberMe(false);
     } catch (error) {
       console.error("Sign in error:", error);
-      toast.error("Network error. Please check your connection and try again.");
+      // Error handling is done in the auth context
     } finally {
       setIsLoading(false);
     }

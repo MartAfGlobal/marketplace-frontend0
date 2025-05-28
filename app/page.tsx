@@ -6,6 +6,8 @@ import Image from "next/image";
 import { SearchIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { apiService, Product } from "@/lib/api";
+import { toast } from "sonner";
 
 // Reusable category circle component
 const CategoryCircle = ({ name, icon, onClick }: { name: string; icon: string; onClick: () => void }) => (
@@ -24,7 +26,8 @@ const categories = [
   { name: "Beauty", icon: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80", slug: "beauty" },
 ];
 
-const products = [
+// Fallback products for when API is not available
+const fallbackProducts = [
   { id: "1", name: "Diamond Earrings", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80", price: 40.00, rating: 4 },
   { id: "2", name: "Yellow Heels", image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80", price: 40.00, rating: 4 },
   { id: "3", name: "Diamond Earrings", image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80", price: 40.00, rating: 4 },
@@ -37,60 +40,90 @@ const products = [
 
 export default function Home() {
   const router = useRouter();
-  const [displayedProducts, setDisplayedProducts] = useState(products);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleCategoryClick = (slug: string) => {
     router.push(`/categories/${slug}`);
   };
 
-  const handleProductClick = (productId: string) => {
+  const handleProductClick = (productId: string | number) => {
     router.push(`/product/${productId}`);
   };
 
-  const handleFavorite = (productId: string) => {
+  const handleFavorite = (productId: string | number) => {
     console.log(`Added product ${productId} to favorites`);
   };
 
-  // Simulate loading more products
-  const loadMoreProducts = () => {
+  // Load more products
+  const loadMoreProducts = async () => {
     if (isLoading || !hasMore) return;
     
     setIsLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      const currentLength = displayedProducts.length;
-      
-      // Create more products by duplicating with unique IDs
-      const additionalProducts: typeof products = [];
-      for (let i = 0; i < 4; i++) {
-        const baseProduct = products[i % products.length];
-        // Use timestamp and index to ensure unique keys
-        const uniqueId = `${baseProduct.id}-${Date.now()}-${currentLength + i}`;
-        additionalProducts.push({
-          ...baseProduct,
-          id: uniqueId,
-        });
-      }
-      
-      setDisplayedProducts(prev => [...prev, ...additionalProducts]);
-      setIsLoading(false);
-      
-      // Stop loading after showing many products
-      if (displayedProducts.length > 24) {
-        setHasMore(false);
-      }
-    }, 1500);
+    await fetchProducts(searchQuery, currentPage + 1);
+    setIsLoading(false);
   };
 
-  // Simulate initial page loading
+  // Fetch products from API
+  const fetchProducts = async (search?: string, page: number = 1) => {
+    try {
+      const response = await apiService.getProducts({
+        search,
+        is_active: true,
+        page
+      });
+      
+      if (page === 1) {
+        setProducts(response.results);
+        setDisplayedProducts(response.results.map(p => ({
+          id: p.id.toString(),
+          name: p.name,
+          image: p.images?.[0]?.image || "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
+          price: Number(p.discount_price || p.price),
+          rating: 4 // Default rating since API doesn't provide this
+        })));
+      } else {
+        const newProducts = response.results.map(p => ({
+          id: p.id.toString(),
+          name: p.name,
+          image: p.images?.[0]?.image || "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
+          price: Number(p.discount_price || p.price),
+          rating: 4
+        }));
+        setDisplayedProducts((prev: any[]) => [...prev, ...newProducts]);
+      }
+      
+      setHasMore(!!response.next);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      // Use fallback products if API fails
+      if (page === 1) {
+        setDisplayedProducts(fallbackProducts);
+      }
+      toast.error("Failed to load products. Showing sample products.");
+    }
+  };
+
+  // Handle search
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    setIsLoading(true);
+    setCurrentPage(1);
+    await fetchProducts(query, 1);
+    setIsLoading(false);
+  };
+
+  // Initial page loading
   useEffect(() => {
     const loadPageData = async () => {
-      // Simulate API call for initial data
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      setIsPageLoading(true);
+      await fetchProducts();
       setIsPageLoading(false);
     };
 
@@ -177,6 +210,13 @@ export default function Home() {
           <input
             className="ml-2 w-full outline-none border-0 bg-transparent"
             placeholder="Search for products"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch(searchQuery);
+              }
+            }}
           />
         </div>
       </div>
