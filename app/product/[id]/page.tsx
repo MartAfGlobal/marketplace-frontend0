@@ -1059,7 +1059,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   badge={product.badge}
                   freeShipping={product.freeShipping}
                   onFavorite={() => console.log(`Added ${product.name} to favorites`)}
-                  onClick={() => console.log(`Clicked on ${product.name}`)}
                 />
               ))}
             </div>
