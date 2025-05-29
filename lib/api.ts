@@ -96,7 +96,7 @@ class ApiService {
   }
 
   async login(data: LoginData): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/accounts/login/`, {
+    const response = await fetch(`${API_BASE_URL}/accounts/login`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
