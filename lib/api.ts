@@ -81,7 +81,7 @@ class ApiService {
 
   // Auth endpoints
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/accounts/register/`, {
+    const response = await fetch(`${API_BASE_URL}/accounts/register`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
@@ -117,7 +117,7 @@ class ApiService {
 
   async logout(): Promise<void> {
     try {
-      await fetch(`${API_BASE_URL}/accounts/logout/`, {
+      await fetch(`${API_BASE_URL}/accounts/logout`, {
         method: 'POST',
         credentials: 'include',
         headers: this.getAuthHeaders(),
@@ -128,7 +128,7 @@ class ApiService {
   }
 
   async refreshToken(): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/accounts/refresh/`, {
+    const response = await fetch(`${API_BASE_URL}/accounts/refresh`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -149,7 +149,7 @@ class ApiService {
   }
 
   async getUserDetails(): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/accounts/UserDetails/`, {
+    const response = await fetch(`${API_BASE_URL}/accounts/UserDetails`, {
       headers: this.getAuthHeaders(),
     });
 
@@ -218,7 +218,7 @@ class ApiService {
 
   // Reset password endpoints
   async resetPassword(email: string): Promise<{ message: string }> {
-    const response = await fetch(`${API_BASE_URL}/reset-password/`, {
+    const response = await fetch(`${API_BASE_URL}/reset-password`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ email }),
@@ -233,7 +233,7 @@ class ApiService {
   }
 
   async confirmResetPassword(token: string, password: string): Promise<{ message: string }> {
-    const response = await fetch(`${API_BASE_URL}/reset-password-confirm/${token}/`, {
+    const response = await fetch(`${API_BASE_URL}/reset-password-confirm/${token}`, {
       method: 'POST',
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ password }),
