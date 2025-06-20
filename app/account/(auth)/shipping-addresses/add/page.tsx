@@ -207,13 +207,19 @@ export default function AddShippingAddressPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-[#7C2AE8] text-white">
-        <div className="flex items-center gap-4 p-4">
-          <Link href="/shipping-addresses">
+      <div className="flex items-center justify-between px-4 py-4 border-b bg-white">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          asChild
+          className="p-2 flex-shrink-0"
+        >
+          <Link href="/account/shipping-addresses">
             <ArrowLeft className="w-6 h-6" />
           </Link>
-          <h1 className="text-lg font-semibold">Add new address</h1>
-        </div>
+        </Button>
+        <h1 className="text-xl font-semibold text-black flex-1 text-center">Add new address</h1>
+        <div className="w-10 flex-shrink-0"></div>
       </div>
 
       {/* Form */}

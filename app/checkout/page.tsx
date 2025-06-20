@@ -6,7 +6,6 @@ import { ArrowLeft, Plus, ChevronDown, ChevronUp, Minus } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 
 // Mock data
 const shippingAddresses = [
@@ -95,7 +94,6 @@ const orderItems = [
 ];
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const [selectedAddress, setSelectedAddress] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState(1);
   const [showMoreAddresses, setShowMoreAddresses] = useState(false);
@@ -173,7 +171,7 @@ export default function CheckoutPage() {
         
         // Redirect to order success page after a short delay
         setTimeout(() => {
-          router.push('/order-success');
+          window.location.href = '/order-success';
         }, 2000);
       }, 1500);
     } else {
@@ -203,7 +201,7 @@ export default function CheckoutPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Shipping address</h2>
-            <Link href="/shipping-addresses">
+            <Link href="/account/shipping-addresses">
               <button className="w-8 h-8 bg-[#FF715B] rounded-full flex items-center justify-center">
                 <Plus className="w-5 h-5 text-white" />
               </button>
@@ -259,9 +257,11 @@ export default function CheckoutPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Payment method</h2>
-            <button className="w-8 h-8 bg-[#FF715B] rounded-full flex items-center justify-center">
-              <Plus className="w-5 h-5 text-white" />
-            </button>
+            <Link href="/account/payment-methods/add">
+              <button className="w-8 h-8 bg-[#FF715B] rounded-full flex items-center justify-center hover:bg-[#ff4d2d] transition-colors">
+                <Plus className="w-5 h-5 text-white" />
+              </button>
+            </Link>
           </div>
 
           <div className="space-y-3">
@@ -310,12 +310,11 @@ export default function CheckoutPage() {
           </div>
 
           {paymentMethods.length > 3 && (
-            <button
-              className="text-[#FF715B] text-sm font-medium mt-3"
-              onClick={() => setShowMorePayments(!showMorePayments)}
-            >
-              {showMorePayments ? 'See less' : 'See more'}
-            </button>
+            <Link href="/account/payment-methods">
+              <button className="text-[#FF715B] text-sm font-medium mt-3">
+                See more
+              </button>
+            </Link>
           )}
 
           {errors.payment && (

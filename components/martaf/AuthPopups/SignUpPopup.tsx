@@ -103,8 +103,8 @@ export function SignUpPopup({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-w-md mx-auto">
-        <DrawerHeader className="border-b p-4">
+      <DrawerContent className="max-w-md mx-auto max-h-[95vh] overflow-hidden">
+        <DrawerHeader className="border-b p-4 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -121,7 +121,7 @@ export function SignUpPopup({
           </div>
         </DrawerHeader>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           <div className="text-center mb-6">
             <p className="text-sm text-gray-600">Join the largest African marketplace</p>
           </div>

@@ -3,8 +3,9 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import Header from "@/components/martaf/Header";
 import { AuthProvider } from "@/lib/auth-context";
+import { CartProvider } from "@/lib/cart-context";
+import ConditionalHeader from "@/components/martaf/ConditionalHeader";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -32,9 +33,11 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <AuthProvider>
-              <Header />
-              {children}
-              <Toaster />
+              <CartProvider>
+                <ConditionalHeader />
+                {children}
+                <Toaster />
+              </CartProvider>
             </AuthProvider>
         </ThemeProvider>
       </body>

@@ -6,31 +6,31 @@ const products = [
     id: "1",
     name: "Diamond Earrings",
     image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
-    price: 23.45,
+    price: 45000,
   },
   {
     id: "2",
     name: "Gold Ring",
     image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
-    price: 23.45,
+    price: 35000,
   },
   {
     id: "3",
     name: "Yellow Heels",
     image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80",
-    price: 23.45,
+    price: 15000,
   },
   {
     id: "4",
     name: "Trendy Caps",
     image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80",
-    price: 23.45,
+    price: 8500,
   },
   {
     id: "5",
     name: "Leather Wallet",
     image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
-    price: 23.45,
+    price: 12000,
   },
 ];
 

@@ -80,17 +80,23 @@ export default function ShippingAddressesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-[#7C2AE8] text-white">
-        <div className="flex items-center gap-4 p-4">
-          <Link href="/checkout">
+      <div className="flex items-center justify-between px-4 py-4 border-b bg-white">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          asChild
+          className="p-2 flex-shrink-0"
+        >
+          <Link href="/account">
             <ArrowLeft className="w-6 h-6" />
           </Link>
-          <h1 className="text-lg font-semibold">Shipping addresses</h1>
-        </div>
+        </Button>
+        <h1 className="text-xl font-semibold text-black flex-1 text-center">Shipping addresses</h1>
+        <div className="w-10 flex-shrink-0"></div>
       </div>
 
       {/* Address List */}
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 pb-24">
         {addresses.map((address) => (
           <div
             key={address.id}
@@ -147,7 +153,7 @@ export default function ShippingAddressesPage() {
 
       {/* Fixed Bottom Add Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t">
-        <Link href="/shipping-addresses/add">
+        <Link href="/account/shipping-addresses/add">
           <Button className="w-full bg-[#FF715B] hover:bg-[#ff4d2d] text-white py-4 text-lg font-semibold rounded-lg h-14">
             + Add new address
           </Button>

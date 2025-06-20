@@ -13,8 +13,8 @@ interface CheckInboxPopupProps {
 export function CheckInboxPopup({ open, onOpenChange, onBack }: CheckInboxPopupProps) {
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-w-md mx-auto">
-        <DrawerHeader className="border-b p-4">
+      <DrawerContent className="max-w-md mx-auto max-h-[95vh] overflow-hidden">
+        <DrawerHeader className="border-b p-4 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -30,7 +30,7 @@ export function CheckInboxPopup({ open, onOpenChange, onBack }: CheckInboxPopupP
           </div>
         </DrawerHeader>
 
-        <div className="p-6 text-center">
+        <div className="p-6 overflow-y-auto flex-1">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Mail className="w-8 h-8 text-green-600" />
           </div>
