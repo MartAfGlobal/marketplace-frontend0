@@ -8,6 +8,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import Footer from "@/components/martaf/Footer";
+import MoreToLove from "@/components/martaf/MoreToLove";
+import { ConfirmDeliveryModal } from "@/components/martaf/ConfirmDeliveryModal";
+import { Order } from "@/types/api";
+import { apiService } from "@/lib/api";
 
 // Mock order data
 const orders = [
@@ -91,90 +95,28 @@ const orders = [
 ];
 
 // Mock product recommendations
-const recommendations = [
-  {
-    id: 1,
-    title: "Handmade Ceramic Coffee Mug Set",
-    price: "₦8,500",
-    image:
-      "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?auto=format&fit=crop&w=400&q=80",
-    onSale: true,
-    freeShipping: true,
-    rating: 4,
-  },
-  {
-    id: 2,
-    title: "Waterproof Hiking Backpack",
-    price: "₦22,000",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80",
-    onSale: true,
-    freeShipping: true,
-    rating: 4,
-  },
-  {
-    id: 3,
-    title: "Portable Bluetooth Speaker",
-    price: "₦15,000",
-    image:
-      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=400&q=80",
-    onSale: true,
-    freeShipping: true,
-    rating: 3,
-  },
-  {
-    id: 4,
-    title: "Bamboo Cutting Board Set",
-    price: "₦6,500",
-    image:
-      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=400&q=80",
-    onSale: true,
-    freeShipping: true,
-    rating: 5,
-  },
-  {
-    id: 5,
-    title: "Wireless Phone Charger Pad",
-    price: "₦12,500",
-    image:
-      "https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=400&q=80",
-    onSale: true,
-    freeShipping: true,
-    rating: 4,
-  },
-  {
-    id: 6,
-    title: "Indoor Plant Care Kit",
-    price: "₦9,800",
-    image:
-      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=400&q=80",
-    onSale: true,
-    freeShipping: true,
-    rating: 3,
-  },
-];
 
 const tabs = [
   { key: "all", label: "All" },
-  { key: "awaiting_payment", label: "Awaiting payment" },
-  { key: "to_ship", label: "To ship(2)" },
-  { key: "shipped", label: "Shipped(1)" },
-  { key: "completed", label: "Processed(1)" },
+  { key: "Awaiting Confirmation", label: "Awaiting Confirmation" },
+  { key: "Processing", label: "To ship(2)" },
+  { key: "Shipped", label: "Shipped(1)" },
+  { key: "Delivered", label: "Processed(1)" },
 ];
 
 const getStatusDisplay = (status: string) => {
   switch (status) {
-    case "on_way":
+    case "Out for Delivery":
       return { text: "Order on its way", color: "text-blue-600" };
     case "dispute":
       return { text: "In dispute", color: "text-red-600" };
-    case "completed":
+    case "Delivered":
       return { text: "Completed", color: "text-green-600" };
-    case "awaiting_payment":
-      return { text: "Awaiting payment", color: "text-orange-600" };
-    case "to_ship":
+    case "Awaiting Confirmation":
+      return { text: "Awaiting Confirmation", color: "text-orange-600" };
+    case "Processing":
       return { text: "Ready to ship", color: "text-purple-600" };
-    case "shipped":
+    case "Shipped":
       return { text: "Shipped", color: "text-blue-600" };
     default:
       return { text: "Unknown", color: "text-gray-600" };
@@ -186,33 +128,80 @@ export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [displayedOrders, setDisplayedOrders] = useState<typeof orders>([]);
+  //const [displayedOrders, setDisplayedOrders] = useState<typeof orders>([]);
+  const [displayedOrders, setDisplayedOrders] = useState<Order[]>([]);
 
-  // Filter orders based on tab
-  const filteredOrders =
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  
+
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const { results } = await apiService.getOrderHistory();
+        setDisplayedOrders(results); // store all orders once
+      } catch (err) {
+        toast.error("Failed to load orders");
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+
+  const applyFilters = () => {
+  const filteredByTab =
     activeTab === "all"
-      ? orders
-      : orders.filter((order) => order.status === activeTab);
+      ? displayedOrders
+      : displayedOrders.filter((order) =>
+          order.status.toLowerCase() === activeTab.toLowerCase()
+        );
 
-  // Further filter by search query
-  const searchFilteredOrders = filteredOrders.filter((order) => {
+  return filteredByTab.filter((order) => {
     if (!searchQuery.trim()) return true;
 
     const query = searchQuery.toLowerCase();
-    return (
-      order.title.toLowerCase().includes(query) ||
-      order.description.toLowerCase().includes(query) ||
-      order.specifications.toLowerCase().includes(query) ||
-      order.price.toLowerCase().includes(query)
-    );
+    const normalizedQuery = query.replace(/[₦,]/g, "");
+
+    const itemMatch = order.items.some((item) => {
+      const nameMatch = item.product.name.toLowerCase().includes(query);
+      const descriptionMatch = item.product.description
+        ?.toLowerCase()
+        .includes(query);
+
+      const colorMatch = item.variant?.color
+        ?.toLowerCase()
+        .includes(query);
+      const sizeMatch = item.variant?.size
+        ?.toLowerCase()
+        .includes(query);
+
+      return (
+        nameMatch ||
+        descriptionMatch ||
+        colorMatch ||
+        sizeMatch
+      );
+    });
+
+    const priceMatch = order.total_price
+      .replace(/[₦,]/g, "")
+      .toLowerCase()
+      .includes(normalizedQuery);
+
+    return itemMatch || priceMatch;
   });
+};
+
+
 
   // Handle search with animation
   useEffect(() => {
     setIsSearching(true);
 
     const timer = setTimeout(() => {
-      setDisplayedOrders(searchFilteredOrders);
+      setDisplayedOrders(applyFilters);
       setIsSearching(false);
     }, 300); // Small delay for smooth transition
 
@@ -220,15 +209,15 @@ export default function OrdersPage() {
   }, [searchQuery, activeTab]);
 
   // Initialize displayed orders
-  useEffect(() => {
-    setDisplayedOrders(searchFilteredOrders);
-  }, []);
+  // useEffect(() => {
+  //   setDisplayedOrders(searchFilteredOrders);
+  // }, []);
 
   const handleTrackOrder = (orderId: number) => {
     // Navigation handled by Link wrapper
   };
 
-  const handleConfirmDelivery = (orderId: number) => {
+  const handleConfirmDelivery = (orderId: string) => {
     toast.success(`Delivery confirmed for order #${orderId}`);
   };
 
@@ -374,6 +363,13 @@ export default function OrdersPage() {
         </div>
       </div>
 
+      {/* confirm delivery modal */}
+      <ConfirmDeliveryModal
+        open={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmDelivery}
+        orderId={displayedOrders[0]?.id} // Pass the first order ID for confirmation
+      />
       {/* Orders List */}
       <div className="px-4 py-6 pb-8 relative min-h-[400px]">
         {/* Loading overlay */}
@@ -411,8 +407,8 @@ export default function OrdersPage() {
                   {/* Product Image */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
                     <Image
-                      src={order.image}
-                      alt={order.title}
+                      src={order.items[0]?.product.images_data[0]?.image || "/placeholder.png"}
+                      alt={order.items[0]?.product.name || "Product image"}
                       width={80}
                       height={80}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
@@ -429,7 +425,7 @@ export default function OrdersPage() {
                         {statusDisplay.text}
                       </span>
                       <span className="text-xs text-gray-500 text-right leading-tight ml-2">
-                        Delivery: {order.delivery}
+                        Delivery: {order.estimated_delivery_date ?? "Pending"}
                       </span>
                     </div>
 
@@ -438,28 +434,33 @@ export default function OrdersPage() {
                       <div>
                         <div className="space-y-1 mb-4">
                           <h3 className="font-semibold text-black text-sm sm:text-base leading-tight line-clamp-2">
-                            {order.title}
+                            {order.items[0]?.product.name}
                           </h3>
                           <p className="text-sm text-gray-600 leading-tight">
-                            {order.description}
+                            {order.items[0]?.product.description}
                           </p>
                           <p className="text-xs text-gray-500 leading-tight">
-                            {order.specifications}
+                            {[
+                              order.items[0]?.variant?.color,
+                              order.items[0]?.variant?.size,
+                            ]
+                              .filter(Boolean)
+                              .join(", ")}
                           </p>
                         </div>
 
                         {/* Price */}
                         <p className="text-lg font-bold text-black mb-4">
-                          {order.price}
+                          ₦{order.items[0]?.price_at_purchase}
                         </p>
                       </div>
                       {/* Action Buttons - Fixed Layout */}
-                      {order.status === "on_way" && (
+                      {order.status === "Out for Delivery" && (
                         <div className="flex gap-2 sm:gap-3 md:flex-col md:pt-8">
                           <Button
                             size="sm"
                             className="hidden md:flex h-9 text-xs sm:text-sm bg-[#FF715B] text-white hover:bg-[#ff4d2d] font-medium transition-colors duration-200"
-                            onClick={() => handleConfirmDelivery(order.id)}
+                            onClick={() => setShowConfirmModal(true)}
                           >
                             Confirm delivery
                           </Button>
@@ -496,7 +497,7 @@ export default function OrdersPage() {
                           </Link>
                         </div>
                       )}
-                      {order.status === "awaiting_payment" && (
+                      {order.status === "Awaiting Confirmation" && (
                         <div className="flex gap-2 sm:gap-3 md:flex-col md:pt-8">
                           <Link
                             href="/account/edit/"
@@ -519,7 +520,7 @@ export default function OrdersPage() {
                           </Button>
                         </div>
                       )}
-                      {order.status === "to_ship" && (
+                      {order.status === "Processing" && (
                         <div className="flex gap-2 sm:gap-3 md:flex-col md:pt-8">
                           <Button
                             size="sm"
@@ -542,7 +543,7 @@ export default function OrdersPage() {
                           </Link>
                         </div>
                       )}
-                      {order.status === "shipped" && (
+                      {order.status === "Shipped" && (
                         <div className="flex gap-2 sm:gap-3 md:flex-col md:pt-8">
                           <Link
                             href="/track-order"
@@ -565,7 +566,7 @@ export default function OrdersPage() {
                           </Button>
                         </div>
                       )}
-                      {order.status === "completed" && (
+                      {order.status === "Delivered" && (
                         <div className="flex gap-2 sm:gap-3 md:flex-col md:pt-8">
                           <Button
                             size="sm"
@@ -624,90 +625,7 @@ export default function OrdersPage() {
       </div>
 
       {/* More to love section */}
-      <div className="px-4 pb-8">
-        <h2 className="text-xl font-bold text-black mb-4">More to love</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
-          {recommendations.map((product, index) => (
-            <Card
-              key={product.id}
-              className="relative bg-white overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-              style={{
-                animationDelay: `${index * 100}ms`,
-                animation: "fadeInUp 0.5s ease-out forwards",
-              }}
-            >
-              {/* Product Image */}
-              <div className="relative aspect-square">
-                <Image
-                  src={product.image}
-                  alt={product.title}
-                  fill
-                  className="object-cover transition-transform duration-300 hover:scale-105"
-                />
-
-                {/* Sale Badge */}
-                {product.onSale && (
-                  <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs px-2 py-1 rounded">
-                    On sale
-                  </div>
-                )}
-
-                {/* Wishlist Heart */}
-                <button className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm transition-all duration-200 hover:scale-110 hover:shadow-md">
-                  <Heart className="w-4 h-4 text-gray-400 transition-colors duration-200 hover:text-red-500" />
-                </button>
-              </div>
-
-              {/* Product Info */}
-              <div className="p-3">
-                {/* Title */}
-                <h3 className="text-sm font-medium text-black mb-2 line-clamp-2 leading-tight">
-                  {product.title}
-                </h3>
-
-                {/* Star Rating */}
-                <div className="flex items-center mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <svg
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.round(product.rating)
-                          ? "text-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.1 3.386a1 1 0 00.95.69h3.57c.969 0 1.371 1.24.588 1.81l-2.89 2.1a1 1 0 00-.364 1.118l1.1 3.386c.3.921-.755 1.688-1.54 1.118l-2.89-2.1a1 1 0 00-1.176 0l-2.89 2.1c-.784.57-1.838-.197-1.539-1.118l1.1-3.386a1 1 0 00-.364-1.118L2.34 8.813c-.783-.57-.38-1.81.588-1.81h3.57a1 1 0 00.95-.69l1.1-3.386z" />
-                    </svg>
-                  ))}
-                </div>
-
-                {/* Shipping */}
-                <p className="text-xs text-gray-500 mb-1">Free shipping</p>
-
-                {/* Price & Add to Cart */}
-                <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-black">
-                    {product.price}
-                  </p>
-                  <button className="bg-[#FF715B] text-white w-9 h-9 rounded flex items-center justify-center transition-colors hover:bg-[#ff4d2d]">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M3 3h2l.4 2M7 13h14l-1.5 8H6L3 6h18" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <MoreToLove />
       <Footer />
 
       {/* CSS animations */}
