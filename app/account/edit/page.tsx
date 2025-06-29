@@ -44,16 +44,16 @@ const EditProfilePage = () => {
           
           // Populate form with existing data from UserDetails response
           setFormData({
-            firstName: userData.profile?.contact_details?.first_name || '',
-            surname: userData.profile?.contact_details?.surname || '',
+            firstName: userData.profile?.first_name || '',
+            surname: userData.profile?.last_name || '',
             email: userData.email || '',
-            phoneNumber: userData.profile?.contact_details?.phone || '',
-            mobileNumber: userData.profile?.contact_details?.mobile || ''
+            phoneNumber: userData.profile?.phone || '',
+            mobileNumber: userData.profile?.phone2 || ''
           });
 
           // Set current profile image if exists
           if (userData.profile?.profile_picture) {
-            setCurrentProfileImage(userData.profile.profile_picture);
+            setCurrentProfileImage(userData.profile?.profile_picture);
           }
         }
       } catch (error) {
@@ -87,9 +87,17 @@ const EditProfilePage = () => {
     if (isLoading) return; // Prevent changes during loading
     const file = event.target.files?.[0];
     if (file) {
+      console.log('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      lastModifiedDate: new Date(file.lastModified)
+    });
       setProfileImage(file);
       toast.success('Image selected successfully');
     }
+    
   };
 
   const handleSave = async () => {
@@ -101,6 +109,7 @@ const EditProfilePage = () => {
       
       // Add email field (user level field)
       formDataToSend.append('email', formData.email);
+    
       
       // Add profile picture if selected
       if (profileImage) {
@@ -108,14 +117,21 @@ const EditProfilePage = () => {
       }
       
       // Add contact details as JSON object according to UserDetails API
-      const contactDetails = {
-        first_name: formData.firstName,
-        surname: formData.surname,
-        phone: formData.phoneNumber,
-        mobile: formData.mobileNumber
-      };
+      // const contactDetails = {
+      //   first_name: formData.firstName,
+      //   last_name: formData.surname,
+      //   phone: formData.phoneNumber,
+      //   phone2: formData.mobileNumber
+      // };
       
-      formDataToSend.append('contact_details', JSON.stringify(contactDetails));
+      // formDataToSend.append('contact_details', JSON.stringify(contactDetails));
+
+        // Add all fields
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('first_name', formData.firstName);
+      formDataToSend.append('last_name', formData.surname);
+      formDataToSend.append('phone', formData.phoneNumber);
+      formDataToSend.append('phone2', formData.mobileNumber);
 
       // Make API call to UserDetails endpoint
       const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
@@ -127,6 +143,9 @@ const EditProfilePage = () => {
         body: formDataToSend,
       });
 
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to update profile');
@@ -135,7 +154,7 @@ const EditProfilePage = () => {
       const result = await response.json();
       
       toast.success('Profile updated successfully!');
-      window.location.href = '/account';
+      //window.location.href = '/account';
       
     } catch (error) {
       console.error('Profile update error:', error);
