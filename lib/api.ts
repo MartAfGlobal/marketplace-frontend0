@@ -62,6 +62,7 @@ export interface AuthResponse {
 export interface RegisterData {
   email: string;
   password: string;
+  confirm_password: string;
   is_customer?: boolean;
   is_manufacturer?: boolean;
 }
@@ -214,7 +215,7 @@ class ApiService {
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/accounts/register`, {
       method: "POST",
-      headers: this.getAuthHeaders(),
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(data),
     });
 
