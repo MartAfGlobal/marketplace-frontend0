@@ -83,6 +83,7 @@ function SignUpForm() {
       await register({
         email,
         password,
+        confirm_password: confirmPassword,
         is_customer: true,
         is_manufacturer: false
       });
