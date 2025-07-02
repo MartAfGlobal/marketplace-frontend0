@@ -96,6 +96,8 @@ export interface ShippingAddress {
   state: string;
   country: string;
   postal_code: string;
+  full_name: string; // Full name of the recipient
+  phone: string; // Phone number of the recipient
 }
 
 export interface ShippingMethod {
@@ -127,7 +129,7 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: string;
+  id: string | number; // Depending on your API, it could be a string or number
   order_no: string;
   user: number | User;
 
@@ -136,11 +138,11 @@ export interface Order {
   coupon?: Coupon;
   escrow?: Escrow;
 
-  subtotal: string;
-  tax: string;
-  shipping_cost: string;
-  discount_amount: string;
-  total_price: string;
+  subtotal: number;
+  tax: number;
+  shipping_cost: number;
+  discount_amount: number;
+  total_price: number;
 
   payment_reference?: string;
   payment_status: 'Pending' | 'Successful' | 'Failed';
