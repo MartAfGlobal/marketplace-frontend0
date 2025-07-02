@@ -841,7 +841,7 @@ class ApiService {
         throw new Error(error.detail || "Failed to fetch order history");
       }
 
-      const data = await response.json();
+      const data: PaginatedResponse<Order> = await response.json();
       console.log("Fetched order history:", data);
       return data;
     } catch (error) {
@@ -854,6 +854,86 @@ class ApiService {
       };
     }
   }
+
+  async cancelOrder(orderId: string | number): Promise<Order> {
+    const response = await fetch(
+      `${API_BASE_URL}/orders/${orderId}/cancel/`,
+      {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        error.detail || error.message || "Failed to cancel order"
+      );
+    }
+    const data: Order = await response.json();
+    return data;
+  }
+
+  async MarkOrderDelivered(orderId: string | number | null): Promise<Order> {
+    const response = await fetch(
+      `${API_BASE_URL}/orders/${orderId}/mark-delivered/`,
+      {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        error.detail || error.message || "Failed to mark order as delivered"
+      );
+    }
+    const data: Order = await response.json(); 
+    return data;
+  }
+
+
+  async getOrder(orderId: string | number): Promise<Order> {
+    const response = await fetch(
+      `${API_BASE_URL}/orders/${orderId}/`,
+      {
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        error.detail || error.message || "Failed to get order details"
+      );
+    }
+    const data: Order = await response.json(); 
+    return data; 
+  }
+
+  async trackOrder(orderId: string | number): Promise<Order> {
+    const response = await fetch(
+      `${API_BASE_URL}/orders/${orderId}/track/`,
+      {
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(
+        error.detail || error.message || "Failed to track order"
+      );
+    }
+    const data: Order = await response.json();
+    return data;
+  }
+
 }
 
 export const apiService = new ApiService();

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Search, Heart, Loader2 } from "lucide-react";
+import { ArrowLeft, Search, Heart, Loader2, Award } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -12,87 +12,88 @@ import MoreToLove from "@/components/martaf/MoreToLove";
 import { ConfirmDeliveryModal } from "@/components/martaf/ConfirmDeliveryModal";
 import { Order } from "@/types/api";
 import { apiService } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 // Mock order data
-const orders = [
-  {
-    id: 1,
-    status: "on_way",
-    title: "Wireless Bluetooth Headphones with Noise Cancellation",
-    description: "Premium audio headphones",
-    specifications: "Black, Over-ear",
-    price: "₦25,000",
-    delivery: "May 15, 2025",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    id: 2,
-    status: "dispute",
-    title: "Vintage Leather Handbag for Women",
-    description: "Genuine leather shoulder bag",
-    specifications: "Brown, Medium size",
-    price: "₦18,500",
-    delivery: "May 15, 2025",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    id: 3,
-    status: "completed",
-    title: "Organic Cotton T-Shirt Pack (3-piece)",
-    description: "Comfortable casual wear",
-    specifications: "3PC, Assorted colors",
-    price: "₦12,000",
-    delivery: "Delivered",
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    id: 4,
-    status: "dispute",
-    title: "Smart Fitness Watch with Heart Rate Monitor",
-    description: "Health tracking smartwatch",
-    specifications: "Black, Silicone strap",
-    price: "₦45,000",
-    delivery: "May 15, 2025",
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    id: 5,
-    status: "awaiting_payment",
-    title: "Professional Kitchen Knife Set",
-    description: "Stainless steel knives",
-    specifications: "5PC, German steel",
-    price: "₦35,000",
-    delivery: "Pending payment",
-    image:
-      "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    id: 6,
-    status: "to_ship",
-    title: "Luxury Scented Candle Collection",
-    description: "Aromatherapy candles",
-    specifications: "4PC, Mixed scents",
-    price: "₦15,500",
-    delivery: "Ready to ship",
-    image:
-      "https://images.unsplash.com/photo-1572726729207-a78d6feb18d7?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    id: 7,
-    status: "shipped",
-    title: "Gaming Mechanical Keyboard with RGB Lighting",
-    description: "Backlit gaming keyboard",
-    specifications: "RGB, Cherry MX switches",
-    price: "₦28,000",
-    delivery: "May 20, 2025",
-    image:
-      "https://images.unsplash.com/photo-1541140532154-b024d705b90a?auto=format&fit=crop&w=400&q=80",
-  },
-];
+// const orders = [
+//   {
+//     id: 1,
+//     status: "on_way",
+//     title: "Wireless Bluetooth Headphones with Noise Cancellation",
+//     description: "Premium audio headphones",
+//     specifications: "Black, Over-ear",
+//     price: "₦25,000",
+//     delivery: "May 15, 2025",
+//     image:
+//       "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80",
+//   },
+//   {
+//     id: 2,
+//     status: "dispute",
+//     title: "Vintage Leather Handbag for Women",
+//     description: "Genuine leather shoulder bag",
+//     specifications: "Brown, Medium size",
+//     price: "₦18,500",
+//     delivery: "May 15, 2025",
+//     image:
+//       "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=400&q=80",
+//   },
+//   {
+//     id: 3,
+//     status: "completed",
+//     title: "Organic Cotton T-Shirt Pack (3-piece)",
+//     description: "Comfortable casual wear",
+//     specifications: "3PC, Assorted colors",
+//     price: "₦12,000",
+//     delivery: "Delivered",
+//     image:
+//       "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80",
+//   },
+//   {
+//     id: 4,
+//     status: "dispute",
+//     title: "Smart Fitness Watch with Heart Rate Monitor",
+//     description: "Health tracking smartwatch",
+//     specifications: "Black, Silicone strap",
+//     price: "₦45,000",
+//     delivery: "May 15, 2025",
+//     image:
+//       "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80",
+//   },
+//   {
+//     id: 5,
+//     status: "awaiting_payment",
+//     title: "Professional Kitchen Knife Set",
+//     description: "Stainless steel knives",
+//     specifications: "5PC, German steel",
+//     price: "₦35,000",
+//     delivery: "Pending payment",
+//     image:
+//       "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=400&q=80",
+//   },
+//   {
+//     id: 6,
+//     status: "to_ship",
+//     title: "Luxury Scented Candle Collection",
+//     description: "Aromatherapy candles",
+//     specifications: "4PC, Mixed scents",
+//     price: "₦15,500",
+//     delivery: "Ready to ship",
+//     image:
+//       "https://images.unsplash.com/photo-1572726729207-a78d6feb18d7?auto=format&fit=crop&w=400&q=80",
+//   },
+//   {
+//     id: 7,
+//     status: "shipped",
+//     title: "Gaming Mechanical Keyboard with RGB Lighting",
+//     description: "Backlit gaming keyboard",
+//     specifications: "RGB, Cherry MX switches",
+//     price: "₦28,000",
+//     delivery: "May 20, 2025",
+//     image:
+//       "https://images.unsplash.com/photo-1541140532154-b024d705b90a?auto=format&fit=crop&w=400&q=80",
+//   },
+// ];
 
 // Mock product recommendations
 
@@ -128,13 +129,12 @@ export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  //const [displayedOrders, setDisplayedOrders] = useState<typeof orders>([]);
   const [displayedOrders, setDisplayedOrders] = useState<Order[]>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState<
+    number | string | null
+  >(null);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  
-
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -149,52 +149,41 @@ export default function OrdersPage() {
     fetchOrders();
   }, []);
 
-
   const applyFilters = () => {
-  const filteredByTab =
-    activeTab === "all"
-      ? displayedOrders
-      : displayedOrders.filter((order) =>
-          order.status.toLowerCase() === activeTab.toLowerCase()
-        );
+    const filteredByTab =
+      activeTab === "all"
+        ? displayedOrders
+        : displayedOrders.filter(
+            (order) => order.status.toLowerCase() === activeTab.toLowerCase()
+          );
 
-  return filteredByTab.filter((order) => {
-    if (!searchQuery.trim()) return true;
+    return filteredByTab.filter((order) => {
+      if (!searchQuery.trim()) return true;
 
-    const query = searchQuery.toLowerCase();
-    const normalizedQuery = query.replace(/[₦,]/g, "");
+      const query = searchQuery.toLowerCase();
+      const normalizedQuery = query.replace(/[₦,]/g, "");
 
-    const itemMatch = order.items.some((item) => {
-      const nameMatch = item.product.name.toLowerCase().includes(query);
-      const descriptionMatch = item.product.description
-        ?.toLowerCase()
-        .includes(query);
+      const itemMatch = order.items.some((item) => {
+        const nameMatch = item.product.name.toLowerCase().includes(query);
+        const descriptionMatch = item.product.description
+          ?.toLowerCase()
+          .includes(query);
 
-      const colorMatch = item.variant?.color
-        ?.toLowerCase()
-        .includes(query);
-      const sizeMatch = item.variant?.size
-        ?.toLowerCase()
-        .includes(query);
+        const colorMatch = item.variant?.color?.toLowerCase().includes(query);
+        const sizeMatch = item.variant?.size?.toLowerCase().includes(query);
 
-      return (
-        nameMatch ||
-        descriptionMatch ||
-        colorMatch ||
-        sizeMatch
-      );
+        return nameMatch || descriptionMatch || colorMatch || sizeMatch;
+      });
+
+      const priceMatch = order.total_price
+        .toString()
+        .replace(/[₦,]/g, "")
+        .toLowerCase()
+        .includes(normalizedQuery);
+
+      return itemMatch || priceMatch;
     });
-
-    const priceMatch = order.total_price
-      .replace(/[₦,]/g, "")
-      .toLowerCase()
-      .includes(normalizedQuery);
-
-    return itemMatch || priceMatch;
-  });
-};
-
-
+  };
 
   // Handle search with animation
   useEffect(() => {
@@ -213,13 +202,57 @@ export default function OrdersPage() {
   //   setDisplayedOrders(searchFilteredOrders);
   // }, []);
 
-  const handleTrackOrder = (orderId: number) => {
-    // Navigation handled by Link wrapper
+  
+
+  const handleConfirmDelivery = async (orderId: string | number | null) => {
+    try {
+      await apiService.MarkOrderDelivered(orderId); // Await the API call
+      toast.success(`Delivery confirmed for order #${orderId}`);
+    } catch (error: any) {
+      console.error("Error confirming delivery:", error);
+      toast.error(error.message || "Failed to confirm delivery");
+    }
   };
 
-  const handleConfirmDelivery = (orderId: string) => {
-    toast.success(`Delivery confirmed for order #${orderId}`);
+  const router = useRouter();
+
+  const handleViewOrderDetails = async (orderId: string | number) => {
+    try {
+      // Optional: Fetch the order (to validate or pre-load)
+      await apiService.getOrder(orderId);
+
+      // Navigate to the order details page
+      router.push(`/order-details/${orderId}`);
+    } catch (error: any) {
+      toast.error(error.message || "Could not load order details");
+    }
   };
+
+  const handleTrackOrder = async (orderId: number | string) => {
+    try {
+      await apiService.trackOrder(orderId);
+      router.push(`/track-order/${orderId}`);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to retrieve tracking information");
+    }
+  };
+
+  const handleCancelOrder = async (orderId: number | string) => {
+    try {
+      const cancelledOrder = await apiService.cancelOrder(orderId);
+      toast.success(`Order #${orderId} has been cancelled successfully`);
+      
+      // Optionally update the local state to reflect change
+      setDisplayedOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === cancelledOrder.id ? cancelledOrder : order
+        )
+      );
+    } catch (error: any) {
+      toast.error(error.message || "Failed to cancel the order");
+    }
+  };
+
 
   const handleSearchToggle = () => {
     setShowSearchInput(!showSearchInput);
@@ -366,9 +399,13 @@ export default function OrdersPage() {
       {/* confirm delivery modal */}
       <ConfirmDeliveryModal
         open={showConfirmModal}
-        onClose={() => setShowConfirmModal(false)}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setSelectedOrderId(null);
+        }}
         onConfirm={handleConfirmDelivery}
-        orderId={displayedOrders[0]?.id} // Pass the first order ID for confirmation
+        orderId={selectedOrderId ?? ""}
+        // Pass the first order ID for confirmation
       />
       {/* Orders List */}
       <div className="px-4 py-6 pb-8 relative min-h-[400px]">
@@ -407,7 +444,10 @@ export default function OrdersPage() {
                   {/* Product Image */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
                     <Image
-                      src={order.items[0]?.product.images_data[0]?.image || "/placeholder.png"}
+                      src={
+                        order.items[0]?.product.images_data[0]?.image ||
+                        "/placeholder.png"
+                      }
                       alt={order.items[0]?.product.name || "Product image"}
                       width={80}
                       height={80}
@@ -454,13 +494,17 @@ export default function OrdersPage() {
                           ₦{order.items[0]?.price_at_purchase}
                         </p>
                       </div>
-                      {/* Action Buttons - Fixed Layout */}
+
+                      {/* Action Buttons - Responsive Layout */}
                       {order.status === "Out for Delivery" && (
                         <div className="flex gap-2 sm:gap-3 md:flex-col md:pt-8">
                           <Button
                             size="sm"
                             className="hidden md:flex h-9 text-xs sm:text-sm bg-[#FF715B] text-white hover:bg-[#ff4d2d] font-medium transition-colors duration-200"
-                            onClick={() => setShowConfirmModal(true)}
+                            onClick={() => {
+                              setSelectedOrderId(order.id);
+                              setShowConfirmModal(true);
+                            }}
                           >
                             Confirm delivery
                           </Button>
@@ -479,22 +523,22 @@ export default function OrdersPage() {
                           <Button
                             size="sm"
                             className="flex-1 md:hidden h-9 text-xs sm:text-sm bg-[#FF715B] text-white hover:bg-[#ff4d2d] font-medium transition-colors duration-200"
-                            onClick={() => handleConfirmDelivery(order.id)}
+                            onClick={() => {
+                              setSelectedOrderId(order.id);
+                              setShowConfirmModal(true);
+                            }}
                           >
                             Confirm delivery
                           </Button>
-                          <Link
-                            href={`/order-details/${order.id}/`}
-                            className="hidden md:flex"
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="hidden md:flex w-full h-9 text-xs sm:text-sm text-orange-600 hover:bg-orange-100 font-medium transition-colors duration-200 md:px-24"
+                            onClick={() => handleViewOrderDetails(order.id)}
                           >
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full h-9 text-xs sm:text-sm text-orange-600 hover:bg-orange-100 font-medium transition-colors duration-200 md:px-24"
-                            >
-                              Order details
-                            </Button>
-                          </Link>
+                            Order details
+                          </Button>
                         </div>
                       )}
                       {order.status === "Awaiting Confirmation" && (
@@ -514,7 +558,7 @@ export default function OrdersPage() {
                           <Button
                             size="sm"
                             className="flex-1 h-9 text-xs sm:text-sm bg-[#FF715B] text-white hover:bg-[#ff4d2d] font-medium transition-colors duration-200"
-                            onClick={() => handleConfirmDelivery(order.id)}
+                            //onClick={() => handleConfirmDelivery(order.id)}
                           >
                             Confirm & Pay
                           </Button>
@@ -525,7 +569,7 @@ export default function OrdersPage() {
                           <Button
                             size="sm"
                             className="flex-1 h-9 text-xs sm:text-sm border-orange-400 text-orange-600 bg-orange-50 hover:bg-orange-100 font-medium transition-colors duration-200"
-                            onClick={() => handleConfirmDelivery(order.id)}
+                            onClick={() => handleCancelOrder(order.id)}
                           >
                             Cancel order
                           </Button>
@@ -553,6 +597,7 @@ export default function OrdersPage() {
                               variant="outline"
                               size="sm"
                               className="w-full h-9 text-xs sm:text-sm bg-[#FF715B] text-white hover:bg-[#ff4d2d]  font-medium transition-colors duration-200 md:px-24"
+                              onClick={() => handleTrackOrder(order.id)}
                             >
                               Track order
                             </Button>
@@ -560,7 +605,10 @@ export default function OrdersPage() {
                           <Button
                             size="sm"
                             className="flex-1 h-9 text-xs sm:text-sm border-orange-400 text-orange-600 bg-orange-50 hover:bg-orange-100 font-medium transition-colors duration-200"
-                            onClick={() => handleConfirmDelivery(order.id)}
+                            onClick={() => {
+                              setSelectedOrderId(order.id);
+                              setShowConfirmModal(true);
+                            }}
                           >
                             Confirm delivery
                           </Button>

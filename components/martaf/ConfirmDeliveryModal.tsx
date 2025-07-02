@@ -15,8 +15,8 @@ import { X } from "lucide-react";
 interface ConfirmDeliveryModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (orderId: string) => void;
-  orderId?: string; // Optional orderId if needed for confirmation
+  onConfirm: (orderId: string | number | null) => void;
+  orderId?: string | number | null; // Optional orderId if needed for confirmation
 }
 
 export function ConfirmDeliveryModal({ open, onClose, onConfirm, orderId }: ConfirmDeliveryModalProps) {
