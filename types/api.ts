@@ -66,8 +66,7 @@ export interface ApiError {
   detail?: string;
   message?: string;
   [key: string]: any;
-} 
-
+}
 
 // order types based on the api documentation
 export interface PaginatedResponse<T> {
@@ -78,19 +77,50 @@ export interface PaginatedResponse<T> {
 }
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   first_name: string;
   last_name: string;
   avatar?: string;
+  profile: {
+    profile_picture?: string;
+    phone: string;
+    phone2: string;
+  };
   is_customer: boolean;
   is_manufacturer: boolean;
   // Add other fields if exposed
 }
 
+// export interface AppUser {
+//   id: string;
+//   email: string;
+//   first_name: string;
+//   last_name: string;
+//   profile_picture?: string;
+//   phone: string;
+//   phone2: string;
+//   is_customer: boolean;
+//   is_manufacturer: boolean;
+// }
+
+interface CheckoutItem {
+  id: string;
+  product: Product;
+  product_name: string;
+  product_image: string;
+  variation: any | null;
+  variation_display: string;
+  quantity: number;
+  subtotal: number;
+  formatted_subtotal: string;
+  checked: boolean;
+  discount_amount:string;
+}
 
 export interface ShippingAddress {
   id: number;
+  user?: number;
   address: string;
   city: string;
   state: string;
@@ -98,6 +128,10 @@ export interface ShippingAddress {
   postal_code: string;
   full_name: string; // Full name of the recipient
   phone: string; // Phone number of the recipient
+  name:string;
+  street: string;
+  phone_number: string;
+  is_default: boolean;
 }
 
 export interface ShippingMethod {
@@ -110,7 +144,7 @@ export interface ShippingMethod {
 export interface Coupon {
   id: number;
   code: string;
-  discount_type: 'percentage' | 'fixed';
+  discount_type: "percentage" | "fixed";
   discount_value: number;
 }
 
@@ -145,15 +179,15 @@ export interface Order {
   total_price: number;
 
   payment_reference?: string;
-  payment_status: 'Pending' | 'Successful' | 'Failed';
+  payment_status: "Pending" | "Successful" | "Failed";
   status:
-    | 'Awaiting Confirmation'
-    | 'Order Placed'
-    | 'Processing'
-    | 'Shipped'
-    | 'Out for Delivery'
-    | 'Delivered'
-    | 'Cancelled';
+    | "Awaiting Confirmation"
+    | "Order Placed"
+    | "Processing"
+    | "Shipped"
+    | "Out for Delivery"
+    | "Delivered"
+    | "Cancelled";
 
   tracking_number?: string;
   estimated_delivery_date?: string;
@@ -162,4 +196,44 @@ export interface Order {
   updated_at: string;
 
   items: OrderItem[];
+}
+
+interface SavedCard {
+  id: string;
+  // Add other saved card properties as needed
+  [key: string]: any;
+}
+
+export interface CheckoutResponse {
+  items: CheckoutItem[];
+  available_addresses: ShippingAddress[];
+  available_shipping_methods: ShippingMethod[];
+  saved_cards: SavedCard[];
+  default_address_id: string | null;
+}
+
+export interface CreateOrderPayload {
+  shipping_address: string;
+  shipping_method?: string;
+  coupon_code?: string;
+}
+
+export interface PaymentPayload {
+  email: string;
+  amount: string | number;
+  shipping_address_id: string;
+  checkout_id: string;
+  payment_method: string;
+}
+
+export interface CheckoutOrderResponse {
+  checkout_id: string;
+  paystack_reference: string;
+  paystack_url: string;
+  order_ids: string[];
+  subtotal: number;
+  shipping_cost: number;
+  discount_total: number;
+  total_amount: number;
+  status: string;
 }

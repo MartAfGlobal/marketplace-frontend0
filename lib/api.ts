@@ -1,4 +1,13 @@
-import { Order, PaginatedResponse } from "@/types/api";
+import {
+  CheckoutResponse,
+  CreateOrderPayload,
+  Order,
+  PaginatedResponse,
+  PaymentPayload,
+  User as AppUser,
+  CheckoutOrderResponse,
+  ShippingAddress,
+} from "@/types/api";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -134,6 +143,7 @@ export interface CartItem {
   quantity: number;
   subtotal: number;
   formatted_subtotal: string;
+  checked?: boolean;
 }
 
 export interface Cart {
@@ -215,7 +225,7 @@ class ApiService {
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/accounts/register`, {
       method: "POST",
-      headers: {'Content-Type': 'application/json'},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
@@ -280,7 +290,7 @@ class ApiService {
     return result;
   }
 
-  async getUserDetails(): Promise<User> {
+  async getUserDetails(): Promise<AppUser> {
     const response = await fetch(`${API_BASE_URL}/accounts/UserDetails`, {
       headers: this.getAuthHeaders(),
     });
@@ -630,11 +640,23 @@ class ApiService {
     );
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || "Failed to remove cart item");
+      const text = await response.text();
+      try {
+        const error = JSON.parse(text);
+        throw new Error(error.detail || "Failed to remove cart item");
+      } catch {
+        throw new Error(text || "Failed to remove cart item");
+      }
     }
 
-    return response.json();
+    const text = await response.text();
+    if (!text) return { message: "Cart item removed successfully" };
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { message: text };
+    }
   }
 
   async clearCart(): Promise<{ message: string }> {
@@ -645,11 +667,25 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || "Failed to clear cart");
+      // Try parsing error body safely
+      const text = await response.text();
+      try {
+        const error = JSON.parse(text);
+        throw new Error(error.detail || "Failed to clear cart");
+      } catch {
+        throw new Error(text || "Failed to clear cart");
+      }
     }
 
-    return response.json();
+    // Handle empty response gracefully
+    const text = await response.text();
+    if (!text) return { message: "Cart cleared successfully" };
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { message: text };
+    }
   }
 
   async batchUpdateCartItems(
@@ -856,14 +892,11 @@ class ApiService {
   }
 
   async cancelOrder(orderId: string | number): Promise<Order> {
-    const response = await fetch(
-      `${API_BASE_URL}/orders/${orderId}/cancel/`,
-      {
-        method: "POST",
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel/`, {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -891,19 +924,15 @@ class ApiService {
         error.detail || error.message || "Failed to mark order as delivered"
       );
     }
-    const data: Order = await response.json(); 
+    const data: Order = await response.json();
     return data;
   }
 
-
   async getOrder(orderId: string | number): Promise<Order> {
-    const response = await fetch(
-      `${API_BASE_URL}/orders/${orderId}/`,
-      {
-        headers: this.getAuthHeaders(),
-        credentials: "include",
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/`, {
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -911,14 +940,29 @@ class ApiService {
         error.detail || error.message || "Failed to get order details"
       );
     }
-    const data: Order = await response.json(); 
-    return data; 
+    const data: Order = await response.json();
+    return data;
   }
 
   async trackOrder(orderId: string | number): Promise<Order> {
+    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/track/`, {
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || error.message || "Failed to track order");
+    }
+    const data: Order = await response.json();
+    return data;
+  }
+
+  async toggleCartItem(itemId: string | number): Promise<{ checked: boolean }> {
     const response = await fetch(
-      `${API_BASE_URL}/orders/${orderId}/track/`,
+      `${API_BASE_URL}/cart/items/${itemId}/set-checked/`,
       {
+        method: "PATCH",
         headers: this.getAuthHeaders(),
         credentials: "include",
       }
@@ -927,13 +971,271 @@ class ApiService {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(
-        error.detail || error.message || "Failed to track order"
+        error.detail || error.message || "Failed to toggle item in cart"
       );
     }
-    const data: Order = await response.json();
+
+    return await response.json();
+  }
+
+  async setCartItemChecked(
+    itemId: string | number,
+    checked: boolean
+  ): Promise<{ checked: boolean; item_id: string }> {
+    console.log("=== API REQUEST DEBUG ===");
+    console.log("ItemId:", itemId, "Type:", typeof itemId);
+    console.log("Checked:", checked, "Type:", typeof checked);
+
+    const requestBody = { checked };
+    console.log("Request body:", JSON.stringify(requestBody));
+
+    const url = `${API_BASE_URL}/cart/items/${itemId}/set-checked/`;
+    console.log("URL:", url);
+
+    const headers = {
+      ...this.getAuthHeaders(),
+      "Content-Type": "application/json",
+    };
+    console.log("Headers:", headers);
+
+    try {
+      const response = await fetch(url, {
+        method: "PATCH",
+        headers,
+        credentials: "include",
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("Error response body:", errorText);
+
+        let error;
+        try {
+          error = JSON.parse(errorText);
+        } catch {
+          error = { message: errorText };
+        }
+
+        console.error("API Error:", error);
+        throw new Error(
+          error.detail ||
+            error.message ||
+            error.error ||
+            "Failed to update item in cart"
+        );
+      }
+
+      const result = await response.json();
+      console.log("Success response:", result);
+      console.log("=== API REQUEST END ===");
+
+      return result;
+    } catch (fetchError) {
+      console.error("Fetch error:", fetchError);
+      console.log("=== API REQUEST END (ERROR) ===");
+      throw fetchError;
+    }
+  }
+
+  // checkout
+  async checkout(): Promise<CheckoutResponse> {
+    const response = await fetch(`${API_BASE_URL}/checkout/review/`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || error.message || "Checkout failed");
+    }
+
+    const data: CheckoutResponse = await response.json();
     return data;
   }
 
+  // Add this method to your ApiService class
+  async getCartStatus(): Promise<any> {
+    const url = `${API_BASE_URL}/cart/`;
+    const headers = this.getAuthHeaders();
+
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers,
+        credentials: "include",
+      });
+
+      const cartData = await response.json();
+
+      return cartData;
+    } catch (error) {
+      console.error("Failed to fetch cart status:", error);
+      throw error;
+    }
+  }
+
+  async updatePendingCheckoutInfo(data: {
+    shipping_address?: string;
+    // shipping_method?: string;
+    // payment_card_token?: string;
+  }): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/select/shipping-address/`, {
+      method: "PATCH",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.detail || "Failed to update pending checkout info"
+      );
+    }
+  }
+
+  async createOrder(
+    payload: CreateOrderPayload
+  ): Promise<CheckoutOrderResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/checkout/`, {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      // Check if response is HTML (error page) instead of JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        // This is likely an HTML error page
+        const htmlText = await response.text();
+        console.error("Received HTML response instead of JSON:", htmlText);
+        throw new Error("Server error - please try again later");
+      }
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (parseError) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        throw new Error(
+          errorData.error ||
+            errorData.detail ||
+            errorData.message ||
+            "Checkout failed"
+        );
+      }
+
+      const data: CheckoutOrderResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("API call failed:", error);
+      throw error;
+    }
+  }
+
+  async initializePayment(payload: PaymentPayload): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/paystack/init/`, {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || error.message || "Checkout failed");
+    }
+
+    const data = await response.json();
+    return data;
+  }
+
+  async updateUserProfile(data: FormData): Promise<AppUser> {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("access_token")
+        : null;
+    const response = await fetch(`${API_BASE_URL}/accounts/UserDetails/`, {
+      method: "PATCH",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      credentials: "include",
+      body: data,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to update profile");
+    }
+
+    return response.json();
+  }
+
+  // GET: List user shipping addresses
+  async getShippingAddresses(): Promise<ShippingAddress[]> {
+    const response = await fetch(
+      `${API_BASE_URL}/shipping/shipping-addresses/`,
+      {
+        method: "GET",
+        headers: {
+          ...this.getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch shipping addresses");
+    }
+
+    return await response.json();
+  }
+
+  // POST: Create a new shipping address
+  async createShippingAddress(data: ShippingAddress): Promise<ShippingAddress> {
+    const response = await fetch(
+      `${API_BASE_URL}/shipping/shipping-addresses/`,
+      {
+        method: "POST",
+        headers: {
+          ...this.getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("Shipping address creation error:", error); // 👈 this helps you debug
+      throw new Error(
+        error.detail ||
+          JSON.stringify(error) ||
+          "Failed to create shipping address"
+      );
+    }
+
+    return await response.json();
+  }
 }
 
 export const apiService = new ApiService();

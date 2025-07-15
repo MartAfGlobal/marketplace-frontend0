@@ -105,7 +105,7 @@ const tabs = [
   { key: "Delivered", label: "Processed(1)" },
 ];
 
-const getStatusDisplay = (status: string) => {
+export const getStatusDisplay = (status: string) => {
   switch (status) {
     case "Out for Delivery":
       return { text: "Order on its way", color: "text-blue-600" };
@@ -135,11 +135,14 @@ export default function OrdersPage() {
   >(null);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<
+    Order["status"] | undefined
+  >(undefined);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const { results } = await apiService.getOrderHistory();
+        const { results } = await apiService.getOrderHistory(selectedStatus);
         setDisplayedOrders(results); // store all orders once
       } catch (err) {
         toast.error("Failed to load orders");
@@ -147,7 +150,7 @@ export default function OrdersPage() {
     };
 
     fetchOrders();
-  }, []);
+  }, [selectedStatus]);
 
   const applyFilters = () => {
     const filteredByTab =
@@ -163,14 +166,15 @@ export default function OrdersPage() {
       const query = searchQuery.toLowerCase();
       const normalizedQuery = query.replace(/[₦,]/g, "");
 
-      const itemMatch = order.items.some((item) => {
-        const nameMatch = item.product.name.toLowerCase().includes(query);
-        const descriptionMatch = item.product.description
+      const itemMatch = order.items?.some((item) => {
+        const nameMatch =
+          item?.product?.name?.toLowerCase().includes(query) || false;
+        const descriptionMatch = item?.product?.description
           ?.toLowerCase()
           .includes(query);
 
-        const colorMatch = item.variant?.color?.toLowerCase().includes(query);
-        const sizeMatch = item.variant?.size?.toLowerCase().includes(query);
+        const colorMatch = item?.variant?.color?.toLowerCase().includes(query);
+        const sizeMatch = item?.variant?.size?.toLowerCase().includes(query);
 
         return nameMatch || descriptionMatch || colorMatch || sizeMatch;
       });
@@ -201,8 +205,6 @@ export default function OrdersPage() {
   // useEffect(() => {
   //   setDisplayedOrders(searchFilteredOrders);
   // }, []);
-
-  
 
   const handleConfirmDelivery = async (orderId: string | number | null) => {
     try {
@@ -241,7 +243,7 @@ export default function OrdersPage() {
     try {
       const cancelledOrder = await apiService.cancelOrder(orderId);
       toast.success(`Order #${orderId} has been cancelled successfully`);
-      
+
       // Optionally update the local state to reflect change
       setDisplayedOrders((prevOrders) =>
         prevOrders.map((order) =>
@@ -252,7 +254,6 @@ export default function OrdersPage() {
       toast.error(error.message || "Failed to cancel the order");
     }
   };
-
 
   const handleSearchToggle = () => {
     setShowSearchInput(!showSearchInput);
@@ -269,6 +270,11 @@ export default function OrdersPage() {
     setTimeout(() => {
       setIsSearching(false);
     }, 200);
+    if (tabKey === "all") {
+      setSelectedStatus(undefined); // fetch all orders
+    } else {
+      setSelectedStatus(tabKey as Order["status"]); // fetch only specific status
+    }
   };
 
   return (
@@ -439,13 +445,14 @@ export default function OrdersPage() {
                     ? "fadeInUp 0.4s ease-out forwards"
                     : "none",
                 }}
+                onClick={() => handleViewOrderDetails(order.id)}
               >
                 <div className="flex gap-4">
                   {/* Product Image */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
                     <Image
                       src={
-                        order.items[0]?.product.images_data[0]?.image ||
+                        order.items?.[0]?.product?.images_data?.[0]?.image ||
                         "/placeholder.png"
                       }
                       alt={order.items[0]?.product.name || "Product image"}
@@ -469,7 +476,7 @@ export default function OrdersPage() {
                       </span>
                     </div>
 
-                    {/* Product Info - Improved Spacing */}
+                    {/* Product Info  */}
                     <div className="md:flex justify-between">
                       <div>
                         <div className="space-y-1 mb-4">
@@ -557,7 +564,7 @@ export default function OrdersPage() {
                           </Link>
                           <Button
                             size="sm"
-                            className="flex-1 h-9 text-xs sm:text-sm bg-[#FF715B] text-white hover:bg-[#ff4d2d] font-medium transition-colors duration-200"
+                            className="flex-1  h-9 md:py-2 text-xs sm:text-sm bg-[#FF715B] text-white hover:bg-[#ff4d2d] font-medium transition-colors duration-200"
                             //onClick={() => handleConfirmDelivery(order.id)}
                           >
                             Confirm & Pay
@@ -673,7 +680,10 @@ export default function OrdersPage() {
       </div>
 
       {/* More to love section */}
-      <MoreToLove />
+      <div>
+        <h2 className="text-xl font-bold text-black mb-4">More to love</h2>
+        <MoreToLove />
+      </div>
       <Footer />
 
       {/* CSS animations */}
