@@ -30,7 +30,7 @@ interface Props {
   shippingFee: number;
 }
 
-export default function OrderSuccess({
+export function OrderSuccess({
   isMobile,
   items,
   address,
