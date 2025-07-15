@@ -68,9 +68,10 @@ const transformCategory = (category: Category): { name: string; icon: string; su
   return {
     name: category.name,
     icon: getCategoryIcon(category.name),
-    sub: category.children.map(child => child.name) || []
+    sub: category.children?.map(child => child.name) ?? [],
   };
 };
+
 
 const languages = [
   { name: "English", flag: "https://flagcdn.com/gb.svg" },

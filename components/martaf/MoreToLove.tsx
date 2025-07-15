@@ -1,3 +1,4 @@
+"use client"
 import React from 'react'
 import { Card } from '../ui/card';
 import Image from 'next/image';
@@ -50,7 +51,7 @@ const recommendations = [
     price: "₦12,500",
     image:
       "https://images.unsplash.com/photo-1586953208448-b95a79798f07?auto=format&fit=crop&w=400&q=80",
-    onSale: true,
+    onSale: false,
     freeShipping: true,
     rating: 4,
   },
@@ -60,7 +61,7 @@ const recommendations = [
     price: "₦9,800",
     image:
       "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=400&q=80",
-    onSale: true,
+    onSale: false,
     freeShipping: true,
     rating: 3,
   },
@@ -70,20 +71,19 @@ const MoreToLove = () => {
   return (
     <div>
       {/* More to love section */}
-      <div className="px-4 pb-8">
-        <h2 className="text-xl font-bold text-black mb-4">More to love</h2>
+      <div className="px-4 md:px-0">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
           {recommendations.map((product, index) => (
             <Card
               key={product.id}
-              className="relative bg-white overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+              className="relative bg-white overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 p-0"
               style={{
                 animationDelay: `${index * 100}ms`,
                 animation: "fadeInUp 0.5s ease-out forwards",
               }}
             >
               {/* Product Image */}
-              <div className="relative aspect-square">
+              <div className="relative w-full h-40 rounded-t-md overflow-hidden">
                 <Image
                   src={product.image}
                   alt={product.title}
@@ -105,14 +105,10 @@ const MoreToLove = () => {
               </div>
 
               {/* Product Info */}
-              <div className="p-3">
-                {/* Title */}
-                <h3 className="text-sm font-medium text-black mb-2 line-clamp-2 leading-tight">
-                  {product.title}
-                </h3>
-
+              <div className="px-2">
                 {/* Star Rating */}
-                <div className="flex items-center mb-2">
+                <p className="text-xs text-gray-500 mb-1">Free shipping</p>
+                <div className="flex items-center mb-1">
                   {[...Array(5)].map((_, i) => (
                     <svg
                       key={i}
@@ -130,10 +126,9 @@ const MoreToLove = () => {
                 </div>
 
                 {/* Shipping */}
-                <p className="text-xs text-gray-500 mb-1">Free shipping</p>
 
                 {/* Price & Add to Cart */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-4">
                   <p className="text-lg font-bold text-black">
                     {product.price}
                   </p>
@@ -154,6 +149,32 @@ const MoreToLove = () => {
           ))}
         </div>
       </div>
+       {/* CSS animations */}
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+      `}</style>
     </div>
   )
 }

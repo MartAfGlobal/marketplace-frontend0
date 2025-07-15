@@ -87,13 +87,6 @@ const EditProfilePage = () => {
     if (isLoading) return; // Prevent changes during loading
     const file = event.target.files?.[0];
     if (file) {
-      console.log('File details:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified,
-      lastModifiedDate: new Date(file.lastModified)
-    });
       setProfileImage(file);
       toast.success('Image selected successfully');
     }
