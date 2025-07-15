@@ -364,7 +364,7 @@ export default function CartPage() {
             </p>
             <Link href="/">
               <Button className="bg-[#FF715B] hover:bg-[#ff4d2d] text-white">
-                Start Shopping
+                Start Shopping    
               </Button>
             </Link>
           </div>
