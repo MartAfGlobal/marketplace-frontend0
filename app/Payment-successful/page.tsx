@@ -30,7 +30,7 @@ interface Props {
   shippingFee: number;
 }
 
-export function OrderSuccess({
+function OrderSuccess({
   isMobile,
   items,
   address,
@@ -103,7 +103,9 @@ export function OrderSuccess({
                     {item.quantity}PC, {item.color}
                   </p>
                 </div>
-                <span className="ml-auto font-semibold">₦{item.price.toLocaleString()}</span>
+                <span className="ml-auto font-semibold">
+                  ₦{item.price.toLocaleString()}
+                </span>
               </div>
             ))}
           </div>
@@ -122,7 +124,8 @@ export function OrderSuccess({
             <div className="flex gap-3 items-start">
               <ShieldCheck className="text-green-600 w-5 h-5 mt-1" />
               <p className="text-xs text-gray-600">
-                Every payment you make on MartAf is secured with strict SSL encryption and PCI DSS data protection protocols.
+                Every payment you make on MartAf is secured with strict SSL
+                encryption and PCI DSS data protection protocols.
               </p>
             </div>
 
@@ -134,7 +137,9 @@ export function OrderSuccess({
               </div>
               <div className="flex justify-between text-sm">
                 <span>Discounts</span>
-                <span className="text-red-500">-₦{discount.toLocaleString()}</span>
+                <span className="text-red-500">
+                  -₦{discount.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
@@ -192,3 +197,5 @@ export function OrderSuccess({
     </div>
   );
 }
+
+export default OrderSuccess;
