@@ -374,7 +374,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white px-6">
+    <div className="min-h-screen bg-white ">
       {/* Cart Header */}
       <div className="flex items-center justify-between p-4 border-b md:border-none md:w-[17%]">
         <h1 className="text-lg font-semibold">My Cart ({cart.items.length})</h1>
