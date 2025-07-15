@@ -1,3 +1,4 @@
+import { OrderSuccessProps, OrderItem, } from "@/components/martaf/OrderSuccess";
 import {
   CheckoutResponse,
   CreateOrderPayload,
@@ -7,6 +8,7 @@ import {
   User as AppUser,
   CheckoutOrderResponse,
   ShippingAddress,
+  
 } from "@/types/api";
 
 const API_BASE_URL =
@@ -1236,6 +1238,46 @@ class ApiService {
 
     return await response.json();
   }
+
+  async getOrderSuccessData(orderId: string): Promise<Omit<OrderSuccessProps, "isMobile">> {
+    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/success/`, {
+      method: "GET",
+      headers: {
+          ...this.getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+      credentials: "include",
+        
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Failed to fetch order success data:", errorData);
+      throw new Error(errorData?.detail || "Failed to load order success details");
+    }
+
+    const data = await response.json();
+
+    // Optional: Map API response to your UI shape
+    return {
+      items: data.items as OrderItem[],
+      address: data.address,
+      phone: data.phone,
+      name: data.name,
+      orderId: data.order_id,
+      seller: data.seller,
+      orderDate: data.order_date,
+      deliveryDate: data.delivery_date,
+      card: data.card_last4 ? `•••• ${data.card_last4}` : "N/A",
+      cardType: data.card_type || "N/A",
+      total: data.total,
+      subtotal: data.subtotal,
+      discount: data.discount,
+      shippingFee: data.shipping_fee,
+    };
+  }
+
+
 }
 
 export const apiService = new ApiService();
