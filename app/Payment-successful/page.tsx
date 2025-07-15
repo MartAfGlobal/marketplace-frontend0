@@ -4,11 +4,18 @@ import OrderSuccess from "@/components/martaf/OrderSuccess";
 import { apiService } from "@/lib/api";
 
 
-export default async function PaymentSuccessfulPage({ searchParams }: { searchParams: { orderId: string } }) {
+
+interface PageProps {
+  searchParams: {
+    orderId: string;
+  };
+}
+
+export default async function PaymentSuccessfulPage({ searchParams }: PageProps) {
   const orderId = searchParams.orderId;
 
   if (!orderId) {
-    return <div className="text-center p-10">Order ID is missing</div>;
+    return <div className="text-center p-10">Missing order ID</div>;
   }
 
   const data = await apiService.getOrderSuccessData(orderId);
