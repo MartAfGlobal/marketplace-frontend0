@@ -9,9 +9,10 @@ import { ShippingAddress } from "@/types/api";
 
 interface Props {
   setIsAddressModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsCardModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const AccountPaymentAddress: React.FC<Props>  = ({setIsAddressModalOpen}) => {
+const AccountPaymentAddress: React.FC<Props>  = ({setIsAddressModalOpen, setIsCardModalOpen}) => {
   const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>([]);
   // Load shipping addresses
   useEffect(() => {
@@ -33,6 +34,10 @@ const AccountPaymentAddress: React.FC<Props>  = ({setIsAddressModalOpen}) => {
 
   const handleAddressOpen = () => {
     setIsAddressModalOpen(true)
+  }
+
+  const handleCardOpen = () => {
+    setIsCardModalOpen(true)
   }
   // const shippingAddresses = [
   //   {
@@ -181,14 +186,14 @@ const AccountPaymentAddress: React.FC<Props>  = ({setIsAddressModalOpen}) => {
               </div>
             </div>
           ))}
-          <Link href="/account/payment-method/add" className="hidden md:block">
-            <div className="p-4 rounded-lg border-2 border-gray-200 bg-white hover:border-[#FF715B] transition-all flex items-center justify-center min-h-[140px]">
+          
+            <div className="hidden  p-4 rounded-lg border-2 border-gray-200 bg-white hover:border-[#FF715B] transition-all md:flex items-center justify-center min-h-[140px]" onClick={handleCardOpen}>
               <div className="flex flex-col items-center text-gray-600">
                 <Plus className="w-6 h-6 mb-1 text-[#343330]" />
                 <span className="text-sm font-medium">Add new card</span>
               </div>
             </div>
-          </Link>
+          
         </div>
 
         {paymentMethods.length > 3 && (

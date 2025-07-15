@@ -115,6 +115,7 @@ interface CheckoutItem {
   subtotal: number;
   formatted_subtotal: string;
   checked: boolean;
+  discount_amount:string;
 }
 
 export interface ShippingAddress {

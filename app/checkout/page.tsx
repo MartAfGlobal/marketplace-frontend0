@@ -42,7 +42,9 @@ export default function CheckoutPage() {
   const [checkoutData, setCheckoutData] = useState<CheckoutResponse | null>(
     null
   );
-  const [selectedShippingMethod, setSelectedShippingMethod] = useState<string | null>(null);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState<
+    string | null
+  >(null);
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
   useEffect(() => {
@@ -136,7 +138,11 @@ export default function CheckoutPage() {
   // Calculate totals based on API data
   const totalItems =
     checkoutData?.items.reduce((sum, item) => sum + item.subtotal, 0) || 0;
-  const discount = 5500; // You might want to get this from the API too
+  const discount =
+    checkoutData?.items?.reduce(
+      (sum, item) => sum + Number(item.discount_amount),
+      0
+    ) || 0;
   const subtotal = totalItems - discount;
 
   const validateForm = () => {
@@ -731,9 +737,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between">
               <span>Discounts</span>
-              <span className="text-red-500">
-                -₦{discount.toLocaleString()}
-              </span>
+              <span className="text-red-500">₦{discount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between font-medium">
               <span>Subtotal</span>

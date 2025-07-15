@@ -68,6 +68,7 @@ import { UpdatePersonalDetailsModal } from "@/components/martaf/UpdatePersonalDe
 import { UpdateProfilePictureModal } from "@/components/martaf/UploadProfilePictureModal";
 import { UpdatePasswordModal } from "@/components/martaf/UpdatePasswordModal";
 import { AddAddressModal } from "@/components/martaf/AddAddressModal";
+import { AddCardModal } from "@/components/martaf/AddCardModal";
 
 const AccountPage = () => {
   const { user, logout, isLoading } = useAuth();
@@ -99,7 +100,10 @@ const AccountPage = () => {
   const [showProfilePictureModal, setShowProfilePictureModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>([]);
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(
+    []
+  );
 
   // Redirect to login if user is not authenticated
   useEffect(() => {
@@ -702,6 +706,15 @@ const AccountPage = () => {
             }}
           />
 
+          <AddCardModal
+            open={isCardModalOpen}
+            onClose={() => setIsCardModalOpen(false)}
+            onSubmit={(form) => {
+              console.log("Card submitted:", form);
+              // Send to API...
+            }}
+          />
+
           {/* Desktop Content Area */}
           <div className="md:px-10 md:py-6">
             <h2 className="hidden md:block text-xl font-semibold mb-6">
@@ -996,6 +1009,7 @@ const AccountPage = () => {
             <div className="hidden md:block">
               <AccountPaymentAddress
                 setIsAddressModalOpen={setIsAddressModalOpen}
+                setIsCardModalOpen={setIsCardModalOpen}
               />
             </div>
             <div className="hidden md:block mt-6">
