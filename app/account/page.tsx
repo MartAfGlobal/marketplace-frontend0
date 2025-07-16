@@ -757,7 +757,7 @@ const AccountPage = () => {
 
               {/* Sample Order Cards */}
               <div className="space-y-4 transition-all duration-300 ease-in-out">
-                {displayedOrders.map((order, index) => {
+                {displayedOrders?.map((order, index) => {
                   const statusDisplay = getStatusDisplay(order.status);
                   return (
                     <Card
@@ -774,7 +774,7 @@ const AccountPage = () => {
                                 ?.image || "/placeholder.png"
                             }
                             alt={
-                              order.items[0]?.product.name || "Product image"
+                              order.items[0]?.product?.name || "Product image"
                             }
                             width={80}
                             height={80}
@@ -802,10 +802,10 @@ const AccountPage = () => {
                             <div>
                               <div className="space-y-1 mb-4">
                                 <h3 className="font-semibold text-black text-sm sm:text-base leading-tight line-clamp-2">
-                                  {order.items[0]?.product.name}
+                                  {order.items[0]?.product?.name}
                                 </h3>
                                 <p className="text-sm text-gray-600 leading-tight">
-                                  {order.items[0]?.product.description}
+                                  {order.items[0]?.product?.description}
                                 </p>
                                 <p className="text-xs text-gray-500 leading-tight">
                                   {[
