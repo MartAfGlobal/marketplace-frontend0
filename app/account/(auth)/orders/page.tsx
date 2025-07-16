@@ -440,7 +440,7 @@ export default function OrdersPage() {
                         order.items?.[0]?.product?.images_data?.[0]?.image ||
                         "/placeholder.png"
                       }
-                      alt={order.items[0]?.product.name || "Product image"}
+                      alt={order.items[0]?.product?.name || "Product image"}
                       width={80}
                       height={80}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
@@ -466,10 +466,10 @@ export default function OrdersPage() {
                       <div>
                         <div className="space-y-1 mb-4">
                           <h3 className="font-semibold text-black text-sm sm:text-base leading-tight line-clamp-2">
-                            {order.items[0]?.product.name}
+                            {order.items[0]?.product?.name}
                           </h3>
                           <p className="text-sm text-gray-600 leading-tight">
-                            {order.items[0]?.product.description}
+                            {order.items[0]?.product?.description}
                           </p>
                           <p className="text-xs text-gray-500 leading-tight">
                             {[
