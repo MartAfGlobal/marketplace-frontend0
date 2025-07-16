@@ -54,7 +54,7 @@ import {
   FileText,
 } from "lucide-react";
 import { apiService } from "@/lib/api";
-import { getStatusDisplay } from "./(auth)/orders/page";
+
 import { Order, User as AppUser, ShippingAddress } from "@/types/api";
 import { useRouter } from "next/navigation";
 import { ConfirmDeliveryModal } from "@/components/martaf/ConfirmDeliveryModal";
@@ -69,6 +69,7 @@ import { UpdateProfilePictureModal } from "@/components/martaf/UploadProfilePict
 import { UpdatePasswordModal } from "@/components/martaf/UpdatePasswordModal";
 import { AddAddressModal } from "@/components/martaf/AddAddressModal";
 import { AddCardModal } from "@/components/martaf/AddCardModal";
+import { getStatusDisplay } from "@/lib/utils";
 
 const AccountPage = () => {
   const { user, logout, isLoading } = useAuth();

@@ -13,6 +13,8 @@ import { ConfirmDeliveryModal } from "@/components/martaf/ConfirmDeliveryModal";
 import { Order } from "@/types/api";
 import { apiService } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { getStatusDisplay } from "@/lib/utils";
+
 
 // Mock order data
 // const orders = [
@@ -105,24 +107,7 @@ const tabs = [
   { key: "Delivered", label: "Processed(1)" },
 ];
 
-export const getStatusDisplay = (status: string) => {
-  switch (status) {
-    case "Out for Delivery":
-      return { text: "Order on its way", color: "text-blue-600" };
-    case "dispute":
-      return { text: "In dispute", color: "text-red-600" };
-    case "Delivered":
-      return { text: "Completed", color: "text-green-600" };
-    case "Awaiting Confirmation":
-      return { text: "Awaiting Confirmation", color: "text-orange-600" };
-    case "Processing":
-      return { text: "Ready to ship", color: "text-purple-600" };
-    case "Shipped":
-      return { text: "Shipped", color: "text-blue-600" };
-    default:
-      return { text: "Unknown", color: "text-gray-600" };
-  }
-};
+
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("all");
