@@ -777,10 +777,10 @@ export default function CheckoutPage() {
           </Button>
         </div>
       </div>
-      <div className="mt-6">
+      <div className="md:mt-6">
         <MoreToLove />
       </div>
-      <div className="mt-6">
+      <div className="md:mt-6">
         <Footer />
       </div>
     </div>

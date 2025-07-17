@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,10 @@ export function UpdateProfilePictureModal({
     initialProfilePicture || null
   );
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setPreviewImage(initialProfilePicture || null);
+  }, [initialProfilePicture]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -103,18 +107,20 @@ export function UpdateProfilePictureModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-sm w-[30%] p-6 sm:p-8 rounded-lg">
         <DialogHeader>
-          <DialogTitle className="text-center text-lg font-semibold flex justify-center rounded-full">
-            <div className="rounded-full">
+          <DialogTitle className="text-center text-lg font-semibold flex justify-center">
+            <div className="w-48 h-48 rounded-full overflow-hidden">
+              {" "}
+              {/* Fixed container size */}
               {previewImage ? (
                 <Image
                   src={previewImage}
                   alt="Profile Preview"
                   width={200}
                   height={200}
-                  className="rounded-full object-cover border-2 border-gray-300 hover:opacity-80 transition"
+                  className="w-full h-full object-cover hover:opacity-80 transition"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-xl text-white bg-gradient-to-br from-purple-500 to-pink-500">
+                <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center text-4xl text-white bg-gradient-to-br from-purple-500 to-pink-500">
                   ?
                 </div>
               )}

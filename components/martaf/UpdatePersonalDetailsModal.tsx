@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,14 @@ export function UpdatePersonalDetailsModal({
 
   const [loading, setLoading] = useState(false);
 
+  // Sync state with props when initialValues changes
+  useEffect(() => {
+    setFirstName(initialValues.first_name);
+    setLastName(initialValues.last_name);
+    setPhone(initialValues.phone);
+    setPhone2(initialValues.phone2);
+  }, [initialValues]);
+
   const handleSave = async () => {
     const formData = new FormData();
 
@@ -79,6 +87,7 @@ export function UpdatePersonalDetailsModal({
             <Input
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
+              className="border focus:!ring-1 focus:!ring-[#FF715B] focus:!border-[#ff4d2d] focus:!outline-none"
             />
           </div>
           <div className="flex flex-col gap-3">
@@ -86,18 +95,26 @@ export function UpdatePersonalDetailsModal({
             <Input
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              className="border focus:!ring-1 focus:!ring-[#FF715B] focus:!border-[#ff4d2d] focus:!outline-none"
             />
           </div>
-          
         </div>
         <div className="flex justify-evenly mt-4">
           <div className="flex flex-col gap-3">
             <Label>Mobile number</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)}/>
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="border focus:!ring-1 focus:!ring-[#FF715B] focus:!border-[#ff4d2d] focus:!outline-none"
+            />
           </div>
           <div className="flex flex-col gap-3">
             <Label>Home number</Label>
-            <Input value={phone2} onChange={(e) => setPhone2(e.target.value)} />
+            <Input
+              value={phone2}
+              onChange={(e) => setPhone2(e.target.value)}
+              className="border focus:!ring-1 focus:!ring-[#FF715B] focus:!border-[#ff4d2d] focus:!outline-none"
+            />
           </div>
         </div>
 

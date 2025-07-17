@@ -765,6 +765,17 @@ const AccountPage = () => {
                       className="p-4 bg-white shadow-sm border border-gray-100 transition-all duration-300 ease-in-out hover:shadow-md transform hover:-translate-y-0.5"
                       onClick={() => handleViewOrderDetails(order.id)}
                     >
+                      {/* Status and Delivery - Better Alignment */}
+                      <div className="flex items-start justify-between mb-3">
+                        <span
+                          className={`text-sm font-medium ${statusDisplay.color} leading-tight`}
+                        >
+                          {statusDisplay.text}
+                        </span>
+                        <span className="text-xs text-gray-500 text-right leading-tight ml-2">
+                          Delivery: {order.estimated_delivery_date ?? "Pending"}
+                        </span>
+                      </div>
                       <div className="flex gap-4">
                         {/* Product Image */}
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
@@ -784,19 +795,6 @@ const AccountPage = () => {
 
                         {/* Order Details */}
                         <div className="flex-1 min-w-0">
-                          {/* Status and Delivery - Better Alignment */}
-                          <div className="flex items-start justify-between mb-3">
-                            <span
-                              className={`text-sm font-medium ${statusDisplay.color} leading-tight`}
-                            >
-                              {statusDisplay.text}
-                            </span>
-                            <span className="text-xs text-gray-500 text-right leading-tight ml-2">
-                              Delivery:{" "}
-                              {order.estimated_delivery_date ?? "Pending"}
-                            </span>
-                          </div>
-
                           {/* Product Info - Improved Spacing */}
                           <div className="md:flex justify-between">
                             <div>
