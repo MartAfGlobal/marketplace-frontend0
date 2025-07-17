@@ -79,7 +79,7 @@ const DesktopSettings: React.FC<DesktopSettingsProps> = ({ setIsChangePasswordOp
   };
 
   return (
-    <div className="hidden md:block mx-auto px-4 py-6 bg-white">
+    <div className="hidden md:block mx-auto py-6 bg-white">
       {/* Notifications Section */}
       <div className="mb-12">
         <h2 className="text-2xl font-semibold text-gray-900 mb-8">Notifications</h2>

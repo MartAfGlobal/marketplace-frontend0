@@ -54,7 +54,7 @@ export default function CouponsAndSellers() {
               key={index}
               className="flex flex-col items-center"
             >
-              <div className="bg-orange-400 rounded-lg w-30 h-30 flex flex-col items-center justify-center mb-2 hover:bg-orange-500 transition-colors cursor-pointer">
+              <div className="bg-[#F89F1C] rounded-lg w-30 h-30 flex flex-col items-center justify-center mb-2 hover:bg-orange-500 transition-colors cursor-pointer">
                 <div className="text-black text-xs font-semibold text-center leading-tight">
                   {seller.logo}
                 </div>

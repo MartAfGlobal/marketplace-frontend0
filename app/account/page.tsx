@@ -619,7 +619,7 @@ const AccountPage = () => {
               </div>
               <div>
                 <button
-                  className="text-orange-400"
+                  className="text-[#FF715B]"
                   onClick={() => setShowPersonalDetailsModal(true)}
                 >
                   Edit details
@@ -729,7 +729,7 @@ const AccountPage = () => {
                   className="relative aspect-square max-h-40 w-full text-center border border-red-100 p-4 flex flex-col justify-center items-center cursor-pointer"
                 >
                   {/* Red badge count */}
-                  <div className="absolute -top-2 -right-2 bg-[#FF5A5F] text-white text-xs font-semibold w-10 h-10 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-2 -right-2 bg-[#F50000] text-white text-xs font-semibold w-10 h-10 rounded-full flex items-center justify-center">
                     {status.count}
                   </div>
 
@@ -749,7 +749,7 @@ const AccountPage = () => {
                 </h3>
                 <Link
                   href="/account/orders"
-                  className="text-orange-500 hover:text-orange-600"
+                  className="text-[#FF715B] hover:text-orange-600"
                 >
                   View all
                 </Link>
