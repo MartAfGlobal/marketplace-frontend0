@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Search, Heart, Loader2, Award } from "lucide-react";
+import { ArrowLeft, Search, Heart, Loader2, Award, Check, Copy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -120,6 +120,13 @@ export default function OrdersPage() {
   const [selectedStatus, setSelectedStatus] = useState<
     Order["status"] | undefined
   >(undefined);
+  const [copied, setCopied] = useState<string>("");
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(text);
+    setTimeout(() => setCopied(""), 3000);
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -203,7 +210,7 @@ export default function OrdersPage() {
   const handleViewOrderDetails = async (orderId: string | number) => {
     try {
       // Optional: Fetch the order (to validate or pre-load)
-      await apiService.getOrder(orderId);
+      //await apiService.getOrder(orderId);
 
       // Navigate to the order details page
       router.push(`/order-details/${orderId}`);
@@ -427,26 +434,38 @@ export default function OrdersPage() {
                     ? "fadeInUp 0.4s ease-out forwards"
                     : "none",
                 }}
-                onClick={() => handleViewOrderDetails(order.id)}
               >
                 <div className="flex items-start justify-between mb-3">
-                      <div className="flex flex-col gap-2">
-                        <span
-                          className={`text-sm font-medium ${statusDisplay.color} leading-tight`}
-                        >
-                          {statusDisplay.text}
-                        </span>
-                        <span className="text-sm font-medium">
-                          Order ID: {order.order_no}
-                        </span>
-                      </div>
-                      <span className="text-xs text-gray-500 text-right leading-tight ml-2">
-                        Delivery: {order.estimated_delivery_date ?? "Pending"}
-                      </span>
+                  <div className="flex flex-col gap-2">
+                    <span
+                      className={`text-sm font-medium ${statusDisplay.color} leading-tight`}
+                    >
+                      {statusDisplay.text}
+                    </span>
+                    <div className="flex items-center gap-1 text-sm font-medium">
+                      <span>Order ID: {order.order_no}</span>
+                      <button
+                        onClick={() => handleCopy(order.order_no)}
+                        className="p-1"
+                      >
+                        {copied === order.order_no ? (
+                          <Check className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <Copy className="w-4 h-4 text-gray-500" />
+                        )}
+                      </button>
                     </div>
+                  </div>
+                  <span className="text-xs text-gray-500 text-right leading-tight ml-2">
+                    Delivery: {order.estimated_delivery_date ?? "Pending"}
+                  </span>
+                </div>
                 <div className="flex gap-4">
                   {/* Product Image */}
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
+                  <div
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0"
+                    onClick={() => handleViewOrderDetails(order.id)}
+                  >
                     <Image
                       src={
                         order.items?.[0]?.product?.images_data?.[0]?.image ||
@@ -462,7 +481,6 @@ export default function OrdersPage() {
                   {/* Order Details */}
                   <div className="flex-1 min-w-0">
                     {/* Status and Delivery - Better Alignment */}
-                    
 
                     {/* Product Info  */}
                     <div className="md:flex justify-between">

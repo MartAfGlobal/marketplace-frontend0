@@ -162,14 +162,14 @@ export default function CheckoutPage() {
 
   const handleSelectAddress = async (addressId: string) => {
     setSelectedAddress(addressId);
-    try {
-      await apiService.updatePendingCheckoutInfo({
-        shipping_address: addressId,
-        //payment_card_token: selectedPayment?.toString(),
-      });
-    } catch (err) {
-      toast.error("Failed to update shipping info");
-    }
+    // try {
+    //   await apiService.updatePendingCheckoutInfo({
+    //     shipping_address: addressId,
+    //     //payment_card_token: selectedPayment?.toString(),
+    //   });
+    // } catch (err) {
+    //   toast.error("Failed to update shipping info");
+    // }
   };
 
   const handleSelectPayment = async (paymentId: string | number) => {
