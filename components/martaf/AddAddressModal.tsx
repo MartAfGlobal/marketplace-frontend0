@@ -60,7 +60,7 @@ export function AddAddressModal({ open, onClose, onSubmit }: Props) {
               type="text"
               value={form.country}
               onChange={(e) => handleChange("country", e.target.value)}
-              className="w-[50%] border rounded px-3 py-2"
+              className="w-[50%] border rounded px-3 py-2 focus:ring-1 focus:ring-[#FF715B] focus:border-[#ff4d2d] focus:outline-none"
             />
           </div>
 
@@ -76,7 +76,7 @@ export function AddAddressModal({ open, onClose, onSubmit }: Props) {
                   type="text"
                   value={form.full_name}
                   onChange={(e) => handleChange("full_name", e.target.value)}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:ring-1 focus:ring-[#FF715B] focus:border-[#ff4d2d] focus:outline-none"
                 />
               </div>
               <div className="relative">
@@ -89,7 +89,7 @@ export function AddAddressModal({ open, onClose, onSubmit }: Props) {
                     type="text"
                     value={form.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    className="w-full border rounded pl-10 pr-3 py-2"
+                    className="w-full border rounded pl-10 pr-3 py-2 focus:ring-1 focus:ring-[#FF715B] focus:border-[#ff4d2d] focus:outline-none"
                   />
                 </div>
               </div>
@@ -110,7 +110,7 @@ export function AddAddressModal({ open, onClose, onSubmit }: Props) {
                     type="text"
                     value={form.state}
                     onChange={(e) => handleChange("state", e.target.value)}
-                    className="w-full border rounded pl-10 pr-3 py-2"
+                    className="w-full border rounded pl-10 pr-3 py-2 focus:ring-1 focus:ring-[#FF715B] focus:border-[#ff4d2d] focus:outline-none"
                   />
                 </div>
               </div>
@@ -122,7 +122,7 @@ export function AddAddressModal({ open, onClose, onSubmit }: Props) {
                     type="text"
                     value={form.city}
                     onChange={(e) => handleChange("city", e.target.value)}
-                    className="w-full border rounded pl-10 pr-3 py-2"
+                    className="w-full border rounded pl-10 pr-3 py-2 focus:ring-1 focus:ring-[#FF715B] focus:border-[#ff4d2d] focus:outline-none"
                   />
                 </div>
               </div>
@@ -134,7 +134,7 @@ export function AddAddressModal({ open, onClose, onSubmit }: Props) {
                   type="text"
                   value={form.postal_code}
                   onChange={(e) => handleChange("postal_code", e.target.value)}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:ring-1 focus:ring-[#FF715B] focus:border-[#ff4d2d] focus:outline-none"
                 />
               </div>
               <div className="relative">
@@ -147,7 +147,7 @@ export function AddAddressModal({ open, onClose, onSubmit }: Props) {
                     type="text"
                     value={form.address}
                     onChange={(e) => handleChange("address", e.target.value)}
-                    className="w-full border rounded pl-10 pr-3 py-2"
+                    className="w-full border rounded pl-10 pr-3 py-2 focus:ring-1 focus:ring-[#FF715B] focus:border-[#ff4d2d] focus:outline-none"
                   />
                 </div>
               </div>

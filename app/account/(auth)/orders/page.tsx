@@ -15,7 +15,6 @@ import { apiService } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { getStatusDisplay } from "@/lib/utils";
 
-
 // Mock order data
 // const orders = [
 //   {
@@ -106,8 +105,6 @@ const tabs = [
   { key: "Shipped", label: "Shipped(1)" },
   { key: "Delivered", label: "Processed(1)" },
 ];
-
-
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("all");
@@ -432,6 +429,21 @@ export default function OrdersPage() {
                 }}
                 onClick={() => handleViewOrderDetails(order.id)}
               >
+                <div className="flex items-start justify-between mb-3">
+                      <div className="flex flex-col gap-2">
+                        <span
+                          className={`text-sm font-medium ${statusDisplay.color} leading-tight`}
+                        >
+                          {statusDisplay.text}
+                        </span>
+                        <span className="text-sm font-medium">
+                          Order ID: {order.order_no}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500 text-right leading-tight ml-2">
+                        Delivery: {order.estimated_delivery_date ?? "Pending"}
+                      </span>
+                    </div>
                 <div className="flex gap-4">
                   {/* Product Image */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden flex-shrink-0">
@@ -450,16 +462,7 @@ export default function OrdersPage() {
                   {/* Order Details */}
                   <div className="flex-1 min-w-0">
                     {/* Status and Delivery - Better Alignment */}
-                    <div className="flex items-start justify-between mb-3">
-                      <span
-                        className={`text-sm font-medium ${statusDisplay.color} leading-tight`}
-                      >
-                        {statusDisplay.text}
-                      </span>
-                      <span className="text-xs text-gray-500 text-right leading-tight ml-2">
-                        Delivery: {order.estimated_delivery_date ?? "Pending"}
-                      </span>
-                    </div>
+                    
 
                     {/* Product Info  */}
                     <div className="md:flex justify-between">
