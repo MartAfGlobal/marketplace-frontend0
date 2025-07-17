@@ -1,4 +1,4 @@
-import { OrderSuccessProps, OrderItem, } from "@/components/martaf/OrderSuccess";
+import { OrderSuccessProps, OrderItem } from "@/components/martaf/OrderSuccess";
 import {
   CheckoutResponse,
   CreateOrderPayload,
@@ -8,7 +8,6 @@ import {
   User as AppUser,
   CheckoutOrderResponse,
   ShippingAddress,
-  
 } from "@/types/api";
 
 const API_BASE_URL =
@@ -930,18 +929,39 @@ class ApiService {
     return data;
   }
 
-  async getOrder(orderId: string | number): Promise<Order> {
+  async getOrder(orderId: string): Promise<Order> {
+    // Validate that orderId is provided and is a non-empty string
+    if (!orderId || typeof orderId !== "string" || orderId.trim() === "") {
+      throw new Error("Order ID must be a valid non-empty string");
+    }
+
     const response = await fetch(`${API_BASE_URL}/orders/${orderId}/`, {
       headers: this.getAuthHeaders(),
       credentials: "include",
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(
-        error.detail || error.message || "Failed to get order details"
-      );
+      let errorMessage = `Failed to get order details (${response.status})`;
+
+      try {
+        // Try to parse as JSON first
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const error = await response.json();
+          errorMessage = error.detail || error.message || errorMessage;
+        } else {
+          // If it's not JSON, get the text response
+          const errorText = await response.text();
+          errorMessage = `Server error: ${errorText.substring(0, 200)}...`;
+        }
+      } catch (parseError) {
+        // If we can't parse the error response, use a generic message
+        errorMessage = `Server returned ${response.status}: ${response.statusText}`;
+      }
+
+      throw new Error(errorMessage);
     }
+
     const data: Order = await response.json();
     return data;
   }
@@ -1239,21 +1259,24 @@ class ApiService {
     return await response.json();
   }
 
-  async getOrderSuccessData(orderId: string): Promise<Omit<OrderSuccessProps, "isMobile">> {
+  async getOrderSuccessData(
+    orderId: string
+  ): Promise<Omit<OrderSuccessProps, "isMobile">> {
     const response = await fetch(`${API_BASE_URL}/orders/${orderId}/success/`, {
       method: "GET",
       headers: {
-          ...this.getAuthHeaders(),
-          "Content-Type": "application/json",
-        },
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
       credentials: "include",
-        
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Failed to fetch order success data:", errorData);
-      throw new Error(errorData?.detail || "Failed to load order success details");
+      throw new Error(
+        errorData?.detail || "Failed to load order success details"
+      );
     }
 
     const data = await response.json();
@@ -1276,8 +1299,6 @@ class ApiService {
       shippingFee: data.shipping_fee,
     };
   }
-
-
 }
 
 export const apiService = new ApiService();

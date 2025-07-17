@@ -37,8 +37,8 @@ type Product = {
 // };
 
 export default function OrderDetailsPage() {
-  const params = useParams<{ id: string }>();
-  const id = params.id;
+  const params = useParams<{ orderId: string }>();
+  const id = params.orderId;
   const [order, setOrder] = useState<Order | null>(null);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -98,12 +98,14 @@ export default function OrderDetailsPage() {
   // }, [orderId]);
 
   useEffect(() => {
+    if (!id) return;
+
     const fetchOrder = async () => {
       try {
         const result = await apiService.getOrder(id);
         setOrder(result);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch order:", err);
       }
     };
 
@@ -195,26 +197,26 @@ export default function OrderDetailsPage() {
           <div className="flex-1 border-t md:border-none py-6 md:py-0">
             <p className="md:hidden font-semibold mb-6">Package details</p>
             {order.items.map((item) => (
-              <div key={item.product.id} className="flex items-start gap-6">
+              <div key={item?.product?.id} className="flex items-start gap-6">
                 <div className="w-20 h-20 relative rounded overflow-hidden">
                   <Image
                     src={
-                      item.product.images_data[0]?.image || "/placeholder.png"
+                      item?.product?.images_data[0]?.image || "/placeholder.png"
                     }
-                    alt={item.product.name}
+                    alt={item?.product?.name}
                     fill
                     className="object-cover"
                   />
                 </div>
                 <div className="flex-1 flex flex-col gap-2">
-                  <p className="text-sm font-semibold">{item.product.name}</p>
+                  <p className="text-sm font-semibold">{item?.product?.name}</p>
                   <p className="text-xs w-24 p-2 font-semibold rounded-4xl bg-neutral-100 ">
-                    {item.quantity}
-                    {item.variant?.color ? `, ${item.variant.color}` : ""}
-                    {item.variant?.size ? ` (${item.variant.size})` : ""}
+                    {item?.quantity}
+                    {item?.variant?.color ? `, ${item?.variant?.color}` : ""}
+                    {item?.variant?.size ? ` (${item?.variant?.size})` : ""}
                   </p>
                   <div className="text-sm font-semibold">
-                    ₦{item.price_at_purchase.toLocaleString()}
+                    ₦{item?.price_at_purchase.toLocaleString()}
                   </div>
                 </div>
               </div>

@@ -308,7 +308,7 @@ const AccountPage = () => {
   const handleViewOrderDetails = async (orderId: string | number) => {
     try {
       // Optional: Fetch the order (to validate or pre-load)
-      await apiService.getOrder(orderId);
+      //await apiService.getOrder(Number(orderId));
 
       // Navigate to the order details page
       router.push(`/order-details/${orderId}`);
