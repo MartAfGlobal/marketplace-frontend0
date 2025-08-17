@@ -181,7 +181,7 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
             exit="exit"
           >
             <div
-              className="bg-white w-full px-6 pt-6"
+              className="bg-white w-full px-6 py-6"
               onClick={(e) => e.stopPropagation()} // prevent backdrop close
             >
               <div className="flex justify-between items-center gap-2 mb-c32 h-c42">
