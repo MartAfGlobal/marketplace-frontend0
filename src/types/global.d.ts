@@ -196,7 +196,7 @@ interface ProductCardProps {
   product: Product;
 }
 export interface CategoryButtonProps {
-  iconSrc: string;
+  iconSrc: string | StaticImageData;
   label: string;
   selected?: boolean;
   onClick?: () => void;

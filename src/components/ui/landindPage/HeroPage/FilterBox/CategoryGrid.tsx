@@ -1,16 +1,29 @@
+
+import Image from "next/image";
+
 import CategoryButton from "./CategoryButton";
+import Tshirt from "@/assets/Icons2/TShirt.png"
+import CassetteTape from "@/assets/Icons2/CassetteTape.png"
+import ArmChair from "@/assets/Icons2/Armchair.png"
+import PaintBrush from "@/assets/Icons2/PaintBrush.png"
+import Books from "@/assets/Icons2/Books.png"
+import Bag from "@/assets/Icons2/Bag.png"
+import Car from "@/assets/Icons2/Car.png"
+import BabyCarriage from "@/assets/Icons2/BabyCarriage.png"
+import MaskHappy from "@/assets/Icons2/MaskHappy.png"
+
 
 export default function CategoriesGrid() {
   const categories = [
-    { iconSrc: "/icons/TShirt.png", label: "Fashion & Apparel" },
-    { iconSrc: "/icons/CassetteTape.png", label: "Electronics" },
-    { iconSrc: "/icons/Armchair.png", label: " Home living" },
-    { iconSrc: "/icons/PaintBrush.png", label: " Health and beauty" },
-    { iconSrc: "/icons/Books.png", label: "Media & Education" },
-    { iconSrc: "/icons/Bag.png", label: " Travel & Luggage" },
-    { iconSrc: "/icons/Car.png", label: "Automotive & Industrial" },
-    { iconSrc: "/icons/BabyCarriage.png", label: "Kids & Babies" },
-    { iconSrc: "/icons/MaskHappy.png", label: "Culture-specific" },
+    { iconSrc: Tshirt, label: "Fashion & Apparel" },
+    { iconSrc: CassetteTape, label: "Electronics" },
+    { iconSrc: ArmChair, label: " Home living" },
+    { iconSrc: PaintBrush, label: " Health and beauty" },
+    { iconSrc: Books, label: "Media & Education" },
+    { iconSrc: Bag, label: " Travel & Luggage" },
+    { iconSrc: Car, label: "Automotive & Industrial" },
+    { iconSrc: BabyCarriage, label: "Kids & Babies" },
+    { iconSrc: MaskHappy, label: "Culture-specific" },
   ];
 
   return (
