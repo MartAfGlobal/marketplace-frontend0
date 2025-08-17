@@ -1,0 +1,610 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Montserrat-Regular";
+  src: url("/assets/fonts/Montserrat-VariableFont_wght.ttf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat-Bold";
+  src: url("/assets/fonts/Montserrat-VariableFont_wght.ttf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Montserrat-SemiBold";
+  src: url("/assets/fonts/Montserrat-VariableFont_wght.ttf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat-Medium";
+  src: url("/assets/fonts/Montserrat-VariableFont_wght.ttf") format("opentype");
+  font-weight: 500;
+  font-style: medium;
+}
+
+@theme {
+  --color-ffffff: #ffffff;
+  --color-FAFAFA: #fafafa;
+  --color-f0f0f: #f0f0f0;
+  --color-636363: #636363;
+  --color-090909: #090909;
+  --color-efefef: #efefef;
+  --color-71717a: #71717a;
+  --color-000000: #000000;
+  --color-facc14: #facc14;
+  --color-626D7D: #626d7d;
+  --color-050505: #050505;
+  --color-318af7: #318af7;
+  --color-e2e2e2: #e2e2e2;
+  --color-ff0000: #ff0000;
+  --color-ffe6e669: #ffe6e669;
+  --color-eaf3fe2e: #eaf3fe2e;
+  --color-807c79: #807c79;
+  --color-eaf3fe: #eaf3fe;
+  --color-212121: #212121;
+  --color-b1b1b1: #b1b1b1;
+  --color-161616: #161616;
+  --color-6a0dad: #6a0dad;
+  --color-efefef: #efefef;
+  --color-ff715b: #ff715b;
+  --color-2d7565: #2d7565;
+  --color-f89f1c: #f89f1c;
+  --color-947fff: #947fff;
+  --color-1a1a1a: #1a1a1a;
+  --color-ffaco6: #ffac06;
+  --color-646464: #646464;
+  --color-128807: #128807;
+  --color-f2f2f2: #f2f2f2;
+  --color-f4f4f4: #f4f4f4;
+  --color-50ad0d: #50ad0d;
+  --color-f5f5f5: #f5f5f5;
+  --color-a2a2a2: #a2a2a2;
+  --color-d9d9d9: #d9d9d9;
+  --color-343330: #343330;
+  --color-f50000: #f50000;
+  --color-947fff: #947fff;
+
+  --spacing-c1: 1px;
+  --spacing-c2: 2px;
+  --spacing-c3: 3px;
+  --spacing-c8: 8px;
+  --spacing-c19: 19px;
+  --spacing-c20: 20px;
+  --spacing-c24: 24px;
+  --spacing-c24-76: 24.76px;
+  --spacing-c26-25: 26.65px;
+  --spacing-c28: 28px;
+  --spacing-c26-26: 26px;
+  --spacing-c32: 32px;
+  --spacing-c40: 40px;
+  --spacing-c42: 42px;
+  --spacing-c44: 44px;
+  --spacing-c45: 45px;
+  --spacing-c46: 46px;
+  --spacing-c46-45: 46.45px;
+  --spacing-c47: 47px;
+  --spacing-c48: 48px;
+  --spacing-c48-15: 48.15px;
+  --spacing-c56: 56px;
+  --spacing-c60: 60px;
+  --spacing-c61: 61px;
+  --spacing-c64: 64px;
+  --spacing-c66-81: 66.81px;
+  --spacing-c67: 67px;
+  --spacing-c80: 80px;
+  --spacing-c88: 88px;
+  --spacing-c90: 90px;
+  --spacing-c92: 92px;
+  --spacing-c92: 100px;
+  --spacing-c114-79: 114.79px;
+  --spacing-c117: 117px;
+  --spacing-c125-16: 125.16px;
+  --spacing-c126: 126px;
+  --spacing-c132: 132px;
+  --spacing-c132-55: 132.55px;
+  --spacing-c160: 160px;
+  --spacing-c182: 182px;
+  --spacing-c186: 186px;
+  --spacing-c188: 188px;
+  --spacing-c192: 192px;
+  --spacing-c243: 243px;
+  --spacing-c281: 281px;
+  --spacing-c303: 303px;
+  --spacing-c336: 336px;
+  --spacing-c340: 340px;
+  --spacing-c376: 376px;
+  --spacing-c376-36: 376.36px;
+  --spacing-c385-15: 385.15px;
+  --spacing-c386-58: 386.58px;
+  --spacing-c393: 393px;
+  --spacing-c397: 397px;
+  --spacing-c400: 400px;
+  --spacing-c400-15: 400.15px;
+  --spacing-c422: 422px;
+  --spacing-c464: 464px;
+  --spacing-c480: 480px;
+  --spacing-c500: 500px;
+  --spacing-c506: 506px;
+  --spacing-c556: 556px;
+  --spacing-c589: 589px;
+  --spacing-c601: 601px;
+  --spacing-c822: 822px;
+  --spacing-c953: 953px;
+  --spacing-c100p: 100%;
+
+  --radius-c4: 4px;
+  --radius-c6: 6px;
+  --radius-c8: 8px;
+  --radius-c12: 12px;
+  --radius-c24: 24px;
+  --radius-c40: 40px;
+  --radius-c50: 50px;
+  --radius-c100: 100px;
+
+  --border-c3-5: 3.5px;
+
+  --font-MontserratNormal: "Montserrat-Regular", "sans-serif";
+  --font-MontserratBold: "Montserrat-Bold", "sans-serif";
+  --font-MontserratMedium: "Montserrat-Medium", "sans-serif";
+  --font-MontserratSemiBold: "Montserrat-SemiBold", "sans-serif";
+
+  --text-c10: 10px;
+  --text-c12: 12px;
+  --text-c13-32: 13.32px;
+  --text-c14: 14px;
+  --text-c16: 16px;
+  --text-c17: 17px;
+  --text-c17-5: 17.5px;
+  --text-c18: 18px;
+  --text-c20: 20px;
+  --text-c24: 24px;
+  --text-c28: 28px;
+  --text-c32: 32px;
+
+  --text-c40: 40px;
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideDownModal {
+  0% {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes slideUpModal {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .shadow-custom {
+    box-shadow: 0px 2px 4px 0px #00000040;
+  }
+
+  .blurred-box {
+    background: rgba(255, 255, 255, 0.1); /* Transparent layer */
+    backdrop-filter: blur(200px); /* Heavy blur */
+    -webkit-backdrop-filter: blur(200px); /* Safari support */
+    border-radius: 12px;
+  }
+  .innerShadow {
+    box-shadow: inset 0px 1px 8px 0px #ffffff9c;
+  }
+  .NewShadow {
+    box-shadow: 2px 2px 4px 0px #6a0dad1f;
+  }
+  .circle-shadow {
+    box-shadow: 1px 3px 8px 1px #6a0dad14;
+    border-radius: 8px;
+  }
+  .circled-shadow {
+    box-shadow: 1px 3px 8px 1px #6a0dad14;
+    border-radius: 100%;
+  }
+  .no-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  section {
+    scroll-margin-top: 7rem; /* same as your sticky header height */
+  }
+
+  .section-offset {
+    scroll-margin-top: 7rem;
+  }
+  .custom-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1); /* darker thumb */
+    border-radius: 9999px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.1); /* faint rail */
+    border-radius: 9999px; /* optional for rounded rail */
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  .custom-border {
+    border: 1px solid;
+
+    border-image-source: linear-gradient(0deg, #000000, #000000),
+      linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.88),
+        rgba(255, 255, 255, 0.88)
+      );
+  }
+
+  .bg-hero {
+    background-image: url("/assets/images/heroBaground.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .mobilebg-hero {
+    background-image: url("/assets/images/mobilLand.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .bg-dual-gradient {
+    background: linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0.05)
+      ),
+      linear-gradient(
+        0deg,
+        rgba(148, 127, 255, 0.15),
+        rgba(148, 127, 255, 0.15)
+      );
+  }
+  .my-gradient-border {
+    border: 2px solid transparent; /* border thickness */
+    border-radius: 12px; /* rounding */
+    background: linear-gradient(
+        90deg,
+        rgba(106, 13, 173, 0.15),
+        /* Purple with lighter opacity */ rgba(255, 0, 255, 0.15)
+          /* Pink with lighter opacity */
+      )
+      border-box; /* applies gradient to the border area */
+  }
+
+  .my-faint-gradient-border {
+    border: 2px solid;
+    border-image-source: 
+    /* faint black top layer */ linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.08),
+        rgba(0, 0, 0, 0.08)
+      ),
+      /* slightly stronger faint black base layer */
+        linear-gradient(0deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18));
+    border-image-slice: 1;
+    border-radius: 12px;
+  }
+
+  .my-gradient-border > * {
+    border-radius: 12px; /* same rounding so it aligns perfectly */
+    background: white; /* inside background */
+  }
+
+  .shadow-customW {
+    box-shadow: 0px 3px 8px 0px #6a0dad14;
+  }
+  /* ─── slide‑down animations ────────────────────────── */
+  .animate-slideUpModal {
+    animation: slideUpModal 0.4s ease-in-out forwards;
+  }
+  /* Utility classes (names match what the component already uses) */
+  .animate-slideDown {
+    animation: slideDown 1s ease forwards;
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.4s ease forwards;
+  }
+
+  .animate-slideDownModal {
+    animation: slideDownModal 0.4s ease-in-out forwards;
+  }
+
+  .text-24p {
+    font-size: var(--font-size-24);
+  }
+  .text-10p {
+    font-size: var(--font-size-10);
+  }
+  .text-28p {
+    font-size: var(--font-size-28);
+  }
+  .p955 {
+    padding: 0px 99.55px;
+  }
+  .pt32 {
+    padding-top: 32px;
+  }
+  .px32 {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+  .h350 {
+    height: 350px;
+  }
+  .h146 {
+    height: 146px;
+  }
+  .w133 {
+    width: 13.3px;
+  }
+  .h133 {
+    height: 13.3px;
+  }
+  .h84 {
+    height: 84px;
+  }
+  .gap21 {
+    gap: 21px;
+  }
+  .gap63 {
+    gap: 63px;
+  }
+  .w103 {
+    width: 103px;
+  }
+  .w1621 {
+    width: 162.01px;
+  }
+  .pt92 {
+    padding-top: 92px;
+  }
+  .w14901 {
+    width: 149.01px;
+  }
+  .h32 {
+    height: 32px;
+  }
+  .h48 {
+    height: 48px;
+  }
+  .h483 {
+    height: 483px;
+  }
+  .w14901 .pt6229 {
+    padding-top: 62.29px;
+  }
+  .h54 {
+    height: 54px;
+  }
+  .w350 {
+    width: 350px;
+  }
+  .w268 {
+    width: 268px;
+  }
+  .w785 {
+    width: 78.5px;
+  }
+  .backgroundimg {
+    background-image: url("/assets/icon/titleBg.png");
+    background-size: cover;
+    background-position: center;
+  }
+
+  .mb32 {
+    padding-bottom: 32px;
+  }
+  .ml32 {
+    margin-left: 32px;
+  }
+  .pt68 {
+    padding-top: 68px;
+  }
+  .mr65 {
+    margin-right: 65px;
+  }
+  .top954 {
+    top: 9.54px;
+  }
+  .left102 {
+    left: 10.2px;
+  }
+  .mt1746 {
+    margin-top: 17.46px;
+  }
+  .pt48 {
+    padding-top: 48px;
+  }
+  .pt44 {
+    padding-top: 44px;
+  }
+  .w946 {
+    width: 946px;
+  }
+  .h20 {
+    height: 19px;
+  }
+
+  .h96 {
+    height: 96px;
+  }
+  .h6743 {
+    height: 67.43px;
+  }
+  .new {
+    background-color: var(--background);
+  }
+  .pl40 {
+    padding-left: 40px;
+  }
+  .p70 {
+    padding-left: 70.5px;
+    padding-right: 70.5px;
+  }
+  .p305 {
+    padding-left: 30.5px;
+    padding-right: 80px;
+  }
+  .pt3157 {
+    padding-top: 31.57px;
+  }
+  .rounded12 {
+    border-radius: 12px;
+  }
+  .rounded32 {
+    border-radius: 32px;
+  }
+  .pt1246 {
+    padding-top: 12.46px;
+  }
+  .h68 {
+    height: 68px;
+  }
+  .w14297 {
+    width: 142.97px;
+  }
+  .w140 {
+    width: 140px;
+  }
+  .w111 {
+    width: 111px;
+  }
+  .w23 {
+    width: 23px;
+  }
+  .w24 {
+    width: 24px;
+  }
+  .w14296 {
+    width: 142.96px;
+  }
+  .h24 {
+    height: 24px;
+  }
+  .h4043 {
+    height: 40.43px;
+  }
+  .h4044 {
+    height: 40.44px;
+  }
+  .h23 {
+    height: 23px;
+  }
+
+  .h64 {
+    height: 64px;
+  }
+  .w358 {
+    width: 358px;
+  }
+  .h276 {
+    height: 276px;
+  }
+  .w308 {
+    width: 308px;
+  }
+  .h44 {
+    height: 44px;
+  }
+  .w269 {
+    width: 269px;
+  }
+  .h17921 {
+    height: 179.21px;
+  }
+  .pb48 {
+    padding-bottom: 48px;
+  }
+  .pb39 {
+    padding-bottom: 39px;
+  }
+  .border-bottom {
+    border-bottom: 4px solid var(--color-ffffff);
+  }
+}
+
+@media (min-width: 340px) {
+  .mobilLogo {
+    width: 129px;
+    height: 32.4px;
+  }
+  .mobilemain {
+    width: 100%;
+    height: 100%;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+  .mobilInput {
+    width: 100%;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0; /* Initial state before animation */
+}
+
+@layer base {
+  a,
+  button {
+    @apply cursor-pointer outline-none transition-all duration-300 ease-in-out hover:scale-105;
+  }
+}
