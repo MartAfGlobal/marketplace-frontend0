@@ -22,21 +22,19 @@ export default function QuantitySelector({ productId, initialQty = 1, onChange }
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex md:items-center gap-3">
       <button
         onClick={handleDecrease}
-        className="w-6 h-6 rounded-full flex items-center justify-center border border-ff715b hover:bg-ff715b hover:text-ffffff text-ff715b hover:border-0 transition"
+        className="md:w-6 md:h-6  w-7.5 h-7.5 rounded-full flex items-center justify-center border border-ff715b hover:bg-ff715b hover:text-ffffff text-ff715b hover:border-0 transition"
       >
         -
       </button>
-
-      <span className="w-10 text-center text-161616 font-MontserratSemiBold text-c18">
+      <span className=" text-center text-161616 font-MontserratSemiBold text-c18">
         {quantity}
       </span>
-
       <button
         onClick={handleIncrease}
-        className="w-6 h-6 rounded-full text-ffffff bg-ff715b flex items-center justify-center"
+        className="md:w-6 md:h-6 rounded-full w-7.5 h-7.5  text-ffffff bg-ff715b flex items-center justify-center"
       >
         +
       </button>

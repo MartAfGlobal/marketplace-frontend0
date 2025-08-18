@@ -15,7 +15,8 @@ import OtherSearchInput from "../../others/Search";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import DropdownModal from "../../mobile/modal/header-drop-modal";
-import { useState } from "react";
+import { useState } from "react"; 
+import CartButton from "../../cart/cartButton";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -52,22 +53,7 @@ export default function Header() {
           </div>
 
           {cartCount > 0 && (
-            <div className="w-fit h-fit relative">
-              <Link href="/cart">
-                <button className="h-[25.32px] w-[25.32px] ">
-                  <Image
-                    src={Cart}
-                    alt="Cart"
-                    width={25.32}
-                    height={25.32}
-                    className="object-cover"
-                  />
-                </button>
-                <span className="bg-[#CA0202] text-ffffff absolute -top-2 -right-2 flex items-center justify-center w-4 h-4 rounded-full font-MontserratSemiBold text-[8px]">
-                  {cartCount}
-                </span>
-              </Link>
-            </div>
+           < CartButton/>
           )}
 
           <Link href="/auth/login" className="flex items-center gap-2">

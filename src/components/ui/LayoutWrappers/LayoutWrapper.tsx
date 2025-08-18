@@ -12,14 +12,25 @@ interface LayoutWrapperProps {
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
 
-  // Optional chaining + nullish check to avoid error on initial render
+  // Hide layout for auth pages
   const hideLayout = pathname?.startsWith("/auth") ?? false;
+
+  // Detect product detail pages
+  const productPage = pathname?.startsWith("/product") ?? false;
 
   return (
     <>
       {!hideLayout && <Header />}
       {children}
-      {!hideLayout && <FooterPage />}
+      {/* Hide footer on auth pages and on mobile product pages */}
+      {!hideLayout &&
+        (productPage ? (
+          <div className="hidden md:block">
+            <FooterPage />
+          </div>
+        ) : (
+          <FooterPage />
+        ))}
     </>
   );
 }

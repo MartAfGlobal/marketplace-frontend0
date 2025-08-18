@@ -2,6 +2,7 @@
 // import { title } from "process";
 
 import { StaticImageData } from "next/image";
+import { ReactNode } from "react";
 
 interface BreadcrumbItem {
   label: string;
@@ -12,6 +13,10 @@ type Category = {
   name: string;
   icon: string | StaticImageData;
   subcategories: string[];
+};
+type CategoryD = {
+  name: string;
+  subcategories: string | ReactNode;
 };
 
 export interface Option {
@@ -232,7 +237,10 @@ export type UserAddressProps = {
 };
 
 
-
+type DropdownModalProps = {
+  open: boolean;
+  onClose: () => void;
+};
 
 type Coupons = {
   id: string | number;

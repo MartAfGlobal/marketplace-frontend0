@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence, Variants } from "framer-motion";
+import { DropdownModalProps } from "@/types/global";
+
+
 import Logo from "@/assets/Logos/authLogo.svg";
 import CloseModal from "@/assets/headerIcon/closeModal.png";
 import CaretDown from "@/assets/headerIcon/caretD.png";
@@ -103,10 +106,7 @@ const categories: Category[] = [
   },
 ];
 
-type DropdownModalProps = {
-  open: boolean;
-  onClose: () => void;
-};
+
 
 export default function DropdownModal({ open, onClose }: DropdownModalProps) {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
@@ -212,7 +212,7 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                           onClick={() =>
                             setOpenCategory(isOpen ? null : cat.name)
                           }
-                          className="flex items-center justify-between w-full px-3  h-c48  "
+                          className="flex items-center justify-between w-full   h-c48  "
                         >
                           <span className="flex items-center gap-3">
                             <Image

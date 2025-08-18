@@ -10,9 +10,8 @@ export default function SizeColorSelector() {
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-  const sizesPerPage = 7;
-  const start = page * sizesPerPage;
-  const currentSizes = allSizes.slice(start, start + sizesPerPage);
+  
+  const currentSizes = [41, 42, 43, 44, 45,46,47]
 
   const colors = [
     { name: "White", code: "#FFFFFF" },
@@ -23,13 +22,12 @@ export default function SizeColorSelector() {
   ];
 
   return (
-    <div className="pt-c24">
+    <div className="md:pt-c24 pt-4">
       {/* Size buttons */}
       <div>
-        <div className="flex justify-between items-center mb-c24">
-          <p className="">Size guide</p>
-          {start + sizesPerPage < allSizes.length && (
-            <button onClick={() => setPage(page + 1)}>
+        <div className="flex justify-between items-center mb-4 md:mb-c24">
+          <p className="font-MontserratSemiBold text-sm">Size guide</p>
+          <button >
               <Image
                 src={NavButton}
                 alt="nav button"
@@ -37,15 +35,14 @@ export default function SizeColorSelector() {
                 height={13.75}
               />
             </button>
-          )}
         </div>
 
-        <div className="flex gap-2  flex-wrap ">
+        <div className="flex gap-2 overflow-auto w-full pb-2 no-scrollbar  md:flex-wrap ">
           {currentSizes.map((size) => (
             <button
               key={size}
               onClick={() => setSelectedSize(size)}
-              className={`h-c47 w-c44 border rounded-lg transition text-sm font-MontserratSemiBold text-000000 
+              className={`h-c47 w-c44 border rounded-lg transition text-sm  flex-shrink-0 font-MontserratSemiBold text-000000 
                 ${selectedSize === size ? "border-ff715b" : "border-gray-300"}
                 hover:bg-ff715b hover:text-000000`}
             >
@@ -57,7 +54,7 @@ export default function SizeColorSelector() {
 
       {/* Color selection */}
      <div className="mt-c24">
-      <p className="mb-c24 text-sm font-MontserratSemiBold text-161616">Color:</p>
+      <p className="md:mb-c24 mb-2  text-sm font-MontserratSemiBold text-161616">Color:</p>
        <div className="flex gap-4.5">
         {colors.map((color) => (
           <button
