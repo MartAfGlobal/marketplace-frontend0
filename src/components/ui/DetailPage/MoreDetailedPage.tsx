@@ -56,7 +56,7 @@ export default function MoreDetailedPage({product}: { product: Product }) {
   };
 
   return (
-    <div className="w-full  md:py-8 md:max-w-4xl md:mx-auto relative">
+    <div className="w-full  md:pt-8 md:max-w-4xl md:mx-auto relative">
       <section id="details" className="mt-8 mb-6 hidden md:flex  w-full">
         <div>
           <h2 className="font-MontserratSemiBold text-base text-[#1a1a1a] mb-2">
@@ -219,7 +219,7 @@ export default function MoreDetailedPage({product}: { product: Product }) {
             );
           })}
         </div>
-        <div className="pb-20">
+        <div className="pb-20 md:pb-1">
           <Overview />
         </div>
       </section>

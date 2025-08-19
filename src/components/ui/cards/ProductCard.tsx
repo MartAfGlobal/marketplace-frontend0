@@ -1,35 +1,41 @@
 import Image from "next/image";
-import Link from "next/link";
-import LoveIcon from "@/assets/images/loveIcone.svg";
-import Cart from "@/assets/headerIcon/cart.svg";
 import { motion } from "framer-motion";
 import { Product } from "@/types/global";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/cart/cartSlice";
+import { setSelectedProduct } from "@/store/user-data/products/selectedProduct-slice";
+import { useRouter } from "next/navigation";
+import LoveIcon from "@/assets/images/loveIcone.svg";
+import Cart from "@/assets/headerIcon/cart.svg";
 
-export default function ProductCard({ product }: { product: Product }) {
+interface ProductCardProps {
+  product: Product;
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
   const dispatch = useDispatch();
+  const router = useRouter();
+
+  const handleClick = () => {
+    dispatch(setSelectedProduct(product));
+    router.push(`/product/${product.slug}`);
+  };
+
+  const productImage = Array.isArray(product.image) ? product.image[0] : product.image;
+
   return (
-    <Link href={`/product/${product.slug}`} passHref>
+    <div onClick={handleClick} className="cursor-pointer">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="rounded-lg shadow-custom w-full h-[264.69px] pb-4 flex-shrink-0 md:max-w-49 bg-white shadow overflow-hidden cursor-pointer"
+        className="rounded-lg shadow-custom w-full h-[264.69px] pb-4 flex-shrink-0 md:max-w-49 bg-white shadow overflow-hidden"
       >
-        {/* === Product Image with Badges === */}
+        {/* Product Image */}
         <div className="relative h-40 w-full">
-          <Image
-            src={
-              Array.isArray(product.image) ? product.image[0] : product.image
-            }
-            alt={product.category || "Product image"}
-            fill
-            className="object-cover"
-          />
+          <Image src={productImage} alt={product.category || "Product"} fill className="object-cover" />
 
-          {/* On Sale Badge */}
           {product.onSale && (
             <span className="absolute top-4 left-4 font-MontserratSemiBold bg-[#FFAC06] text-[12px] text-white w-[71px] h-[32px] flex items-center justify-center rounded-[8px]">
               On sale
@@ -37,39 +43,28 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
 
           {/* Love Button */}
-          <div>
-            <button
-              onClick={(e) => e.preventDefault()} // prevent Link navigation when clicked
-              className="absolute top-4 right-4 w-[32px] h-[32px] bg-white rounded-full shadow flex items-center justify-center"
-            >
-              <Image
-                src={LoveIcon}
-                alt="LoveIcon"
-                width={19}
-                height={16}
-                className="m-auto"
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* === Product Info === */}
-        <div className="flex justify-between p-4 items-end">
-          <div className=" text-sm">
-            <p className="font-MontserratMedium text-[12px] text-[#161616]">
-              Free shipping
-            </p>
-            <p className="text-yellow-500 text-base">★★★★★</p>
-            <p className="font-MontserratSemiBold text-base">
-              N{product.price}
-            </p>
-          </div>
-
-          {/* Add to Cart Button */}
           <button
             onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation(); 
+              e.stopPropagation();
+            }}
+            className="absolute top-4 right-4 w-[32px] h-[32px] bg-white rounded-full shadow flex items-center justify-center"
+          >
+            <Image src={LoveIcon} alt="LoveIcon" width={19} height={16} />
+          </button>
+        </div>
+
+        {/* Product Info */}
+        <div className="flex justify-between p-4 items-end">
+          <div className="text-sm">
+            <p className="font-MontserratMedium text-[12px] text-[#161616]">Free shipping</p>
+            <p className="text-yellow-500 text-base">★★★★★</p>
+            <p className="font-MontserratSemiBold text-base">N{product.price}</p>
+          </div>
+
+          {/* Add to Cart */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
               dispatch(addToCart(product));
             }}
             className="w-c44 hidden md:flex h-[41.97px] items-center justify-center gap-2 py-1 bg-[#FF715B] rounded-[8px]"
@@ -78,6 +73,6 @@ export default function ProductCard({ product }: { product: Product }) {
           </button>
         </div>
       </motion.div>
-    </Link>
+    </div>
   );
 }

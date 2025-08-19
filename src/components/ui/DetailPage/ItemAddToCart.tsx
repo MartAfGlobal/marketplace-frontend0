@@ -1,20 +1,40 @@
 "use client";
+import { useState } from "react";
 import { Button } from "../Button/Button";
 import Image from "next/image";
 import truck from "@/assets/icons/truck.png";
 import Security from "@/assets/icons/security-check.svg";
 import refund from "@/assets/icons/refund.svg";
-import Counter from "../Button/Counter";
+
 import Location from "@/assets/mobile/MapPinArea.png";
 import phone from "@/assets/mobile/Phone.png";
+import { Product } from "@/types/global";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store/index";
 
-export default function ItemAddToCart() {
+import QuantitySelector from "../cart/quantityControl";
+import { updateQuantity, addToCart } from "@/store/cart/cartSlice";
+
+export default function ItemAddToCart({
+  product,
+ 
+}: {
+  product: Product;
+  selectedQty: number;
+  setSelectedQty: React.Dispatch<React.SetStateAction<number>>;
+}) {
+  const dispatch = useDispatch();
+
+  const cartItem = useSelector((state: RootState) =>
+    state.cart.items.find((item) => item.id === product.id)
+  );
+
+  const quantity = cartItem?.quantity ?? 1;
   const empty = "";
-
   return (
     <div className="w-full md:min-w-c386-58  md:shadow p-6 flex flex-col gap-6 ">
       <div className="flex flex-col-reverse md:flex-col gap-c24 md:pb-c32 md:border-b md:border-gray-100">
-        <div className="w-full flex justify-between items-start"> 
+        <div className="w-full flex justify-between items-start">
           <div className="flex gap-4  ">
             {empty === "" && (
               <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center">
@@ -138,11 +158,24 @@ export default function ItemAddToCart() {
           </div>
         </div>
       </div>
-      <div className="hidden md:flex">
-        <Counter />
+      <div className="hidden md:flex mt-3">
+        <QuantitySelector
+          productId={product.id}
+          initialQty={quantity}
+          onChange={(newQty, id) => {
+            dispatch(updateQuantity({ id, quantity: newQty }));
+          }}
+        />
       </div>
       <div className="space-y-c32 hidden md:flex flex-col">
-        <Button className="bg-transparent border text-ff715b border-ff715b hover:bg-gray-50">
+        <Button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dispatch(addToCart(product)); // will either create or increment
+          }}
+          className="bg-transparent border text-ff715b border-ff715b hover:bg-gray-50"
+        >
           Add to cart
         </Button>
         <Button>Buy now</Button>

@@ -190,9 +190,11 @@ export interface Product {
   onSale: boolean;
   rating: number;
   freeShipping: boolean;
+   quantity?: number;
 }
-interface ProductPageProps {
-  params: Promise<{ slug: string }>;
+
+ export interface ProductPageProps {
+  params: { slug: string }; // still declare type for TS
 }
 
 type RatingKey = 1 | 2 | 3 | 4 | 5;
@@ -277,4 +279,13 @@ export interface QuantitySelectorProps {
   productId: string | number;  
   initialQty?: number;
   onChange?: (quantity: number, productId: string | number) => void;
+    increaseBg?: string;
+  increaseText?: string;
+  decreaseBorder?: string;
+  decreaseText?: string;
+  hoverDecreaseBg?: string;
+  hoverDecreaseText?: string;
+   buttonWidth? = string;
+  buttonHeight? = string;
+  quantityFont? = string;
 }

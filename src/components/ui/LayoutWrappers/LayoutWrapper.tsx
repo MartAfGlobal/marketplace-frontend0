@@ -15,8 +15,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   // Hide layout for auth pages
   const hideLayout = pathname?.startsWith("/auth") ?? false;
 
-  // Detect product detail pages
-  const productPage = pathname?.startsWith("/product") ?? false;
+const productPage = ["/product", "/cart"].some(path => pathname?.startsWith(path));
 
   return (
     <>

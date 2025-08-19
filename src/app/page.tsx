@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import WireframeLoader from "@/components/ui/WireframeLoader";
 import MobileCategory from "@/components/ui/mobile/mobile-category";
 import Gallary from "@/components/ui/mobile/gallary";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,8 @@ export default function Home() {
     const timer = setTimeout(() => setLoading(false), 2000);
     return () => clearTimeout(timer);
   }, []);
-
+const products = useSelector((state: RootState) => state.products.items);
+console.log("Products in Redux:", products);
   if (loading) return <WireframeLoader />;
 
   return (
@@ -29,7 +32,7 @@ export default function Home() {
         <div className="md:hidden">
          < Gallary/>
         </div>
-        <ProductListPage />
+        <ProductListPage/>
         <AboutPage />
       </div>
       <JoinUsPage />

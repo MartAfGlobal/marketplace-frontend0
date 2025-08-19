@@ -1,15 +1,12 @@
-import { Product } from "@/types/global"
-
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-
+import { Product } from "@/types/global";
 
 interface ProductState {
   items: Product[];
 }
 
 const initialState: ProductState = {
-  items: [], // You will populate this with dummy or fetched data
+  items: [], // populate this later
 };
 
 const productSlice = createSlice({
@@ -22,5 +19,8 @@ const productSlice = createSlice({
   },
 });
 
+// Export the action(s)
 export const { setProducts } = productSlice.actions;
-export default productSlice;
+
+// ✅ Export the reducer, not the slice
+export default productSlice.reducer;
