@@ -179,7 +179,7 @@ export default function ProductPage() {
                       quantity={quantity} // ✅ use this
                       onChange={(newQty, id) => {
                         dispatch(updateQuantity({ id, quantity: newQty }));
-                      }}
+                      }} 
                     />
                   </div>
                 </div>
