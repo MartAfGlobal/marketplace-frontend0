@@ -32,10 +32,7 @@ export default function ProductPage() {
     (state: RootState) => state.selectedProduct.product
   );
 
-
-  console.log(  "ttttttttt", product)
-
-
+  console.log("ttttttttt", product);
 
   if (!product) return <p>No product selected</p>; // early return
 
@@ -140,19 +137,46 @@ export default function ProductPage() {
 
                   <div className="mt-3 flex items-center gap-3">
                     <div className="flex gap-0.5 items-center">
-                      <Image src={YellowStar} alt="yellow star" height={22.74} width={24} />
-                      <Image src={YellowStar} alt="yellow star" height={22.74} width={24} />
-                      <Image src={YellowStar} alt="yellow star" height={22.74} width={24} />
-                      <Image src={YellowStar} alt="yellow star" height={22.74} width={24} />
-                      <Image src={Star} alt="yellow star" height={22.74} width={24} />
+                      <Image
+                        src={YellowStar}
+                        alt="yellow star"
+                        height={22.74}
+                        width={24}
+                      />
+                      <Image
+                        src={YellowStar}
+                        alt="yellow star"
+                        height={22.74}
+                        width={24}
+                      />
+                      <Image
+                        src={YellowStar}
+                        alt="yellow star"
+                        height={22.74}
+                        width={24}
+                      />
+                      <Image
+                        src={YellowStar}
+                        alt="yellow star"
+                        height={22.74}
+                        width={24}
+                      />
+                      <Image
+                        src={Star}
+                        alt="yellow star"
+                        height={22.74}
+                        width={24}
+                      />
                     </div>
-                    <p className="font-MontserratMedium text-sm text-161616">4.5/5</p>
+                    <p className="font-MontserratMedium text-sm text-161616">
+                      4.5/5
+                    </p>
                   </div>
 
                   <div className="md:hidden mt-3">
                     <QuantitySelector
                       productId={product.id}
-                      initialQty={quantity}
+                      quantity={quantity} // ✅ use this
                       onChange={(newQty, id) => {
                         dispatch(updateQuantity({ id, quantity: newQty }));
                       }}
@@ -161,8 +185,20 @@ export default function ProductPage() {
                 </div>
 
                 <div className="flex gap-c19 md:mt-c24 items-center">
-                  <Image src={Heart} alt="Like" height={22.93} width={28} className="w-5.25 h-4.5" />
-                  <Image src={Share} alt="Share" height={24} width={28.01} className="h-5.25 w-4.5" />
+                  <Image
+                    src={Heart}
+                    alt="Like"
+                    height={22.93}
+                    width={28}
+                    className="w-5.25 h-4.5"
+                  />
+                  <Image
+                    src={Share}
+                    alt="Share"
+                    height={24}
+                    width={28.01}
+                    className="h-5.25 w-4.5"
+                  />
                 </div>
               </div>
 
@@ -187,7 +223,7 @@ export default function ProductPage() {
         <div>
           <ItemAddToCart
             product={product}
-            selectedQty={selectedQty}
+            quantity={selectedQty}
             setSelectedQty={setSelectedQty}
           />
         </div>
@@ -198,8 +234,13 @@ export default function ProductPage() {
       </div>
 
       {/* Similar products */}
-      <section id="similar" className="h-fit p-6 md:pt-12 md:px-0 rounded-lg md:pb-20">
-        <h2 className="font-MontserratSemiBold text-base text-[#1a1a1a] mb-6">Similar Items</h2>
+      <section
+        id="similar"
+        className="h-fit p-6 md:pt-12 md:px-0 rounded-lg md:pb-20"
+      >
+        <h2 className="font-MontserratSemiBold text-base text-[#1a1a1a] mb-6">
+          Similar Items
+        </h2>
         {relatedProducts.length === 0 ? (
           <p className="text-gray-500 text-sm">No similar items found.</p>
         ) : (

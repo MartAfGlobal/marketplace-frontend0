@@ -181,6 +181,12 @@
   }
 }
 
+select option {
+  max-width: 20%;  
+  background-color: yellow;
+   
+}
+
 /* Slide up animation */
 @keyframes slideUp {
   0% {

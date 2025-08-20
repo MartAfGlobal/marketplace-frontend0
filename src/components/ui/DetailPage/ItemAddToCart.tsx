@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../Button/Button";
 import Image from "next/image";
 import truck from "@/assets/icons/truck.png";
@@ -15,13 +15,15 @@ import { RootState } from "@/store/index";
 import QuantitySelector from "../cart/quantityControl";
 import { updateQuantity, addToCart } from "@/store/cart/cartSlice";
 
+
 export default function ItemAddToCart({
   product,
- 
+  quantity,
+  setSelectedQty,
 }: {
   product: Product;
-  selectedQty: number;
-  setSelectedQty: React.Dispatch<React.SetStateAction<number>>;
+  quantity: number;
+  setSelectedQty: (qty: number) => void;
 }) {
   const dispatch = useDispatch();
 
@@ -29,8 +31,24 @@ export default function ItemAddToCart({
     state.cart.items.find((item) => item.id === product.id)
   );
 
-  const quantity = cartItem?.quantity ?? 1;
-  const empty = "";
+  const [localQty, setLocalQty] = useState<number>(quantity ?? cartItem?.quantity ?? 1);
+
+  useEffect(() => {
+    setLocalQty(quantity ?? cartItem?.quantity ?? 1);
+  }, [cartItem?.quantity, quantity]);
+
+  const handleQtyChange = (newQty: number) => {
+    if (newQty < 1) return;
+    setLocalQty(newQty);
+    setSelectedQty(newQty); // sync back up
+    dispatch(updateQuantity({ id: product.id, quantity: newQty }));
+  };
+
+  const handleAddToCart = () => {
+    dispatch(addToCart({ ...product, quantity: localQty }));
+  };
+
+  const empty =""
   return (
     <div className="w-full md:min-w-c386-58  md:shadow p-6 flex flex-col gap-6 ">
       <div className="flex flex-col-reverse md:flex-col gap-c24 md:pb-c32 md:border-b md:border-gray-100">
@@ -159,21 +177,15 @@ export default function ItemAddToCart({
         </div>
       </div>
       <div className="hidden md:flex mt-3">
-        <QuantitySelector
+         <QuantitySelector
           productId={product.id}
-          initialQty={quantity}
-          onChange={(newQty, id) => {
-            dispatch(updateQuantity({ id, quantity: newQty }));
-          }}
+          quantity={localQty} // controlled value
+          onChange={(qty) => handleQtyChange(qty)}
         />
       </div>
       <div className="space-y-c32 hidden md:flex flex-col">
         <Button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            dispatch(addToCart(product)); // will either create or increment
-          }}
+          onClick={handleAddToCart}
           className="bg-transparent border text-ff715b border-ff715b hover:bg-gray-50"
         >
           Add to cart

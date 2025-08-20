@@ -275,17 +275,21 @@ export interface OrderDetailsPageProps {
 }
 
 
+// types/global.ts (or wherever QuantitySelectorProps is defined)
 export interface QuantitySelectorProps {
-  productId: string | number;  
-  initialQty?: number;
-  onChange?: (quantity: number, productId: string | number) => void;
-    increaseBg?: string;
+  productId: string | number;
+  quantity: number ; 
+  onChange?: (newQty: number, id: string | number) => void;
+
+  // optional styling props
+  increaseBg?: string;
   increaseText?: string;
   decreaseBorder?: string;
   decreaseText?: string;
   hoverDecreaseBg?: string;
   hoverDecreaseText?: string;
-   buttonWidth? = string;
-  buttonHeight? = string;
-  quantityFont? = string;
+  buttonWidth?: string;
+  buttonHeight?: string;
+  quantityFont?: string;
 }
+

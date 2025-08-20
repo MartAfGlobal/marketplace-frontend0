@@ -66,7 +66,7 @@ export default function CartPage() {
     return acc + (isNaN(price) ? 0 : price) * (item.quantity || 0);
   }, 0);
   console.log(totalPrice);
-  
+
   const showMore = () => setVisible((prev) => prev + 10);
 
   return (
@@ -105,7 +105,9 @@ export default function CartPage() {
             height={16.5}
             className="brightness-20 w-2.25 h-[16.5px]"
           />
-          <p className="font-MontserratSemiBold text-c16 text-161616">Cart</p>
+          <p className="font-MontserratSemiBold text-c16 text-161616">
+            My Cart ({cartItems.length})
+          </p>
         </button>
 
         {/* Items List */}
@@ -150,9 +152,9 @@ export default function CartPage() {
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.8 }}
                     >
-                      <div className="w-full justify-between pb-8 flex">
-                        <div className="flex gap-4 items-center md:items-start">
-                          <div className="flex gap-3 items-center w-full">
+                      <div className="w-full justify-between  pb-8 flex">
+                        <div className="flex gap-4 w-full j items-center md:items-start">
+                          <div className="flex gap-3  items-center w-full max-w-fit">
                             <button
                               onClick={() =>
                                 setSelectedItems((prev) => ({
@@ -183,7 +185,6 @@ export default function CartPage() {
                               className="w-16 h-16 md:w-25 md:h-25"
                             />
                           </div>
-
                           <div className="w-full md:max-w-143.75">
                             <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
                               {item.title}
@@ -215,7 +216,7 @@ export default function CartPage() {
                           </button>
                           <QuantitySelector
                             productId={item.id}
-                            initialQty={item.quantity}
+                            quantity={item.quantity} // <-- get quantity directly from Redux
                             onChange={(newQty, id) =>
                               dispatch(updateQuantity({ id, quantity: newQty }))
                             }
@@ -234,7 +235,7 @@ export default function CartPage() {
               </div>
             </div>
 
-            {/* Desktop Order Summary */}
+          
             <div className="hidden md:flex">
               <div className="w-full max-w-84.25 hid">
                 <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
@@ -267,7 +268,7 @@ export default function CartPage() {
                     N{totalPrice}
                   </p>
                 </div>
-                <Button>Checkout ({cartItems.length})</Button>
+                <Button onClick={() => router.push("/cart/checkout")}>Checkout ({cartItems.length})</Button>
 
                 {/* Payment Info */}
                 <div className="w-full space-y-6 mt-c32 max-w-84">
@@ -326,21 +327,21 @@ export default function CartPage() {
         {/* More Products */}
         <div className="hidden w-full md:flex">
           <div className=" w-full">
-          <div className="py-c32 ">
-            <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
-              More to love
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
-              {fashionProducts.slice(0, visible).map((item) => (
-                <ProductCard key={item.id} product={item} />
-              ))}
+            <div className="py-c32 ">
+              <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
+                More to love
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
+                {fashionProducts.slice(0, visible).map((item) => (
+                  <ProductCard key={item.id} product={item} />
+                ))}
+              </div>
             </div>
           </div>
         </div>
-        </div>
       </div>
 
-      {/* Mobile Bottom Bar */}
+
       <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed bottom-0 md:hidden z-50 flex items-center gap-4">
         <div className="flex items-center gap-2 w-11">
           <button
@@ -375,7 +376,7 @@ export default function CartPage() {
           </button>
         </div>
 
-        <Button>Checkout</Button>
+       <Button  onClick={() => router.push("/cart/checkout")} className="border-0" >Checkout ({cartItems.length})</Button>
       </div>
 
       {/* Mobile Modal Above Footer */}

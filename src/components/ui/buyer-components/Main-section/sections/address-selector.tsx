@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { useState } from "react";
 import { motion, Variants } from "framer-motion";
-import AddressModal from "@/components/ui/Modals/new-address-modal"; // adjust path
+import AddressModal from "@/components/ui/Modals/new-address-modal";
 import { UserAddressProps, Address } from "@/types/global";
 import { twMerge } from "tailwind-merge";
+import { useRouter } from "next/navigation";
 
 // Example icons
 import AddcardBtn from "@/assets/icons/user-dashboard/atm-cards/plus.png";
@@ -18,6 +19,9 @@ export default function UserAddress({ className }: { className?: string }) {
   const [editingAddress, setEditingAddress] = useState<
     Partial<Address> | undefined
   >(undefined);
+  const [showAll, setShowAll] = useState(false);
+
+  const router = useRouter();
 
   const addressProp: UserAddressProps[] = [
     {
@@ -40,6 +44,20 @@ export default function UserAddress({ className }: { className?: string }) {
       icon: ActiveCardBtn,
       phoneNo: "+2347034562314",
       address: "LEA Primary School Dakwo, Abuja Kabusa, Abuja, Nigeria, 900102",
+    },
+    {
+      id: 4,
+      name: "Chisom Ebube Chris",
+      icon: ActiveCardBtn,
+      phoneNo: "+2347034562314",
+      address: "Another address example",
+    },
+    {
+      id: 5,
+      name: "Chisom Ebube Chris",
+      icon: ActiveCardBtn,
+      phoneNo: "+2347034562314",
+      address: "Another address example",
     },
   ];
 
@@ -77,7 +95,6 @@ export default function UserAddress({ className }: { className?: string }) {
       fullName: item.name,
       mobile: item.phoneNo,
       street: item.address,
-      // add other fields if needed
       defaultAddress: false,
       country: "",
       state: "",
@@ -87,34 +104,51 @@ export default function UserAddress({ className }: { className?: string }) {
     setIsModalOpen(true);
   };
 
+  // Determine how many addresses to show initially
+  const getVisibleAddresses = () => {
+    if (showAll) return addressProp;
+    return addressProp.filter((_, idx) => {
+      // lg screens show max 3
+      // mobile show max 2
+      if (window.innerWidth >= 1024) return idx < 3;
+      return idx < 2;
+    });
+  };
+
   return (
     <div className="w-full">
-      <div className="pb-c32 flex justify-between">
-        <p className="font-MontserratSemiBold text-base leading-c24 text-000000">
+      <div className="pb-c32 flex justify-between items-center">
+        <p className="font-MontserratSemiBold text-base leading-c24 hidden md:flex text-000000">
           Addresses
         </p>
-          <button className="font-MontserratSemiBold text-sm text-ff715b">View all</button>
+        <button
+          className="font-MontserratSemiBold text-sm  hidden md:flex text-ff715b"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? "See less" : "See more"}
+        </button>
       </div>
-      <div className={`flex w-full gap-6 flex-wrap `}>
-        {addressProp.map((item, idx) => {
+
+      <div className="flex  flex-col gap-3 md:flex-row w-full md:gap-6 md:flex-wrap">
+        {getVisibleAddresses().map((item, idx) => {
           const isSelected = item.id === selectedCardId;
           const variant = cardVariants[idx % cardVariants.length];
 
           return (
             <motion.div
               key={item.id}
-              onClick={() => handleEditAddress(item)}
+              onClick={() =>handleSelectBtn(item.id)}
               variants={variant}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: false, amount: 0.3 }}
               whileHover={{ scale: 1.05 }}
               className={twMerge(
-                "p-c24 h-34.5 w-80.75 rounded-c12 flex gap-2 bg-gree flex-col cursor-pointer relative transition-colors duration-300",
+                "p-c24 h-31 w-full md:w-80.75 md:h-34.5 rounded-c12 flex flex-col gap-2 cursor-pointer relative transition-colors duration-300",
                 isSelected
-                  ? "bg-black text-ffffff shadow-inner"
+                  ? "md:bg-black bg-6a0dad text-ffffff shadow-inner"
                   : "bg-black/20 text-black shadow",
-                className 
+                className
               )}
             >
               <div className="flex justify-between items-center">
@@ -154,7 +188,10 @@ export default function UserAddress({ className }: { className?: string }) {
           }}
           whileHover={{ scale: 1.05 }}
           viewport={{ once: false, amount: 0.3 }}
-          className={twMerge("p-c24 w-81 h-45.5 rounded-c12 flex flex-col justify-center items-center cursor-pointer bg-black/2 gap-c3 border-black text-black transition-colors duration-300", className )}
+          className={twMerge(
+            "p-c24 w-full hidden md:w-81 md:flex h-45.5 rounded-c12 flex-col justify-center items-center cursor-pointer bg-black/2 gap-c3 border-black text-black transition-colors duration-300",
+            className
+          )}
         >
           <Image src={AddcardBtn} width={20} height={20} alt="Add card" />
           <p className="text-center font-MontserratNormal text-base">
@@ -162,7 +199,17 @@ export default function UserAddress({ className }: { className?: string }) {
           </p>
         </motion.div>
       </div>
-      
+
+      <div className="w-full flex pt-6 justify-end md:hidden">
+        <button
+          className="font-MontserratSemiBold text-sm text-ff715b"
+          onClick={() => { 
+            router.push("/cart/mobile/addresses");
+          }}
+        >
+          See more
+        </button>
+      </div>
       <AddressModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

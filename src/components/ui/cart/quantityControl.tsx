@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
 import { QuantitySelectorProps } from "@/types/global";
 
 export default function QuantitySelector({
   productId,
-  initialQty = 1,
+  quantity = 1,
+  
+   
   onChange,
   // Mobile colors (apply only below md)
   increaseBg = "bg-ff715b",
@@ -22,22 +23,15 @@ export default function QuantitySelector({
   buttonHeight?: string;
   quantityFont?: string;
 }) {
-  const [quantity, setQuantity] = useState(initialQty);
+  // Ensure quantity is always a valid number
+  const safeQty = Number(quantity) || 1;
 
   const handleDecrease = () => {
-    setQuantity((prev) => {
-      const newQty = Math.max(prev - 1, 1);
-      onChange?.(newQty, productId);
-      return newQty;
-    });
+    if (safeQty > 1) onChange?.(safeQty - 1, productId);
   };
 
   const handleIncrease = () => {
-    setQuantity((prev) => {
-      const newQty = prev + 1;
-      onChange?.(newQty, productId);
-      return newQty;
-    });
+    onChange?.(safeQty + 1, productId);
   };
 
   return (
@@ -52,8 +46,10 @@ export default function QuantitySelector({
       </button>
 
       {/* Quantity Display */}
-      <span className={`text-center font-MontserratSemiBold ${quantityFont} md:text-c18`}>
-        {quantity}
+      <span
+        className={`text-center font-MontserratSemiBold ${quantityFont} md:text-c18`}
+      >
+        {safeQty}
       </span>
 
       {/* Increase Button */}
