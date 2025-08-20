@@ -28,7 +28,7 @@ const images = [
 
 export default function Gallary() {
   return (
-    <div className="w-full px-c24-76 h-c376-36 space-y-4">
+    <div className="w-full px-6 h-c376-36 space-y-4 overflow-hidden">
       {Array.from({ length: 3 }).map((_, rowIdx) => (
         <div key={rowIdx} className="flex gap-4  w-full">
           {images.slice(rowIdx * 2, rowIdx * 2 + 2).map((item, i) => (

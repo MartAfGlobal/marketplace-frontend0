@@ -12,6 +12,7 @@ import UserAddress from "@/components/ui/buyer-components/Main-section/sections/
 import UserCard from "@/components/ui/buyer-components/Main-section/sections/user-cards";
 import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import MobileCards from "../mobile/mobile-payment-cards";
+import { Input } from "../forms/Input";
 
 export default function CheckoutItems() {
   const trackOrders: TrackOrders[] = [
@@ -111,7 +112,10 @@ export default function CheckoutItems() {
             <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
               Order Summary
             </p>
-
+            <div className="flex gap-2 pb-3">
+              <Input  placeholder="Enter coupon code w-full"/>
+              <button className="w-full max-w-31.25 bg-transparent border border-ff715b text-c12 h-12 rounded-c8 font-MontserratSemiBold text-ff715b">Apply coupon</button>
+            </div>
             <div className="font-MontserratNormal text-sm text-000000 space-y-2">
               <div className="flex justify-between">
                 <p>Total items</p>
