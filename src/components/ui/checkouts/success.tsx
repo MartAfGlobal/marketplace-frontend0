@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function PaymentSuccess() {
   return (
-    <div className="flex w-full max-w-101 m-auto flex-col items-center justify-center mb-c64 space-y-6">
+    <div className="flex w-full max-w-101 m-auto flex-col items-center justify-center md:mb-c64 space-y-6">
       <div className="w-13 h-13 rounded-full border-4 border-[#2D7565] flex items-center  justify-center">
         <motion.svg
           xmlns="http://www.w3.org/2000/svg"

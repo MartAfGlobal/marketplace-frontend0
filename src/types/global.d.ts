@@ -244,6 +244,14 @@ type DropdownModalProps = {
   onClose: () => void;
 };
 
+export type Slide = {
+  id: number;
+  image: string;
+  title: string;
+  description: string;
+  discount: string;
+};
+
 type Coupons = {
   id: string | number;
   title: string;

@@ -13,7 +13,7 @@ export default function ChooseCard({ image, title, description }: ChooseCardProp
       <div className="flex justify-center ">
         <Image src={image} alt={title} width={64} height={64} className="w-c48 h-c48 md:w-c64 md:h-c64" />
       </div>
-      <h2 className="font-MontserratMedium md:text-c18 text-3 md:pb-2  pb-2 mt-4 md:pt-6 ">{title}</h2>
+      <h2 className="fontN-MontserratMedium md:text-c18 text-3 md:pb-2  pb-2 mt-4 md:pt-6 ">{title}</h2>
       <p className="text-c12 md:text-base font-MontserratNormal">{description}</p>
     </motion.div>
   );

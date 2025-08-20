@@ -8,26 +8,18 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 
 import { RootState } from "@/store";
-import { removeFromCart, updateQuantity } from "@/store/cart/cartSlice";
+import { updateQuantity } from "@/store/cart/cartSlice";
 import { dummyProducts } from "@/store/data/products";
 
-import NavBack from "@/assets/icons/navBacksmall.png";
-import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
-import VisaCard from "@/assets/icons/visa_inc_logo.svg.svg";
-import ShildCheck from "@/assets/icons/ShieldCheck.png";
-import Trash from "@/assets/icons/trash.png";
-import padlock from "@/assets/icons/padlock.png";
-import GoodMark from "@/assets/mobile/good.png";
+
 import CaretDwn from "@/assets/mobile/carent-down.png";
-import Filter from "@/assets/icons/filter.png";
-import CloseX from "@/assets/mobile/closeX.png";
+
 
 import QuantitySelector from "@/components/ui/cart/quantityControl";
 import ProductCard from "@/components/ui/cards/ProductCard";
 import { Button } from "@/components/ui/Button/Button";
 
 export default function MobileCheckoutItems() {
-  const [selected, setSelected] = useState(false);
   const [selectedItems, setSelectedItems] = useState<{
     [key: string]: boolean;
   }>({});
@@ -257,7 +249,7 @@ export default function MobileCheckoutItems() {
         </div>
 
         <Button
-          onClick={() => router.push("/cart/checkout")}
+          onClick={() => router.push("/cart/checkout/checkout-summary")}
           className="border-0"
         >
           Place order

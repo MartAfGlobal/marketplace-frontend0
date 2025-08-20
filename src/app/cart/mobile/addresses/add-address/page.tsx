@@ -68,7 +68,10 @@ const AFRICA: Country[] = [
           { label: "Tema", zips: ["00233"] },
         ],
       },
-      { label: "Ashanti", cities: [{ label: "Kumasi", zips: ["AK-0000-0000"] }] },
+      {
+        label: "Ashanti",
+        cities: [{ label: "Kumasi", zips: ["AK-0000-0000"] }],
+      },
     ],
   },
   {
@@ -77,7 +80,10 @@ const AFRICA: Country[] = [
     dialCode: "+254",
     flag: Flag,
     states: [
-      { label: "Nairobi", cities: [{ label: "Nairobi", zips: ["00100", "00505"] }] },
+      {
+        label: "Nairobi",
+        cities: [{ label: "Nairobi", zips: ["00100", "00505"] }],
+      },
       { label: "Mombasa", cities: [{ label: "Mombasa", zips: ["80100"] }] },
     ],
   },
@@ -87,8 +93,14 @@ const AFRICA: Country[] = [
     dialCode: "+27",
     flag: Flag,
     states: [
-      { label: "Gauteng", cities: [{ label: "Johannesburg", zips: ["2000", "2001"] }] },
-      { label: "Western Cape", cities: [{ label: "Cape Town", zips: ["8001", "8005"] }] },
+      {
+        label: "Gauteng",
+        cities: [{ label: "Johannesburg", zips: ["2000", "2001"] }],
+      },
+      {
+        label: "Western Cape",
+        cities: [{ label: "Cape Town", zips: ["8001", "8005"] }],
+      },
     ],
   },
   {
@@ -97,7 +109,10 @@ const AFRICA: Country[] = [
     dialCode: "+20",
     flag: Flag,
     states: [
-      { label: "Cairo", cities: [{ label: "Cairo", zips: ["11511", "11311"] }] },
+      {
+        label: "Cairo",
+        cities: [{ label: "Cairo", zips: ["11511", "11311"] }],
+      },
       { label: "Giza", cities: [{ label: "Giza", zips: ["12511"] }] },
     ],
   },
@@ -138,7 +153,10 @@ export default function AddNewAddreess() {
   const [isDefault, setIsDefault] = useState<boolean>(false);
 
   // Derived options
-  const states = useMemo<StateEntry[]>(() => selectedCountry.states, [selectedCountry]);
+  const states = useMemo<StateEntry[]>(
+    () => selectedCountry.states,
+    [selectedCountry]
+  );
   const cities = useMemo<City[]>(() => {
     const s = states.find((st) => st.label === selectedState);
     return s ? s.cities : [];
@@ -149,7 +167,9 @@ export default function AddNewAddreess() {
   }, [cities, selectedCity]);
 
   // Close dropdowns on outside click
-  const countryRef = useClickOutside<HTMLDivElement>(() => setCountryOpen(false));
+  const countryRef = useClickOutside<HTMLDivElement>(() =>
+    setCountryOpen(false)
+  );
   const stateRef = useClickOutside<HTMLDivElement>(() => setStateOpen(false));
   const cityRef = useClickOutside<HTMLDivElement>(() => setCityOpen(false));
   const zipRef = useClickOutside<HTMLDivElement>(() => setZipOpen(false));
@@ -198,7 +218,6 @@ export default function AddNewAddreess() {
 
   return (
     <div>
-      
       <div className="px-6">
         <button
           type="button"
@@ -212,7 +231,9 @@ export default function AddNewAddreess() {
             height={16.5}
             className="brightness-20 w-2.25 h-[16.5px]"
           />
-          <p className="font-MontserratSemiBold text-c16 text-161616">Add new address</p>
+          <p className="font-MontserratSemiBold text-c16 text-161616">
+            Add new address
+          </p>
         </button>
       </div>
 
@@ -221,7 +242,9 @@ export default function AddNewAddreess() {
         <form action="" className="space-y-6">
           {/* Country */}
           <div className="space-y-4">
-            <Label className="text-sm pb-4 font-MontserratSemiBold">Country/region</Label>
+            <Label className="text-sm pb-4 font-MontserratSemiBold">
+              Country/region
+            </Label>
             <div className="relative pt-4 w-full" ref={countryRef}>
               <button
                 type="button"
@@ -237,7 +260,12 @@ export default function AddNewAddreess() {
                   />
                   <span>{selectedCountry.label}</span>
                 </div>
-                <Image src={CaretDown} alt="select country" width={11} height={6} />
+                <Image
+                  src={CaretDown}
+                  alt="select country"
+                  width={11}
+                  height={6}
+                />
               </button>
 
               <AnimatePresence>
@@ -275,10 +303,14 @@ export default function AddNewAddreess() {
 
           {/* Contact information */}
           <div>
-            <p className="text-sm font-MontserratSemiBold pb-4">Contact information</p>
+            <p className="text-sm font-MontserratSemiBold pb-4">
+              Contact information
+            </p>
 
             <div className="pb-3">
-              <Label className="text-sm  font-MontserratSemiBold">Full name</Label>
+              <Label className="text-sm  font-MontserratSemiBold">
+                Full name
+              </Label>
               <input
                 placeholder=""
                 type="text"
@@ -287,7 +319,9 @@ export default function AddNewAddreess() {
             </div>
 
             <div>
-              <Label className="text-sm  font-MontserratSemiBold">Mobile number</Label>
+              <Label className="text-sm  font-MontserratSemiBold">
+                Mobile number
+              </Label>
               <div className="flex items-center p-4 mt-2 border border-gray-300 rounded-lg h-10">
                 <Image
                   src={Phone}
@@ -309,7 +343,9 @@ export default function AddNewAddreess() {
 
           {/* Address information */}
           <div>
-            <p className="text-sm font-MontserratSemiBold pb-4">Address information</p>
+            <p className="text-sm font-MontserratSemiBold pb-4">
+              Address information
+            </p>
 
             <div className="pb-3">
               <Label className="text-sm  font-MontserratSemiBold">
@@ -324,7 +360,9 @@ export default function AddNewAddreess() {
 
             {/* State */}
             <div className="space-y-4">
-              <Label className="text-sm  font-MontserratSemiBold">State/province</Label>
+              <Label className="text-sm  font-MontserratSemiBold">
+                State/province
+              </Label>
               <div className="relative pt-2 w-full" ref={stateRef}>
                 <button
                   type="button"
@@ -334,7 +372,12 @@ export default function AddNewAddreess() {
                   <div className="flex items-center gap-2">
                     <span>{selectedState || "Select state/province"}</span>
                   </div>
-                  <Image src={CaretDown} alt="select state" width={11} height={6} />
+                  <Image
+                    src={CaretDown}
+                    alt="select state"
+                    width={11}
+                    height={6}
+                  />
                 </button>
 
                 <AnimatePresence>
@@ -379,7 +422,12 @@ export default function AddNewAddreess() {
                   <div className="flex items-center gap-2">
                     <span>{selectedCity || "Select city"}</span>
                   </div>
-                  <Image src={CaretDown} alt="select city" width={11} height={6} />
+                  <Image
+                    src={CaretDown}
+                    alt="select city"
+                    width={11}
+                    height={6}
+                  />
                 </button>
 
                 <AnimatePresence>
@@ -414,7 +462,9 @@ export default function AddNewAddreess() {
 
             {/* Zip */}
             <div className="space-y-4 pt-3">
-              <Label className="text-sm  font-MontserratSemiBold">Zip code</Label>
+              <Label className="text-sm  font-MontserratSemiBold">
+                Zip code
+              </Label>
               <div className="relative pt-2 w-full" ref={zipRef}>
                 <button
                   type="button"
@@ -424,7 +474,12 @@ export default function AddNewAddreess() {
                   <div className="flex items-center gap-2">
                     <span>{selectedZip || "Select zip/postal code"}</span>
                   </div>
-                  <Image src={CaretDown} alt="select zip" width={11} height={6} />
+                  <Image
+                    src={CaretDown}
+                    alt="select zip"
+                    width={11}
+                    height={6}
+                  />
                 </button>
 
                 <AnimatePresence>
@@ -459,7 +514,9 @@ export default function AddNewAddreess() {
 
             {/* Custom Toggle */}
             <div className="pt-6 flex items-center justify-between">
-              <span className="text-c2 font-MontserratSemiBold">Set as default address</span>
+              <span className="text-c2 font-MontserratSemiBold">
+                Set as default address
+              </span>
               <button
                 type="button"
                 onClick={() => setIsDefault((v) => !v)}
@@ -483,15 +540,14 @@ export default function AddNewAddreess() {
             </div>
           </div>
 
-          {/* Submit */}
-            <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
-        <Button
-          onClick={() => router.push("/cart/mobile/addresses/add-address")}
-          className="border-0"
-        >
-         Save address
-        </Button>
-      </div>
+          <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
+            <Button
+              onClick={() => router.push("/cart/mobile/addresses/add-address")}
+              className="border-0"
+            >
+              Save address
+            </Button>
+          </div>
         </form>
       </div>
     </div>

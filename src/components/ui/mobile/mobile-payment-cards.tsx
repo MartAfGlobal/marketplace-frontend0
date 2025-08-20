@@ -9,6 +9,7 @@ import Master from "@/assets/mobile/cards/master.png";
 import flutterwave from "@/assets/mobile/cards/flutterwave_logo.png";
 import American from "@/assets/mobile/cards/american-express.png";
 import Paystack from "@/assets/mobile/cards/paystack.png";
+import {useRouter} from "next/navigation";
 
 type AtmCardProps = {
   id: number;
@@ -34,6 +35,7 @@ const directions = [
 
 export default function MobileCards() {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
+  const router = useRouter();
 
   return (
     <div className="space-y-6 pt-3">
@@ -93,8 +95,8 @@ export default function MobileCards() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          onClick={() => console.log("Navigate to full cards page")}
           className="text-c12 font-MontserratSemiBold text-ff715b"
+          onClick={() => router.push("/cart/mobile/payment-cards")}
         >
           See More
         </motion.button>
