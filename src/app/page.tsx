@@ -24,9 +24,9 @@ export default function Home() {
     <main className="">
       <div className=" md:px-15 pt-6 ">
         <HeroPage />
-        {/* <div className="md:hidden">
+        <div className="md:hidden">
           <MobileCategory/>
-        </div> */}
+        </div>
         <div className="md:hidden">
          < Gallary/>
         </div>

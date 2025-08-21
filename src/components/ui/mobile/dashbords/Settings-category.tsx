@@ -2,31 +2,40 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { StaticImageData } from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import CaratRight from "@/assets/mobile/carent-down.png"; // caret icon
 import { Button } from "../../Button/Button";
 import { useRouter } from "next/navigation";
+import ChangePasswordModal from "./buyer-dashboard/change-password";
+import Flag from "@/assets/icons/flag.svg";
 
 // Minimal African sample (add more as needed)
 const countrySettings: Record<
   string,
-  { currency: string; language: string; code: string; flag: string }
+  {
+    currency: string;
+    language: string;
+    code: string;
+    flag: string | StaticImageData;
+  }
 > = {
-  Nigeria: { currency: "NGN", language: "EN", code: "NG", flag: "🇳🇬" },
-  Ghana: { currency: "GHS", language: "EN", code: "GH", flag: "🇬🇭" },
-  Kenya: { currency: "KES", language: "EN", code: "KE", flag: "🇰🇪" },
-  "South Africa": { currency: "ZAR", language: "EN", code: "ZA", flag: "🇿🇦" },
-  Egypt: { currency: "EGP", language: "AR", code: "EG", flag: "🇪🇬" },
-  Morocco: { currency: "MAD", language: "FR", code: "MA", flag: "🇲🇦" },
-  Ethiopia: { currency: "ETB", language: "AM", code: "ET", flag: "🇪🇹" },
-  Algeria: { currency: "DZD", language: "AR", code: "DZ", flag: "🇩🇿" },
-  Tunisia: { currency: "TND", language: "AR", code: "TN", flag: "🇹🇳" },
-  Uganda: { currency: "UGX", language: "EN", code: "UG", flag: "🇺🇬" },
-  Tanzania: { currency: "TZS", language: "EN", code: "TZ", flag: "🇹🇿" },
-  Rwanda: { currency: "RWF", language: "EN", code: "RW", flag: "🇷🇼" },
+  Nigeria: { currency: "NGN", language: "EN", code: "NG", flag: Flag },
+  Ghana: { currency: "GHS", language: "EN", code: "GH", flag: Flag },
+  Kenya: { currency: "KES", language: "EN", code: "KE", flag: Flag },
+  "South Africa": { currency: "ZAR", language: "EN", code: "ZA", flag: Flag },
+  Egypt: { currency: "EGP", language: "AR", code: "EG", flag: Flag },
+  Morocco: { currency: "MAD", language: "FR", code: "MA", flag: Flag },
+  Ethiopia: { currency: "ETB", language: "AM", code: "ET", flag: Flag },
+  Algeria: { currency: "DZD", language: "AR", code: "DZ", flag: Flag },
+  Tunisia: { currency: "TND", language: "AR", code: "TN", flag: Flag },
+  Uganda: { currency: "UGX", language: "EN", code: "UG", flag: Flag },
+  Tanzania: { currency: "TZS", language: "EN", code: "TZ", flag: Flag },
+  Rwanda: { currency: "RWF", language: "EN", code: "RW", flag: Flag },
 };
 
 export default function Settings() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [openSections, setOpenSections] = useState<string[]>([]);
   const [toggles, setToggles] = useState({
     orderNotifications: true,
@@ -179,8 +188,12 @@ export default function Settings() {
               onClick={() => setIsRegionOpen((o) => !o)}
               className="flex items-center gap-2 font-semibold"
             >
-              <span>{countrySettings[selectedCountry].flag}</span>
-              <span>{countrySettings[selectedCountry].code}</span>
+              <Image
+                src={countrySettings[selectedCountry].flag}
+                alt={selectedCountry}
+                width={24}
+                height={18}
+              />
             </button>
           </div>
 
@@ -192,7 +205,7 @@ export default function Settings() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}
-                className="absolute right-0 z-20 mt-2 max-h-60 overflow-y-auto bg-white border rounded-lg shadow w-48"
+                className="absolute right-0 z-20 mt-2 max-h-60 overflow-y-auto bg-white border rounded-lg shadow w-full"
               >
                 {Object.keys(countrySettings).map((country) => {
                   const c = countrySettings[country];
@@ -207,10 +220,15 @@ export default function Settings() {
                       }}
                       className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center justify-between"
                     >
+                      <span>{c.code}</span>
                       <span className="flex items-center gap-2">
-                        <span>{c.flag}</span>
+                        <Image
+                          src={c.flag}
+                          alt={c.code}
+                          width={24}
+                          height={18}
+                        />
                       </span>
-                      <span className="text-sm opacity-70">{c.code}</span>
                     </li>
                   );
                 })}
@@ -222,18 +240,22 @@ export default function Settings() {
         {/* Auto-updated currency + language */}
         <div className="flex items-center justify-between py-3 border-b border-b-000000/5 text-sm font-MontserratNormal">
           <span>Currency</span>
-          <span className="font-semibold">{currency}</span>
+          <span className="font-MontserratNormal text-sm">{currency}</span>
         </div>
         <div className="flex items-center justify-between py-3">
           <span>Language</span>
-          <span className="font-semibold">{language}</span>
+          <span className="font-MontserratNormal text-sm">{language}</span>
         </div>
       </Section>
 
       {/* 3) Password & Security */}
       <Section title="Password & Security" id="security">
         <div className=" py-3 border-b border-b-000000/5 text-sm font-MontserratNormal">
-          <button type="button" className="text-[#FF715B] font-semibold">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            type="button"
+            className="text-ff715b font-semibold"
+          >
             Change password
           </button>
         </div>
@@ -245,7 +267,7 @@ export default function Settings() {
           />
         </div>
       </Section>
-      <div className="text-sm font-MontserratSemiBold px-6 pb-38 "> 
+      <div className="text-sm font-MontserratSemiBold px-6 pb-38 ">
         <div className="flex items-center h-11 border-b border-b-000000/5">
           <span>Privacy policy</span>
         </div>
@@ -254,20 +276,21 @@ export default function Settings() {
           <span>Legal information</span>
         </div>
         <div className="flex items-center h-11 border-b border-b-000000/5">
-         <button className="text-ff715b">Delete account</button>
+          <button className="text-ff715b">Delete account</button>
         </div>
-      
       </div>
       <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center  justify-center ">
-        
-
         <Button
           onClick={() => router.push("/")}
           className="border border-ff715b bg-transparent w-full max-w-36 text-ff715b font-MontserratSemiBold text-sm "
         >
-         Log out
+          Log out
         </Button>
       </div>
+      <ChangePasswordModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
