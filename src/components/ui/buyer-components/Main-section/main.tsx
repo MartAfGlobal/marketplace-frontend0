@@ -112,7 +112,7 @@ export default function UserMain() {
 
   return (
     <div
-      className="flex px-35 justify-center gap-8 -full "
+      className="hidden md:flex px-35 justify-center  gap-8 -full "
       style={{ paddingTop: "2rem" }}
     >
       {/* Sidebar with slide-in */}

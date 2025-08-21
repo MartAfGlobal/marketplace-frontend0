@@ -30,7 +30,7 @@ export default function Gallary() {
   return (
     <div className="w-full px-6 h-c376-36 space-y-4 overflow-hidden">
       {Array.from({ length: 3 }).map((_, rowIdx) => (
-        <div key={rowIdx} className="flex gap-4  w-full">
+        <div key={rowIdx} className="flex gap-4 justify-center w-full">
           {images.slice(rowIdx * 2, rowIdx * 2 + 2).map((item, i) => (
             <motion.div
               key={i}
@@ -38,6 +38,7 @@ export default function Gallary() {
               whileInView="visible"
               viewport={{ once: false, amount: 0.2 }}
               variants={imageVariants}
+              className="w-full"
             >
               <Image
                 src={item.src}
