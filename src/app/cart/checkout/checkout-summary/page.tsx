@@ -330,7 +330,7 @@ export default function CheckoutSummary() {
             </div>
 
             <Button
-              onClick={() => router.push("/cart/mobile/payment-successful")}
+              onClick={() => router.push("/dashboard/buyer/mobile/payment-successful")}
               className="border-0"
             >
               Confirm order

@@ -69,7 +69,7 @@ export default function AwaitingOrders() {
   };
 
   return (
-    <div className="space-y-c24 w-full">
+    <div className="space-y-c24 px-6 w-full">
       <div className="w-full">
         <div className="w-full space-y-c24 mt-c32">
           <AnimatePresence mode="wait">
@@ -111,7 +111,7 @@ export default function AwaitingOrders() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.8 }}
                   >
-                    <div className="w-full flex justify-between mb-c32">
+                    <div className="w-full flex justify-between mb-3 md:mb-c32">
                       <div>
                         <p className="text-sm font-MontserratSemiBold leading-c20 text-000000">
                           Awaiting payment
@@ -142,10 +142,26 @@ export default function AwaitingOrders() {
                           <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
                             ₦{item.totalAmount}
                           </p>
+                          <div className="w-full gap-4 pl flex md:hidden  mt-4 space-y-4">
+                            <button
+                              onClick={() => {
+                                setEditingAddress(undefined);
+                                setIsModalOpen(true);
+                              }}
+                              className="bg-transparent border h-c40 w-full rounded-c8 text-c10 border-ff715b text-ff715b"
+                            >
+                              Edit address
+                            </button>
+                            <button
+                              className="text-c10 text-ffffff bg-ff715b w-full h-c40 rounded-lg "
+                            >
+                              Confirm & pay
+                            </button>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="w-full max-w-70 space-y-4">
+                      <div className="w-full hidden md:block max-w-70 space-y-4">
                         <Button
                           onClick={() => {
                             setEditingAddress(undefined);

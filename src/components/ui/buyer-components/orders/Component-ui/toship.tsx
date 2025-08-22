@@ -83,7 +83,7 @@ export default function ToShip() {
   };
 
   return (
-    <div className="space-y-c24 w-full">
+    <div className="space-y-c24 px-6 w-full">
       <div className="w-full">
         <div className="w-full space-y-c24 mt-c32">
           <AnimatePresence mode="wait">
@@ -125,13 +125,13 @@ export default function ToShip() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.8 }}
                   >
-                    <div className="w-full flex justify-between mb-c32">
+                     <div className="w-full flex items-center gap-32 justify-center md:gap-0 md:justify-between mb-3 md:mb-c32">
                       <div>
                         <p className="text-sm font-MontserratSemiBold leading-c20 text-000000">
                           Order is being processed
                         </p>
-                        <div className="flex gap-2 mt-2">
-                          <p className="text-c12 font-MontserratNormal">
+                        <div className="md:flex hidden gap-2 mt-2">
+                          <p className="text-c12  font-MontserratNormal">
                             Order ID: {orderId}
                           </p>
                           <button onClick={handleCopy}>
@@ -154,7 +154,7 @@ export default function ToShip() {
                       </p>
                     </div>
 
-                    <div className="w-full justify-between pb-c32 flex">
+                    <div className="w-full md:justify-between flex-col pb-c32 flex md:flex-row">
                       <div className="flex gap-4 items-start">
                         <Image
                           src={item.icon}
@@ -177,21 +177,31 @@ export default function ToShip() {
                           <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
                             ₦{item.totalAmount}
                           </p>
+                          <div className="w-full gap-4 pl flex md:hidden  mt-4 space-y-4">
+                            <button
+                             
+                              className="bg-transparent border h-c40 rounded-c8 w-full text-c10 border-ff715b text-ff715b"
+                            > 
+                             Cancel order
+                            </button>
+                            <button className="text-c10 text-ffffff bg-ff715b w-full h-c40 rounded-lg ">
+                              Edit address
+                            </button>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="w-full max-w-70 space-y-4">
-                        <Button className="bg-transparent border border-ff715b text-ff715b">
-                          Cancel order
-                        </Button>
+                      <div className="w-full gap-4 pl hidden md:flex md:flex-col  md:max-w-70 space-y-4">
                         <Button
-                          onClick={() => {
-                            setEditingAddress(undefined);
-                            setIsModalOpen(true);
-                          }}
+                          
+                          className="bg-transparent border border-ff715b text-ff715b"
                         >
-                          Edit address
+                          Track order
                         </Button>
+                        <Button >
+                          Confirm delivery
+                        </Button>
+                       
                       </div>
                     </div>
                   </motion.div>

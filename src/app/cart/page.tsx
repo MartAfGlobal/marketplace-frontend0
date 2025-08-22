@@ -32,6 +32,8 @@ export default function CartPage() {
     [key: string]: boolean;
   }>({});
 
+
+  
   const [openModal, setOpenModal] = useState(false);
   const [visible, setVisible] = useState(10);
 

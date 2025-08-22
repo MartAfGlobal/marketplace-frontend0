@@ -93,7 +93,7 @@ export default function TrackingDetail() {
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="pl-c56 pt-c20 z-40 flex items-center w-full"
+        className="pl-c56 hidden pt-c20 z-40 md:flex items-center w-full"
         style={{ top: "4rem" }}
       >
         <nav
@@ -124,12 +124,12 @@ export default function TrackingDetail() {
         </nav>
       </motion.div>
 
-      <div className="w-full px-15">
+      <div className="w-full px-6 md:px-15">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-4 mt-c32"
+          className="flex items-center gap-4 mt-4 md:mt-c32"
         >
           <Image
             src={NavBack}
@@ -138,47 +138,50 @@ export default function TrackingDetail() {
             height={16.5}
             className="brightness-20 w-2.25 h-[16.5px]"
           />
-          <p className="font-MontserratSemiBold text-c16 text-161616">
+          <p className="font-MontserratSemiBold  hidden md:flex text-c16 text-161616">
             Order tracking
           </p>
+          <p className="font-MontserratSemiBold md:hidden text-c16 text-161616">
+            Track order
+          </p>
         </motion.div>
-            <motion.div
+        <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="pt-c32 pb-c64 px-62.5"
+          className="md:pt-c32  md:pb-c64 md:px-62.5"
         >
-             <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: {
-              opacity: 1,
-              y: 0,
-              transition: { staggerChildren: 0.1 },
-            },
-          }}
-          className="py-c32"
-        >
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: { staggerChildren: 0.1 },
+              },
+            }}
+            className="nd:py-c32 py-7"
+          >
             <div>
-              <div className="flex justify-between  border-b border-b-000000/20 space-y-c32 ">
-                <div className="w-full max-w-84.25">
+              <div className="md:flex md:justify-between  md:border-b border-b-000000/20 space-y-c32 ">
+                <div className="w-full md:max-w-84.25">
                   <p className="text-sm mb-6 font-MontserratSemiBold">
                     Delivery
                   </p>
                   <div className="">
                     <div className="flex gap-4 items-center text-6a0dad ">
-                      <div className="w-20.25 h-fit flex items-center gap-1">
-                        <p className="text-5xl font-MontserratBold">15</p>
-                        <p>May 2025</p>
+                      <div className="md:max-w-20.25 w-full max-w-16.25 h-fit flex items-center gap-1">
+                        <p className="md:text-5xl md:font-MontserratBold font-MontserratSemiBold text-c32">15</p>
+                        <p className="text-c12 font-MontserratSemiBold">May 2025</p>
                       </div>
                       <p className="font-MontserratNormal text-sm text-000000">
                         -
                       </p>
-                      <div className="w-20.25 h-fit flex items-center gap-1">
-                        <p className="text-5xl font-MontserratBold">21</p>
-                        <p>Jun 2025</p>
+                      <div className="md:max-w-20.25 w-full max-w-16.25 h-fit flex items-center gap-1">
+                        <p className="md:text-5xl md:font-MontserratBold font-MontserratSemiBold text-c32">21</p>
+                        <p className="text-c12 font-MontserratSemiBold">Jun 2025</p>
                       </div>
                     </div>
                     <div className="mt-3">
@@ -187,12 +190,13 @@ export default function TrackingDetail() {
                         alt="speed of"
                         width={82.96}
                         height={26.76}
+                        className="w-16 h-[20.65px] md:[w-82.96] md:h-[26.76]"
                       />
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-2 items-center">
+                  <div className="flex gap-2 mt-2  items-center">
                     <p className="text-sm  font-MontserratNormal">
-                      Order ID: {orderId}
+                      Order ID: <span className="text-c12 font-MontserratSemiBold"> {orderId} </span>
                     </p>
                     <button onClick={handleCopy}>
                       <Image
@@ -209,9 +213,9 @@ export default function TrackingDetail() {
                       </span>
                     )}
                   </div>
-                  <div className="flex gap-2 mt-2 items-center">
-                    <p className="text-sm font-MontserratNormal">
-                      Tracking number: {trackingNumber}
+                  <div className="flex gap-2 mt-2 md:items-center pb-6 md:pb-0 border-b border-b-000000/5">
+                    <p className="md:text-sm font-MontserratNormal text-c12">
+                      Tracking number:<span className="text-c12 font-MontserratSemiBold"> {trackingNumber} </span>
                     </p>
                     <button
                       onClick={handleCopyTrack}
@@ -225,8 +229,8 @@ export default function TrackingDetail() {
                       </span>
                     )}
                   </div>
-                  <div className="font-MontserratNormal pt-c24 text-sm text-000000  ">
-                    <p className="text-sm mb-6 font-MontserratSemiBold">
+                  <div className="font-MontserratNormal pt-c24 text-sm text-000000 border-b pb-6 md:pb-0  border-b-000000/5">
+                    <p className="text-sm md:mb-6 mb-3 font-MontserratSemiBold">
                       Address for delivery
                     </p>
                     <div className="space-y-2">
@@ -239,11 +243,11 @@ export default function TrackingDetail() {
                     </div>
                   </div>
                 </div>
-                <div className=" max-w-74  overflow-y-auto  custom-scroll mb-c32 h-fit max-h-105.5 pr-7.5">
+                <div className=" md:max-w-74  w-full overflow-y-auto  custom-scroll mb-c32 h-fit  md:max-h-105.5 md:pr-7.5">
                   <p className="text-sm font-MontserratSemiBold mb-c32">
                     Package details
                   </p>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between overflow-y-auto  custom-scroll h-fit max-h-54 ">
                     <motion.div
                       key="orders-list"
                       initial="hidden"
@@ -267,15 +271,15 @@ export default function TrackingDetail() {
                           exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.8 }}
                         >
-                          <div className="w-full justify-between pb-8 flex">
-                            <div className="flex gap-4 items-start">
+                          <div className="w-full justify-between md:pb-8 flex ">
+                            <div className="flex gap-4 items-start  border-b border-b-000000/5  md:border-0 pb-c20 md:pb-0 h-fit">
                               <Image
                                 src={item.icon}
                                 alt={item.title}
                                 width={100}
                                 height={100}
                               />
-                              <div className="w-full max-w-143.75">
+                              <div className="w-full md:max-w-143.75">
                                 <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
                                   {item.title}
                                 </p>
@@ -285,7 +289,7 @@ export default function TrackingDetail() {
                                     {item.totalQuantity}PC, {item.colour}
                                   </span>
                                 </div>
-                                <p className="font-MontserratSemiBold text-c18 pt-3 leading-6.5">
+                                <p className="font-MontserratSemiBold hidden md:flex text-c18 pt-3 leading-6.5">
                                   ₦{item.totalAmount}
                                 </p>
                               </div>
@@ -298,80 +302,109 @@ export default function TrackingDetail() {
                 </div>
               </div>
             </div>
-            <div className="w-full pt-c32 text-sm font-MontserratSemiBold text-000000">
+            <div className="w-full pt-c32  text-sm font-MontserratSemiBold text-000000">
               <h1>Tracking details</h1>
             </div>
             <div className="flex gap-c24 mt-c24 items-start ">
               <div className="w-4 h-fit max-h-120">
                 <div className="relative w-fit flex flex-col h-fit items-center">
-                    <p className="h-4 w-c1 bg-000000/20"></p>
-                    <p className="w-4 h-4 rounded-full bg-000000/20"></p>
+                  <p className="h-4 w-c1 bg-000000/20"></p>
+                  <p className="w-4 h-4 rounded-full bg-000000/20"></p>
                 </div>
                 <div className="relative w-fit flex flex-col h-fit items-center">
-                    <p className="h-c48 w-c1 bg-000000/20"></p>
-                    <p className="w-4 h-4 rounded-full bg-000000/20"></p>
+                  <p className="h-c48 w-c1 bg-000000/20"></p>
+                  <p className="w-4 h-4 rounded-full bg-000000/20"></p>
                 </div>
                 <div className="relative w-fit flex flex-col h-fit items-center">
-                    <p className="h-c48 w-c1 bg-000000/20"></p>
-                    <p className="w-4 h-4 rounded-full bg-000000/20"></p>
+                  <p className="h-c48 w-c1 bg-000000/20"></p>
+                  <p className="w-4 h-4 rounded-full bg-000000/20"></p>
                 </div>
                 <div className="relative w-fit flex flex-col h-fit items-center">
-                    <p className="h-c48 w-c1 bg-000000/20"></p>
-                    <p className="w-4 h-4 rounded-full bg-000000/20"></p>
+                  <p className="h-c48 w-c1 bg-000000/20"></p>
+                  <p className="w-4 h-4 rounded-full bg-000000/20"></p>
                 </div>
                 <div className="relative w-fit flex flex-col h-fit items-center">
-                    <p className="h-c48 w-c1 bg-000000/20"></p>
-                    <p className="w-4 h-4 rounded-full bg-000000/20"></p>
+                  <p className="h-c48 w-c1 bg-000000/20"></p>
+                  <p className="w-4 h-4 rounded-full bg-000000/20"></p>
                 </div>
                 <div className="relative w-fit flex flex-col h-fit items-center">
-                    <p className="h-c48 w-c1 bg-000000/20"></p>
-                    <p className="w-4 h-4 rounded-full bg-000000/20"></p>
+                  <p className="h-c48 w-c1 bg-000000/20"></p>
+                  <p className="w-4 h-4 rounded-full bg-000000/20"></p>
                 </div>
                 <div className="relative w-fit flex flex-col h-fit items-center">
-                    <p className="h-c48 w-c1 bg-000000/20"></p>
-                    <p className="w-4 h-4 rounded-full bg-000000/20"></p>
+                  <p className="h-c48 w-c1 bg-000000/20"></p>
+                  <p className="w-4 h-4 rounded-full bg-000000/20"></p>
                 </div>
                 <div className="relative w-fit flex flex-col h-fit items-center">
-                    <p className="h-c48 w-c1 bg-000000/20"></p>
-                    <p className="w-4 h-4 rounded-full bg-000000/20"></p>
+                  <p className="h-c48 w-c1 bg-000000/20"></p>
+                  <p className="w-4 h-4 rounded-full bg-000000/20"></p>
                 </div>
               </div>
 
-
-
-
               <div className="pt-3 space-y-5.5">
                 <div className="space-y-1">
-                    <p className="text-sm font-MontserratSemiBold">Customs clearance completed</p>
-                    <p className="text-c12 font-MontserratNormal">15 May, 2025, 3:09 pm</p>
+                  <p className="text-sm font-MontserratSemiBold">
+                    Customs clearance completed
+                  </p>
+                  <p className="text-c12 font-MontserratNormal">
+                    15 May, 2025, 3:09 pm
+                  </p>
                 </div>
                 <div className="space-y-1 text-000000/70">
-                    <p className="text-sm font-MontserratSemiBold ">Package arrived at airport</p>
-                    <p className="text-c12 font-MontserratNormal">15 May, 2025, 3:09 pm</p>
+                  <p className="text-sm font-MontserratSemiBold ">
+                    Package arrived at airport
+                  </p>
+                  <p className="text-c12 font-MontserratNormal">
+                    15 May, 2025, 3:09 pm
+                  </p>
                 </div>
                 <div className="space-y-1 text-000000/70">
-                    <p className="text-sm font-MontserratSemiBold ">Flight departure</p>
-                    <p className="text-c12 font-MontserratNormal">15 May, 2025, 3:09 pm</p>
+                  <p className="text-sm font-MontserratSemiBold ">
+                    Flight departure
+                  </p>
+                  <p className="text-c12 font-MontserratNormal">
+                    15 May, 2025, 3:09 pm
+                  </p>
                 </div>
                 <div className="space-y-1 text-000000/70">
-                    <p className="text-sm font-MontserratSemiBold ">Order Shipped</p>
-                    <p className="text-c12 font-MontserratNormal">15 May, 2025, 3:09 pm</p>
+                  <p className="text-sm font-MontserratSemiBold ">
+                    Order Shipped
+                  </p>
+                  <p className="text-c12 font-MontserratNormal">
+                    15 May, 2025, 3:09 pm
+                  </p>
                 </div>
                 <div className="space-y-1 text-000000/70">
-                    <p className="text-sm font-MontserratSemiBold ">Your order is being picked in the warehouse</p>
-                    <p className="text-c12 font-MontserratNormal">15 May, 2025, 3:09 pm</p>
+                  <p className="text-sm font-MontserratSemiBold ">
+                    Your order is being picked in the warehouse
+                  </p>
+                  <p className="text-c12 font-MontserratNormal">
+                    15 May, 2025, 3:09 pm
+                  </p>
                 </div>
                 <div className="space-y-1 text-000000/70">
-                    <p className="text-sm font-MontserratSemiBold ">The warehouse has started preparing your order</p>
-                    <p className="text-c12 font-MontserratNormal">15 May, 2025, 3:09 pm</p>
+                  <p className="text-sm font-MontserratSemiBold ">
+                    The warehouse has started preparing your order
+                  </p>
+                  <p className="text-c12 font-MontserratNormal">
+                    15 May, 2025, 3:09 pm
+                  </p>
                 </div>
                 <div className="space-y-1 text-000000/70">
-                    <p className="text-sm font-MontserratSemiBold ">Order Paid Successfully</p>
-                    <p className="text-c12 font-MontserratNormal">15 May, 2025, 3:09 pm</p>
+                  <p className="text-sm font-MontserratSemiBold ">
+                    Order Paid Successfully
+                  </p>
+                  <p className="text-c12 font-MontserratNormal">
+                    15 May, 2025, 3:09 pm
+                  </p>
                 </div>
                 <div className="space-y-1 text-000000/70">
-                    <p className="text-sm font-MontserratSemiBold ">Order Submitted</p>
-                    <p className="text-c12 font-MontserratNormal">15 May, 2025, 3:09 pm</p>
+                  <p className="text-sm font-MontserratSemiBold ">
+                    Order Submitted
+                  </p>
+                  <p className="text-c12 font-MontserratNormal">
+                    15 May, 2025, 3:09 pm
+                  </p>
                 </div>
               </div>
             </div>

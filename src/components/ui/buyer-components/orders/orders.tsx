@@ -22,7 +22,7 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("All");
 
   return (
-    <div className="w-full h-screen flex flex-col">
+    <div className="w-full  h-screen flex flex-col">
       {/* Top section (Nav + Search) */}
       <div className="flex justify-between pt-c32 border-b border-black/10">
         <OrdersNav
@@ -32,13 +32,13 @@ export default function OrdersPage() {
         />
         <SearchInput
           placeholder="Order ID, Store name, Product name"
-          className="border border-000000/18 focus:ring-ff715b shadow-neutral-50"
+          className="border border-000000/18 focus:ring-ff715b shadow-neutral-50 hidden md:block"
         />
       </div>
 
       {/* Scrollable content section */}
-      <div className="flex-1  overflow-y-auto no-scrollbar">
-        <div className="pt-c32 pb-c60">
+      <div className="flex-1   overflow-y-auto no-scrollbar">
+        <div className="md:pt-c32 pb-c60">
           {activeTab === "All" && <Orders />}
           {activeTab === "Awaiting Payment" && (
             <div className=""><AwaitingOrders/></div>

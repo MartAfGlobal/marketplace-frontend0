@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-
+import { useRouter } from "next/navigation";
 import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 
 import { dummyProducts } from "@/store/data/products";
@@ -22,6 +22,7 @@ import MobileCheckoutItems from "@/components/ui/mobile/checkout-items";
 
 export default function CartPage() {
   const [visible, setVisible] = useState(10);
+  const router = useRouter();
 
   const fashionProducts = dummyProducts.filter(
     (product) => product.category === "Fashion and Apparel"
@@ -33,7 +34,13 @@ export default function CartPage() {
   const dispatch = useDispatch();
 
   return (
-    <div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}  // Start slightly down and transparent
+      animate={{ opacity: 1, y: 0 }}  // Animate to normal
+      exit={{ opacity: 0, y: -20 }}   // Optional exit animation
+      transition={{ duration: 0.5, ease: "easeOut" }}  // Smooth transition
+      className="w-full"
+    >
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -52,6 +59,7 @@ export default function CartPage() {
           <span className=" font-MontserratMedium text-c12">Checkout</span>
         </nav>
       </motion.div>
+
       <div className="w-full px-6 md:px-15">
         <Link href="/cart" className="flex items-center gap-4 mt-3 md:mt-c32">
           <Image
@@ -68,7 +76,7 @@ export default function CartPage() {
 
         <div className="flex justify-between mt-7 md:hidden">
           <p className="text-c12 font-MontserratSemiBold ">Shipping address</p>
-          <button className="rounded-full bg-ff715b text-ffffff w-c32 h-c32">
+          <button onClick={() => router.push("/dashboard/buyer/mobile/addresses/add-address")} className="rounded-full bg-ff715b text-ffffff w-c32 h-c32">
             +
           </button>
         </div>
@@ -91,6 +99,6 @@ export default function CartPage() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

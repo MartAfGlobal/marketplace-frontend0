@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 interface OrdersNavProps {
   tabs: string[];
@@ -9,13 +10,36 @@ interface OrdersNavProps {
 }
 
 export default function OrdersNav({ tabs, activeTab, onTabChange }: OrdersNavProps) {
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    const activeIndex = tabs.findIndex((t) => t === activeTab);
+
+    // ✅ Only run scroll on mobile (below md: 768px)
+    if (
+      typeof window !== "undefined" &&
+      window.innerWidth < 768 &&
+      activeIndex !== -1 &&
+      tabRefs.current[activeIndex]
+    ) {
+      tabRefs.current[activeIndex]?.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [activeTab, tabs]);
+
   return (
-    <div className="relative flex gap-2 bg-947fff/10 w-full max-w-152.25 border-gray-300">
-      {tabs.map((tab) => {
+    <div className="relative flex gap-2 bg-947fff/10 w-full md:max-w-152.25 overflow-x-auto text-nowrap scroll-smooth">
+      {tabs.map((tab, index) => {
         const isActive = activeTab === tab;
         return (
           <button
             key={tab}
+            ref={(el) => {
+              tabRefs.current[index] = el; // ✅ no return
+            }}
             onClick={() => onTabChange(tab)}
             className="relative p-4 text-c12 font-MontserratSemiBold text-6a0dad"
           >

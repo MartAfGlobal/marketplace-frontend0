@@ -60,7 +60,7 @@ export default function     Proccessed() {
   };
 
   return (
-    <div className="space-y-c24 w-full">
+    <div className="space-y-c24 w-ful l px-6">
       <div className="w-full">
         <div className="w-full space-y-c24 mt-c32">
           <AnimatePresence mode="wait">
@@ -102,13 +102,13 @@ export default function     Proccessed() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.8 }}
                   >
-                    <div className="w-full flex justify-between mb-c32">
+                      <div className="w-full flex items-center md:gap-0 justify-between mb-3 md:mb-c32">
                       <div>
-                        <p className="text-sm font-MontserratSemiBold leading-c20 text-000000">
-                         Order is on its way
+                        <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
+                         Delivered
                         </p>
-                        <div className="flex gap-2 mt-2">
-                          <p className="text-c12 font-MontserratNormal">
+                        <div className="md:flex hidden gap-2 mt-2">
+                          <p className="text-c12  font-MontserratNormal">
                             Order ID: {orderId}
                           </p>
                           <button onClick={handleCopy}>
@@ -131,7 +131,7 @@ export default function     Proccessed() {
                       </p>
                     </div>
 
-                    <div className="w-full justify-between pb-c32 flex">
+                    <div className="w-full md:justify-between flex-col pb-c32 flex md:flex-row">
                       <div className="flex gap-4 items-start">
                         <Image
                           src={item.icon}
@@ -154,16 +154,35 @@ export default function     Proccessed() {
                           <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
                             ₦{item.totalAmount}
                           </p>
+                          <div className="w-full gap-4 pl flex md:hidden  mt-4 space-y-4">
+                            <button
+                             
+                              className="bg-transparent border h-c40 rounded-c8 w-full text-c10 border-ff715b text-ff715b"
+                            >
+                              Track order
+                            </button>
+                            <button
+                              
+                              className="text-c10 text-ffffff bg-ff715b w-full h-c40 rounded-lg "
+                            >
+                              Confirm delivery
+                            </button>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="w-full max-w-70 space-y-4">
-                        <Button className="bg-transparent border border-ff715b text-ff715b">
-                          Add to cart
+                      <div className="w-full gap-4 pl hidden md:flex md:flex-col  md:max-w-70 space-y-4">
+                        <Button
+                         
+                          className="bg-transparent border border-ff715b text-ff715b"
+                        >
+                          Track order
                         </Button>
-                        <Button>Leave a review</Button>
-                         <div className="w-full flex justify-center">
-                          <button className="text-c14 font-MontserratSemiBold text-ff715b">Remove</button>
+                        <Button >
+                          Confirm delivery
+                        </Button>
+                        <div className="w-full hidden md:flex justify-center">
+                         
                         </div>
                       </div>
                     </div>

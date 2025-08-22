@@ -41,7 +41,7 @@ export default function MobileCards() {
     <div className="space-y-6 pt-3">
       <div className="flex justify-between mt-7 md:hidden">
         <p className="text-c12 font-MontserratSemiBold ">Payment method</p>
-        <button className="rounded-full bg-ff715b text-ffffff w-c32 h-c32">
+        <button onClick={() => router.push("/dashboard/buyer/mobile/payment-cards/add-address")} className="rounded-full bg-ff715b text-ffffff w-c32 h-c32">
           +
         </button>
       </div>
@@ -96,7 +96,7 @@ export default function MobileCards() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
           className="text-c12 font-MontserratSemiBold text-ff715b"
-          onClick={() => router.push("/cart/mobile/payment-cards")}
+          onClick={() => router.push("/dashboard/buyer/mobile/payment-cards")}
         >
           See More
         </motion.button>

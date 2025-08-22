@@ -28,26 +28,32 @@ export default function BuyerDashboard() {
     {
       name: "Wishlist",
       icon: Heart,
+      routerLink: "/dashboard/buyer/mobile/wishlist",
     },
     {
       name: "Orders",
       icon: Plane,
+      routerLink: "/dashboard/buyer/orders",
     },
     {
       name: "Coupons",
       icon: Coupon,
+      routerLink: "/dashboard/buyer/coupons",
     },
     {
       name: "Sellers",
       icon: seller,
+      routerLink: "/dashboard/buyer/sellers",
     },
     {
       name: "Cards",
       icon: card,
+      routerLink: "/dashboard/buyer/mobile/payment-cards",
     },
     {
       name: "Addresses",
       icon: Address,
+      routerLink: "/dashboard/buyer/mobile/addresses"
     },
   ];
 
@@ -109,6 +115,7 @@ export default function BuyerDashboard() {
                     .slice(rowIdx * 3, rowIdx * 3 + 3)
                     .map((item, i) => (
                       <motion.button
+                       onClick={()=> router.push(item.routerLink)}
                         key={i}
                         whileInView="visible"
                         viewport={{ once: false, amount: 0.2 }}

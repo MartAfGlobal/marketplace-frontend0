@@ -203,8 +203,8 @@ export default function UserAddress({ className }: { className?: string }) {
       <div className="w-full flex pt-6 justify-end md:hidden">
         <button
           className="font-MontserratSemiBold text-sm text-ff715b"
-          onClick={() => { 
-            router.push("/cart/mobile/addresses");
+          onClick={() => {
+            router.push("/dashboard/buyer/mobile/addresses");
           }}
         >
           See more

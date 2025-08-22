@@ -177,7 +177,7 @@ export default function AllAddressesPage() {
       
       <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
         <Button
-          onClick={() => router.push("/cart/mobile/addresses/add-address")}
+          onClick={() => router.push("/dashboard/buyer/mobile/addresses/add-address")}
           className="border-0"
         >
           + Add new address

@@ -87,7 +87,7 @@ export default function MobileCards() {
         ))}
 
         <button
-          onClick={() => router.push("/cart/mobile/payment-cards/add-new-card")}
+          onClick={() => router.push("/dashboard/buyer/mobile/payment-cards/add-new-card")}
           className="w-full mt-6  flex flex-col items-start py-3 px-6 gap-2 rounded-c8 text-ff715b border border-ff715b"
         >
           <span className="text-c12 font-MontserratSemiBold text-left">
