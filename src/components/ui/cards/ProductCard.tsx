@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Product } from "@/types/global";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/cart/cartSlice";
+import { addToWishlist } from "@/store/cart/wishlist-slice";
 import { setSelectedProduct } from "@/store/user-data/products/selectedProduct-slice";
 import { useRouter } from "next/navigation";
 import LoveIcon from "@/assets/images/loveIcone.svg";
@@ -46,6 +47,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={(e) => {
               e.stopPropagation();
+              dispatch(addToWishlist(product));
             }}
             className="absolute top-4 right-4 w-[32px] h-[32px] bg-white rounded-full shadow flex items-center justify-center"
           >

@@ -25,7 +25,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
     if (loading) return <WireframeLoader/>;
 
   // Hide layout for auth pages
-  const hideLayout = pathname?.startsWith("/auth") ?? false;
+  const hideLayout =  pathname?.startsWith("/auth") ?? false;
 
 const productPage = ["/product", "/cart", "/dashboard"].some(path => pathname?.startsWith(path));
 

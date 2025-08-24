@@ -15,12 +15,13 @@ import OtherSearchInput from "../../others/Search";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import DropdownModal from "../../mobile/modal/header-drop-modal";
-import { useState } from "react"; 
+import { useState } from "react";
 import CartButton from "../../cart/cartButton";
+import SignUpModal from "../../mobile/auth/sign-up";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
-
+  const [showModal, setShowModal] = useState(false);
   const pathname = usePathname();
   const changeSearch = pathname?.startsWith("/others") ?? false;
 
@@ -52,9 +53,7 @@ export default function Header() {
             </button>
           </div>
 
-          {cartCount > 0 && (
-           < CartButton/>
-          )}
+          {cartCount > 0 && <CartButton />}
 
           <Link href="/auth/login" className="flex items-center gap-2">
             <Image src={User} alt="User" width={30} height={30} />
@@ -65,7 +64,7 @@ export default function Header() {
 
       {/* mobile screen */}
       <div className="w-full md:hidden">
-         <DropdownModal open={open} onClose={() => setOpen(false)} />
+        <DropdownModal open={open} onClose={() => setOpen(false)} />
       </div>
       <motion.header
         initial={{ opacity: 0, y: -40 }}
@@ -73,7 +72,6 @@ export default function Header() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="w-full bg-[#6A0DAD] md:hidden h-[80px] pl-4 pr-6 flex items-center justify-between"
       >
-       
         <div className="flex gap-3 items-center">
           <button onClick={() => setOpen(true)} className=" px-1 py-1.75">
             <Image src={handburger} alt="categories" width={24} height={18} />
@@ -105,18 +103,24 @@ export default function Header() {
             </div>
           )}
 
-          <Link href="/auth/login" className="flex items-center gap-2">
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2"
+          >
             <Image src={User} alt="User" width={19.52} height={18.77} />
-          </Link>
+          </button>
 
           <button className="flex items-center gap-2">
-            <h1 className="text-ffffff font-MontserratMedium text-c14">
-              EN
-            </h1>
+            <h1 className="text-ffffff font-MontserratMedium text-c14">EN</h1>
             <Image src={NigeriaFlag} alt="NigeriaFlag" width={20} height={20} />
           </button>
         </div>
       </motion.header>
+      <div className="w-full px-3.75">
+        <div className="w-full px-3.75">
+        <SignUpModal open={showModal} onClose={() => setShowModal(false)} />
+        </div>
+      </div>
     </div>
   );
 }

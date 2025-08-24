@@ -32,7 +32,7 @@ export default function OrdersPage() {
 
   return (
     <div className="w-full   flex flex-col">
-      {/* Top section (Nav + Search) */}
+      
       <div className="flex justify-between pt-c32 border-b border-black/10">
         <OrdersNav
           tabs={tabs}
