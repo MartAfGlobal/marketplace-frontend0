@@ -164,7 +164,7 @@ export default function Shipped() {
                           </p>
                           <div className="w-full gap-4 pl flex md:hidden  mt-4 space-y-4">
                             <button
-                              onClick={handleTrackOrder}
+                              onClick={() => router.push(`/dashboard/buyer/mobile/order-on-its-way`)}
                               className="bg-transparent border h-c40 rounded-c8 w-full text-c10 border-ff715b text-ff715b"
                             >
                               Track order

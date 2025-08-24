@@ -1,5 +1,6 @@
 "use client";
 import { use } from "react"; // <-- Important
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/Button/Button";
 import SpeedOf from "@/assets/icons/speedof.png";
@@ -21,6 +22,7 @@ export default function TrackingDetail() {
   const [copied, setCopied] = useState(false);
   const [visible, setVisible] = useState(10);
   const showMore = () => setVisible((prev) => prev + 10);
+  const router = useRouter();
 
   const fashionProducts = dummyProducts.filter(
     (product) => product.category === "Fashion and Apparel"
@@ -125,11 +127,12 @@ export default function TrackingDetail() {
       </motion.div>
 
       <div className="w-full px-6 md:px-15">
-        <motion.div
+        <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
           className="flex items-center gap-4 mt-4 md:mt-c32"
+          onClick={() => router.back()}
         >
           <Image
             src={NavBack}
@@ -144,7 +147,7 @@ export default function TrackingDetail() {
           <p className="font-MontserratSemiBold md:hidden text-c16 text-161616">
             Track order
           </p>
-        </motion.div>
+        </motion.button>
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}

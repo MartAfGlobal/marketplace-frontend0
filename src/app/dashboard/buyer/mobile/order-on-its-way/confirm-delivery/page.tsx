@@ -15,8 +15,11 @@ import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import NavBack from "@/assets/icons/navBacksmall.png";
 import { TrackOrders } from "@/types/global";
 import { Button } from "@/components/ui/Button/Button";
+import ResponseModal from "@/components/ui/mobile/modal/ResponseModal";
 
 export default function OrderOnTheWayPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalType, setModalType] = useState<"yes" | "no">("no");
   const [copied, setCopied] = useState(false);
   const router = useRouter();
   const orderId = "1234567890";
@@ -86,7 +89,7 @@ export default function OrderOnTheWayPage() {
             className="brightness-20 w-2.25 h-[16.5px]"
           />
           <p className="font-MontserratSemiBold text-c16 text-161616">
-            Payment methods
+            Confirm delivery
           </p>
         </button>
       </div>
@@ -267,7 +270,7 @@ export default function OrderOnTheWayPage() {
             </div>
           </div>
         </motion.div>
-        <div className="py-c32  pb-35">
+        <div className="py-c32  pb-60">
           <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
             More to love
           </p>
@@ -278,26 +281,41 @@ export default function OrderOnTheWayPage() {
           </div>
         </div>
       </div>
-      <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
+      <div className="w-full h-46 bg-ffffff circle-shadow px-6 pt-6 fixed left-0 bottom-0 md:hidden z-50 gap-4">
+        <div className="text-center w-full pb-c32 space-y-1">
+          <p className="text-sm font-MontserratSemiBold">
+            Did you receive this package?
+          </p>
+          <p className="text-c12 font-MontserratNormal">
+            Confirming helps us complete your order and improve service.
+          </p>
+        </div>
         <div className="flex gap-4 items-center justify-center w-full text-c12 font-MontserratSemiBold">
           <button
-            onClick={() =>
-              router.push("/dashboard/buyer/mobile/tracking/[trackingId]")
-            }
+            onClick={() => {
+              setModalType("no");
+              setIsModalOpen(true);
+            }}
             className="border border-ff715b rounded-lg h-c48 flex items-center justify-center w-full text-ff715b"
           >
-           Track order
+            No
           </button>
           <button
-            onClick={() =>
-              router.push("/dashboard/buyer/mobile/order-on-its-way/confirm-delivery")
-            }
+             onClick={() => {
+          setModalType("yes");
+          setIsModalOpen(true);
+        }}
             className=" rounded-lg h-c48 flex items-center justify-center w-full bg-ff715b text-white"
           >
-            Confirm delivery
+            Yes
           </button>
         </div>
       </div>
+      <ResponseModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+         type={modalType}
+      />
     </div>
   );
 }

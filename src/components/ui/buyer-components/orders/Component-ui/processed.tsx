@@ -159,13 +159,13 @@ export default function     Proccessed() {
                              
                               className="bg-transparent border h-c40 rounded-c8 w-full text-c10 border-ff715b text-ff715b"
                             >
-                              Track order
+                              Leave a review
                             </button>
                             <button
                               
                               className="text-c10 text-ffffff bg-ff715b w-full h-c40 rounded-lg "
                             >
-                              Confirm delivery
+                              Buy again
                             </button>
                           </div>
                         </div>
