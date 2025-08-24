@@ -8,6 +8,10 @@ import AwaitingOrders from "./Component-ui/Awaiting-payment";
 import ToShip from "./Component-ui/toship";
 import Shipped from "./Component-ui/shipped";
 import Proccessed from "./Component-ui/processed";
+import { motion } from "framer-motion";
+
+import ProductCard from "@/components/ui/cards/ProductCard";
+import { dummyProducts } from "@/store/data/products";
 
 const tabs = [
   "All",
@@ -21,8 +25,13 @@ const tabs = [
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("All");
 
+
+  const fashionProducts = dummyProducts.filter(
+    (product) => product.category === "Fashion and Apparel"
+  );
+
   return (
-    <div className="w-full  h-screen flex flex-col">
+    <div className="w-full   flex flex-col">
       {/* Top section (Nav + Search) */}
       <div className="flex justify-between pt-c32 border-b border-black/10">
         <OrdersNav
@@ -38,7 +47,7 @@ export default function OrdersPage() {
 
       {/* Scrollable content section */}
       <div className="flex-1   overflow-y-auto no-scrollbar">
-        <div className="md:pt-c32 pb-c60">
+        <div className="md:pt-c32 md:pb-c60 ">
           {activeTab === "All" && <Orders />}
           {activeTab === "Awaiting Payment" && (
             <div className=""><AwaitingOrders/></div>
@@ -57,6 +66,36 @@ export default function OrdersPage() {
           )}
         </div>
 
+      </div>
+       
+      <div className="pb-3 px-6  md:hidden">
+        <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
+          More to love
+        </p>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.15 },
+            },
+          }}
+          className="grid grid-cols-2 sm:grid-cols-4 justify-center lg:grid-cols-6 gap-2.5"
+        >
+          {fashionProducts.map((item) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <ProductCard product={item} />
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </div>
   );

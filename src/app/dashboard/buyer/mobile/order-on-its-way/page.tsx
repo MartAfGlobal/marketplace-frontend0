@@ -86,7 +86,7 @@ export default function OrderOnTheWayPage() {
             className="brightness-20 w-2.25 h-[16.5px]"
           />
           <p className="font-MontserratSemiBold text-c16 text-161616">
-            Payment methods
+            Order on its way
           </p>
         </button>
       </div>

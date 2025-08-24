@@ -83,9 +83,9 @@ export default function Orders() {
       });
   };
   return (
-    <div className="space-y-c24 -full px-6">
-      <div className="w-full">
-        <div className="w-full space-y-c24 mt-7 md:mt-c32">
+    <div className="space-y-c24   w-full px-6 ">
+      <div className="w-full ">
+        <div className="w-full space-y-c24 mt-7 md:mt-c32 ">
           <AnimatePresence mode="wait">
             {trackOrders.length === 0 ? (
               <motion.div
@@ -160,7 +160,7 @@ export default function Orders() {
                       </p>
                     </div>
 
-                    <div className="w-full md:justify-between flex-col pb-c32 flex md:flex-row">
+                    <div className="w-full md:justify-between  flex-col pb-c32 flex md:flex-row">
                       <div className="flex gap-4 items-start">
                         <Image
                           src={item.icon}

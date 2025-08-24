@@ -44,6 +44,9 @@ export default function OrderOnTheWayPage() {
       setIsBottomSheetOpen(false);
     }
   };
+    const fashionProducts = dummyProducts.filter(
+    (product) => product.category === "Fashion and Apparel"
+  );
 
   const handleTakePhoto = () => {
     if (fileInputRef.current) {
@@ -82,9 +85,7 @@ export default function OrderOnTheWayPage() {
     },
   ];
 
-  const fashionProducts = dummyProducts.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+
 
   return (
     <div className="px-6">
@@ -314,7 +315,7 @@ export default function OrderOnTheWayPage() {
                     alt="camera"
                     width={19.63}
                     height={17.36}
-                    className="bg-blue-600"
+                    className=""
                   />
                   <p className="w-fit"> Take Photo</p>
                 </button>

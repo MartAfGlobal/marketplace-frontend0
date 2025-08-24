@@ -170,7 +170,7 @@ export default function Shipped() {
                               Track order
                             </button>
                             <button
-                              onClick={() => setOpen(true)}
+                              onClick={() => router.push(`/dashboard/buyer/mobile/order-on-its-way/confirm-delivery`)}
                               className="text-c10 text-ffffff bg-ff715b w-full h-c40 rounded-lg "
                             >
                               Confirm delivery

@@ -31,7 +31,7 @@ export default function OrdersNav({ tabs, activeTab, onTabChange }: OrdersNavPro
   }, [activeTab, tabs]);
 
   return (
-    <div className="relative flex gap-2 bg-947fff/10 w-full md:max-w-152.25 overflow-x-auto text-nowrap scroll-smooth">
+    <div className="relative flex gap-2 bg-947fff/10 w-full md:max-w-152.25 overflow-x-auto  no-scrollbar text-nowrap scroll-smooth">
       {tabs.map((tab, index) => {
         const isActive = activeTab === tab;
         return (
