@@ -14,9 +14,11 @@ import seller from "@/assets/mobile/cards/sellerIcon.png";
 import card from "@/assets/mobile/cards/card.png";
 import Address from "@/assets/mobile/cards/address.png";
 import SettingsCategories from "../Settings-category";
+import { useSelector } from "react-redux";
 
 export default function BuyerDashboard() {
   const router = useRouter();
+  const buyer = useSelector((state: any) => state.buyer.BuyerData);
 
   const imageVariants = {
     hiddenLeft: { x: -100, opacity: 0 },
@@ -90,9 +92,9 @@ export default function BuyerDashboard() {
               />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-MontserratSemiBold">Frank Ubara</p>
+              <p className="text-sm font-MontserratSemiBold"> { buyer.first_name}</p>
               <p className="text-c12 font-MontserratNormal">
-                frankubi2023@gmail.com
+                {buyer.email}
               </p>
             </div>
           </div>

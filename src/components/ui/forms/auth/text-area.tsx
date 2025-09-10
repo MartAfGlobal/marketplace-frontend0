@@ -10,7 +10,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const textareaClasses = cn(
       "h-c120 p-4 w-full rounded-c12 border outline-none resize-none md:text-sm",
       valid
-        ? "border-efefef focus:border-[#FF715B] focus:ring-2 focus:ring-ff715b"
+        ? "border-efefef focus:border-ff715b focus:ring-1 focus:ring-ff715b"
         : "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500",
       "focus:ring-offset-0",
       className

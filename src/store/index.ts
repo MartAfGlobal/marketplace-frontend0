@@ -2,22 +2,38 @@
 
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import cartReducer from "@/store/cart/cartSlice";
-import  wishlistReducer from "@/store/cart/wishlist-slice";
+import wishlistReducer from "@/store/cart/wishlist-slice";
 import { persistReducer, persistStore } from "redux-persist";
 import counterReducer from "./slices/counterSlice";
 import storage from "redux-persist/lib/storage";
 
 import productReducer from "./user-data/products/product-slice"; 
-import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice"; // ✅ fixed import
-import toastReducer from "@/store/token/token-slice"
+import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice"; 
+import tokenReducer from "@/store/token/token-slice";
+import buyerReducer from "@/store/user-data/buyer/buyer-slice"; // ✅ import buyer slicese
+import sellerReducer from "@/store/user-data/seller/seller-slice"
 
-const clientCartPersistConfig = {
+// Persist config for token
+const tokenPersistConfig = {
   key: "token",
   storage,
 };
 
+// (Optional) Persist config for buyer (if you want buyer data saved after reload)
+const buyerPersistConfig = {
+  key: "buyer",
+  storage,
+};
+
+const sellerPersistConfig ={
+  key: "seller",
+  storage,
+}
+
 const rootReducer = combineReducers({
-  token: persistReducer(clientCartPersistConfig, toastReducer.reducer),
+  token: persistReducer(tokenPersistConfig, tokenReducer.reducer),
+  buyer: persistReducer(buyerPersistConfig, buyerReducer),
+  seller: persistReducer(sellerPersistConfig, sellerReducer),
   products: productReducer,
   counter: counterReducer,
   cart: cartReducer,

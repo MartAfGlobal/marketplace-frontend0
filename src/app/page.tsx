@@ -9,11 +9,15 @@ import MobileCategory from "@/components/ui/mobile/mobile-category";
 import Gallary from "@/components/ui/mobile/gallary";
 
 
-export default function Home() {
-  const [loading, setLoading] = useState(true);
 
+
+
+export default function Home() {
+
+
+
+  const [loading, setLoading] = useState(true);
     useEffect(() => {
-    // Simulate data fetching
     const timer = setTimeout(() => setLoading(false), 2000);
     return () => clearTimeout(timer);
   }, []);

@@ -75,6 +75,8 @@ export default function SectionSelector({
                   <Image
                     src={s.icon}
                     alt={`${s.label} icon`}
+                    width={16}
+                    height={16}
                     className="w-2.5 h-2.5 object-contain"
                   />
                 )}

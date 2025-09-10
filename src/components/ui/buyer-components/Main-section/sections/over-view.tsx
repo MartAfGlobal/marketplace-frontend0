@@ -8,8 +8,10 @@ import ProfileImageModal from "@/components/ui/Modals/ProfileImageModal";
 import ProfileDetailsModal from "@/components/ui/Modals/edit-profile-modal";
 import { AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 
 export default function OverView() {
+  const buyer = useSelector((state: any) => state.buyer.BuyerData);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
@@ -21,6 +23,8 @@ export default function OverView() {
     mobile: "+2347034567654",
     homeNumber: "+2347034567654",
   });
+
+  console.log ("new buyer details:", buyer)
 
   function handleUpload(file: File) {
     const url = URL.createObjectURL(file);
@@ -42,7 +46,7 @@ export default function OverView() {
     <>
       <div className="flex gap-c48">
         <ProfileImage
-          src={currentProfile}
+          src={buyer?.profile?.profile_picture || profilePicture}
           onEditClick={() => setProfileModalOpen(true)}
         />
         <div className="w-full">
@@ -64,7 +68,7 @@ export default function OverView() {
                 Full name
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                {profileDetails.name}
+                {buyer.first_name || "N/A"} {buyer.last_name || "N/A"}
               </span>
             </div>
             <div className="flex gap-c32">
@@ -72,7 +76,7 @@ export default function OverView() {
                 Email address
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                {profileDetails.email}
+                {buyer.email}
               </span>
             </div>
             <div className="flex gap-c32">
@@ -80,7 +84,7 @@ export default function OverView() {
                 Mobile number
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                {profileDetails.mobile}
+                 {buyer?.profile?.phone || "N/A"}
               </span>
             </div>
             <div className="flex gap-c32">
@@ -88,7 +92,7 @@ export default function OverView() {
                 Home number
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                {profileDetails.homeNumber}
+                 {buyer?.profile?.phone2 || "N/A"}
               </span>
             </div>
           </div>

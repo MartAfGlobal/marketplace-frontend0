@@ -1,6 +1,6 @@
 // app/(auth)/login/page.tsx
 import AuthenticationLayout from "@/components/ui/LayoutWrappers/AuthenticationLayout";
-import ForgotPassword from "@/components/ui/forms/auth/forgotPassword";
+import ForgotPassword from "@/components/ui/forms/auth/buyer/forgotPassword";
 
 
 

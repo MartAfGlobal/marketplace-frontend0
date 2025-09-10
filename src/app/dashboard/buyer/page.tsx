@@ -1,5 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useHttp } from "@/hooks/use-http";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
+
 import UserMain from "@/components/ui/buyer-components/Main-section/main";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,18 +12,57 @@ import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 import { motion } from "framer-motion";
 import BuyerDashboard from "@/components/ui/mobile/dashbords/buyer-dashboard/dashboard";
 
-export default function BuyerDashBoard() {
+export default function BuyerDashBoardPage() {
+  const { sendHttpRequest: userInforHttpRequest, } = useHttp();
+  const dispatch = useDispatch();
+
+  const token = useSelector((state: any) => state.token?.token);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchUserSucRes = (res: any) => {
+      const resData = res?.data;
+      console.log("User info response:", resData);
+
+      // Adjust depending on backend response shape
+      const user = resData?.buyerDetails || resData?.user || resData;
+
+      // ✅ Save to redux
+      dispatch(
+        buyerActions.updateBuyerData({
+          email: user?.email,
+          first_name: user?.first_name,
+        })
+      );
+    };
+
+    userInforHttpRequest({
+      requestConfig: {
+        url: "/accounts/UserDetails/",
+        method: "GET",
+        token,
+        isAuth: true,
+        successMessage: "User info fetched", 
+        userType: "buyer"
+      },
+      successRes: fetchUserSucRes,
+    });
+  }, [token, dispatch]);
+
   return (
     <>
-    <div className="md:hidden">
-     < BuyerDashboard/>
-    </div>
-      {/* Breadcrumb */}
+      {/* Mobile Dashboard */}
+      <div className="md:hidden">
+        <BuyerDashboard />
+      </div>
+
+      {/* Breadcrumb for Desktop */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className=" pl-c56 pt-c20 z-40 md:flex items-center w-full hidden"
+        className="pl-c56 pt-c20 z-40 md:flex items-center w-full hidden"
         style={{ top: "5rem" }}
       >
         <nav aria-label="breadcrumb" className="flex items-center gap-2">
@@ -32,6 +76,7 @@ export default function BuyerDashBoard() {
         </nav>
       </motion.div>
 
+      {/* Desktop Dashboard */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}

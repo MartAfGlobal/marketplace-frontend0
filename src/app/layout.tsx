@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import ClientProvider from "@/components/store/client-provider";
 import "./globals.css";
 import LayoutWrapper from "@/components/ui/LayoutWrappers/LayoutWrapper"; // Adjust the path if needed
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "market place",
@@ -18,6 +19,7 @@ export default function RootLayout({
       <body>
         <ClientProvider>
           <LayoutWrapper>
+              <Toaster richColors position="top-right" />
             {children}
           </LayoutWrapper>
         </ClientProvider>

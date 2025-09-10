@@ -1,6 +1,6 @@
 // app/(auth)/login/page.tsx
 import AuthenticationLayout from "@/components/ui/LayoutWrappers/AuthenticationLayout";
-import RecoveryEmailSent from "@/components/ui/forms/auth/recoverylinksent";
+import RecoveryEmailSent from "@/components/ui/forms/auth/buyer/recoverylinksent";
 
 
 

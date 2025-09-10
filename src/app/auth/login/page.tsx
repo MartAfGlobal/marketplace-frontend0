@@ -1,6 +1,6 @@
 // app/(auth)/login/page.tsx
 import AuthenticationLayout from "@/components/ui/LayoutWrappers/AuthenticationLayout";
-import LoginForm from "@/components/ui/forms/auth/loginForm";
+import LoginForm from "@/components/ui/forms/auth/buyer/loginForm";
 
 
 

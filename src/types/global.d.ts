@@ -1,6 +1,7 @@
 // import Button from "@/components/ui/Button/Button";
 // import { title } from "process";
 
+import { profile } from "console";
 import { StaticImageData } from "next/image";
 import { ReactNode } from "react";
 
@@ -8,6 +9,11 @@ interface BreadcrumbItem {
   label: string;
   href?: string; // if no href, render as plain text
 }
+
+export type LoadingSpinnerProps = {
+  size?: number;
+  color?: string;
+};
 
 type Category = {
   name: string;
@@ -18,6 +24,22 @@ type CategoryD = {
   name: string;
   subcategories: string | ReactNode;
 };
+
+type HttpRequestConfigType = {
+  url: string;
+  method: string;
+  successMessage?: string;
+  token?: string;
+  params?: any;
+  body?: any;
+  isAuth?: boolean;
+  userType?: "seller" | "buyer"; // 👈 added
+};
+
+export interface HttpRequestConfigProps {
+  requestConfig: HttpRequestConfigType;
+  successRes: (data: any) => void;
+}
 
 export interface Option {
   id: number;
@@ -71,6 +93,41 @@ export type Passwords = {
   confirmPassword: string;
 };
 
+export interface RegisterParams {
+  email: string;
+  password: string;
+  confirm_password: string;
+  is_manufacturer?: boolean;
+  phone?: string; // ✅ optional
+}
+
+export interface BusinessRegisterParams {
+  company_name?: string;
+  buisness_type?: string;
+  business_registration_number?: string;
+  business_category?: string;
+  business_description?: string;
+  city?: string;
+  company_address?: string;
+  residence_country?: string;
+  state?: string;
+  phone2?: string;
+  postal_code?: string;
+}
+
+export interface BuyerEditParams {
+  name: string;
+  phone: string;
+  phone2: string;
+  email: string;
+  name: string;
+}
+
+export interface LoginParams {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
 
 export interface ResetPasswordModalProps {
   isOpen: boolean;
@@ -101,10 +158,9 @@ export interface AddressModalProps {
   currentAddress?: Partial<Address>; // optional for pre-filling form
 }
 
-
 export interface AtmCardProps {
   id: number;
-  icon: string| StaticImageData;
+  icon: string | StaticImageData;
   accountNo: string;
 }
 
@@ -120,8 +176,6 @@ export interface AddCardModalProps {
   onClose: () => void;
   onSave: (details: CardDetails) => void;
 }
-
-
 
 interface NotificationItem {
   id: number;
@@ -190,10 +244,25 @@ export interface Product {
   onSale: boolean;
   rating: number;
   freeShipping: boolean;
-   quantity?: number;
+  quantity?: number;
 }
 
- export interface ProductPageProps {
+
+export interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  uploadedSize: number;
+  progress: number;
+  uploaded: boolean;
+  title: string;
+  description: string;
+  rawFile: File;   // ✅ always required
+  url?: string;
+}
+
+
+export interface ProductPageProps {
   params: { slug: string }; // still declare type for TS
 }
 
@@ -235,9 +304,18 @@ export type UserAddressProps = {
   icon: string | StaticImageData;
   phoneNo: string;
   address: string;
-   className?: string;
+  className?: string;
 };
 
+export interface UsableCardProps {
+  title: string;
+  children: ReactNode;
+}
+
+interface NavigationBarProps {
+  activeTab: string;
+  setActiveTab: (id: string) => void;
+}
 
 type DropdownModalProps = {
   open: boolean;
@@ -282,11 +360,10 @@ export interface OrderDetailsPageProps {
   params: Promise<{ id: string }>;
 }
 
-
 // types/global.ts (or wherever QuantitySelectorProps is defined)
 export interface QuantitySelectorProps {
   productId: string | number;
-  quantity: number ; 
+  quantity: number;
   onChange?: (newQty: number, id: string | number) => void;
 
   // optional styling props
@@ -301,3 +378,168 @@ export interface QuantitySelectorProps {
   quantityFont?: string;
 }
 
+interface SectionSelectorProps extends Props {
+  onSectionClick: (id: string) => void;
+  sections: { id: string; label: string; icon?: StaticImageData }[];
+  hideOnMobile?: boolean;
+}
+
+type FilterModalProps = {
+  onFiltersChange: (filters: any) => void;
+  onClose: () => void; // <-- add this
+};
+types / global.d.ts;
+
+// Define the Profile type first
+export type BuyerProfile = {
+  id: number;
+  profile_picture: string | null;
+  phone: string;
+  phone2: string | null;
+  country: string;
+  state: string;
+  city: string;
+  address: string;
+  zip_code: string;
+};
+
+export type Data = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  account_status: string;
+  date_created: string;
+  date_joined: string;
+  last_login: string | null;
+  groups: string[];
+  is_accountant: boolean;
+  is_active: boolean;
+  is_agent: boolean;
+  is_customer: boolean;
+  is_google_user: boolean;
+  is_manufacturer: boolean;
+  is_staff: boolean;
+  is_staff_member: boolean;
+  is_superuser: boolean;
+  profile_type: string;
+  user_permissions: string[];
+  profile: BuyerProfile;
+};
+
+// Your slice params type
+export type BuyerSliceParams = {
+  BuyerData: BuyerData;
+  BuyerItems: BuyerItem[];
+};
+
+// Define the Profile type first
+export type SellerProfile = {
+  id: number;
+  profile_picture: string | null;
+  phone: string;
+  phone2: string | null;
+  country: string;
+  state: string;
+  city: string;
+  address: string;
+  zip_code: string;
+};
+
+// Define the main BuyerData type
+export type Data = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  account_status: string;
+  date_created: string;
+  date_joined: string;
+  last_login: string | null;
+  groups: string[];
+  is_accountant: boolean;
+  is_active: boolean;
+  is_agent: boolean;
+  is_customer: boolean;
+  is_google_user: boolean;
+  is_manufacturer: boolean;
+  is_staff: boolean;
+  is_staff_member: boolean;
+  is_superuser: boolean;
+  profile_type: string;
+  user_permissions: string[];
+  profile: BuyerProfile;
+};
+
+// Your slice params type
+export type BuyerSliceParams = {
+  BuyerData: Data;
+  BuyerItems: BuyerItem[];
+};
+
+export interface SellerProfile {
+  CAC_No?: string | null;
+  address?: string | null;
+  bank_details?: string | null;
+  bank_verification_status?: string | null;
+  business_description?: string | null;
+  business_industry?: string | null;
+  business_license?: string | null;
+  business_registration_location?: string | null;
+  business_registration_number?: string | null;
+  business_type?: string | null;
+  city?: string | null;
+  company_address?: string | null;
+  company_logo_url?: string | null;
+  company_name?: string | null;
+  country?: string | null;
+  created_at?: string | null;
+  dob?: string | null;
+  document_verification_status?: string | null;
+  documents?: any[];
+  email?: string | null;
+  first_name?: string | null;
+  id?: string | number;
+  identification_verification?: string | null;
+  is_fully_verified?: boolean;
+  is_warehouse?: boolean;
+  landmark?: string | null;
+  last_name?: string | null;
+  loyalty_points?: number;
+  nationality?: string | null;
+  phone?: string | null;
+  phone2?: string | null;
+  postal_code?: string | null;
+  preferred_payment_method?: string | null;
+  profile_picture_url?: string | null;
+  residence_country?: string | null;
+  state?: string | null;
+  total_documents?: number;
+  username?: string | null;
+  verified_documents?: number;
+  wallet_balance?: number;
+  warehouse?: string | null;
+  website?: string | null;
+  account_status?: string;
+  date_created?: string;
+  date_joined?: string;
+  is_accountant?: boolean;
+  is_active?: boolean;
+  is_agent?: boolean;
+  is_customer?: boolean;
+  is_google_user?: boolean;
+  is_manufacturer?: boolean;
+  is_staff?: boolean;
+  is_staff_member?: boolean;
+  is_superuser?: boolean;
+  last_login?: string | null;
+}
+
+export interface SellerData {
+  email?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  phone2?: string | null;
+  profile?: SellerProfile;
+}

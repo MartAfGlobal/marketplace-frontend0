@@ -49,7 +49,7 @@ export default function Header() {
             </h1>
             <Image src={NigeriaFlag} alt="NigeriaFlag" width={24} height={24} />
             <button>
-              <Image src={DropIcon} alt="DropIcon" />
+               <Image src={DropIcon} alt="DropIcon" width={16.5} height={9} />
             </button>
           </div>
 
