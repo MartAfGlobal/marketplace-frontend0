@@ -78,15 +78,15 @@ export default function SellerSignUp() {
     checkbox === true;
 
   return (
-    <div className=" w-full max-w-130 min-w-90  flex items-center  justify-center py-6 rounded-c16 signUp ">
-      <div className="h-full w-ful max-w-102 ">
+    <div className=" w-full max-w-130 px-c56 min-w-90  flex items-center  justify-center py-6 rounded-c16 signUp ">
+      <div className="h-full w-full  ">
         <div className="text-center space-y-2 mb-4">
           <h2 className="font-MontserratSemiBold text-c32 m-0">Sign up</h2>
           <p className="font-MontserratNormal text-base m-0">
             Welcome! Let’s set up your seller account.
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="">
+        <form onSubmit={handleSubmit} className=" w-full ">
           <div className="flex flex-col gap-2">
             <label className="text-c12 font-MontserratMedium text-000000 ">
               email

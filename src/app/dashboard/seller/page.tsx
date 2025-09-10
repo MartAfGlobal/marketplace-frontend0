@@ -6,6 +6,7 @@ import { useHttp } from "@/hooks/use-http";
 import { sellerActions } from "@/store/user-data/seller/seller-slice";
 import { useRouter } from "next/navigation";
 import { SellerData } from "@/types/global";
+import { toast } from "sonner";
 
 export default function SellerDashboardPage() {
   const { sendHttpRequest: userInforHttpRequest } = useHttp();
@@ -17,7 +18,8 @@ export default function SellerDashboardPage() {
 
   useEffect(() => {
     if (!token) {
-      console.warn("No token, skipping user fetch");
+      toast.error("No token, skipping user fetch");
+      router.replace("/auth/seller/login")
       return;
     }
 
