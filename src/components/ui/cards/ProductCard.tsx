@@ -1,6 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Product } from "@/types/global";
+import { Product, Variations } from "@/types/global";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/cart/cartSlice";
 import { addToWishlist } from "@/store/cart/wishlist-slice";
@@ -8,6 +10,12 @@ import { setSelectedProduct } from "@/store/user-data/products/selectedProduct-s
 import { useRouter } from "next/navigation";
 import LoveIcon from "@/assets/images/loveIcone.svg";
 import Cart from "@/assets/headerIcon/cart.svg";
+import { useHttp } from "@/hooks/use-http";
+import { addToCartBackend } from "../cart/AddToCart";
+import { LoadingSpinner } from "../loading-spinner";
+
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -16,13 +24,34 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const { loading, sendHttpRequest } = useHttp();
+
+  const [selectedVariation, setSelectedVariation] = useState<Variations | null>(
+    product.variations?.[0] || null
+  );
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCartBackend(
+      {
+        productId: product.id,
+        quantity: 1,
+        variationid: selectedVariation?.id || null, // send the variation id
+      },
+      sendHttpRequest,
+      (res) => {
+        
+        toast.success("Item added to cart successfully"); // ✅ correct syntax
+      }
+    );
+  };
 
   const handleClick = () => {
     dispatch(setSelectedProduct(product));
     router.push(`/product/${product.slug}`);
   };
 
-  const productImage = Array.isArray(product.image) ? product.image[0] : product.image;
+  const productImage = product.image?.[0] || "/placeholder.png";
 
   return (
     <div onClick={handleClick} className="cursor-pointer">
@@ -35,7 +64,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       >
         {/* Product Image */}
         <div className="relative h-40 w-full">
-          <Image src={productImage} alt={product.category || "Product"} fill className="object-cover" />
+          <Image
+            src={productImage}
+            alt={product.category || "Product"}
+            fill
+            className="object-cover"
+          />
 
           {product.onSale && (
             <span className="absolute top-4 left-4 font-MontserratSemiBold bg-[#FFAC06] text-[12px] text-white w-[71px] h-[32px] flex items-center justify-center rounded-[8px]">
@@ -56,22 +90,55 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Product Info */}
-        <div className="flex justify-between p-4 items-end">
+        <div className="flex  items-end justify-between p-4 h-[104px]">
           <div className="text-sm">
-            <p className="font-MontserratMedium text-[12px] text-[#161616]">Free shipping</p>
-            <p className="text-yellow-500 text-base">★★★★★</p>
-            <p className="font-MontserratSemiBold text-base">N{product.price}</p>
+            <p className="font-MontserratMedium text-[12px] text-[#161616]">
+              Free shipping
+            </p>
+
+            {/* Dynamic Rating */}
+            <div className="flex items-center">
+              {Array.from({ length: 5 }, (_, i) => (
+                <span
+                  key={i}
+                  className={`text-base ${
+                    i < Math.round(product.rating_average || 0)
+                      ? "text-yellow-500"
+                      : "text-gray-300"
+                  }`}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+
+            {/* Price */}
+            <p className="font-MontserratSemiBold text-base">
+              {product.discount_price &&
+              product.discount_price < product.price ? (
+                <>
+                  <span className="line-through text-gray-400 mr-2">
+                    N{product.price}
+                  </span>
+                  <span>N{product.discount_price}</span>
+                </>
+              ) : (
+                <span>N{product.price}</span>
+              )}
+            </p>
           </div>
 
           {/* Add to Cart */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(addToCart(product));
-            }}
+            onClick={handleAddToCart}
+            disabled={loading}
             className="w-c44 hidden md:flex h-[41.97px] items-center justify-center gap-2 py-1 bg-[#FF715B] rounded-[8px]"
           >
-            <Image src={Cart} alt="cart" width={20} height={17.6} />
+            {loading ? (
+              <LoadingSpinner />
+            ) : (
+              <Image src={Cart} alt="cart" width={20} height={17.6} />
+            )}
           </button>
         </div>
       </motion.div>

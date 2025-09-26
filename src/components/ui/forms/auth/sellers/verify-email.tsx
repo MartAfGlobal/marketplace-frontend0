@@ -12,7 +12,7 @@ export default function EmailVerificationSent() {
 
   const handleReturnToSignIn = (e: React.FormEvent) => {
     e.preventDefault(); // prevent form submission
-    router.push("/auth/login"); // navigate to login page
+    router.push("/auth/seller/login"); // navigate to login page
   };
 
   return (

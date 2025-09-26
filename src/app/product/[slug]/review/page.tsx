@@ -4,16 +4,19 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import Caretleft from "@/assets/mobile/CaretLeft.png";
 import MoreDetailedPage from "@/components/ui/DetailPage/MoreDetailedPage";
-import { dummyProducts } from "@/store/data/products"; // <-- adjust path
+ // <-- adjust path
 import { Product } from "@/types/global";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function ReviewsPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params?.slug as string;
 
+    const cartItems = useSelector((state: RootState) => state.cart.items);
   // Find product from your data using slug
-  const product: Product | undefined = dummyProducts.find(
+  const product: Product | undefined = cartItems.find(
     (p) => p.slug === slug
   );
 

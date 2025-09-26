@@ -104,23 +104,47 @@ export interface RegisterParams {
 export interface BusinessRegisterParams {
   company_name?: string;
   buisness_type?: string;
-  business_registration_number?: string;
+
   business_category?: string;
   business_description?: string;
-  city?: string;
-  company_address?: string;
-  residence_country?: string;
-  state?: string;
+  company_city?: string;
+  business_registration_location?: string;
+  company_country?: string;
+  company_state?: string;
   phone2?: string;
   postal_code?: string;
+  is_registered_business: boolean;
+}
+export interface IndividualRegisterParams {
+  first_name: string;
+  last_name: string;
+  address: string;
+  residence_country: string;
+  nationality: string;
+  dob: string;
+  phone2?: string;
+  postal_code: string;
+  identification_verifications: IdentificationVerification[];
+
+  is_registered_business: boolean;
+}
+
+export interface IdentificationVerification {
+  type: string;
+  idType?: string;
+  name?: string;
+  mimeType?: string;
+  size?: number;
+  dateOfIssue?: string;
+  dateOfExpiry?: string;
+  idNumber?: string; // ✅ added
 }
 
 export interface BuyerEditParams {
-  name: string;
+  first_name: string;
   phone: string;
   phone2: string;
-  email: string;
-  name: string;
+  last_name: string;
 }
 
 export interface LoginParams {
@@ -232,21 +256,85 @@ interface AboutHeroProps {
   paddingX?: string; // optional padding-x class, default px-c60
 }
 
-export interface Product {
+export interface Review {
   id: string;
-  colour: string;
-  title: string;
-  slug: string;
-  price: string;
-  image: Array;
-  section: string;
-  category: string;
-  onSale: boolean;
   rating: number;
-  freeShipping: boolean;
-  quantity?: number;
+  comment: string;
+  country?: string; // optional
+  user?: string; // optional, if you want user name
+  date?: string; // optional
+  verified?: boolean; // optional
 }
 
+export interface ImageData {
+  id: string;
+  image_urls: {
+    original: string;
+    medium: string;
+    thumbnail: string;
+  };
+  alt_text?: string;
+  product: string; // product id
+}
+
+export interface SpecificationData {
+  id: string;
+  name?: string;
+  value?: string;
+  product: string;
+}
+
+export interface Variations {
+  id: string;
+  sku: string;
+  size?: string;
+  color?: string;
+  stock?: number;
+  low_stock_threshold?: number;
+  low_stock_notified?: boolean;
+  product: string; // product id
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  discount_price?: number;
+  discount_percent?: number;
+  sku?: string;
+  category?: string; // e.g., gender or type
+  inventory?: number;
+  sold?: number;
+  onSale?: boolean; // derived from discount_percent
+  rating_average?: number;
+  gender?: string;
+  age_group?: string;
+  variations_data?: Variation[]; // matches backend field
+  images_data?: ImageData[]; // matches backend field
+  specifications_data?: SpecificationData[]; // matches backend field
+  whatsinbox?: string | null;
+  origin?: string;
+  is_active?: boolean;
+  is_draft?: boolean;
+  is_published?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  manufacturer?: number;
+  warehouse?: number | null;
+  reviews_data?: Review[];
+  image;
+   variations?: Variation[]; 
+   quantity: number 
+   section?: string
+}
+
+interface AddToCartParams {
+  productId: string;
+  quantity?: number;
+  variationid: string |null;
+}
 
 export interface UploadedFile {
   id: string;
@@ -257,10 +345,9 @@ export interface UploadedFile {
   uploaded: boolean;
   title: string;
   description: string;
-  rawFile: File;   // ✅ always required
+  rawFile: File; // ✅ always required
   url?: string;
 }
-
 
 export interface ProductPageProps {
   params: { slug: string }; // still declare type for TS
@@ -536,10 +623,19 @@ export interface SellerProfile {
 }
 
 export interface SellerData {
-  email?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  phone?: string | null;
-  phone2?: string | null;
-  profile?: SellerProfile;
+  profileId?: number; // manufacturer profile id
+  email?: string;
+  first_name?: string;
+  phone?: string;
+}
+
+interface SellerVerification {
+  percentage: number;
+  isIncomplete: boolean;
+  raw?: any; // keep full API response if needed
+}
+
+interface SellerState {
+  data: SellerData;
+  verificationStatus: SellerVerification | null;
 }

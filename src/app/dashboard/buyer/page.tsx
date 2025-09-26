@@ -11,15 +11,19 @@ import Link from "next/link";
 import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 import { motion } from "framer-motion";
 import BuyerDashboard from "@/components/ui/mobile/dashbords/buyer-dashboard/dashboard";
+import { useRouter } from "next/navigation";
 
 export default function BuyerDashBoardPage() {
-  const { sendHttpRequest: userInforHttpRequest, } = useHttp();
+  const { sendHttpRequest: userInforHttpRequest } = useHttp();
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const token = useSelector((state: any) => state.token?.token);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      router.replace("/auth/login");
+    }
 
     const fetchUserSucRes = (res: any) => {
       const resData = res?.data;
@@ -33,6 +37,16 @@ export default function BuyerDashBoardPage() {
         buyerActions.updateBuyerData({
           email: user?.email,
           first_name: user?.first_name,
+          last_name: user?.last_name,
+          profile: {
+            phone: user?.profile?.phone,
+            phone2: user?.profile?.phone2,
+            country: user?.profile?.country,
+            state: user?.profile?.state,
+            city: user?.profile?.city,
+            address: user?.profile?.address,
+            zip_code: user?.profile?.zip_code,
+          },
         })
       );
     };
@@ -43,8 +57,8 @@ export default function BuyerDashBoardPage() {
         method: "GET",
         token,
         isAuth: true,
-        successMessage: "User info fetched", 
-        userType: "buyer"
+        successMessage: "User info fetched",
+        userType: "buyer",
       },
       successRes: fetchUserSucRes,
     });

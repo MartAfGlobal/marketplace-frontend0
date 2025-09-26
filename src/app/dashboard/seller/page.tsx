@@ -19,10 +19,9 @@ export default function SellerDashboardPage() {
   useEffect(() => {
     if (!token) {
       toast.error("No token, skipping user fetch");
-      router.replace("/auth/seller/login")
+      router.replace("/auth/seller/login");
       return;
     }
-
     const fetchVerificationStatus = () => {
       statusHttpRequest({
         requestConfig: {
@@ -34,39 +33,50 @@ export default function SellerDashboardPage() {
         },
         successRes: (statusRes: any) => {
           const status = statusRes?.data;
-          console.log("✅ Manufacturer verification status:", status);
 
-          const isIncomplete = status?.progress_percentage !== "100";
+          // Safely extract percentage
+          const percentage =
+            status?.progress_percentage ??
+            status?.manufacturer_data?.verification_progress?.percentage ??
+            0;
+
+
+  
 
           // ✅ Save into Redux for use in overview
           dispatch(
             sellerActions.updateSellerVerification({
-              status,
-              isIncomplete,
+              percentage: percentage, // whatever comes from API
+              raw: status,
             })
           );
 
-          // ✅ Always redirect to overview page
-          console.log("➡️ Redirecting to dashboard/seller/overview...");
           router.replace("/dashboard/seller/overview");
+           console.log("✅ Manufacturer verification status:", percentage)
         },
+             
+         
       });
+
+      
     };
 
     const fetchUserSucRes = (res: any) => {
       console.log("✅ User info fetched:", res);
 
       const resData: any = res?.data;
-      const sellerUser: SellerData =
-        resData?.buyerDetails || resData?.user || resData;
+
+    
 
       dispatch(
         sellerActions.updateSellerData({
-          email: sellerUser.email || "",
-          first_name: sellerUser.first_name || "",
-          phone: sellerUser.phone || sellerUser.profile?.phone || "",
+          profileId: resData.id, // manufacturer profile id
+          email: resData.email || "", // fallback if empty
+          first_name: resData.first_name || "",
+          phone: resData.profile?.phone || "", // use profile phone if available
         })
       );
+
 
       // run verification check before routing
       fetchVerificationStatus();

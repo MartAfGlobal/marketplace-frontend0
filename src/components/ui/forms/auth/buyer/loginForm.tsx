@@ -165,7 +165,7 @@ export default function LoginForm() {
       </div>
       <div>
         <button className="w-full border flex items-center justify-center h-c56 font-MontserratSemiBold text-base gap-4 border-161616 rounded-c8">
-          <Image src={Google} alt="google sign in" />
+          <Image src={Google} width={29.33} height={29.33} alt="google sign in" />
           Sign in with Google
         </button>
       </div>

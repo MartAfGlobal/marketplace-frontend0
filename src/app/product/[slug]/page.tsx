@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/index";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import Image from "next/image";
 import DetailPageNavbar from "@/components/ui/navigation/detail-page-nav";
@@ -25,16 +25,24 @@ import CartBtn from "@/assets/mobile/cart.png";
 
 export default function ProductPage() {
   const dispatch = useDispatch();
+  const params = useParams(); // ✅ get slug from URL
+  const slug = params?.slug as string;
+
   const [selectedQty, setSelectedQty] = useState(1);
 
-  // ✅ Get the full product from Redux
-  const product = useSelector(
-    (state: RootState) => state.selectedProduct.product
+  // ✅ Try to find product by slug
+  const product = useSelector((state: RootState) =>
+    state.products.items.find((p) => p.slug === slug)
   );
 
-  console.log("ttttttttt", product);
-
-  if (!product) return <p>No product selected</p>; // early return
+  // if product not found, return fallback
+  if (!product) {
+    return (
+      <main className="p-6">
+        <p className="text-gray-600 text-center">Product not found.</p>
+      </main>
+    );
+  }
 
   const cartItem = useSelector((state: RootState) =>
     state.cart.items.find((item) => item.id === product.id)
@@ -52,22 +60,20 @@ export default function ProductPage() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   return (
-    <main className="md:px-c60 pb-c32">
+    <main className="md:px-c60 pb-c32 ">
       <div className="hidden md:flex">
         <DetailPageNavbar />
       </div>
 
       {/* Product main section */}
-      <div className="flex flex-col md:flex-row md:gap-c67">
-        <div className="flex flex-col gap-c32 ">
-          {/* Images & Details */}
+      <div className="flex flex-col md:flex-row md:gap-c67 justify-center">
+        <div className="flex flex-col gap-c32 w-full ">
           <div className="flex flex-col md:flex-row items-start gap-4 md:gap-12 px-5.5 md:px-0 mt-6 md:border-b md:border-gray-200 h-fit pb-1.5 ">
-            {/* Images */}
-            <div>
+            <div className="w-full ">
               <div className="w-full md:min-w-c397 h-fit md:h-c386-58 mb-1 md:mb-4 flex-shrink-0">
                 <Image
                   src={selectedImage}
-                  alt={product.category}
+                  alt={product.category || product.name}
                   width={397}
                   height={387}
                   className="object-cover w-full md:max-w-c397 md:h-c386-58 h-85 rounded-lg border"
@@ -136,38 +142,21 @@ export default function ProductPage() {
                   )}
 
                   <div className="mt-3 flex items-center gap-3">
-                    <div className="flex gap-0.5 items-center">
-                      <Image
-                        src={YellowStar}
-                        alt="yellow star"
-                        height={22.74}
-                        width={24}
-                      />
-                      <Image
-                        src={YellowStar}
-                        alt="yellow star"
-                        height={22.74}
-                        width={24}
-                      />
-                      <Image
-                        src={YellowStar}
-                        alt="yellow star"
-                        height={22.74}
-                        width={24}
-                      />
-                      <Image
-                        src={YellowStar}
-                        alt="yellow star"
-                        height={22.74}
-                        width={24}
-                      />
-                      <Image
-                        src={Star}
-                        alt="yellow star"
-                        height={22.74}
-                        width={24}
-                      />
+                    <div className="flex items-center">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <span
+                          key={i}
+                          className={`text-base ${
+                            i < Math.round(product.rating_average || 0)
+                              ? "text-yellow-500"
+                              : "text-gray-300"
+                          }`}
+                        >
+                          ★
+                        </span>
+                      ))}
                     </div>
+
                     <p className="font-MontserratMedium text-sm text-161616">
                       4.5/5
                     </p>
@@ -176,10 +165,10 @@ export default function ProductPage() {
                   <div className="md:hidden mt-3">
                     <QuantitySelector
                       productId={product.id}
-                      quantity={quantity} // ✅ use this
+                      quantity={quantity}
                       onChange={(newQty, id) => {
                         dispatch(updateQuantity({ id, quantity: newQty }));
-                      }} 
+                      }}
                     />
                   </div>
                 </div>
@@ -205,12 +194,12 @@ export default function ProductPage() {
               <h1 className="font-MontserratSemiBold text-base mt-c32 md:mt-c24 text-161616">
                 Variations available
               </h1>
-              <SizeColorSelector />
+              <SizeColorSelector product={product} />
             </div>
           </div>
 
           {/* More details section */}
-          <div className="relative hidden md:flex flex-col">
+          <div className="relative hidden md:flex flex-col ">
             <div className="sticky top-0 z-10 bg-white shadow pointer-events-auto">
               <ProductNav />
             </div>
@@ -220,7 +209,7 @@ export default function ProductPage() {
           </div>
         </div>
 
-        <div>
+        <div className=" w-full max-w-105.5">
           <ItemAddToCart
             product={product}
             quantity={selectedQty}

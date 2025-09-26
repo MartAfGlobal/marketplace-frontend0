@@ -1,4 +1,3 @@
-// store/cart/cartSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Product } from "@/types/global";
 
@@ -68,10 +67,15 @@ const cartSlice = createSlice({
       state.items = [];
       saveCartToLocalStorage(state.items);
     },
+    // ✅ NEW: set cart items (from backend)
+    setCartItems: (state, action: PayloadAction<CartItem[]>) => {
+      state.items = action.payload;
+      saveCartToLocalStorage(state.items);
+    },
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart } =
+export const { addToCart, removeFromCart, updateQuantity, clearCart, setCartItems } =
   cartSlice.actions;
 
 export default cartSlice.reducer;

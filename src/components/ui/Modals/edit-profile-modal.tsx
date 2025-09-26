@@ -25,8 +25,8 @@ export default function ProfileDetailsModal({
   const [details, setDetails] = useState(currentDetails);
 
   const [formData, setFormData] = useState<BuyerEditParams>({
-    name: "",
-    email: "",
+    first_name: "",
+    last_name: "",
     phone: "",
     phone2: "",
   });
@@ -40,12 +40,15 @@ export default function ProfileDetailsModal({
   const handleeditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.email.includes("@")) {
-      toast.error("Please enter a valid email address!");
-      return;
-    }
+    const form = new FormData();
+    form.append("first_name", formData.first_name);
+    form.append("last_name", formData.last_name);
+    form.append("phone", formData.phone);
+    form.append("phone2", formData.phone2);
 
     const registerUserRes = (res: any) => {
+      toast.success("Profile updated successfully!");
+      onClose();
       router.push(`/dashboard/buyer`);
     };
 
@@ -54,11 +57,10 @@ export default function ProfileDetailsModal({
       requestConfig: {
         url: "/accounts/UserDetails/",
         method: "PATCH",
-        body: {
-          ...formData,
-        },
+        body: form,
         token, // ✅ attach token
-        isAuth: true, // ✅ required so your useHttp adds Authorization header
+        isAuth: true, // ✅ r
+        userType: "buyer",
         successMessage: "Profile updated successfully.",
       },
     });
@@ -126,13 +128,13 @@ export default function ProfileDetailsModal({
                 <div className="flex gap-c24  w-full ">
                   <div className="flex flex-col gap-2 w-full">
                     <Label className="text-c12 font-MontserratMedium">
-                      Name
+                      First Name
                     </Label>
                     <Input
                       type="text"
-                      value={formData.name}
+                      value={formData.first_name}
                       onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
+                        setFormData({ ...formData, first_name: e.target.value })
                       }
                       className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                     />
@@ -141,20 +143,18 @@ export default function ProfileDetailsModal({
                   {/* Email */}
                   <div className="flex flex-col gap-2 w-full">
                     <Label className="text-c12 font-MontserratMedium">
-                      Email
+                      Last Name
                     </Label>
                     <Input
-                      type="email"
-                      value={formData.email}
+                      type="text"
+                      value={formData.last_name}
                       onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
+                        setFormData({ ...formData, last_name: e.target.value })
                       }
                       className="border border-efefef rounded-md p-4  text-c12 font-MontserratMedium w-full"
                     />
                   </div>
                 </div>
-
-                {/* Address */}
 
                 {/* Mobile Number */}
                 <div className="flex gap-c24 w-full">

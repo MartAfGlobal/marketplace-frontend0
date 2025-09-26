@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  images: {
+    domains: ["res.cloudinary.com"], // ✅ allow Cloudinary images
+  },
   webpack(config) {
     // 👇 SVG as React Component
     config.module.rules.push({

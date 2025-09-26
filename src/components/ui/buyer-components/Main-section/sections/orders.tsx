@@ -80,7 +80,7 @@ export default function Orders() {
         {Orderahistory.map((item) => (
           <div key={item.title} className="h-fit w-fit relative  ">
             <div className="w-37.5 h-31.25 flex flex-col items-center justify-center gap-4 border border-ff715b rounded-c4 opacity-60">
-              <Image src={item.icon} alt={item.title} />
+              <Image src={item.icon} alt={item.title} width={96} height={96} />
               <p>{item.title}</p>
             </div>
             <div className="absolute -right-4 -top-3 w-10.25 h-10.25 rounded-full flex items-center justify-center bg-f50000 opacity-60  ">

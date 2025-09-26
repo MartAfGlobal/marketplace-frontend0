@@ -11,7 +11,9 @@ import Proccessed from "./Component-ui/processed";
 import { motion } from "framer-motion";
 
 import ProductCard from "@/components/ui/cards/ProductCard";
-import { dummyProducts } from "@/store/data/products";
+import { RootState } from "@/store";
+import { useDispatch, useSelector } from "react-redux";
+
 
 const tabs = [
   "All",
@@ -25,8 +27,9 @@ const tabs = [
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("All");
 
-
-  const fashionProducts = dummyProducts.filter(
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();
+  const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 

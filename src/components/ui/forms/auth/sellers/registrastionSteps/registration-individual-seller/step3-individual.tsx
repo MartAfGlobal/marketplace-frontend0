@@ -3,40 +3,92 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/forms/Input";
 import { DropdownInput } from "../registered-business/modals/business-type";
-import { africaLocationData } from "../registered-business/countrydata"; // make sure path is correct
+import { africaLocationData } from "../registered-business/countrydata";
 import { Button } from "@/components/ui/Button/Button";
+import { useSelector } from "react-redux";
+import { useRouter } from "next/router";
+import { RootState } from "@/store";
+import { useHttp } from "@/hooks/use-http";
+import { toast } from "sonner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-export default function RegisteredIndividualStep3({
-  onContinue,
+
+  export default function RegisteredIndividualStep3({
   goBack,
+  onContinue,
 }: {
   onContinue: () => void;
   goBack: () => void;
 }) {
 
-  const [businessEmail, setBusinessEmail] = useState("");
+
   const [businessCategory, setBusinessCategory] = useState("");
   const [businessIntro, setBusinessIntro] = useState("");
-  const [businessPhone, setBusinessPhone] = useState("");
+ 
   const [businessAddress, setBusinessAddress] = useState("");
   const [postalCode, setPostalCode] = useState("");
-
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
 
-  // Dynamically get states & cities
+  const sellerId = useSelector((state: any) => state.seller.data?.id);
+  const sellerData = useSelector((state: RootState) => state.seller.data);
+  const token = useSelector((state: any) => state.token?.token);
+ 
+
+  const { loading, sendHttpRequest: UserkycUdateReq } = useHttp();
+
+  const registerUserRes = () => {
+    toast.success("Documents submitted successfully!");
+    onContinue();
+ 
+  };
+
+  const handleSubmit = async () => {
+    const newFormData = new FormData();
+
+    // Add seller base data (from previous steps)
+    if (sellerData) {
+      Object.entries(sellerData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          newFormData.append(key, String(value));
+        }
+      });
+    }
+
+    // Add Step 3 fields
+    newFormData.append("business_category", businessCategory);
+    newFormData.append("business_description", businessIntro);
+
+    newFormData.append("business_address", businessAddress);
+    newFormData.append("company_postal_code", postalCode);
+    newFormData.append("country", country);
+    newFormData.append("state", state);
+    newFormData.append("city", city);
+
+    if (sellerId) {
+      UserkycUdateReq({
+        successRes: registerUserRes,
+        requestConfig: {
+          url: "/accounts/UserDetails/",
+          method: "PATCH",
+          body: newFormData,
+          token,
+          successMessage: "Data submitted successfully!",
+        },
+      });
+    }
+     
+  };
+
   const states = country ? Object.keys(africaLocationData[country].states) : [];
   const cities =
     country && state ? africaLocationData[country].states[state] : [];
 
-  // Disable continue if any input is empty
   const isContinueDisabled =
-    !businessEmail ||
-    
     !businessCategory ||
     !businessIntro ||
-    !businessPhone ||
+   
     !businessAddress ||
     !postalCode ||
     !country ||
@@ -45,14 +97,16 @@ export default function RegisteredIndividualStep3({
 
   return (
     <div className="mt-c48 w-full max-w-270">
-      <form className="flex flex-col gap-6 text-000000/60">
+      <form
+        className="flex flex-col gap-6 text-000000/60"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
+      >
         {/* Row 1 */}
-       
-
-        {/* Row 2 */}
         <div className="flex justify-center gap-20">
-          
-          <div className="w-full max-w-125 h-fit">
+          <div className="w-full max-w-125">
             <label className="font-MontserratSemiBold text-base">
               Business Category
             </label>
@@ -74,7 +128,7 @@ export default function RegisteredIndividualStep3({
               onChange={setBusinessCategory}
             />
           </div>
-           <div className="w-full max-w-125 h-fit">
+          <div className="w-full max-w-125">
             <label className="font-MontserratSemiBold text-base">
               Short Business Introduction
             </label>
@@ -88,38 +142,11 @@ export default function RegisteredIndividualStep3({
           </div>
         </div>
 
+       
+
         {/* Row 3 */}
         <div className="flex justify-center gap-20">
-         
-          <div className="w-full max-w-125 h-fit">
-            <label className="font-MontserratSemiBold text-base">
-              Business Phone Number
-            </label>
-            <Input
-              type="text"
-              placeholder="Enter business phone number"
-              value={businessPhone}
-              onChange={(e) => setBusinessPhone(e.target.value)}
-              className="mt-2"
-            />
-          </div>
-          <div className="w-full max-w-125 h-fit">
-            <label className="font-MontserratSemiBold text-base">
-             Business Email Address (if applicable)
-            </label>
-            <Input
-              type="text"
-              placeholder="Enter business phone number"
-              value={businessEmail}
-              onChange={(e) => setBusinessEmail(e.target.value)}
-              className="mt-2"
-            />
-          </div>
-        </div>
-
-        {/* Row 4 */}
-        <div className="flex justify-center gap-20">
-          <div className="w-full max-w-125 h-fit">
+          <div className="w-full max-w-125">
             <label className="font-MontserratSemiBold text-base">
               Business Address
             </label>
@@ -131,7 +158,7 @@ export default function RegisteredIndividualStep3({
               className="mt-2"
             />
           </div>
-          <div className="w-full max-w-125 h-fit">
+          <div className="w-full max-w-125">
             <label className="font-MontserratSemiBold text-base">
               Postal Code
             </label>
@@ -145,44 +172,35 @@ export default function RegisteredIndividualStep3({
           </div>
         </div>
 
-        {/* Row 5: Country, State, City */}
+        {/* Row 4: Country, State, City */}
         <div className="flex justify-center gap-20">
-          <div className="w-full max-w-125 h-fit">
-            <label className="font-MontserratSemiBold text-base">Country</label>
-            <DropdownInput
-              placeholder="Choose your country"
-              options={Object.keys(africaLocationData)}
-              value={country}
-              onChange={(val) => {
-                setCountry(val);
-                setState("");
-                setCity("");
-              }}
-            />
-          </div>
-          <div className="w-full max-w-125 h-fit">
-            <label className="font-MontserratSemiBold text-base">State</label>
-            <DropdownInput
-              placeholder="Choose your state"
-              options={states}
-              value={state}
-              onChange={(val) => {
-                setState(val);
-                setCity("");
-              }}
-              disabled={!country}
-            />
-          </div>
-          <div className="w-full max-w-125 h-fit">
-            <label className="font-MontserratSemiBold text-base">City</label>
-            <DropdownInput
-              placeholder="Enter your city"
-              options={cities}
-              value={city}
-              onChange={setCity}
-              disabled={!state}
-            />
-          </div>
+          <DropdownInput
+            placeholder="Choose your country"
+            options={Object.keys(africaLocationData)}
+            value={country}
+            onChange={(val) => {
+              setCountry(val);
+              setState("");
+              setCity("");
+            }}
+          />
+          <DropdownInput
+            placeholder="Choose your state"
+            options={states}
+            value={state}
+            onChange={(val) => {
+              setState(val);
+              setCity("");
+            }}
+            disabled={!country}
+          />
+          <DropdownInput
+            placeholder="Choose your city"
+            options={cities}
+            value={city}
+            onChange={setCity}
+            disabled={!state}
+          />
         </div>
 
         {/* Buttons */}
@@ -195,12 +213,11 @@ export default function RegisteredIndividualStep3({
             Previous
           </button>
           <Button
-            type="button"
-            onClick={onContinue}
-            disabled={isContinueDisabled}
+            type="submit"
+            disabled={isContinueDisabled || loading}
             className="h-11 w-full max-w-39.75 rounded-xl text-sm font-MontserratSemiBold "
           >
-            Continue
+            {loading ?  <LoadingSpinner /> : "Continue"}
           </Button>
         </div>
       </form>

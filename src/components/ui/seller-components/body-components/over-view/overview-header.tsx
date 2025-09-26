@@ -9,11 +9,17 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 export default function OverviewHeader() {
-  const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+
   const verificationStatus = useSelector(
     (state: any) => state.seller.verificationStatus
   );
 
+
+
+const percentage = verificationStatus?.percentage ?? 0;
+const isIncomplete = percentage < 65
+
+console.log ("overview-header status", percentage)
 const router = useRouter()
   console.log("checking-seller data:....", isIncomplete);
 
@@ -43,13 +49,13 @@ const router = useRouter()
       <AlartSvg className="w-c19 h-c19" />
       <div className="flex-1">
         <p>Complete your KYB documentation to begin using our services</p>
-        <p className="mt-2">{verificationStatus.progress_percentage ?? 0}%</p>
+        <p className="mt-2">{ percentage}%</p>
         <div className="flex justify-between items-center h-fit mt-2">
           <div className="w-full max-w-50.5">
             <div className="w-full bg-white/30 h-1 overflow-hidden rounded">
               <motion.div
                 className="bg-0070e9 h-1"
-                style={{ width: `${verificationStatus.progress_percentage ?? 0}%` }}
+                style={{ width: `${ percentage}%` }}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: 1, ease: "easeInOut" }}

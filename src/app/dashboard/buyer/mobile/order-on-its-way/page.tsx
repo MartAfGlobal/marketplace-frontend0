@@ -8,18 +8,23 @@ import { motion } from "framer-motion";
 import ProductCard from "@/components/ui/cards/ProductCard";
 import Copy from "@/assets/icons/Copy.png";
 import Visa from "@/assets/mobile/cards/visa.png";
-import { dummyProducts } from "@/store/data/products";
+
 import Security from "@/assets/icons/ShieldCheck.png";
 import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 
 import NavBack from "@/assets/icons/navBacksmall.png";
 import { TrackOrders } from "@/types/global";
 import { Button } from "@/components/ui/Button/Button";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function OrderOnTheWayPage() {
   const [copied, setCopied] = useState(false);
   const router = useRouter();
   const orderId = "1234567890";
+
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();
 
   const trackOrders: TrackOrders[] = [
     // Uncomment to test non-empty state
@@ -67,7 +72,7 @@ export default function OrderOnTheWayPage() {
       });
   };
 
-  const fashionProducts = dummyProducts.filter(
+  const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 
@@ -286,11 +291,13 @@ export default function OrderOnTheWayPage() {
             }
             className="border border-ff715b rounded-lg h-c48 flex items-center justify-center w-full text-ff715b"
           >
-           Track order
+            Track order
           </button>
           <button
             onClick={() =>
-              router.push("/dashboard/buyer/mobile/order-on-its-way/confirm-delivery")
+              router.push(
+                "/dashboard/buyer/mobile/order-on-its-way/confirm-delivery"
+              )
             }
             className=" rounded-lg h-c48 flex items-center justify-center w-full bg-ff715b text-white"
           >

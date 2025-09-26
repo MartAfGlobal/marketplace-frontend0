@@ -10,6 +10,12 @@ import { Button } from "@/components/ui/Button/Button";
 
 import clearIcon from "@/assets/icons/close.png";
 import UploadIcon from "@/assets/uploadIcon.png";
+import { IdentificationVerification, IndividualRegisterParams } from "@/types/global";
+
+import { useDispatch, useSelector } from "react-redux";
+
+import { sellerActions } from "@/store/user-data/seller/seller-slice";
+import { address } from "framer-motion/client";
 
 export default function RegisteredIndividualStep1({
   onContinue,
@@ -18,22 +24,31 @@ export default function RegisteredIndividualStep1({
   onContinue: () => void;
   goBack: () => void;
 }) {
+  const sellerData = useSelector((state: any) => state.seller);
   // Input states
-  const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [nationality, setNationality] = useState("");
-  const [countryOfResidence, setCountryOfResidence] = useState("");
-  const [residenceAddress, setResidenceAddress] = useState("");
-  const [postalCode, setPostalCode] = useState("");
+ const [idNumber, setIdNumber] = useState("");
+
   const [idType, setIdType] = useState("");
-  const [dateOfInsurance, setDateOfInsurance] =useState("")
-  const [expiringDate, setExpiringDate] =useState("")
+  const [dateOfInsurance, setDateOfInsurance] = useState("");
+  const [expiringDate, setExpiringDate] = useState("");
 
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
+
+  const [formData, setFormData] = useState<IndividualRegisterParams>({
+    first_name: "",
+    last_name: "",
+    address: "",
+    residence_country: "",
+    nationality: "",
+    dob: "",
+    phone2: "",
+    postal_code: "",
+    identification_verifications: [],
+
+    is_registered_business: false,
+  });
 
   // Upload state
   const passportInputRef = useRef<HTMLInputElement | null>(null);
@@ -61,57 +76,109 @@ export default function RegisteredIndividualStep1({
     if (ref.current) ref.current.value = "";
   };
 
-  // Dynamic states & cities
-  const states = country ? Object.keys(africaLocationData[country].states) : [];
-  const cities =
-    country && state ? africaLocationData[country].states[state] : [];
-
   // Disable continue if any required field is empty
   const isContinueDisabled =
-    !fullName ||
-    !phoneNumber ||
-    !email ||
-    !dateOfBirth ||
-    !nationality ||
-    !countryOfResidence ||
-    !residenceAddress ||
-    !postalCode ||
-    !country ||
-    !state ||
-    !city ||
+    !formData.address ||
+    !formData.phone2 ||
+    !formData.dob ||
+    !formData.first_name ||
+    !formData.nationality ||
+    !formData.residence_country ||
+    !formData.last_name ||
+    !formData.postal_code ||
+
+   
     !passportFile ||
     !idFile ||
-    !idType||
-    !validId||
-    !dateOfInsurance||
-    ! expiringDate;
+    !idType ||
+    !validId ||
+    !dateOfInsurance ||
+    !expiringDate;
+
+  const sellerId = sellerData?.data?.id || "";
+
+  const dispatch = useDispatch();
+  const handleNext = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const identificationData: IdentificationVerification[] = [
+      {
+        type: "Passport",
+        idType: "Passport Photo",
+        name: passportFile,
+        mimeType: passportFile ? passportFile.split(".").pop() || "" : "",
+        size: passportInputRef.current?.files?.[0]?.size,
+      },
+      {
+        type: "Selfie",
+        idType: "Selfie with ID",
+        name: idFile,
+        mimeType: idFile ? idFile.split(".").pop() || "" : "",
+        size: idInputRef.current?.files?.[0]?.size,
+      },
+      {
+        type: "ValidID",
+        idType,
+        name: validId,
+        mimeType: validId ? validId.split(".").pop() || "" : "",
+        size: validIdInputRef.current?.files?.[0]?.size,
+        dateOfIssue: dateOfInsurance,
+        dateOfExpiry: expiringDate,
+        idNumber: idNumber,
+      },
+    ];
+
+    const payload: IndividualRegisterParams = {
+      ...formData,
+      phone2: formData.phone2,
+      identification_verifications: identificationData,
+      is_registered_business: false,
+    };
+
+    dispatch(
+      sellerActions.updateSellerData({
+        ...payload,
+        profileId: sellerId,
+      })
+    );
+
+    // ✅ Move to the next page
+    onContinue();
+  };
 
   return (
     <div className="mt-c48 w-full max-w-270">
-      <form className="flex flex-col gap-6 text-000000/60">
+      <form
+        onSubmit={handleNext}
+        className="flex flex-col gap-6 text-000000/60"
+      >
         {/* Row 1 */}
         <div className="flex justify-center gap-20">
           <div className="w-full max-w-125">
             <label className="font-MontserratSemiBold text-base">
-              Full Name
+              First Name
             </label>
             <Input
               type="text"
               placeholder="Enter your full name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              value={formData.first_name}
+              onChange={(e) =>
+                setFormData({ ...formData, first_name: e.target.value })
+              }
               className="mt-2"
             />
           </div>
           <div className="w-full max-w-125">
             <label className="font-MontserratSemiBold text-base">
-              Email Address
+              Last Name
             </label>
             <Input
               type="text"
               placeholder="Enter your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.last_name}
+              onChange={(e) =>
+                setFormData({ ...formData, last_name: e.target.value })
+              }
               className="mt-2"
             />
           </div>
@@ -126,8 +193,10 @@ export default function RegisteredIndividualStep1({
             <Input
               type="text"
               placeholder="Enter your phone number"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              value={formData.phone2}
+              onChange={(e) =>
+                setFormData({ ...formData, phone2: e.target.value })
+              }
               className="mt-2"
             />
           </div>
@@ -136,10 +205,12 @@ export default function RegisteredIndividualStep1({
               Date of Birth
             </label>
             <Input
-              type="text"
+              type="Date"
               placeholder="Enter your date of birth"
-              value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
+              value={formData.dob}
+              onChange={(e) =>
+                setFormData({ ...formData, dob: e.target.value })
+              }
               className="mt-2"
             />
           </div>
@@ -151,24 +222,32 @@ export default function RegisteredIndividualStep1({
             <label className="font-MontserratSemiBold text-base">
               Nationality
             </label>
-            <Input
-              type="text"
-              placeholder="Enter your nationality"
-              value={nationality}
-              onChange={(e) => setNationality(e.target.value)}
-              className="mt-2"
+            <DropdownInput
+              placeholder="Choose your country"
+              options={Object.keys(africaLocationData)}
+              value={formData.nationality}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  nationality: val,
+                })
+              }
             />
           </div>
           <div className="w-full max-w-125">
             <label className="font-MontserratSemiBold text-base">
               Country of Residence
             </label>
-            <Input
-              type="text"
-              placeholder="Enter your country of residence"
-              value={countryOfResidence}
-              onChange={(e) => setCountryOfResidence(e.target.value)}
-              className="mt-2"
+            <DropdownInput
+              placeholder="Choose your country"
+              options={Object.keys(africaLocationData)}
+              value={formData.residence_country}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  residence_country: val,
+                })
+              }
             />
           </div>
         </div>
@@ -182,8 +261,10 @@ export default function RegisteredIndividualStep1({
             <Input
               type="text"
               placeholder="Enter your residential address"
-              value={residenceAddress}
-              onChange={(e) => setResidenceAddress(e.target.value)}
+              value={formData.address}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
               className="mt-2"
             />
           </div>
@@ -194,49 +275,11 @@ export default function RegisteredIndividualStep1({
             <Input
               type="text"
               placeholder="Enter your postal code"
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
+              value={formData.postal_code}
+              onChange={(e) =>
+                setFormData({ ...formData, postal_code: e.target.value })
+              }
               className="mt-2"
-            />
-          </div>
-        </div>
-
-        {/* Row 5: Country, State, City */}
-        <div className="flex justify-center gap-20">
-          <div className="w-full max-w-125">
-            <label className="font-MontserratSemiBold text-base">Country</label>
-            <DropdownInput
-              placeholder="Choose your country"
-              options={Object.keys(africaLocationData)}
-              value={country}
-              onChange={(val) => {
-                setCountry(val);
-                setState("");
-                setCity("");
-              }}
-            />
-          </div>
-          <div className="w-full max-w-125">
-            <label className="font-MontserratSemiBold text-base">State</label>
-            <DropdownInput
-              placeholder="Choose your state"
-              options={states}
-              value={state}
-              onChange={(val) => {
-                setState(val);
-                setCity("");
-              }}
-              disabled={!country}
-            />
-          </div>
-          <div className="w-full max-w-125">
-            <label className="font-MontserratSemiBold text-base">City</label>
-            <DropdownInput
-              placeholder="Enter your city"
-              options={cities}
-              value={city}
-              onChange={setCity}
-              disabled={!state}
             />
           </div>
         </div>
@@ -315,17 +358,17 @@ export default function RegisteredIndividualStep1({
         <div className=" flex gap-20 w-full">
           <div className="w-full max-w-125">
             <label className="font-MontserratSemiBold text-base">
-             ID/VIN/Passport Number
+              ID/VIN/Passport Number
             </label>
             <Input
               type="text"
               placeholder="Enter your postal code"
-              value={postalCode}
-              onChange={(e) => setPostalCode(e.target.value)}
+              value={idNumber}
+              onChange={(e) => setIdNumber(e.target.value)}
               className="mt-2"
             />
           </div>
-           <FileUpload
+          <FileUpload
             label="Upload Valid ID"
             file={validId}
             inputRef={validIdInputRef}
@@ -343,8 +386,8 @@ export default function RegisteredIndividualStep1({
             Previous
           </button>
           <Button
-            type="button"
-            onClick={onContinue}
+             type="submit"
+            
             disabled={isContinueDisabled}
             className="h-11 w-full max-w-39.75 rounded-xl text-sm font-MontserratSemiBold "
           >

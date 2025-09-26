@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 
 import { RootState } from "@/store";
 import { updateQuantity } from "@/store/cart/cartSlice";
-import { dummyProducts } from "@/store/data/products";
+
 
 
 import CaretDwn from "@/assets/mobile/carent-down.png";
@@ -48,12 +48,12 @@ export default function MobileCheckoutItems() {
       setSelectedItems(newState);
     }
   };
-  const fashionProducts = dummyProducts.filter(
+  const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 
  const totalPrice = cartItems.reduce((acc, item) => {
-  const price = Number(item.price.replace(/[, ]/g, "")); // removes commas & spaces
+  const price = Number(item.price); // removes commas & spaces
   const quantity = item.quantity ?? 1; // default to 1 if undefined
   return acc + (isNaN(price) ? 0 : price) * quantity;
 }, 0);
@@ -116,14 +116,14 @@ export default function MobileCheckoutItems() {
                           </div>
                           <div className="w-full md:max-w-143.75">
                             <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                              {item.title}
+                              {item.name}
                             </p>
                             <p className="font-MontserratNormal text-c12 pb-3">
                               Two piece shop
                             </p>
                             <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                               <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                                {item.quantity}PC, {item.colour}
+                                {item.quantity}PC, {item.name}
                               </span>
                             </div>
                             <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">

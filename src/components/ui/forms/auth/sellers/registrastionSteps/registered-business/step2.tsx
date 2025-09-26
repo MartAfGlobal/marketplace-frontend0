@@ -6,10 +6,12 @@ import { DropdownInput } from "./modals/business-type";
 import { africaLocationData } from "./countrydata"; 
 import { Button } from "@/components/ui/Button/Button";
 import { BusinessRegisterParams } from "@/types/global";
-import { useHttp } from "@/hooks/use-http";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useDispatch, useSelector } from "react-redux";
+
+
+
 import { sellerActions } from "@/store/user-data/seller/seller-slice";
+
 
 export default function RegisteredBusinessStep1({
   onContinue,
@@ -18,52 +20,59 @@ export default function RegisteredBusinessStep1({
   onContinue: () => void;
   goBack: () => void;
 }) {
+   const sellerData = useSelector((state: any) => state.seller);
   const [formData, setFormData] = useState<BusinessRegisterParams>({
+   
     company_name: "",
     buisness_type: "",
-    business_registration_number: "",
     business_category: "",
     business_description: "",
-    city: "",
-    company_address: "",
-    residence_country: "",
-    state: "",
+    company_city: "",
+    business_registration_location: "",
+    company_country: "",
+    company_state: "",
     phone2: "",
     postal_code: "",
+    is_registered_business: true
   });
+   const sellerId = sellerData?.data?.id || "";
 
   const dispatch = useDispatch();
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Save this step’s data into Redux
-    dispatch(sellerActions.updateSellerData(formData));
+    dispatch(
+    sellerActions.updateSellerData({
+      ...formData,
+      profileId:sellerId 
+    })
+  );
 
     // ✅ Move to the next step
     onContinue();
   };
 
-  const states = formData.residence_country
-    ? Object.keys(africaLocationData[formData.residence_country].states)
+  const states = formData.company_country
+    ? Object.keys(africaLocationData[formData.company_country].states)
     : [];
 
   const cities =
-    formData.residence_country && formData.state
-      ? africaLocationData[formData.residence_country].states[formData.state]
+    formData.company_country && formData.company_state
+      ? africaLocationData[formData.company_country].states[formData.company_state]
       : [];
 
   const isContinueDisabled =
     !formData.company_name ||
-    !formData.business_registration_number ||
+    // !formData.business_registration_number ||
     !formData.buisness_type ||
     !formData.business_category ||
     !formData.business_description ||
     !formData.phone2 ||
-    !formData.company_address ||
-    !formData.city ||
-    !formData.residence_country ||
-    !formData.state ||
+    !formData.business_registration_location ||
+    !formData.company_city||
+    !formData.company_country ||
+    !formData.company_state ||
     !formData.postal_code;
 
   return (
@@ -85,7 +94,7 @@ export default function RegisteredBusinessStep1({
               className="mt-2"
             />
           </div>
-          <div className="w-full max-w-125 h-fit">
+          {/* <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">
               Registration Number
             </label>
@@ -101,7 +110,7 @@ export default function RegisteredBusinessStep1({
               }
               className="mt-2"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Row 2 */}
@@ -184,9 +193,9 @@ export default function RegisteredBusinessStep1({
             <Input
               type="text"
               placeholder="Enter your business address"
-              value={formData.company_address}
+              value={formData.business_registration_location}
               onChange={(e) =>
-                setFormData({ ...formData, company_address: e.target.value })
+                setFormData({ ...formData, business_registration_location: e.target.value })
               }
               className="mt-2"
             />
@@ -214,13 +223,13 @@ export default function RegisteredBusinessStep1({
             <DropdownInput
               placeholder="Choose your country"
               options={Object.keys(africaLocationData)}
-              value={formData.residence_country}
+              value={formData.company_country}
               onChange={(val) =>
                 setFormData({
                   ...formData,
-                  residence_country: val,
-                  state: "",
-                  city: "",
+                  company_country: val,
+                  company_state: "",
+                  company_city: "",
                 })
               }
             />
@@ -230,11 +239,11 @@ export default function RegisteredBusinessStep1({
             <DropdownInput
               placeholder="Choose your state"
               options={states}
-              value={formData.state}
+              value={formData.company_state}
               onChange={(val) =>
-                setFormData({ ...formData, state: val, city: "" })
+                setFormData({ ...formData, company_state: val, company_city: "" })
               }
-              disabled={!formData.residence_country}
+              disabled={!formData.company_country}
             />
           </div>
           <div className="w-full max-w-125 h-fit">
@@ -242,9 +251,9 @@ export default function RegisteredBusinessStep1({
             <DropdownInput
               placeholder="Enter your city"
               options={cities}
-              value={formData.city}
-              onChange={(val) => setFormData({ ...formData, city: val })}
-              disabled={!formData.state}
+              value={formData.company_city}
+              onChange={(val) => setFormData({ ...formData, company_city: val })}
+              disabled={!formData.company_state}
             />
           </div>
         </div>

@@ -5,6 +5,15 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import Mail from "@/assets/FormIcon/email.svg";
 import FcGoogle from "@/assets/mobile/google_symbol.svg.png";
+import { EyeIcon, EyeOffIcon, LogIn } from "lucide-react";
+import { toast } from "sonner";
+import { RegisterParams } from "@/types/global";
+import { useRouter } from "next/navigation";
+import { useHttp } from "@/hooks/use-http";
+import { LoadingSpinner } from "../../loading-spinner";
+import { tokenActions } from "@/store/token/token-slice";
+import { useDispatch } from "react-redux";
+import MobileLogin from "./sign-in";
 
 export default function AuthModal({
   open,
@@ -18,8 +27,59 @@ export default function AuthModal({
   >("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  // Lock body scroll when modal is open
+  const { loading, sendHttpRequest: registerUserReq } = useHttp();
+
+  const [formData, setFormData] = useState<RegisterParams>({
+    email: "",
+    password: "",
+    confirm_password: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // ✅ Handle input changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const registerUserRes = (res: any) => {
+    toast.success("Registration successful. Please sign in.");
+    setStep("signin");
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirm_password) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+
+    if (!formData.email.includes("@")) {
+      toast.error("Please enter a valid email address!");
+      return;
+    }
+
+    registerUserReq({
+      successRes: registerUserRes,
+      requestConfig: {
+        url: "/accounts/register",
+        method: "POST",
+        body: {
+          ...formData,
+        },
+        successMessage: "Registration Complete, Please login.",
+      },
+    });
+
+    console.log("Registration data:", { ...formData });
+  };
+  //  LogIn
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -62,7 +122,8 @@ export default function AuthModal({
                   </p>
                 </div>
 
-                <div className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Email */}
                   <div className="relative w-full">
                     <Image
                       src={Mail}
@@ -73,31 +134,88 @@ export default function AuthModal({
                     />
                     <input
                       type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
                       className="w-full border border-black/10 rounded-lg pl-10 pr-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
                       placeholder="Email address"
                     />
                   </div>
 
+                  {/* Password */}
+                  <div className="relative w-full">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      className="w-full border border-black/10 rounded-lg pr-10 pl-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
+                      placeholder="Password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    >
+                      {showPassword ? (
+                        <EyeOffIcon className="w-5 h-5" />
+                      ) : (
+                        <EyeIcon className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className="relative w-full">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirm_password"
+                      value={formData.confirm_password}
+                      onChange={handleChange}
+                      required
+                      className="w-full border border-black/10 rounded-lg pr-10 pl-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
+                      placeholder="Confirm password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOffIcon className="w-5 h-5" />
+                      ) : (
+                        <EyeIcon className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Sign Up */}
                   <button
-                    onClick={() => setStep("verify")}
-                    className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold"
+                    type="submit"
+                    className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center"
                   >
-                    Sign Up
+                    {loading ? <LoadingSpinner /> : "Sign Up"}
                   </button>
 
+                  {/* Divider */}
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
                     <div className="flex-1 h-px bg-black" />
                     <span>or</span>
                     <div className="flex-1 h-px bg-black" />
                   </div>
 
-                  <button className="w-full h-c56 rounded-lg font-medium flex justify-center items-center gap-4 circle-shadow">
+                  {/* Google */}
+                  <button
+                    type="button"
+                    className="w-full h-c56 rounded-lg font-medium flex justify-center items-center gap-4 circle-shadow"
+                    onClick={() => alert("Google Signup coming soon!")}
+                  >
                     <Image src={FcGoogle} alt="Google" width={24} height={24} />
                     Sign up with Google
                   </button>
-                </div>
+                </form>
 
                 <p className="text-sm text-center font-MontserratNormal">
                   Already have an account?{" "}
@@ -144,53 +262,11 @@ export default function AuthModal({
 
             {/* ---------- SIGN IN ---------- */}
             {step === "signin" && (
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <h2 className="font-MontserratSemiBold text-c20">Sign in</h2>
-                  <p className="font-MontserratNormal text-sm">
-                    Welcome back! Please log in to continue.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border border-black/10 rounded-lg px-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-                    placeholder="Email address"
-                  />
-
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border border-black/10 rounded-lg px-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-                    placeholder="Password"
-                  />
-
-                  <button className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold">
-                    Sign In
-                  </button>
-
-                  <button
-                    onClick={() => setStep("forgot")}
-                    className="text-sm text-6a0dad font-MontserratSemiBold text-left"
-                  >
-                    Forgot password?
-                  </button>
-                </div>
-
-                <p className="text-sm text-center font-MontserratNormal">
-                  Don’t have an account?{" "}
-                  <span
-                    onClick={() => setStep("signup")}
-                    className="text-6a0dad font-medium cursor-pointer"
-                  >
-                    Sign up
-                  </span>
-                </p>
-              </div>
+              <MobileLogin
+                onClose={onClose} // ✅ pass down close handler
+                setStep={setStep} 
+             
+              />
             )}
 
             {/* ---------- FORGOT PASSWORD ---------- */}

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Camera from "@/assets/mobile/camera.svg";
 
 import ProductCard from "@/components/ui/cards/ProductCard";
-import { dummyProducts } from "@/store/data/products";
+
 import SelectedProduct from "@/assets/mobile/selectProduct.png";
 import SelectedProduct2 from "@/assets/mobile/selectproduct1.png";
 import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
@@ -18,6 +18,8 @@ import NavBack from "@/assets/icons/navBacksmall.png";
 import { TrackOrders } from "@/types/global";
 import Plus from "@/assets/mobile/Plus.png";
 import CloseIcon from "@/assets/headerIcon/closeModal.png";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function OrderOnTheWayPage() {
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
@@ -27,6 +29,8 @@ export default function OrderOnTheWayPage() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
+    const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();
 
   const handleProductSelect = (id: number) => {
     setSelectedProduct(selectedProduct === id ? null : id);
@@ -44,7 +48,7 @@ export default function OrderOnTheWayPage() {
       setIsBottomSheetOpen(false);
     }
   };
-    const fashionProducts = dummyProducts.filter(
+    const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 

@@ -25,6 +25,10 @@ export default function OverView() {
   });
 
   console.log ("new buyer details:", buyer)
+  console.log ("number:", buyer?.profile?.phone)
+  console.log ("number:", buyer?.profile?.phone2)
+
+  console.log("Current profile image:", buyer?.profile);
 
   function handleUpload(file: File) {
     const url = URL.createObjectURL(file);
@@ -68,7 +72,7 @@ export default function OverView() {
                 Full name
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                {buyer.first_name || "N/A"} {buyer.last_name || "N/A"}
+                {buyer.first_name || "not set"} 
               </span>
             </div>
             <div className="flex gap-c32">
@@ -84,7 +88,7 @@ export default function OverView() {
                 Mobile number
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                 {buyer?.profile?.phone || "N/A"}
+                 {buyer.profile.phone || "N/A"}
               </span>
             </div>
             <div className="flex gap-c32">
@@ -92,7 +96,7 @@ export default function OverView() {
                 Home number
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                 {buyer?.profile?.phone2 || "N/A"}
+                 {buyer.profile.phone2 || "N/A"}
               </span>
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import { Input } from "@/components/ui/forms/Input";
@@ -9,6 +9,8 @@ import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 
+import clearIcon from "@/assets/icons/close.png";
+import UploadIcon from "@/assets/uploadIcon.png";
 import Spinner from "@/assets/icons/spinner.png";
 import cancelUpload from "@/assets/icons/close.png";
 import cloud from "@/assets/icons/cloudupload.png";
@@ -21,9 +23,10 @@ import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { UploadedFile } from "@/types/global";
 
+import { useRouter } from "next/navigation";
+
 export default function DocumentUploadForm({
   goBack,
-  onContinue,
 }: {
   goBack: () => void;
   onContinue: () => void;
@@ -37,26 +40,58 @@ export default function DocumentUploadForm({
   const [showEdit, setShowEdit] = useState(false);
   const [fileToEdit, setFileToEdit] = useState<UploadedFile | null>(null);
 
+  // CAC / TIN refs & labels
+  const passportInputRef = useRef<HTMLInputElement | null>(null);
+  const idInputRef = useRef<HTMLInputElement | null>(null);
+  const [cacFile, setCacFile] = useState("");
+  const [tinFile, settinFile] = useState("");
+  const [cacNumber, setCacNumber] = useState("");
+  const [tinNumber, setTinNumber] = useState("");
+  const intervalsRef = useRef<NodeJS.Timeout[]>([]);
   // ✅ Grab seller data from Redux
+  const sellerId = useSelector((state: any) => state.seller.data?.id);
   const sellerData = useSelector((state: RootState) => state.seller.data);
   const token = useSelector((state: any) => state.token?.token);
-  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const formData = new FormData();
+  formData.append("CAC_No", cacNumber); // string
+  formData.append("CAC_No_file", cacFile); // File object
+  formData.append("tax_identification_number", tinNumber); // string
+  formData.append("tax_identification_file", tinFile);
+
+  useEffect(() => {
+    if (sellerId) {
+      console.log("✅ Seller ID from Redux:", sellerId);
+    }
+  }, [sellerId]);
 
   const { loading, sendHttpRequest: UserkycUdateReq } = useHttp();
 
   const registerUserRes = (res: any) => {
     toast.success("Documents submitted successfully!");
-    onContinue();
+    
+  };
+
+  const handleFileSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (file: string) => void
+  ) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setter(e.target.files[0].name);
+    }
+  };
+
+  const handleFileClear = (
+    ref: React.RefObject<HTMLInputElement | null>,
+    setter: (file: string) => void
+  ) => {
+    setter("");
+    if (ref.current) ref.current.value = "";
   };
 
   const handleDrop = useCallback(
     (acceptedFiles: File[]) => {
-      if (!title.trim() || !description.trim()) {
-        setShowError(true);
-        return;
-      }
-      setShowError(false);
-
       const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
         id: crypto.randomUUID(),
         name: file.name,
@@ -71,34 +106,35 @@ export default function DocumentUploadForm({
 
       setFiles((prev) => [...prev, ...newFiles]);
 
-      // Fake upload progress
       newFiles.forEach((file) => {
         const interval = setInterval(() => {
-          setFiles((prev) => {
-            const updated = prev.map((f) => {
-              if (f.id === file.id && f.progress < 100) {
-                const nextProgress = f.progress + 20;
-                const uploadedSize = Math.min(
+          setFiles((prev) =>
+            prev.map((f) => {
+              if (f.id === file.id) {
+                const nextProgress = Math.min(100, f.progress + 20);
+                const nextUploadedSize = Math.min(
                   f.size,
                   f.uploadedSize + f.size * 0.2
                 );
-                if (nextProgress >= 100) clearInterval(interval);
+
+                if (nextProgress >= 100) {
+                  clearInterval(interval); // ✅ stop interval once upload done
+                }
+
                 return {
                   ...f,
-                  progress: nextProgress >= 100 ? 100 : nextProgress,
+                  progress: nextProgress,
+                  uploadedSize: nextUploadedSize,
                   uploaded: nextProgress >= 100,
-                  uploadedSize,
                 };
               }
               return f;
-            });
-            return updated;
-          });
+            })
+          );
         }, 300);
-      });
 
-      setTitle("");
-      setDescription("");
+        intervalsRef.current.push(interval);
+      });
     },
     [title, description]
   );
@@ -141,63 +177,126 @@ export default function DocumentUploadForm({
       "image/png": [".png"],
       "image/jpeg": [".jpg", ".jpeg"],
     },
-    maxSize: 10 * 1024 * 1024,
+    maxSize: 5 * 1024 * 1024,
   });
 
-const handleSubmit = async () => {
-  // ✅ Check for exactly 3 documents
-  if (files.length < 3) {
-    toast.error("Please upload 3 documents before continuing.");
-    return;
-  }
+  const handleSubmit = async () => {
+    const newFormData = new FormData();
 
-  const formData = new FormData();
-
-  // ✅ Add seller data
-  Object.entries(sellerData).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      formData.append(key, value as string);
+    // Append seller data
+    if (sellerData) {
+      Object.entries(sellerData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null)
+          newFormData.append(key, String(value));
+      });
     }
-  });
 
-  // ✅ Add exactly 3 documents in array format
-  files.slice(0, 3).forEach((file) => {
-    formData.append("documents[title][]", file.title);
-    formData.append("documents[description][]", file.description);
-    formData.append("documents[file][]", file.rawFile);
-  });
+    // CAC data
+    newFormData.append("CAC_No", cacNumber);
+    if (passportInputRef.current?.files?.[0]) {
+      newFormData.append("CAC_No_file", passportInputRef.current.files[0]);
+    }
 
-  // ✅ Debug log
-  for (let [key, value] of formData.entries()) {
-    if (value instanceof File) {
-      console.log(
-        `${key}: FILE -> name=${value.name}, size=${value.size}, type=${value.type}`
+    // TIN data
+    newFormData.append("tax_identification_number", tinNumber);
+    if (idInputRef.current?.files?.[0]) {
+      newFormData.append(
+        "tax_identification_file",
+        idInputRef.current.files[0]
       );
-    } else {
-      console.log(`${key}:`, value);
     }
-  }
 
-  UserkycUdateReq({
-    successRes: registerUserRes,
-    requestConfig: {
-      url: "/accounts/UserDetails/",
-      method: "PATCH",
-      body: formData,
-      token,
-      successMessage: "Data submitted, please verify.",
-    },
-  });
-};
+    // Additional documents
+    files.forEach((file, index) => {
+      newFormData.append(`documents[${index}][title]`, file.title);
+      newFormData.append(`documents[${index}][description]`, file.description);
+      newFormData.append(`documents[${index}][file]`, file.rawFile);
+    });
+
+    // Debug log to see all entries
+    for (let [key, value] of newFormData.entries()) {
+      console.log(key, value);
+    }
+
+    if (sellerId) {
+      UserkycUdateReq({
+        successRes: registerUserRes,
+        requestConfig: {
+          url: "/accounts/UserDetails/",
+          method: "PATCH",
+          body: newFormData,
+          token,
+          successMessage: "Data submitted successfully!",
+        },
+      });
+    }
+  };
 
   const uploadingFiles = files.filter((f) => !f.uploaded);
   const uploadedFiles = files.filter((f) => f.uploaded);
 
   return (
     <div className="flex flex-col gap-6 mt-6">
-      {/* Title + Description + Upload */}
+      <div className="w-full flex justify-center h-62.5 gap-10 py-2.25 ">
+        <div className="w-full  space-y-c24 h-fit">
+          <p className="text-center text-c18 font-MontserratMedium text-161616">
+            Upload Your CAC Documents
+          </p>
+          <div className="w-full">
+            <label className="font-MontserratSemiBold text-black/60 text-base">
+              Enter CAC Number
+            </label>
+            <Input
+              type="text"
+              placeholder="Enter CAC Number"
+              value={cacNumber}
+              onChange={(e) => setCacNumber(e.target.value)}
+            />
+          </div>
+
+          {/* Passport Upload */}
+          <FileUpload
+            label="Upload Your Passport Photo"
+            file={cacFile}
+            inputRef={passportInputRef}
+            onFileSelect={(e) => handleFileSelect(e, setCacFile)}
+            onFileClear={() => handleFileClear(passportInputRef, setCacFile)}
+          />
+        </div>
+        <div className="w-0.25 h-full bg-000000/10"></div>
+        <div className="w-full  space-y-c24 h-fit">
+          <p className="text-center text-c18 font-MontserratMedium text-161616">
+            Upload Your TIN Documents
+          </p>
+          <div className="w-full">
+            <label className="font-MontserratSemiBold text-black/60 text-base">
+              Enter TIN Number
+            </label>
+            <Input
+              type="text"
+              placeholder="Enter TIN Number"
+              value={tinNumber}
+              onChange={(e) => setTinNumber(e.target.value)}
+            />
+          </div>
+
+          {/* Selfie Upload */}
+          <FileUpload
+            label="Upload Selfie with ID"
+            file={tinFile}
+            inputRef={idInputRef}
+            onFileSelect={(e) => handleFileSelect(e, settinFile)}
+            onFileClear={() => handleFileClear(idInputRef, settinFile)}
+          />
+        </div>
+      </div>
+
+      <h1 className="text-center text-c18 font-MontserratMedium text-161616 mt-2">
+        Upload Additional Documents (optional)
+      </h1>
+
       <div className="flex w-full gap-20">
-        <div className="flex flex-col gap-2 w-full max-w-125">
+        <div className="flex flex-col gap-2 w-full">
           <label className="font-MontserratSemiBold text-black/60 text-base">
             Title:
           </label>
@@ -229,8 +328,9 @@ const handleSubmit = async () => {
         </div>
 
         {/* File Upload */}
+
         <motion.div
-          className="flex flex-col gap-2 w-full max-w-125 h-50.5"
+          className="flex flex-col gap-2 w-full  h-50.5"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -401,6 +501,66 @@ const handleSubmit = async () => {
         >
           {loading ? <LoadingSpinner /> : "Continue"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+function FileUpload({
+  label,
+  file,
+  inputRef,
+  onFileSelect,
+  onFileClear,
+}: {
+  label: string;
+  file: string;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileClear: () => void;
+}) {
+  return (
+    <div className="w-full">
+      <label className="font-MontserratSemiBold text-base">{label}</label>
+      <div className="w-full flex items-center mt-2">
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.02 }}
+          onClick={() => inputRef.current?.click()}
+          className="flex items-center h-c56 w-full justify-center gap-2.5 px-3 rounded-tl-lg rounded-bl-lg text-ffffff max-w-c126 bg-6a0dad"
+        >
+          <Image src={UploadIcon} alt="upload icon" width={18} height={18} />
+          <span className="font-MontserratSemiBold text-base">Add File</span>
+        </motion.button>
+
+        {/* ✅ Hidden file input with restrictions */}
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".pdf,.png,.jpg,.jpeg"
+          className="hidden"
+          onChange={onFileSelect}
+        />
+
+        <div className="w-full relative">
+          <Input
+            type="text"
+            readOnly
+            value={file}
+            placeholder="No file selected"
+            className="h-c56 flex-1 rounded-tl-none rounded-bl-none border px-2"
+          />
+          {file && (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={onFileClear}
+              className="h-5 w-5 absolute top-1/2 -translate-y-1/2 right-3 rounded-full bg-000000/32 flex items-center justify-center"
+            >
+              <Image src={clearIcon} alt="delete" width={8} height={8} />
+            </motion.button>
+          )}
+        </div>
       </div>
     </div>
   );

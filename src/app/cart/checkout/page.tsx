@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 
-import { dummyProducts } from "@/store/data/products";
+
 import ProductCard from "@/components/ui/cards/ProductCard";
 import NavBack from "@/assets/icons/navBacksmall.png";
 import { Button } from "@/components/ui/Button/Button";
@@ -24,14 +24,16 @@ export default function CartPage() {
   const [visible, setVisible] = useState(10);
   const router = useRouter();
 
-  const fashionProducts = dummyProducts.filter(
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();
+
+  const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 
   const showMore = () => setVisible((prev) => prev + 3);
 
-  const cartItems = useSelector((state: RootState) => state.cart.items);
-  const dispatch = useDispatch();
+  
 
   return (
     <motion.div

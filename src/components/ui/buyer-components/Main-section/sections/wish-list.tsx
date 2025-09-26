@@ -1,15 +1,20 @@
 import ProductCard from "@/components/ui/cards/ProductCard";
+import { RootState } from "@/store";
 
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-import { dummyProducts } from "@/store/data/products";
+
 
 export default function Wishlist() {
   const [visible, setVisible] = useState(10); // Show 6 items by default
 
   const showMore = () => setVisible((prev) => prev + 10);
 
-  const fashionProducts = dummyProducts.filter(
+    const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();
+
+  const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 

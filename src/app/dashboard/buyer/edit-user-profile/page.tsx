@@ -10,7 +10,7 @@ import profilePicture from "@/assets/icons/user-dashboard/profile-picture.png";
 
 // Icons
 import User from "@/assets/mobile/User.png";
-import Mail from "@/assets/mobile/email.png";
+// import Mail from "@/assets/mobile/email.png";
 import Phone from "@/assets/mobile/Phone.png";
 import Mobile from "@/assets/mobile/mobile.png";
 
@@ -23,7 +23,6 @@ export default function MobileEditProfile() {
   const [formData, setFormData] = useState({
     firstName: "",
     surname: "",
-    email: "",
     phone: "",
     mobile: "",
   });
@@ -123,7 +122,7 @@ export default function MobileEditProfile() {
         </div>
 
         {/* Email */}
-        <div>
+        {/* <div>
           <label className="font-MontserratNormal text-c12 text-000000/60 mb-2 block">
             Email
           </label>
@@ -138,7 +137,7 @@ export default function MobileEditProfile() {
               className="w-full outline-none"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Phone */}
         <div>

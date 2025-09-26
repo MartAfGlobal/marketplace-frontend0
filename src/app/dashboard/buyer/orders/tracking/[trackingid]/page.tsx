@@ -8,7 +8,7 @@ import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import Copy from "@/assets/icons/Copy.png";
 import { TrackOrders } from "@/types/global";
 import { useState } from "react";
-import { dummyProducts } from "@/store/data/products";
+
 import ProductCard from "@/components/ui/cards/ProductCard";
 import Pointer from "@/assets/icons/pointer.svg";
 
@@ -17,14 +17,20 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 import NavBack from "@/assets/icons/navBacksmall.png";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function TrackingDetail() {
   const [copied, setCopied] = useState(false);
   const [visible, setVisible] = useState(10);
   const showMore = () => setVisible((prev) => prev + 10);
   const router = useRouter();
+  
 
-  const fashionProducts = dummyProducts.filter(
+    const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();
+
+  const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 

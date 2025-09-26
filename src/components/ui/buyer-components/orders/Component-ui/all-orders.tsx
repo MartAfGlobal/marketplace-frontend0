@@ -14,7 +14,9 @@ import ProductCard from "@/components/ui/cards/ProductCard";
 import Copy from "@/assets/icons/Copy.png";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 
-import { dummyProducts } from "@/store/data/products";
+
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function Orders() {
   const [copied, setCopied] = useState(false);
@@ -24,15 +26,16 @@ export default function Orders() {
   const [visible, setVisible] = useState(10); // Show 6 items by default
 
   const showMore = () => setVisible((prev) => prev + 10);
-
-  // const { id } = use(params);
+  
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();;
 
   const handleTrackOrder = () => {
     const trackingId = trackOrders[0]?.id?.toString() ?? "";
     router.push(`/dashboard/buyer/orders/tracking/${trackingId}`);
   };
 
-  const fashionProducts = dummyProducts.filter(
+  const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
   const trackOrders: TrackOrders[] = [

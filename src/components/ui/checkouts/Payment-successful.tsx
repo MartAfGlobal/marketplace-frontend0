@@ -13,16 +13,21 @@ import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import Copy from "@/assets/icons/Copy.png";
 import { TrackOrders } from "@/types/global";
 import { useState } from "react";
-import { dummyProducts } from "@/store/data/products";
+
 import ProductCard from "@/components/ui/cards/ProductCard";
 import { useRouter } from "next/navigation";
 import { OrderDetailsPageProps } from "@/types/global";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import PaymentSuccess from "./success";
+import { RootState } from "@/store";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function PaymentSuccessful() {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
+
+    const cartItems = useSelector((state: RootState) => state.cart.items);
+  const dispatch = useDispatch();
  
   const router = useRouter();
   const orderId = "304657846532";
@@ -35,7 +40,7 @@ export default function PaymentSuccessful() {
 
   const showMore = () => setVisible((prev) => prev + 10);
 
-  const fashionProducts = dummyProducts.filter(
+  const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 

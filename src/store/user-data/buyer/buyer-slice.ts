@@ -26,18 +26,24 @@ const buyerInitialState: BuyerSliceParams = {
     profile: {
       id: 0,
       profile_picture: null,
-      phone: "",
-      phone2: null,
-      country: "",
-      state: "",
-      city: "",
-      address: "",
-      zip_code: "",
+      first_name: "",
+      last_name: "",
+      name: "",
+      phone: null,   // ✅ match API
+      phone2: null,  // ✅ match API
+      country: null, // ✅ API sends null, not ""
+      state: null,
+      city: null,
+      address: null,
+      landmark: null,
+      zip_code: null,
+      loyalty_points: 0,
+      preferred_payment_method: null,
+      created_at: "",
     },
   },
   BuyerItems: [],
 };
-
 
 const buyerSlice = createSlice({
   name: "buyer",

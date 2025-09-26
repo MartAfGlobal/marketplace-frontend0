@@ -121,7 +121,7 @@ export default function AllWishlist() {
                     {/* Item Details */}
                     <div className="w-full md:max-w-143.75">
                       <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                        {item.title}
+                        {item.name}
                       </p>
                       <p className="font-MontserratNormal text-c12 pb-3">
                         Two piece shop
