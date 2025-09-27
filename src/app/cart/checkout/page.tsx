@@ -34,6 +34,7 @@ export default function CartPage() {
   const showMore = () => setVisible((prev) => prev + 3);
 
   
+  
 
   return (
     <motion.div
@@ -84,6 +85,7 @@ export default function CartPage() {
         </div>
 
         <CheckoutItems />
+         {/* <PaymentSuccessful/> */}
         <div className="md:hidden">
           <MobileCheckoutItems />
         </div>

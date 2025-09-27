@@ -165,16 +165,6 @@ export interface ProfileImageProps {
   onEditClick: () => void;
 }
 
-export type Address = {
-  country: string;
-  fullName: string;
-  mobile: string;
-  state: string;
-  city: string;
-  zip: string;
-  street: string;
-  defaultAddress: boolean;
-};
 export interface AddressModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -325,15 +315,15 @@ export interface Product {
   warehouse?: number | null;
   reviews_data?: Review[];
   image;
-   variations?: Variation[]; 
-   quantity: number 
-   section?: string
+  variations?: Variation[];
+  quantity: number;
+  section?: string;
 }
 
 interface AddToCartParams {
   productId: string;
   quantity?: number;
-  variationid: string |null;
+  variationid: string | null;
 }
 
 export interface UploadedFile {
@@ -481,16 +471,23 @@ types / global.d.ts;
 export type BuyerProfile = {
   id: number;
   profile_picture: string | null;
-  phone: string;
+  first_name: string;
+  last_name: string;
+  name: string;
+  phone: string | null;
   phone2: string | null;
-  country: string;
-  state: string;
-  city: string;
-  address: string;
-  zip_code: string;
+  country: string | null;
+  state: string | null;
+  city: string | null;
+  address: string | null;
+  landmark: string | null;
+  zip_code: string | null;
+  loyalty_points: number;
+  preferred_payment_method: string | null;
+  created_at: string;
 };
 
-export type Data = {
+export type BuyerData = {
   id: string;
   email: string;
   first_name: string;
@@ -514,12 +511,74 @@ export type Data = {
   profile: BuyerProfile;
 };
 
-// Your slice params type
+export type BuyerItem = {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  description?: string;
+  image?: string;
+};
+
+export type Address = {
+  id: number;
+  country: string;
+  full_name: string;
+  phone: string;
+  state: string;
+  city: string;
+  postal_code: string;
+  address: string;
+  is_default: boolean;
+};
+
 export type BuyerSliceParams = {
   BuyerData: BuyerData;
   BuyerItems: BuyerItem[];
+  BuyerAddresses: Address[];
 };
 
+// ✅ default object for BuyerData
+export const buyerInitialData: BuyerData = {
+  id: "",
+  email: "",
+  first_name: "",
+  last_name: "",
+  account_status: "",
+  date_created: "",
+  date_joined: "",
+  last_login: null,
+  groups: [],
+  is_accountant: false,
+  is_active: false,
+  is_agent: false,
+  is_customer: false,
+  is_google_user: false,
+  is_manufacturer: false,
+  is_staff: false,
+  is_staff_member: false,
+  is_superuser: false,
+  profile_type: "",
+  user_permissions: [],
+  profile: {
+    id: 0,
+    profile_picture: null,
+    first_name: "",
+    last_name: "",
+    name: "",
+    phone: null,
+    phone2: null,
+    country: null,
+    state: null,
+    city: null,
+    address: null,
+    landmark: null,
+    zip_code: null,
+    loyalty_points: 0,
+    preferred_payment_method: null,
+    created_at: "",
+  },
+};
 // Define the Profile type first
 export type SellerProfile = {
   id: number;
@@ -556,12 +615,6 @@ export type Data = {
   profile_type: string;
   user_permissions: string[];
   profile: BuyerProfile;
-};
-
-// Your slice params type
-export type BuyerSliceParams = {
-  BuyerData: Data;
-  BuyerItems: BuyerItem[];
 };
 
 export interface SellerProfile {

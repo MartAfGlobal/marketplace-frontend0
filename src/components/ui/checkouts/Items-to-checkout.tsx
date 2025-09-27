@@ -116,7 +116,7 @@ export default function CheckoutItems() {
               <Input  placeholder="Enter coupon code w-full"/>
               <button className="w-full max-w-31.25 bg-transparent border border-ff715b text-c12 h-12 rounded-c8 font-MontserratSemiBold text-ff715b">Apply coupon</button>
             </div>
-            <div className="font-MontserratNormal text-sm text-000000 space-y-2">
+            <div className="font-MontserratNormal text-sm text-000000 h-23 border-b border-b-000000/10 space-y-2">
               <div className="flex justify-between">
                 <p>Total items</p>
                 <p>N50,000</p>
@@ -130,6 +130,14 @@ export default function CheckoutItems() {
                 <p>N25,000</p>
               </div>
             </div>
+              <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
+                <p>Shipping fee</p>
+                <p>N50,000</p>
+              </div>
+              <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
+                <p>Order total</p>
+                <p>N50,000</p>
+              </div>
 
             <div className=" mt-3 mb-c32 flex gap-c42 items-center">
               <div>
@@ -167,9 +175,9 @@ export default function CheckoutItems() {
                     width={20}
                     height={20}
                   />
-                  <p>Secure payments</p>
+                  <p className="text-c12 font-MontserratSemiBold">Secure payments</p>
                 </div>
-                <p>
+                <p className="text-c12 font-MontserratNormal leading-4 ">
                   Every payment you make on MartAf is secured with strict SSL
                   encryption and PCI DSS data protection protocols
                 </p>
@@ -182,9 +190,9 @@ export default function CheckoutItems() {
                     width={20}
                     height={20}
                   />
-                  <p>Secure privacy</p>
+                  <p className="text-c12 font-MontserratSemiBold">Secure privacy</p>
                 </div>
-                <p>
+                <p className="text-c12 font-MontserratNormal leading-4 ">
                   Protecting your privacy is important to us! Please be assured
                   that your information will be kept secured and uncompromised.
                   We will only use your information in accordance with our

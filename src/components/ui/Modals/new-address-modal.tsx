@@ -6,15 +6,25 @@ import { Button } from "@/components/ui/Button/Button";
 import { Label } from "../forms/Label";
 import { Input } from "../forms/Input";
 import Image from "next/image";
-import { AddressModalProps } from "@/types/global";
-
-
+import { AddressModalProps, Address} from "@/types/global";
 
 import MobileIcon from "@/assets/icons/callIcon.png";
 import StateIcon from "@/assets/icons/mobileIcon.png";
 import CityIcon from "@/assets/icons/callIcon.png";
 
 import NigerianFlag from "@/assets/icons/user-dashboard/Flags/Nigeria.png";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+
+// country-state-city
+import { Country, State } from "country-state-city";
+import { useHttp } from "@/hooks/use-http";
+import { toast } from "sonner";
+import { LoadingSpinner } from "../loading-spinner";
+
+// helper: map ISO code to flag URL
+const getFlagUrl = (isoCode: string) =>
+  `https://flagcdn.com/w20/${isoCode.toLowerCase()}.png`;
 
 export default function AddressModal({
   isOpen,
@@ -22,36 +32,83 @@ export default function AddressModal({
   onSave,
   currentAddress,
 }: AddressModalProps) {
-  const [address, setAddress] = useState({
-    country: currentAddress?.country || "",
-    fullName: currentAddress?.fullName || "",
-    mobile: currentAddress?.mobile || "",
-    state: currentAddress?.state || "",
-    city: currentAddress?.city || "",
-    zip: currentAddress?.zip || "",
-    street: currentAddress?.street || "",
-    defaultAddress: currentAddress?.defaultAddress || false,
+  const [formData, setFormData] = useState<Address>({
+    id: 0,
+    country: currentAddress?.country || "Nigeria",
+    full_name: "",
+    phone: "",
+    state: "",
+    city: "",
+    postal_code: "",
+    address: "",
+    is_default: false,
   });
+
+  const router = useRouter();
+
+  const [streetError, setStreetError] = useState("");
+
+  const [states, setStates] = useState<any[]>([]);
+  const [flag, setFlag] = useState<string>(NigerianFlag.src);
+  const tokenSlice = useSelector((state: any) => state.token);
+  const { token } = tokenSlice;
+
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
-
     return () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
 
-  const handleChange = (
-    field: keyof typeof address,
-    value: string | boolean
-  ) => {
-    setAddress((prev) => ({ ...prev, [field]: value }));
+  // Update states when country changes
+  useEffect(() => {
+    const selectedCountry = Country.getAllCountries().find(
+      (c) => c.name === formData.country
+    );
+
+    if (selectedCountry) {
+      setStates(State.getStatesOfCountry(selectedCountry.isoCode));
+      setFlag(getFlagUrl(selectedCountry.isoCode));
+    }
+  }, [formData.country]);
+
+  const handleChange = (field: keyof Address, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    onSave(address);
+  const { loading, sendHttpRequest: saveRequest } = useHttp();
+
+  const SaveSuccess = (res: any) => {
+    console.log("address INFO:", res);
+
+    setStreetError("");
+    onSave(formData);
     onClose();
+
+    return;
+  };
+
+  const handleSave = (e?: React.FormEvent) => {
+    e?.preventDefault();
+
+    console.log("Token in handleSave:", token);
+    const { id, ...bodyWithoutId } = formData;
+
+    // Login request
+    saveRequest({
+      requestConfig: {
+        url: "shipping/shipping-addresses/",
+        method: "POST",
+        body: bodyWithoutId,
+
+        token,
+        isAuth: true,
+        successMessage: "address added successful!",
+      },
+      successRes: SaveSuccess,
+    });
   };
 
   return (
@@ -95,42 +152,50 @@ export default function AddressModal({
               ✕
             </button>
 
-            <h2 className="font-MontserratSemiBold text-c16 mb-c32">
+            <h2 className="font-MontserratSemiBold text-c16 mb-c24">
               Update Address
             </h2>
 
             <div className="flex flex-col gap-3">
-              {/* Country / Region - full width */}
-
+              {/* Country / Region */}
               <div className="w-full flex gap-c24 justify-between">
-                <div className="flex flex-col gap-2 relative w-full">
+                <div className="flex flex-col gap-2 relative w-full max-w-67.5">
                   <Label className="text-c12 font-MontserratMedium">
                     Country/Region
                   </Label>
-                  <div className="relative w-full flex items-center">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                      <Image
-                        src={NigerianFlag}
-                        alt="Country"
-                        width={18}
-                        height={18}
-                        className="rounded-full"
-                      />
-                    </div>
-                    <Input
-                      type="text"
-                      value={address.country}
-                      placeholder="Nigeria"
+                  <div className="relative w-full flex items-center rounded-c8 p-4 border border-efefef ">
+                    {flag && (
+                      <div className="absolute  left-3 top-1/2 -translate-y-1/2">
+                        <Image
+                          src={flag}
+                          alt="Country"
+                          width={18}
+                          height={18}
+                          className="rounded-full h-4.5 w-4.5"
+                        />
+                      </div>
+                    )}
+                    <select
+                      value={formData.country}
                       onChange={(e) => handleChange("country", e.target.value)}
-                      className="border border-efefef rounded-c8 p-4 pl-10 w-full text-c12 font-MontserratMedium"
-                    />
+                      className="  pl-5  focus:ring-0 focus:outline-0 w-full text-c12 font-MontserratMedium"
+                    >
+                      {Country.getAllCountries().map((c) => (
+                        <option
+                          className="-ml-12"
+                          key={c.isoCode}
+                          value={c.name}
+                        >
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-                <div className="w-full h-8 bg-red"></div>
               </div>
 
               <div>
-                <p className="font-MontserratSemiBold text-c12 mb-c24 text-000000">
+                <p className="font-MontserratSemiBold text-c12 mb-3  text-000000">
                   Contact information
                 </p>
                 <div className="flex gap-c24 w-full">
@@ -138,17 +203,17 @@ export default function AddressModal({
                     <Label className="text-c12 font-MontserratMedium">
                       Full Name
                     </Label>
-                    <div className="relative w-full flex items-center">
-                      <Input
-                        type="text"
-                        value={address.fullName}
-                        onChange={(e) =>
-                          handleChange("fullName", e.target.value)
-                        }
-                        placeholder="Nigeria"
-                        className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
-                      />
-                    </div>
+                    <Input
+                      id="full_namw"
+                      name="full_name"
+                      type="text"
+                      value={formData.full_name}
+                      onChange={(e) =>
+                        handleChange("full_name", e.target.value)
+                      }
+                      placeholder="John Doe"
+                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                    />
                   </div>
 
                   <div className="flex flex-col gap-2 relative w-1/2">
@@ -165,9 +230,11 @@ export default function AddressModal({
                         />
                       </div>
                       <Input
+                        id="phone"
+                        name="phone"
                         type="text"
-                        value={address.mobile}
-                        onChange={(e) => handleChange("mobile", e.target.value)}
+                        value={formData.phone}
+                        onChange={(e) => handleChange("phone", e.target.value)}
                         placeholder="+2347058675432"
                         className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
                       />
@@ -177,57 +244,44 @@ export default function AddressModal({
               </div>
 
               <div>
-                <p className="font-MontserratSemiBold text-c12 mb-c24 text-000000">
+                <p className="font-MontserratSemiBold text-c12 mb-3 text-000000">
                   Address information
                 </p>
                 <div className="flex flex-col gap-c24">
                   <div className="flex gap-c24 w-full">
+                    {/* State */}
                     <div className="flex flex-col gap-2 relative w-1/2">
                       <Label className="text-c12 font-MontserratMedium">
                         State / Province
                       </Label>
-                      <div className="relative w-full flex items-center">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                          <Image
-                            src={StateIcon}
-                            alt="State"
-                            width={11.25}
-                            height={17.5}
-                          />
-                        </div>
-                        <Input
-                          type="text"
-                          value={address.state}
-                          onChange={(e) =>
-                            handleChange("state", e.target.value)
-                          }
-                          placeholder="+234675845675"
-                          className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
-                        />
-                      </div>
+                      <select
+                        id="state"
+                        name="state"
+                        value={formData.state}
+                        onChange={(e) => handleChange("state", e.target.value)}
+                        className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
+                      >
+                        <option value="">Select State</option>
+                        {states.map((s) => (
+                          <option key={s.isoCode} value={s.name}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
+                    {/* City */}
                     <div className="flex flex-col gap-2 relative w-1/2">
                       <Label className="text-c12 font-MontserratMedium">
                         City
                       </Label>
-                      <div className="relative w-full flex items-center">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                          <Image
-                            src={CityIcon}
-                            alt="City"
-                            width={15.32}
-                            height={15.32}
-                          />
-                        </div>
-                        <Input
-                          type="text"
-                          value={address.city}
-                          placeholder="+234675845675"
-                          onChange={(e) => handleChange("city", e.target.value)}
-                          className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
-                        />
-                      </div>
+                      <Input
+                        type="text"
+                        value={formData.city}
+                        placeholder="Lagos"
+                        onChange={(e) => handleChange("city", e.target.value)}
+                        className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
+                      />
                     </div>
                   </div>
 
@@ -236,68 +290,73 @@ export default function AddressModal({
                       <Label className="text-c12 font-MontserratMedium">
                         Zip Code
                       </Label>
-                      <div className="relative w-full flex items-center">
-                        <Input
-                          type="text"
-                          value={address.zip}
-                          placeholder="+234675845675"
-                          onChange={(e) => handleChange("zip", e.target.value)}
-                          className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
-                        />
-                      </div>
+                      <Input
+                        type="text"
+                        value={formData.postal_code}
+                        onChange={(e) =>
+                          handleChange("postal_code", e.target.value)
+                        }
+                        placeholder="100001"
+                        className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                      />
                     </div>
 
                     <div className="flex flex-col gap-2 relative w-1/2">
                       <Label className="text-c12 font-MontserratMedium">
                         Street / House / Apartment / Unit
                       </Label>
-                      <div className="relative w-full flex items-center">
-                        <Input
-                          type="text"
-                          value={address.street}
-                          onChange={(e) =>
-                            handleChange("street", e.target.value)
-                          }
-                          placeholder="frankubi2023@gmail.com"
-                          className="border border-efefef rounded-c8 p-4 pl-10 w-full text-c12 font-MontserratMedium"
-                        />
-                      </div>
+                      <Input
+                        type="text"
+                        value={formData.address}
+                        onChange={(e) =>
+                          handleChange("address", e.target.value)
+                        }
+                        placeholder="12 Broad Street"
+                        className={`border rounded-c8 p-4 pl-10 w-full text-c12 font-MontserratMedium ${
+                          streetError ? "border-red-500" : "border-efefef"
+                        }`}
+                      />
+                      {streetError && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {streetError}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 mt-c16">
-              
                 <button
                   type="button"
                   onClick={() =>
-                    handleChange("defaultAddress", !address.defaultAddress)
+                    handleChange("is_default", !formData.is_default)
                   }
                   className={`w-c46 h-6 rounded-full transition-colors duration-300 ${
-                    address.defaultAddress ? "bg-ff715b" : "bg-gray-300"
+                    formData.is_default ? "bg-ff715b" : "bg-gray-300"
                   } relative`}
                 >
                   <span
                     className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full circled-shadow transition-all ${
-                      address.defaultAddress
+                      formData.is_default
                         ? "translate-x-[22px]"
                         : "translate-x-0"
                     }`}
                   />
                 </button>
-                  <span className="text-c12 font-MontserratMedium">
+                <span className="text-c12 font-MontserratMedium">
                   Set as default address
                 </span>
               </div>
             </div>
 
-            <div className="w-full flex justify-end mt-c32">
+            <div className="w-full flex justify-end mt-c24">
               <Button
+                disabled={loading}
                 onClick={handleSave}
                 className="w-full max-w-50.5 bg-ff715b text-white flex justify-center items-center"
               >
-                Save Address
+                {loading ? <LoadingSpinner /> : "Save Address"}
               </Button>
             </div>
           </motion.div>

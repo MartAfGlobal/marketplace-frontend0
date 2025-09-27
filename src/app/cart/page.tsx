@@ -8,9 +8,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 
 import { RootState } from "@/store";
-import { removeFromCart, updateQuantity, setCartItems } from "@/store/cart/cartSlice";
+import { removeFromCart, updateQuantity } from "@/store/cart/cartSlice";
 
-
+import padlock from "@/assets/icons/padlock.png";
 import NavBack from "@/assets/icons/navBacksmall.png";
 import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 import VisaCard from "@/assets/icons/visa_inc_logo.svg.svg";
@@ -25,45 +25,36 @@ import CloseX from "@/assets/mobile/closeX.png";
 import QuantitySelector from "@/components/ui/cart/quantityControl";
 import ProductCard from "@/components/ui/cards/ProductCard";
 import { Button } from "@/components/ui/Button/Button";
-import { useHttp } from "@/hooks/use-http";
+import CheckoutModal from "@/components/ui/cart/CheckoutModal";
 
 export default function CartPage() {
   const [selected, setSelected] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<{ [key: string]: boolean }>({});
+  const [selectedItems, setSelectedItems] = useState<{
+    [key: string]: boolean;
+  }>({});
   const [openModal, setOpenModal] = useState(false);
   const [visible, setVisible] = useState(10);
 
-  const { sendHttpRequest: userCartHttpRequest } = useHttp();
+  const token = useSelector((state: RootState) => state.token?.token);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+
+  const handleCheckout = () => {
+    console.log("is token true or false", token);
+
+    if (token === null || token === undefined || token === "") {
+      // Token not present → show modal
+      setCheckoutModalOpen(true);
+    } else {
+      // Token exists → continue
+      router.push("/cart/checkout");
+    }
+  };
+
+  console.log("is token true or false", token);
+
   const router = useRouter();
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.items);
-
-  // Fetch user cart
-  useEffect(() => {
-    const fetchUserSucRes = (res: any) => {
-      const resData = res?.data;
-      const fetchedCart = resData?.resData?.cartItems || resData?.cart || [];
-
-      // Normalize quantity
-      const normalizedCart = fetchedCart.map((item: any) => ({
-        ...item,
-        quantity: item.quantity || 1,
-      }));
-
-      dispatch(setCartItems(normalizedCart));
-    };
-
-    userCartHttpRequest({
-      requestConfig: {
-        url: "/cart/",
-        method: "GET",
-        successMessage: "User cart fetched",
-      
-      },
-      successRes: fetchUserSucRes,
-    });
-    console.log("Cart items fetched:", cartItems);
-  }, [dispatch, userCartHttpRequest]);
 
   // Initialize selectedItems whenever cartItems changes
   useEffect(() => {
@@ -128,7 +119,7 @@ export default function CartPage() {
         {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-4 px-6 mt-3 md:mt-c32"
+          className="flex items-center gap-4  mt-3 md:mt-c32"
         >
           <Image
             src={NavBack}
@@ -155,9 +146,28 @@ export default function CartPage() {
                     checked={allSelected}
                     onChange={toggleSelectAll}
                   />
-                  <span className="text-c12 font-MontserratSemiBold">Select</span>
+                  <span className="text-c12 font-MontserratSemiBold">
+                    Select
+                  </span>
                 </div>
-                <Image src={Filter} alt="filter" width={24} height={24} />
+                {Object.values(selectedItems).some(
+                  (isSelected) => isSelected
+                ) && (
+                  <button
+                    onClick={() => {
+                      Object.entries(selectedItems).forEach(
+                        ([id, isSelected]) => {
+                          if (isSelected) {
+                            dispatch(removeFromCart(id));
+                          }
+                        }
+                      );
+                      setSelectedItems({}); // reset
+                    }}
+                  >
+                    <Image src={Trash} alt="delete" width={15} height={16.25} />
+                  </button>
+                )}
               </div>
 
               <div className="flex px-6 w-full justify-between">
@@ -226,7 +236,8 @@ export default function CartPage() {
                             </p>
                             <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                               <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                                {item.quantity}PC, {item.variations_data?.[0]?.color}
+                                {item.quantity}PC,{" "}
+                                {item.variations_data?.[0]?.color}
                               </span>
                             </div>
                             <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">
@@ -236,7 +247,9 @@ export default function CartPage() {
                         </div>
 
                         <div className="flex flex-col justify-between items-end">
-                          <button onClick={() => dispatch(removeFromCart(item.id))}>
+                          <button
+                            onClick={() => dispatch(removeFromCart(item.id))}
+                          >
                             <Image
                               src={Trash}
                               alt="delete"
@@ -266,9 +279,76 @@ export default function CartPage() {
             </div>
 
             {/* Desktop Summary */}
-            <div className="hidden md:flex">
-              <div className="w-full max-w-84.25 hid">
-                {/* ...keep your summary and payment info unchanged... */}
+            <div className="hidden md:flex w-full max-w-84.25">
+              <div className="w-full  ">
+                <h1 className="text-sm font-MontserratSemiBold mb-3">
+                  Order Summary
+                </h1>
+                <div className=" space-y-2 text-sm font-MontserratNormal h-23 border-b border-b-000000/10">
+                  <div className="flex justify-between">
+                    <p className="">Total items:</p>
+                    <p className="">${totalPrice}</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <p className="">Discount:</p>
+                    <p className=" text-ca0202">-₦50</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <p className="">Subtotal:</p>
+                    <p className="">${totalPrice}</p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mb-c32 border-b border-b-000000/10 pt-4">
+                  <div className="w-full max-w-60">
+                    <p className="">Total:</p>
+                    <p className="text-c10 font-MontserratNormal leading-4">
+                      Please refer to your final actual payment amount.
+                    </p>
+                  </div>
+                  <p className="text-c32 font-MontserratSemiBold">
+                    ${totalPrice}
+                  </p>
+                </div>
+                <Button onClick={handleCheckout} className="border-0">
+                  Checkout ({cartItems.length})
+                </Button>
+                <div className="space-y-2.5 mt-c32  ">
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={ShildCheck}
+                      alt="shild check"
+                      width={20}
+                      height={20}
+                    />
+                    <p className="text-c12 font-MontserratSemiBold">
+                      Secure payments
+                    </p>
+                  </div>
+                  <p className="text-c12 font-MontserratNormal leading-4 ">
+                    Every payment you make on MartAf is secured with strict SSL
+                    encryption and PCI DSS data protection protocols
+                  </p>
+                </div>
+                <div className="space-y-2.5 mt-4">
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={padlock}
+                      alt="shild check"
+                      width={20}
+                      height={20}
+                    />
+                    <p className="text-c12 font-MontserratSemiBold">
+                      Secure privacy
+                    </p>
+                  </div>
+                  <p className="text-c12 font-MontserratNormal leading-4 ">
+                    Protecting your privacy is important to us! Please be
+                    assured that your information will be kept secured and
+                    uncompromised. We will only use your information in
+                    accordance with our privacy policy to provide and improve
+                    our services to you.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -297,7 +377,9 @@ export default function CartPage() {
           <button
             onClick={toggleSelectAll}
             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-              allSelected ? "bg-ff715b border-ff715b" : "border-ff715b bg-transparent"
+              allSelected
+                ? "bg-ff715b border-ff715b"
+                : "border-ff715b bg-transparent"
             }`}
           >
             {allSelected && (
@@ -325,8 +407,8 @@ export default function CartPage() {
         </div>
 
         <Button
-          onClick={() => router.push("/cart/checkout")}
-          className="border-0"
+          onClick={handleCheckout}
+          className="border-0 bg-black hover:bg-black/90 text-white rounded-xl"
         >
           Checkout ({cartItems.length})
         </Button>
@@ -342,7 +424,9 @@ export default function CartPage() {
             className="fixed bottom-20 w-full bg-ffffff z-40 px-6 overflow-hidden circle-shadow"
           >
             <div className="flex justify-between pt-6 ">
-              <p className="text-base font-MontserratSemiBold">Checkout details</p>
+              <p className="text-base font-MontserratSemiBold">
+                Checkout details
+              </p>
               <button onClick={() => setOpenModal((prev) => !prev)}>
                 <Image src={CloseX} alt="close" width={15} height={15} />
               </button>
@@ -386,6 +470,10 @@ export default function CartPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <CheckoutModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+      />
     </div>
   );
 }

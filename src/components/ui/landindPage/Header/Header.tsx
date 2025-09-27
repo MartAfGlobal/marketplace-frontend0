@@ -15,15 +15,25 @@ import OtherSearchInput from "../../others/Search";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import DropdownModal from "../../mobile/modal/header-drop-modal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CartButton from "../../cart/cartButton";
 import SignUpModal from "../../mobile/auth/sign-up";
+import { useSearchParams } from "next/navigation";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const pathname = usePathname();
   const changeSearch = pathname?.startsWith("/others") ?? false;
+    const searchParams = useSearchParams();
+  const showLogin = searchParams.get("showLogin");
+  
+ useEffect(() => {
+    if (showLogin === "true") {
+      setShowModal(true); // auto open login modal
+    }
+  }, [showLogin]);
+
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);

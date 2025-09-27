@@ -56,15 +56,15 @@ export default function ToShip() {
 
   const handleEditAddress = (item: UserAddressProps) => {
     setEditingAddress({
-      fullName: item.name,
-      mobile: item.phoneNo,
-      street: item.address,
+      full_name: item.name,
+      phone: item.phoneNo,
+      address: item.address,
       // add other fields if needed
-      defaultAddress: false,
+      is_default: false,
       country: "",
       state: "",
       city: "",
-      zip: "",
+      postal_code: "",
     });
     setIsModalOpen(true);
   };

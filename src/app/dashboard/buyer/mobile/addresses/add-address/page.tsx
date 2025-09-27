@@ -2,123 +2,24 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import Flag from "@/assets/icons/flag.svg";
 import NavBack from "@/assets/icons/navBacksmall.png";
 import Phone from "@/assets/mobile/Phone.png";
 import CaretDown from "@/assets/mobile/carent-down.png";
+import NigerianFlag from "@/assets/icons/user-dashboard/Flags/Nigeria.png";
 
 import { Label } from "@/components/ui/forms/Label";
 import { Button } from "@/components/ui/Button/Button";
+import { Country, State, City } from "country-state-city";
+import { useHttp } from "@/hooks/use-http";
+import { useSelector } from "react-redux";
 
-/** ---- Simple Africa dataset (extend as needed) ---- */
-type ZipEntry = string;
-type City = { label: string; zips: ZipEntry[] };
-type StateEntry = { label: string; cities: City[] };
-type Country = {
-  label: string;
-  value: string;
-  dialCode: string;
-  // swap to your country flags here if you have them, otherwise fallback Flag
-  flag?: any;
-  states: StateEntry[];
-};
+import { AddressModalProps, Address } from "@/types/global";
 
-const AFRICA: Country[] = [
-  {
-    label: "Nigeria",
-    value: "ng",
-    dialCode: "+234",
-    flag: Flag,
-    states: [
-      {
-        label: "Lagos",
-        cities: [
-          { label: "Ikeja", zips: ["100001", "100101"] },
-          { label: "Lekki", zips: ["105102"] },
-          { label: "Surulere", zips: ["101283"] },
-        ],
-      },
-      {
-        label: "Abuja (FCT)",
-        cities: [
-          { label: "Garki", zips: ["900001"] },
-          { label: "Wuse", zips: ["900102"] },
-          { label: "Maitama", zips: ["900271"] },
-        ],
-      },
-      {
-        label: "Rivers",
-        cities: [{ label: "Port Harcourt", zips: ["500001", "500272"] }],
-      },
-    ],
-  },
-  {
-    label: "Ghana",
-    value: "gh",
-    dialCode: "+233",
-    flag: Flag,
-    states: [
-      {
-        label: "Greater Accra",
-        cities: [
-          { label: "Accra", zips: ["00233"] },
-          { label: "Tema", zips: ["00233"] },
-        ],
-      },
-      {
-        label: "Ashanti",
-        cities: [{ label: "Kumasi", zips: ["AK-0000-0000"] }],
-      },
-    ],
-  },
-  {
-    label: "Kenya",
-    value: "ke",
-    dialCode: "+254",
-    flag: Flag,
-    states: [
-      {
-        label: "Nairobi",
-        cities: [{ label: "Nairobi", zips: ["00100", "00505"] }],
-      },
-      { label: "Mombasa", cities: [{ label: "Mombasa", zips: ["80100"] }] },
-    ],
-  },
-  {
-    label: "South Africa",
-    value: "za",
-    dialCode: "+27",
-    flag: Flag,
-    states: [
-      {
-        label: "Gauteng",
-        cities: [{ label: "Johannesburg", zips: ["2000", "2001"] }],
-      },
-      {
-        label: "Western Cape",
-        cities: [{ label: "Cape Town", zips: ["8001", "8005"] }],
-      },
-    ],
-  },
-  {
-    label: "Egypt",
-    value: "eg",
-    dialCode: "+20",
-    flag: Flag,
-    states: [
-      {
-        label: "Cairo",
-        cities: [{ label: "Cairo", zips: ["11511", "11311"] }],
-      },
-      { label: "Giza", cities: [{ label: "Giza", zips: ["12511"] }] },
-    ],
-  },
-];
-
-/** ---- Small helper to close on outside click ---- */
+// Helper to close dropdowns on outside click
 function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   const ref = useRef<T | null>(null);
   useEffect(() => {
@@ -132,88 +33,203 @@ function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   return ref;
 }
 
+// Helper: map ISO code to flag URL
+const getFlagUrl = (isoCode: string) =>
+  `https://flagcdn.com/w20/${isoCode.toLowerCase()}.png`;
+
 export default function AddNewAddreess() {
   const router = useRouter();
+  const tokenSlice = useSelector((state: any) => state.token);
+  const { token } = tokenSlice;
 
-  // Selections
+  const [formData, setFormData] = useState<Address>({
+    id: 0,
+    country: "",
+    full_name: "",
+    phone: "",
+    state: "",
+    city: "",
+    postal_code: "",
+    address: "",
+    is_default: false,
+  });
+
+  // Countries, States, Cities
+  const [countries, setCountries] = useState<
+    ReturnType<typeof Country.getAllCountries>
+  >([]);
+  const [selectedCountry, setSelectedCountry] = useState<
+    ReturnType<typeof Country.getAllCountries>[number] | null
+  >(null);
+
+  const [states, setStates] = useState<
+    ReturnType<typeof State.getStatesOfCountry>
+  >([]);
+  const [selectedState, setSelectedState] = useState<
+    ReturnType<typeof State.getStatesOfCountry>[number] | null
+  >(null);
+
+  const [cities, setCities] = useState<
+    ReturnType<typeof City.getCitiesOfState>
+  >([]);
+  const [selectedCity, setSelectedCity] = useState<
+    ReturnType<typeof City.getCitiesOfState>[number] | null
+  >(null);
+
+  const [flag, setFlag] = useState<string>(NigerianFlag.src);
+
+  // Dropdowns
   const [countryOpen, setCountryOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [zipOpen, setZipOpen] = useState(false);
 
-  const [selectedCountry, setSelectedCountry] = useState<Country>(AFRICA[0]); // default Nigeria
-  const [selectedState, setSelectedState] = useState<string>("");
-  const [selectedCity, setSelectedCity] = useState<string>("");
-  const [selectedZip, setSelectedZip] = useState<string>("");
+  const [isDefault, setIsDefault] = useState<boolean>(formData.is_default);
 
-  // Phone handling
-  const [phone, setPhone] = useState<string>(AFRICA[0].dialCode + " ");
-
-  // Toggle (Set as default, etc.)
-  const [isDefault, setIsDefault] = useState<boolean>(false);
-
-  // Derived options
-  const states = useMemo<StateEntry[]>(
-    () => selectedCountry.states,
-    [selectedCountry]
-  );
-  const cities = useMemo<City[]>(() => {
-    const s = states.find((st) => st.label === selectedState);
-    return s ? s.cities : [];
-  }, [states, selectedState]);
-  const zips = useMemo<ZipEntry[]>(() => {
-    const c = cities.find((ct) => ct.label === selectedCity);
-    return c ? c.zips : [];
-  }, [cities, selectedCity]);
-
-  // Close dropdowns on outside click
   const countryRef = useClickOutside<HTMLDivElement>(() =>
     setCountryOpen(false)
   );
   const stateRef = useClickOutside<HTMLDivElement>(() => setStateOpen(false));
   const cityRef = useClickOutside<HTMLDivElement>(() => setCityOpen(false));
-  const zipRef = useClickOutside<HTMLDivElement>(() => setZipOpen(false));
 
-  // When country changes, reset downstream and set dial code
-  const handleCountrySelect = (c: Country) => {
-    setSelectedCountry(c);
-    setSelectedState("");
-    setSelectedCity("");
-    setSelectedZip("");
-    setCountryOpen(false);
+  const { loading, sendHttpRequest } = useHttp();
 
-    // If phone was empty or previously had a dial code at the start, replace with new dial
-    const trimmed = phone.trim();
-    const possibleCodes = AFRICA.map((x) => x.dialCode);
-    const hadCode = possibleCodes.some((dc) => trimmed.startsWith(dc));
-    if (!trimmed || hadCode) {
-      setPhone(c.dialCode + " ");
+  // Load countries and set default
+  useEffect(() => {
+    const allCountries = Country.getAllCountries();
+    setCountries(allCountries);
+    const defaultCountry =
+      allCountries.find((c) => c.name === formData.country) || allCountries[0];
+    setSelectedCountry(defaultCountry);
+    setFlag(getFlagUrl(defaultCountry.isoCode));
+    setFormData((prev) => ({
+      ...prev,
+      country: defaultCountry.name,
+      phone: prev.phone || "+" + defaultCountry.phonecode + " ",
+    }));
+  }, []);
+
+  // Update states and cities when country changes
+  useEffect(() => {
+    if (!selectedCountry) return;
+    const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
+    setStates(countryStates);
+    const defaultState =
+      countryStates.find((s) => s.name === formData.state) || null;
+    setSelectedState(defaultState);
+
+    if (defaultState) {
+      const stateCities = City.getCitiesOfState(
+        selectedCountry.isoCode,
+        defaultState.isoCode
+      );
+      setCities(stateCities);
+      const defaultCity =
+        stateCities.find((c) => c.name === formData.city) || null;
+      setSelectedCity(defaultCity);
+    } else {
+      setCities([]);
+      setSelectedCity(null);
     }
+  }, [selectedCountry]);
+
+  // Update cities when state changes
+  useEffect(() => {
+    if (!selectedState || !selectedCountry) return;
+    const stateCities = City.getCitiesOfState(
+      selectedCountry.isoCode,
+      selectedState.isoCode
+    );
+    setCities(stateCities);
+    const defaultCity =
+      stateCities.find((c) => c.name === formData.city) || null;
+    setSelectedCity(defaultCity);
+  }, [selectedState]);
+
+  const handleChange = (field: keyof Address, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleStateSelect = (label: string) => {
-    setSelectedState(label);
-    setSelectedCity("");
-    setSelectedZip("");
+  const handleCountrySelect = (c: typeof selectedCountry) => {
+    if (!c) return;
+    setSelectedCountry(c);
+    setFlag(getFlagUrl(c.isoCode));
+    setSelectedState(null);
+    setSelectedCity(null);
+    setCountryOpen(false);
+    setFormData((prev) => ({
+      ...prev,
+      country: c.name,
+      phone: "+" + c.phonecode + " ",
+      state: "",
+      city: "",
+      postal_code: "",
+    }));
+  };
+
+  const handleStateSelect = (s: typeof selectedState) => {
+    if (!s) return;
+    setSelectedState(s);
+    setSelectedCity(null);
     setStateOpen(false);
+    setFormData((prev) => ({
+      ...prev,
+      state: s.name,
+      city: "",
+      postal_code: "",
+    }));
   };
 
-  const handleCitySelect = (label: string) => {
-    setSelectedCity(label);
-    setSelectedZip("");
+  const handleCitySelect = (c: typeof selectedCity) => {
+    if (!c) return;
+    setSelectedCity(c);
     setCityOpen(false);
+    setFormData((prev) => ({
+      ...prev,
+      city: c.name,
+      postal_code: formData.postal_code || "",
+    }));
   };
 
-  const handleZipSelect = (zip: string) => {
-    setSelectedZip(zip);
-    setZipOpen(false);
-  };
-
-  // Framer variants
   const menuVariants = {
     hidden: { opacity: 0, y: -10 },
     show: { opacity: 1, y: 0, transition: { duration: 0.2 } },
     exit: { opacity: 0, y: -10, transition: { duration: 0.15 } },
+  };
+
+  useEffect(() => {
+    if (!token) {
+      const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        // Go to landing page and tell it to open login modal
+        router.replace("/?showLogin=true");
+      } else {
+        // Desktop → go to dedicated login page
+        router.replace("/auth/login");
+      }
+      return;
+    }
+  });
+
+  const handleSave = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const { id, ...bodyWithoutId } = formData;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "shipping/shipping-addresses/",
+        method: "POST",
+        body: bodyWithoutId,
+        token,
+        isAuth: true,
+        successMessage: "Address added successfully!",
+        userType: "buyer",
+      },
+      successRes: () => {
+        router.back();
+      },
+    });
   };
 
   return (
@@ -237,10 +253,9 @@ export default function AddNewAddreess() {
         </button>
       </div>
 
-      {/* Form */}
       <div className="px-6 pt-7 pb-30">
-        <form action="" className="space-y-6">
-          {/* Country */}
+        <form onSubmit={handleSave} className="space-y-6">
+          {/* Country dropdown */}
           <div className="space-y-4">
             <Label className="text-sm pb-4 font-MontserratSemiBold">
               Country/region
@@ -252,13 +267,8 @@ export default function AddNewAddreess() {
                 className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
               >
                 <div className="flex items-center gap-2">
-                  <Image
-                    src={selectedCountry.flag || Flag}
-                    alt="flag"
-                    width={16}
-                    height={12}
-                  />
-                  <span>{selectedCountry.label}</span>
+                  <Image src={flag} alt="flag" width={16} height={12} />
+                  <span>{selectedCountry?.name || "Select country"}</span>
                 </div>
                 <Image
                   src={CaretDown}
@@ -275,23 +285,23 @@ export default function AddNewAddreess() {
                     initial="hidden"
                     animate="show"
                     exit="exit"
-                    className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20"
+                    className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
                   >
-                    {AFRICA.map((option) => (
+                    {countries.map((c) => (
                       <div
-                        key={option.value}
-                        onClick={() => handleCountrySelect(option)}
+                        key={c.isoCode}
+                        onClick={() => handleCountrySelect(c)}
                         className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
                       >
                         <Image
-                          src={option.flag || Flag}
-                          alt="flag"
+                          src={getFlagUrl(c.isoCode)}
+                          alt={c.name}
                           width={16}
                           height={12}
                         />
-                        <span>{option.label}</span>
+                        <span>{c.name}</span>
                         <span className="ml-auto text-xs opacity-60">
-                          {option.dialCode}
+                          +{c.phonecode}
                         </span>
                       </div>
                     ))}
@@ -301,25 +311,25 @@ export default function AddNewAddreess() {
             </div>
           </div>
 
-          {/* Contact information */}
+          {/* Contact info */}
           <div>
             <p className="text-sm font-MontserratSemiBold pb-4">
               Contact information
             </p>
-
             <div className="pb-3">
-              <Label className="text-sm  font-MontserratSemiBold">
+              <Label className="text-sm font-MontserratSemiBold">
                 Full name
               </Label>
               <input
-                placeholder=""
                 type="text"
                 className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                value={formData.full_name}
+                onChange={(e) => handleChange("full_name", e.target.value)}
               />
             </div>
 
             <div>
-              <Label className="text-sm  font-MontserratSemiBold">
+              <Label className="text-sm font-MontserratSemiBold">
                 Mobile number
               </Label>
               <div className="flex items-center p-4 mt-2 border border-gray-300 rounded-lg h-10">
@@ -331,36 +341,35 @@ export default function AddNewAddreess() {
                   className="mr-2"
                 />
                 <input
-                  placeholder={selectedCountry.dialCode}
                   type="tel"
                   className="w-full outline-none"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  value={formData.phone}
+                  onChange={(e) => handleChange("phone", e.target.value)}
                 />
               </div>
             </div>
           </div>
 
-          {/* Address information */}
+          {/* Address info */}
           <div>
             <p className="text-sm font-MontserratSemiBold pb-4">
               Address information
             </p>
-
             <div className="pb-3">
-              <Label className="text-sm  font-MontserratSemiBold">
+              <Label className="text-sm font-MontserratSemiBold">
                 Street, house, apartment, unit
               </Label>
               <input
-                placeholder=""
                 type="text"
                 className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                value={formData.address}
+                onChange={(e) => handleChange("address", e.target.value)}
               />
             </div>
 
-            {/* State */}
+            {/* State dropdown */}
             <div className="space-y-4">
-              <Label className="text-sm  font-MontserratSemiBold">
+              <Label className="text-sm font-MontserratSemiBold">
                 State/province
               </Label>
               <div className="relative pt-2 w-full" ref={stateRef}>
@@ -369,9 +378,7 @@ export default function AddNewAddreess() {
                   onClick={() => setStateOpen((p) => !p)}
                   className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
                 >
-                  <div className="flex items-center gap-2">
-                    <span>{selectedState || "Select state/province"}</span>
-                  </div>
+                  <span>{selectedState?.name || "Select state/province"}</span>
                   <Image
                     src={CaretDown}
                     alt="select state"
@@ -389,39 +396,31 @@ export default function AddNewAddreess() {
                       exit="exit"
                       className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
                     >
-                      {states.length === 0 ? (
-                        <div className="px-3 py-2 text-sm opacity-60">
-                          Select a country first
+                      {states.map((s) => (
+                        <div
+                          key={s.isoCode}
+                          onClick={() => handleStateSelect(s)}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        >
+                          {s.name}
                         </div>
-                      ) : (
-                        states.map((s) => (
-                          <div
-                            key={s.label}
-                            onClick={() => handleStateSelect(s.label)}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                          >
-                            {s.label}
-                          </div>
-                        ))
-                      )}
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
             </div>
 
-            {/* City */}
+            {/* City dropdown */}
             <div className="space-y-4 pt-3">
-              <Label className="text-sm  font-MontserratSemiBold">City</Label>
+              <Label className="text-sm font-MontserratSemiBold">City</Label>
               <div className="relative pt-2 w-full" ref={cityRef}>
                 <button
                   type="button"
                   onClick={() => setCityOpen((p) => !p)}
                   className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
                 >
-                  <div className="flex items-center gap-2">
-                    <span>{selectedCity || "Select city"}</span>
-                  </div>
+                  <span>{selectedCity?.name || "Select city"}</span>
                   <Image
                     src={CaretDown}
                     alt="select city"
@@ -439,80 +438,33 @@ export default function AddNewAddreess() {
                       exit="exit"
                       className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
                     >
-                      {cities.length === 0 ? (
-                        <div className="px-3 py-2 text-sm opacity-60">
-                          Select a state first
+                      {cities.map((c) => (
+                        <div
+                          key={c.name}
+                          onClick={() => handleCitySelect(c)}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        >
+                          {c.name}
                         </div>
-                      ) : (
-                        cities.map((c) => (
-                          <div
-                            key={c.label}
-                            onClick={() => handleCitySelect(c.label)}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                          >
-                            {c.label}
-                          </div>
-                        ))
-                      )}
+                      ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
             </div>
 
-            {/* Zip */}
-            <div className="space-y-4 pt-3">
-              <Label className="text-sm  font-MontserratSemiBold">
-                Zip code
+            <div className="pb-3">
+              <Label className="text-sm font-MontserratSemiBold">
+                Postal code
               </Label>
-              <div className="relative pt-2 w-full" ref={zipRef}>
-                <button
-                  type="button"
-                  onClick={() => setZipOpen((p) => !p)}
-                  className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
-                >
-                  <div className="flex items-center gap-2">
-                    <span>{selectedZip || "Select zip/postal code"}</span>
-                  </div>
-                  <Image
-                    src={CaretDown}
-                    alt="select zip"
-                    width={11}
-                    height={6}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {zipOpen && (
-                    <motion.div
-                      variants={menuVariants}
-                      initial="hidden"
-                      animate="show"
-                      exit="exit"
-                      className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
-                    >
-                      {zips.length === 0 ? (
-                        <div className="px-3 py-2 text-sm opacity-60">
-                          Select a city first
-                        </div>
-                      ) : (
-                        zips.map((z) => (
-                          <div
-                            key={z}
-                            onClick={() => handleZipSelect(z)}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                          >
-                            {z}
-                          </div>
-                        ))
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <input
+                type="text"
+                className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                value={formData.postal_code}
+                onChange={(e) => handleChange("postal_code", e.target.value)}
+              />
             </div>
 
-            {/* Custom Toggle */}
             <div className="pt-6 flex items-center justify-between">
               <span className="text-c2 font-MontserratSemiBold">
                 Set as default address
@@ -540,12 +492,10 @@ export default function AddNewAddreess() {
             </div>
           </div>
 
+          {/* Submit button */}
           <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
-            <Button
-              onClick={() => router.push("/cart/mobile/addresses/add-address")}
-              className="border-0"
-            >
-              Save address
+            <Button type="submit" className="border-0">
+              {loading ? "Saving..." : "Save address"}
             </Button>
           </div>
         </form>

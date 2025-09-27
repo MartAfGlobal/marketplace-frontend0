@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 
 export default function BuyerDashBoardPage() {
   const { sendHttpRequest: userInforHttpRequest } = useHttp();
+  const { sendHttpRequest: userAddressHttpRequest } = useHttp();
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -22,12 +23,47 @@ export default function BuyerDashBoardPage() {
 
   useEffect(() => {
     if (!token) {
-      router.replace("/auth/login");
+      const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        // Go to landing page and tell it to open login modal
+        router.replace("/?showLogin=true");
+      } else {
+        // Desktop → go to dedicated login page
+        router.replace("/auth/login");
+      }
+      return;
     }
 
     const fetchUserSucRes = (res: any) => {
       const resData = res?.data;
-      console.log("User info response:", resData);
+    
+      userAddressHttpRequest({
+        requestConfig: {
+          url: "shipping/shipping-addresses/",
+          method: "GET",
+          token,
+          isAuth: true,
+        },
+        successRes: (res) => {
+          const addresses =
+            res?.data?.map((addr: any) => ({
+              id: addr.id,
+              country: addr.country,
+              full_name: addr.full_name,
+              phone: addr.phone,
+              state: addr.state,
+              city: addr.city,
+              postal_code: addr.postal_code,
+              address: addr.address,
+              defaultAddress: addr.defaultAddress || false,
+            })) || [];
+
+             console.log("User address info:", addresses);
+
+          dispatch(buyerActions.setBuyerAddresses(addresses));
+        },
+      });
 
       // Adjust depending on backend response shape
       const user = resData?.buyerDetails || resData?.user || resData;
@@ -35,17 +71,44 @@ export default function BuyerDashBoardPage() {
       // ✅ Save to redux
       dispatch(
         buyerActions.updateBuyerData({
-          email: user?.email,
-          first_name: user?.first_name,
-          last_name: user?.last_name,
+          id: user?.id ?? "",
+          email: user?.email ?? "",
+          first_name: user?.first_name ?? "",
+          last_name: user?.last_name ?? "",
+          account_status: user?.account_status ?? "",
+          date_created: user?.date_created ?? "",
+          date_joined: user?.date_joined ?? "",
+          last_login: user?.last_login ?? null,
+          groups: user?.groups ?? [],
+          is_accountant: user?.is_accountant ?? false,
+          is_active: user?.is_active ?? false,
+          is_agent: user?.is_agent ?? false,
+          is_customer: user?.is_customer ?? false,
+          is_google_user: user?.is_google_user ?? false,
+          is_manufacturer: user?.is_manufacturer ?? false,
+          is_staff: user?.is_staff ?? false,
+          is_staff_member: user?.is_staff_member ?? false,
+          is_superuser: user?.is_superuser ?? false,
+          profile_type: user?.profile_type ?? "",
+          user_permissions: user?.user_permissions ?? [],
           profile: {
-            phone: user?.profile?.phone,
-            phone2: user?.profile?.phone2,
-            country: user?.profile?.country,
-            state: user?.profile?.state,
-            city: user?.profile?.city,
-            address: user?.profile?.address,
-            zip_code: user?.profile?.zip_code,
+            id: user?.profile?.id ?? 0,
+            profile_picture: user?.profile?.profile_picture ?? null,
+            first_name: user?.profile?.first_name ?? "",
+            last_name: user?.profile?.last_name ?? "",
+            name: user?.profile?.name ?? "",
+            phone: user?.profile?.phone ?? null,
+            phone2: user?.profile?.phone2 ?? null,
+            country: user?.profile?.country ?? null,
+            state: user?.profile?.state ?? null,
+            city: user?.profile?.city ?? null,
+            address: user?.profile?.address ?? null,
+            landmark: user?.profile?.landmark ?? null,
+            zip_code: user?.profile?.zip_code ?? null,
+            loyalty_points: user?.profile?.loyalty_points ?? 0,
+            preferred_payment_method:
+              user?.profile?.preferred_payment_method ?? null,
+            created_at: user?.profile?.created_at ?? "",
           },
         })
       );
@@ -62,7 +125,7 @@ export default function BuyerDashBoardPage() {
       },
       successRes: fetchUserSucRes,
     });
-  }, [token, dispatch]);
+  }, [token, dispatch, router, userInforHttpRequest, userAddressHttpRequest]);
 
   return (
     <>

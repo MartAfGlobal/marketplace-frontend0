@@ -22,7 +22,6 @@ export const useHttp = () => {
         // Clear any stored token
         dispatch(tokenActions.deleteToken());
 
-       
         if (requestConfig.userType === "seller") {
           router.replace("/auth/seller/login");
         }
@@ -67,7 +66,8 @@ export const useHttp = () => {
         let errorMessage: string = "Something went wrong. Please try again.";
 
         if (error.code === "ERR_NETWORK") {
-          errorMessage = "Network error. Please check your internet connection.";
+          errorMessage =
+            "Network error. Please check your internet connection.";
         } else if (error.code === "ECONNABORTED") {
           errorMessage = "Request timed out. Please try again.";
         } else if (error?.response?.data) {
@@ -85,19 +85,28 @@ export const useHttp = () => {
             }
           }
         }
-if (error?.response?.status === 401 || error?.response?.status === 403) {
-  errorMessage = "Please login!";
-  dispatch(tokenActions.deleteToken());
+        if (
+          error?.response?.status === 401 ||
+          error?.response?.status === 403
+        ) {
+          errorMessage = "Please login!";
+          dispatch(tokenActions.deleteToken());
 
-  const userType = requestConfig.userType ?? "seller"; // default buyer
+          const userType = requestConfig.userType ?? "seller"; // default buyer
+          const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
-  if (userType === "seller") {
-    router.replace("/auth/seller/login");
-  } else {
-    router.replace("/auth/login"); // buyer login
-  }
-}
-
+          if (userType === "seller") {
+            router.replace("/auth/seller/login");
+          } else {
+            if (isMobile) {
+              // Go to landing page and tell it to open login modal
+              router.replace("/?showLogin=true");
+            } else {
+              // Desktop → go to dedicated login page
+              router.replace("/auth/login");
+            }
+          }
+        }
 
         setError(errorMessage);
         toast.error(errorMessage);

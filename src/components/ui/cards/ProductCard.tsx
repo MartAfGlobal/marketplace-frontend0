@@ -32,18 +32,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCartBackend(
-      {
-        productId: product.id,
-        quantity: 1,
-        variationid: selectedVariation?.id || null, // send the variation id
-      },
-      sendHttpRequest,
-      (res) => {
-        
-        toast.success("Item added to cart successfully"); // ✅ correct syntax
-      }
-    );
+
+    dispatch(addToCart(product)); // ✅ just pass the whole product
+
+    toast.success("Item added to cart successfully");
   };
 
   const handleClick = () => {
