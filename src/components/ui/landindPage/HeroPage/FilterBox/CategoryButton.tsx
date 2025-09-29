@@ -1,22 +1,30 @@
-import { useState } from "react";
-import {CategoryButtonProps} from "@/types/global"
+import { CategoryButtonProps } from "@/types/global";
 import Image from "next/image";
 
-const CategoryButton: React.FC<CategoryButtonProps> = ({ iconSrc, label, onClick }) => {
-  const [isSelected, setIsSelected] = useState(false);
+interface Props extends CategoryButtonProps {
+  isSelected: boolean;
+}
 
-  const handleClick = () => {
-    setIsSelected(!isSelected);
-    onClick?.(); // call parent click handler too
-  };
-
+const CategoryButton: React.FC<Props> = ({ iconSrc, label, isSelected, onClick }) => {
   return (
     <button
-      onClick={handleClick}
-      className="flex items-center gap-4 transition w-fit h-[40px] "
+      onClick={onClick}
+      className={`flex items-center gap-4 transition pl-c32 h-[40px] px-4 w-full
+        ${isSelected ? "bg-white" : "bg-transparent"}`}
     >
-      <Image  height={16} width={16} src={iconSrc} alt={label} className="w-6 h-6 object-contain" />
-      <span className="text-sm text-000000  font-MontserratBold">{label}</span>
+      <Image
+        height={16}
+        width={16}
+        src={iconSrc}
+        alt={label}
+        className="w-6 h-6 object-contain"
+      />
+      <span
+        className={`text-sm font-MontserratBold 
+          ${isSelected ? "text-black" : "text-gray-700"}`}
+      >
+        {label}
+      </span>
     </button>
   );
 };

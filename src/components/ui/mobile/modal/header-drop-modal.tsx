@@ -19,6 +19,8 @@ import English from "@/assets/headerIcon/englishicon.png"
 import French from "@/assets/headerIcon/FrienchIcon.png"
 import Spanish from "@/assets/headerIcon/spanish.png"
 import Portegual from "@/assets/headerIcon/Portugal.png"
+import { Button } from "../../Button/Button";
+import AuthModal from "../auth/sign-up";
 
 
 const settings = [
@@ -110,6 +112,11 @@ const categories: Category[] = [
 
 export default function DropdownModal({ open, onClose }: DropdownModalProps) {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
+
+    const [showModal, setShowModal] = useState(false);
+  const [modalStep, setModalStep] = useState<
+    "signup" | "verify" | "signin" | "forgot" | "resetVerify"
+  >("signup");
 
   // Close on ESC
   useEffect(() => {
@@ -327,9 +334,36 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
               {/* Logins */}
 
               <div className="flex gap-3 text-c12 font-MontserratSemiBold mt-c24 mb-c48">
-                <Link href="/auth/login" className="h-c48 w-full flex items-center justify-center rounded-c8 border text-ff715b border-ff715b">Sign in</Link>
-                <Link href="/auth/login" className="h-c48 w-full flex items-center justify-center rounded-c8 text-ffffff bg-ff715b">Sign up</Link>
-              </div>
+      {/* Open Sign In */}
+      <Button
+        variant="secondary"
+        onClick={() => {
+          setModalStep("signin");
+          setShowModal(true);
+        }}
+      >
+        Sign in
+      </Button>
+
+      {/* Open Sign Up */}
+      <Button
+        variant="primary"
+        onClick={() => {
+          setModalStep("signup");
+          setShowModal(true);
+        }}
+      >
+        Sign up
+      </Button>
+
+      {/* Auth Modal */}
+      <AuthModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        defaultStep={modalStep}
+      />
+    </div>
+  ;
             </div>
           </motion.div>
         </>

@@ -9,7 +9,7 @@ import SearchInput from "../Header/SearchInput";
 export default function HeroPage() {
   return (
     <motion.div
-      className="md:flex gap-6 pb-6  w-full"
+      className="md:flex gap-6 pb-6  w-full justify-center relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}

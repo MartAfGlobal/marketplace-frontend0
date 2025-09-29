@@ -10,7 +10,7 @@ export default function Impact() {
       <h1 className="font-MontserratSemiBold text-base md:text-c32 text-161616 md:pb-c64  pb-c48">
         Our impact in Numbers
       </h1>
-      <div className="text-center  md:pt-28">
+      <div className="text-center ">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-c32 md:gap-25 px-c32 justify-items-center">
           <ImpactCard
             image={Help}

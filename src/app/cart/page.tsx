@@ -26,6 +26,8 @@ import QuantitySelector from "@/components/ui/cart/quantityControl";
 import ProductCard from "@/components/ui/cards/ProductCard";
 import { Button } from "@/components/ui/Button/Button";
 import CheckoutModal from "@/components/ui/cart/CheckoutModal";
+import { useHttp } from "@/hooks/use-http";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function CartPage() {
   const [selected, setSelected] = useState(false);
@@ -37,6 +39,7 @@ export default function CartPage() {
 
   const token = useSelector((state: RootState) => state.token?.token);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const { loading, sendHttpRequest } = useHttp();
 
   const handleCheckout = () => {
     console.log("is token true or false", token);
@@ -45,8 +48,22 @@ export default function CartPage() {
       // Token not present → show modal
       setCheckoutModalOpen(true);
     } else {
-      // Token exists → continue
-      router.push("/cart/checkout");
+      sendHttpRequest({
+        requestConfig: {
+          url: "/checkout/",
+          method: "POST",
+          body: {
+            items: checkoutItems, // ✅ only selected items
+          },
+          token,
+          isAuth: true,
+          successMessage: "Address added successfully!",
+          userType: "buyer",
+        },
+        successRes: () => {
+          router.replace("/cart/checkout/checkout-summary");
+        },
+      });
     }
   };
 
@@ -89,6 +106,19 @@ export default function CartPage() {
     const price = Number(item.price);
     return acc + (isNaN(price) ? 0 : price) * (item.quantity || 0);
   }, 0);
+
+  const selectedCount = Object.values(selectedItems).filter(Boolean).length;
+
+  const selectedItemsData = cartItems.filter((item) => selectedItems[item.id]);
+
+  const checkoutItems = selectedItemsData.map((item) => ({
+  product_id: item.id,
+  variation_id: item.variations?.[0]?.id, // 👈 pick the selected variation
+  quantity: item.quantity,
+
+  
+}));
+
 
   const showMore = () => setVisible((prev) => prev + 10);
 
@@ -309,8 +339,16 @@ export default function CartPage() {
                     ${totalPrice}
                   </p>
                 </div>
-                <Button onClick={handleCheckout} className="border-0">
-                  Checkout ({cartItems.length})
+                <Button
+                  onClick={handleCheckout}
+                  disabled={selectedCount === 0}
+                  className="border-0"
+                >
+                  {loading ? (
+                    <LoadingSpinner />
+                  ) : (
+                    <>Checkout ({selectedCount})</>
+                  )}
                 </Button>
                 <div className="space-y-2.5 mt-c32  ">
                   <div className="flex items-center gap-2">
@@ -408,9 +446,10 @@ export default function CartPage() {
 
         <Button
           onClick={handleCheckout}
+          disabled={selectedCount === 0}
           className="border-0 bg-black hover:bg-black/90 text-white rounded-xl"
         >
-          Checkout ({cartItems.length})
+          Checkout ({selectedCount})
         </Button>
       </div>
 
@@ -433,16 +472,18 @@ export default function CartPage() {
             </div>
 
             <div className="flex gap-2 overflow-x-scroll py-4">
-              {cartItems.map((item) => (
-                <Image
-                  key={item.id}
-                  src={item.image[0]}
-                  alt={item.name}
-                  width={56}
-                  height={56}
-                  className="flex-shrink-0 rounded"
-                />
-              ))}
+              {cartItems
+                .filter((item) => selectedItems[item.id])
+                .map((item) => (
+                  <Image
+                    key={item.id}
+                    src={item.image[0]}
+                    alt={item.name}
+                    width={56}
+                    height={56}
+                    className="flex-shrink-0 rounded"
+                  />
+                ))}
             </div>
 
             <div className="space-y-2 text-sm font-MontserratNormal">

@@ -44,7 +44,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 variant="primary"
                 onClick={() => {
                   onClose();
-                  router.push("/login"); // login flow
+                  router.push("/auth/login"); // login flow
                 }}
               >
                 Login to Continue

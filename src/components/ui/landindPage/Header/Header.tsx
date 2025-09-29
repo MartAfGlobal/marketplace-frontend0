@@ -9,37 +9,44 @@ import NigeriaFlag from "@/assets/headerIcon/Nigeria.svg";
 import DropIcon from "@/assets/headerIcon/CaretDown.svg";
 import User from "@/assets/headerIcon/User.png";
 import Cart from "@/assets/headerIcon/cart.svg";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import OtherSearchInput from "../../others/Search";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import DropdownModal from "../../mobile/modal/header-drop-modal";
 import { useEffect, useState } from "react";
 import CartButton from "../../cart/cartButton";
-import SignUpModal from "../../mobile/auth/sign-up";
+
 import { useSearchParams } from "next/navigation";
+import { useLogout } from "@/utils/logout";
+import AuthModal from "../../mobile/auth/sign-up";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const pathname = usePathname();
   const changeSearch = pathname?.startsWith("/others") ?? false;
-    const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const showLogin = searchParams.get("showLogin");
-  
- useEffect(() => {
+  const token = useSelector((state: RootState) => state.token?.token);
+  const buyer = useSelector((state: any) => state.buyer.BuyerData);
+  const dispatch = useDispatch();
+  const logout = useLogout(dispatch);
+
+  const [userOpen, setUserOpen] = useState(false);
+
+  useEffect(() => {
     if (showLogin === "true") {
       setShowModal(true); // auto open login modal
     }
   }, [showLogin]);
 
-
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       <motion.header
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -58,17 +65,33 @@ export default function Header() {
               EN
             </h1>
             <Image src={NigeriaFlag} alt="NigeriaFlag" width={24} height={24} />
+
             <button>
-               <Image src={DropIcon} alt="DropIcon" width={16.5} height={9} />
+              <Image src={DropIcon} alt="DropIcon" width={16.5} height={9} />
             </button>
           </div>
 
           {cartCount > 0 && <CartButton />}
 
-          <Link href="/auth/login" className="flex items-center gap-2">
+          <button
+            onClick={() => setUserOpen((prev) => !prev)}
+            className="flex items-center gap-2"
+          >
             <Image src={User} alt="User" width={30} height={30} />
-            <Image src={DropIcon} alt="Dropdown" width={16} height={16} />
-          </Link>
+
+            {token && (
+              <span className="text-base font-MontserratSemiBold text-ffffff">
+                Hi, {buyer.first_name || "not set"}
+              </span>
+            )}
+            <Image
+              src={DropIcon}
+              alt="Dropdown"
+              width={16}
+              height={16}
+              className={`w-4 h-4 ${userOpen ? "rotate-180" : "rotate-0"}`}
+            />
+          </button>
         </div>
       </motion.header>
 
@@ -113,24 +136,76 @@ export default function Header() {
             </div>
           )}
 
-          <button
-            onClick={() => setShowModal(true)}
+          <div
+           
             className="flex items-center gap-2"
           >
             <Image src={User} alt="User" width={19.52} height={18.77} />
-          </button>
+          </div>
 
-          <button className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <h1 className="text-ffffff font-MontserratMedium text-c14">EN</h1>
             <Image src={NigeriaFlag} alt="NigeriaFlag" width={20} height={20} />
-          </button>
+          </div>
         </div>
       </motion.header>
       <div className="w-full px-3.75">
         <div className="w-full px-3.75">
-        <SignUpModal open={showModal} onClose={() => setShowModal(false)} />
+          <AuthModal
+            open={showModal}
+            onClose={() => setShowModal(false)}
+            defaultStep={showLogin === "true" ? "signin" : "signup"} // 👈 auto decide
+          />
         </div>
       </div>
+      <AnimatePresence>
+        {userOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute right-4 w-40 rounded-lg z-40 shadow-lg bg-white border"
+          >
+            <ul className="py-2 text-gray-700">
+              <li>
+                {token ? (
+                  <Link
+                    href="/dashboard/buyer"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Settings
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/login"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Login
+                  </Link>
+                )}
+              </li>
+              <li>
+                {token ? (
+                  <button
+                    onClick={logout}
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Log out
+                  </button>
+                ) : (
+                  <Link
+                    href="/auth/register"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                  >
+                    Sign Up
+                  </Link>
+                )}
+              </li>
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

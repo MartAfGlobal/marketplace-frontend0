@@ -5,13 +5,13 @@ import { ProfileImageProps } from "@/types/global";
 export default function ProfileImage({ src, alt = "Profile Image", onEditClick }: ProfileImageProps) {
   return (
     <div className="relative w-fit h-fit ">
-     <div className="w-26 h-26 rounded-full overflow-hidden border border-gray-300">
+     <div className="w-26 h-26 rounded-full  overflow-hidden border border-gray-300">
        <Image
         src={src}
         alt={alt}
         width={104}
         height={104}
-        className="rounded-full object-cover"
+        className="rounded-full object-cover h-26 w-26"
       />
       <button
         onClick={onEditClick}

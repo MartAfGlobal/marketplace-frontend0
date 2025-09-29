@@ -18,16 +18,16 @@ import MobileLogin from "./sign-in";
 export default function AuthModal({
   open,
   onClose,
+  defaultStep = "signup",
 }: {
   open: boolean;
   onClose: () => void;
+  defaultStep?: "signup" | "verify" | "signin" | "forgot" | "resetVerify";
 }) {
   const [step, setStep] = useState<
     "signup" | "verify" | "signin" | "forgot" | "resetVerify"
-  >("signup");
+  >(defaultStep);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
 
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
 
@@ -36,6 +36,12 @@ export default function AuthModal({
     password: "",
     confirm_password: "",
   });
+
+  useEffect(() => {
+    if (open) {
+      setStep(defaultStep);
+    }
+  }, [defaultStep, open]);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -264,8 +270,7 @@ export default function AuthModal({
             {step === "signin" && (
               <MobileLogin
                 onClose={onClose} // ✅ pass down close handler
-                setStep={setStep} 
-             
+                setStep={setStep}
               />
             )}
 
