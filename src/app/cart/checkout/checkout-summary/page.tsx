@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { updateQuantity } from "@/store/cart/cartSlice";
 
 import QuantitySelector from "@/components/ui/cart/quantityControl";
-import ProductCard from "@/components/ui/cards/ProductCard";
+
 import { Input } from "@/components/ui/forms/Input";
 
 import Master from "@/assets/mobile/cards/master.png";
@@ -23,7 +23,6 @@ import CareteRight from "@/assets/mobile/cards/CaretRight.png";
 export default function CheckoutSummary() {
   const router = useRouter();
 
-  const [selected, setSelected] = useState(false);
   const [selectedItems, setSelectedItems] = useState<{
     [key: string]: boolean;
   }>({});

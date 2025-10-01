@@ -5,24 +5,22 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button/Button";
 import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Google from "@/assets/socialIcons/Google.svg";
-import eye from "@/assets/FormIcon/eyeIcon.svg";
 import Email from "@/assets/FormIcon/email.svg";
 import { LoginParams } from "@/types/global";
 import { toast } from "sonner";
 import { tokenActions } from "@/store/token/token-slice";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-
 import { useDispatch } from "react-redux";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export default function LoginForm() {
-  //   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [formData, setFormData] = useState<LoginParams>({
     email: "",
@@ -30,36 +28,49 @@ export default function LoginForm() {
     rememberMe: false,
   });
 
+  const { loading, sendHttpRequest: loginRequest } = useHttp();
+
+  // ✅ Load saved credentials on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberEmail");
+    const savedPassword = localStorage.getItem("rememberPassword");
+    if (savedEmail && savedPassword) {
+      setFormData({
+        email: savedEmail,
+        password: savedPassword,
+        rememberMe: true,
+      });
+    }
+  }, []);
+
   const toggleVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
-  const dispatch = useDispatch();
-
-  const { loading, sendHttpRequest: loginRequest } = useHttp();
-
   const loginSuccess = (res: any) => {
-    // backend sends { access: "..." }
     const accessToken = res?.data?.access;
-    console.log("Full response:", res);
-    console.log("Access token:", accessToken);
 
     if (!accessToken) {
       toast.error("Login failed: No token received.");
       return;
     }
 
-   
-    dispatch(tokenActions.setToken(accessToken));
+    // ✅ Save email & password if "Remember me" is checked
+    if (formData.rememberMe) {
+      localStorage.setItem("rememberEmail", formData.email);
+      localStorage.setItem("rememberPassword", formData.password);
+    } else {
+      localStorage.removeItem("rememberEmail");
+      localStorage.removeItem("rememberPassword");
+    }
 
-  
+    dispatch(tokenActions.setToken(accessToken));
     router.push("/dashboard/buyer");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.email || !formData.password) {
       toast.error("Please fill in all fields!");
       return;
@@ -69,7 +80,6 @@ export default function LoginForm() {
       return;
     }
 
-    // Login request
     loginRequest({
       requestConfig: {
         url: "/accounts/login",
@@ -78,7 +88,7 @@ export default function LoginForm() {
           email: formData.email,
           password: formData.password,
         },
-        userType: "buyer", 
+        userType: "buyer",
         successMessage: "Login successful!",
       },
       successRes: loginSuccess,
@@ -87,94 +97,80 @@ export default function LoginForm() {
 
   const isFormValid = formData.email !== "" && formData.password !== "";
 
-
-
   return (
     <div className="w-full">
-      <form className="" onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-2 pt-4">
-          <Label className="text-c12 font-MontserratMedium">email</Label>
-          <Input
-            icon={<Image src={Email} alt="email" width={20} height={20} />}
-            id="email"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            className="border border-efefef "
-          />
-        </div>
-        <div className="flex flex-col gap-2 pt-4">
-          <Label className="text-c12 font-MontserratMedium ">Password</Label>
-          <Input
-            type={showPassword ? "text" : "password"}
-            icon={
-              <button type="button" onClick={toggleVisibility}>
-                <Image src={eye} alt="email" width={20} height={20} />
-              </button>
-            }
-            id="password"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            className=" "
-          />
-        </div>
-        <div className="flex justify-between pt-6  mb-c32 items-center">
-          <div className="flex items-center gap-2">
-            <label className="relative flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="peer h-5 w-5 rounded-c4 border cursor-pointer border-ff715b appearance-none checked:bg-ff715b checked:border-ff715b"
-              />
-              {/* Custom checkmark */}
-              <span className="absolute left-0 top-0 h-5 w-5 flex items-center justify-center text-white font-bold scale-0 peer-checked:scale-100 transition-transform">
-                ✓
-              </span>
-              <span className="text-c12 font-MontserratMedium text-161616">
-                Remember me
-              </span>
-            </label>
-            <label
-              htmlFor="check"
-              className="text-c12 font-MontserratMedium text-161616"
-            >
-              Remember me
-            </label>
+      <form onSubmit={handleSubmit}>
+        {/* Email */}
+        <fieldset disabled ={loading} className="w-full">
+          <div className="flex flex-col gap-2 pt-4">
+            <Label className="text-c12 font-MontserratMedium">Email</Label>
+            <Input
+              icon={<Image src={Email} alt="email" width={20} height={20} />}
+              id="email"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="border border-efefef"
+            />
           </div>
-          <Link
-            href="/auth/forgot-password"
-            className="text-ff715b text-c12 font-MontserratMedium "
-          >
-            Forgot password?
-          </Link>
-        </div>
-        <Button
-          type="submit"
-          //   loading={isSubmitting}
-          disabled={loading ||  !isFormValid }
-        >
+
+          {/* Password */}
+          <div className="flex flex-col gap-2 pt-4">
+            <Label className="text-c12 font-MontserratMedium">Password</Label>
+            <Input
+              type={showPassword ? "text" : "password"}
+              icon={
+                <button type="button" onClick={toggleVisibility}>
+                  {showPassword ? (
+                    <EyeOffIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
+                </button>
+              }
+              id="password"
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+            />
+          </div>
+
+          {/* Remember Me */}
+          <div className="flex justify-between pt-6 mb-c32 items-center">
+            <div className="flex items-center gap-2">
+              <label className="relative flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.rememberMe}
+                  onChange={(e) =>
+                    setFormData({ ...formData, rememberMe: e.target.checked })
+                  }
+                  className="peer h-5 w-5 rounded-c4 border cursor-pointer border-ff715b appearance-none checked:bg-ff715b checked:border-ff715b"
+                />
+                <span className="absolute left-0 top-0 h-5 w-5 flex items-center justify-center text-white font-bold scale-0 peer-checked:scale-100 transition-transform">
+                  ✓
+                </span>
+                <span className="text-c12 font-MontserratMedium text-161616">
+                  Remember me
+                </span>
+              </label>
+            </div>
+
+            <Link
+              href="/auth/forgot-password"
+              className="text-ff715b text-c12 font-MontserratMedium"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        </fieldset>
+        {/* Submit */}
+        <Button type="submit" disabled={loading || !isFormValid}>
           {loading ? <LoadingSpinner /> : "Sign in"}
         </Button>
       </form>
-      <div className="flex justify-between items-center gap-c24 mt-c8 mb-c8 h-c24">
-        <p className="h-c1 w-full bg-efefef"></p>
-        <p className="text-base font-MontserratNormal">or</p>
-        <p className="h-c1 w-full bg-efefef"></p>
-      </div>
-      <div>
-        <button className="w-full border flex items-center justify-center h-c56 font-MontserratSemiBold text-base gap-4 border-161616 rounded-c8">
-          <Image src={Google} width={29.33} height={29.33} alt="google sign in" />
-          Sign in with Google
-        </button>
-      </div>
-      <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-c24">
-        <p className="text-161616"> Don’t have an account?</p>
-        <Link href="/auth/register" className="text-ff715b">
-          Sign up
-        </Link>
-      </div>
     </div>
   );
 }

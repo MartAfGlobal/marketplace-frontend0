@@ -35,8 +35,7 @@ export default function SellerLogin() {
 
   const dispatch = useDispatch();
 
-
-    // ✅ Prefill form on mount if stored
+  // ✅ Prefill form on mount if stored
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberEmail");
     const savedPassword = localStorage.getItem("rememberPassword");
@@ -56,7 +55,7 @@ export default function SellerLogin() {
   const loginSuccess = (res: any) => {
     // backend sends { access: "..." }
     const accessToken = res?.data?.access;
-   
+
     console.log("Access token:", accessToken);
 
     if (!accessToken) {
@@ -89,85 +88,87 @@ export default function SellerLogin() {
       return;
     }
 
-   
-   loginRequest({
-  requestConfig: {
-    url: "/accounts/login",
-    method: "POST",
-    body: {
-      email: formData.email,
-      password: formData.password,
-    },
-    userType: "seller", 
-    successMessage: "Login successful!",
-  },
-  successRes: loginSuccess,
-})
+    loginRequest({
+      requestConfig: {
+        url: "/accounts/login",
+        method: "POST",
+        body: {
+          email: formData.email,
+          password: formData.password,
+        },
+        userType: "seller",
+        successMessage: "Login successful!",
+      },
+      successRes: loginSuccess,
+    });
   };
 
   const isFormValid = formData.email !== "" && formData.password !== "";
 
   return (
-    <div className=" w-full max-w-130 min-w-90 px-14  flex items-center  justify-center py-6 rounded-c16 signUp ">
+    <div className=" w-full max-w-130 min-w-90 px-14  flex items-center  justify-center py-c48 rounded-c16 signUp ">
       <div className="h-full w-full">
-        <div className="text-center space-y-2 mb-4">
+        <div className="text-center space-y-2 mb-8">
           <h2 className="font-MontserratSemiBold text-c32 m-0">Sign in </h2>
           <p className="font-MontserratNormal text-sm m-0">
             Sign in to start enjoying our services.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="w-full">
-          <div className="flex flex-col gap-2">
-            <label className="text-c12 font-MontserratMedium text-000000 ">
-              email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              icon={<Image src={Email} alt="email" width={20} height={20} />}
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="border border-efefef "
-            />
-          </div>
+          <fieldset disabled={loading}>
+            <div className="flex flex-col gap-2 mb-3">
+              <label className="text-c12 font-MontserratMedium text-000000 ">
+                email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                icon={<Image src={Email} alt="email" width={20} height={20} />}
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="border border-efefef "
+              />
+            </div>
 
-          <div className="flex flex-col gap-2  ">
-            <label className="text-c12 font-MontserratMedium ">Password</label>
-            <Input
-              type={showPassword ? "text" : "password"}
-              icon={
-                <button type="button" onClick={toggleVisibility}>
-                  <Image src={eye} alt="email" width={20} height={20} />
-                </button>
-              }
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className=" "
-            />
-          </div>
+            <div className="flex flex-col gap-2  ">
+              <label className="text-c12 font-MontserratMedium ">
+                Password
+              </label>
+              <Input
+                type={showPassword ? "text" : "password"}
+                icon={
+                  <button type="button" onClick={toggleVisibility}>
+                    <Image src={eye} alt="email" width={20} height={20} />
+                  </button>
+                }
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className=" "
+              />
+            </div>
 
-          <div className="flex items-center gap-3 pt-3.5 pb-c32">
-            <input
-              type="checkbox"
-              className={`appearance-none h-5 w-5 rounded-c4 cursor-pointer border-1 border-ff715b checked:bg-ff715b checked:border-0 checked:after:content-['✓'] checked:after:block checked:after:text-white checked:after:font-bold checked:after:text-center checked:after:leading-5`}
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            <p className="text-c12 font-MontserratMedium">Remember me</p>
-          </div>
-
+            <div className="flex items-center gap-3 pt-6 pb-c32">
+              <input
+                type="checkbox"
+                className={`appearance-none h-5 w-5 rounded-c4 cursor-pointer border-1 border-ff715b checked:bg-ff715b checked:border-0 checked:after:content-['✓'] checked:after:block checked:after:text-white checked:after:font-bold checked:after:text-center checked:after:leading-5`}
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <p className="text-c12 font-MontserratMedium">Remember me</p>
+            </div>
+          </fieldset>
           <Button type="submit" disabled={loading || !isFormValid}>
             {loading ? <LoadingSpinner /> : "Sign in"}
           </Button>
         </form>
-
+        
         <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-6">
           <p className="text-161616"> have an account?</p>
-          <Link href="/auth/seller/sign-up" className="text-ff715b">
+          <Link href="/auth/seller/sign-up"  className={`text-ff715b ${loading ? "pointer-events-none opacity-50" : ""}`}>
             Sign up
           </Link>
         </div>

@@ -47,7 +47,7 @@ export default function MobileCategory() {
   };
 
   return (
-    <div className="mt-c48 w-full overflow-hidden px-6.75">
+    <div className=" w-full overflow-hidden px-6.75">
       <motion.div
         className="text-center mb-c32"
         initial={{ opacity: 0, y: 20 }}
@@ -59,15 +59,17 @@ export default function MobileCategory() {
           Explore Our Categories
         </h1>
         <p className="font-MontserratSemiBold text-sm text-161616">
-          Explore Our Categories. Find the perfect products that suit your needs.
+          Explore Our Categories. Find the perfect products that suit your
+          needs.
         </p>
       </motion.div>
 
-      <div className="w-full grid grid-cols-2 gap-x-4 gap-y-c32 mt-c32 items-center">
+      <div className="w-full grid grid-cols-2 gap-x-4 gap-y-c32 mt-c32 justify-center items-center">
         {category.map((cat, index) => (
           <motion.div
             key={cat.name}
-            className="w-full cursor-pointer"
+            className="relative w-full h-40  cursor-pointer rounded-lg overflow-hidden"
+            // ✅ set explicit height (h-40 here, adjust to your design)
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
@@ -77,9 +79,9 @@ export default function MobileCategory() {
             <Image
               src={cat.icon}
               alt={cat.name}
-              width={160}
-              height={100}
-              className="rounded-lg shadow-sm"
+              fill
+              className="object-cover rounded-lg"
+              priority
             />
           </motion.div>
         ))}
@@ -98,7 +100,12 @@ export default function MobileCategory() {
           className="bg-transparent border flex items-center justify-center gap-3 border-ff715b text-ff715b w-full h-c48 rounded-lg font-MontserratSemiBold text-c16"
         >
           <span>Browse All Categories</span>
-          <Image src={ArrowRight} alt="arrow right" width={18.12} height={15.1} />
+          <Image
+            src={ArrowRight}
+            alt="arrow right"
+            width={18.12}
+            height={15.1}
+          />
         </motion.button>
       </motion.div>
     </div>

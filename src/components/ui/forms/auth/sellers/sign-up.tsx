@@ -15,9 +15,11 @@ import { toast } from "sonner";
 import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export default function SellerSignUp() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [checkbox, setCheckbox] = useState(false);
 
   const [formData, setFormData] = useState<RegisterParams>({
@@ -66,6 +68,10 @@ export default function SellerSignUp() {
     console.log("Registration data:", { ...formData });
   };
 
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword((prev) => !prev);
+  };
+
   const toggleVisibility = () => {
     setShowPassword((prev) => !prev);
   };
@@ -87,84 +93,107 @@ export default function SellerSignUp() {
           </p>
         </div>
         <form onSubmit={handleSubmit} className=" w-full ">
-          <div className="flex flex-col gap-2">
-            <label className="text-c12 font-MontserratMedium text-000000 ">
-              email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              icon={<Image src={Email} alt="email" width={20} height={20} />}
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="border border-efefef "
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-c12 font-MontserratMedium text-000000 ">
-              Phone Number
-            </label>
-            <Input
-              id="phone"
-              type="tel"
-              icon={<Image src={Phone} alt="email" width={20} height={20} />}
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-              className="border border-efefef "
-            />
-          </div>
-          <div className="flex flex-col gap-2  ">
-            <label className="text-c12 font-MontserratMedium ">Password</label>
-            <Input
-              type={showPassword ? "text" : "password"}
-              icon={
-                <button type="button" onClick={toggleVisibility}>
-                  <Image src={eye} alt="email" width={20} height={20} />
-                </button>
-              }
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className=" "
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-c12 font-MontserratMedium ">
-              Confirm password
-            </label>
-            <Input
-              type={showPassword ? "text" : "password"}
-              icon={
-                <button type="button" onClick={toggleVisibility}>
-                  <Image src={eye} alt="email" width={20} height={20} />
-                </button>
-              }
-              value={formData.confirm_password}
-              onChange={(e) =>
-                setFormData({ ...formData, confirm_password: e.target.value })
-              }
-              className=""
-            />
-          </div>
+          <fieldset className="w-full" disabled={loading}>
+            <div className="flex flex-col gap-2">
+              <label className="text-c12 font-MontserratMedium text-000000 ">
+                email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                icon={<Image src={Email} alt="email" width={20} height={20} />}
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="border border-efefef "
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-c12 font-MontserratMedium text-000000 ">
+                Phone Number
+              </label>
+              <Input
+                id="phone"
+                type="tel"
+                icon={<Image src={Phone} alt="email" width={20} height={20} />}
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
+                className="border border-efefef "
+              />
+            </div>
+            <div className="flex flex-col gap-2  ">
+              <label className="text-c12 font-MontserratMedium ">
+                Password
+              </label>
+              <Input
+                type={showPassword ? "text" : "password"}
+                icon={
+                  <button type="button" onClick={toggleVisibility}>
+                    {showPassword ? (
+                      <EyeOffIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                }
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className=" "
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-c12 font-MontserratMedium ">
+                Confirm password
+              </label>
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                icon={
+                  <button
+                    type="button"
+                    onClick={toggleConfirmPasswordVisibility}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOffIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                }
+                value={formData.confirm_password}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirm_password: e.target.value })
+                }
+                className=""
+              />
+            </div>
 
-          <div className="flex items-center gap-3 pt-3.5 pb-c32">
-            <input
-              type="checkbox"
-              className="h-5 w-5 rounded-c4 "
-              onChange={(e) => setCheckbox(e.target.checked)}
-            />
-            <p className="text-c12 font-MontserratMedium">
-              I agree to the{" "}
-              <span className="text-6a0dad">Terms of Service </span> and{" "}
-              <span className="text-6a0dad">Privacy Policy</span>.
-            </p>
-          </div>
-
+            <div className="flex items-center gap-3 pt-3.5 pb-c32">
+              <label className="relative flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  onChange={(e) => setCheckbox(e.target.checked)}
+                  className="peer h-5 w-5 appearance-none rounded-c4 border border-orange-500 cursor-pointer
+               checked:bg-orange-500 checked:border-orange-500 transition-colors"
+                />
+                <span
+                  className="absolute left-0 top-0 h-5 w-5 flex items-center justify-center text-white font-bold 
+                  scale-0 peer-checked:scale-100 transition-transform"
+                >
+                  ✓
+                </span>
+              </label>
+              <p className="text-c12 font-MontserratMedium">
+                I agree to the{" "}
+                <span className="text-6a0dad">Terms of Service </span> and{" "}
+                <span className="text-6a0dad">Privacy Policy</span>.
+              </p>
+            </div>
+          </fieldset>
           <Button type="submit" disabled={loading || !isFormValid}>
             {loading ? <LoadingSpinner /> : "Continue"}
           </Button>
@@ -172,7 +201,7 @@ export default function SellerSignUp() {
 
         <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-6">
           <p className="text-161616"> have an account?</p>
-          <Link href="/auth/seller/login" className="text-ff715b">
+          <Link href="/auth/seller/login"  className={`text-ff715b ${loading ? "pointer-events-none opacity-50" : ""}`}>
             Sign in
           </Link>
         </div>

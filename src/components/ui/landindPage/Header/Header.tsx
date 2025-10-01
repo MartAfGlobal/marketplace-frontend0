@@ -17,6 +17,8 @@ import { RootState } from "@/store";
 import DropdownModal from "../../mobile/modal/header-drop-modal";
 import { useEffect, useState } from "react";
 import CartButton from "../../cart/cartButton";
+import Gear from "@/assets/icons/Gear.svg"
+import LogOut from "@/assets/icons/ArrowBendDownRight.svg"
 
 import { useSearchParams } from "next/navigation";
 import { useLogout } from "@/utils/logout";
@@ -165,21 +167,23 @@ export default function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-4 w-40 rounded-lg z-40 shadow-lg bg-white border"
+            className="absolute right-12.75 w-38.75 top-15.25 py-3 font-normal text-c12 rounded-c8 z-40 custom-shadow bg-white border h-20.5 "
           >
-            <ul className="py-2 text-gray-700">
+            <ul className="  text-gray-700 flex flex-col gap-2.5">
               <li>
                 {token ? (
                   <Link
                     href="/dashboard/buyer"
-                    className="block px-4 py-2 hover:bg-gray-100"
+                   
+                    className="gap-2.5 items-baseline-last text-ff715b px-4 h-6 flex "
                   >
+                     <Image  src={Gear} alt="gear" width={12} height={12}/>
                     Settings
                   </Link>
                 ) : (
                   <Link
                     href="/auth/login"
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    className="block px-4 py-2  h-6"
                   >
                     Login
                   </Link>
@@ -189,8 +193,10 @@ export default function Header() {
                 {token ? (
                   <button
                     onClick={logout}
-                    className="block px-4 py-2 hover:bg-gray-100"
+                   className="gap-2.5 items-baseline-last text-000000/50 px-4 py-2 flex"
                   >
+                     <Image  src={LogOut} alt="gear" width={12} height={12}/>
+                    
                     Log out
                   </button>
                 ) : (

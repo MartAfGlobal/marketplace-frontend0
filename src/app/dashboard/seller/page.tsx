@@ -19,8 +19,8 @@ export default function SellerDashboardPage() {
   useEffect(() => {
     if (!token) {
       toast.error("No token, skipping user fetch");
-      router.replace("/auth/seller/login");
-      return;
+      router.push("/auth/seller/login");
+    
     }
     const fetchVerificationStatus = () => {
       statusHttpRequest({
@@ -30,6 +30,7 @@ export default function SellerDashboardPage() {
           token,
           isAuth: true,
           successMessage: "Verification status fetched",
+          userType : "seller"
         },
         successRes: (statusRes: any) => {
           const status = statusRes?.data;

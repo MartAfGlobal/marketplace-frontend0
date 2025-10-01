@@ -11,11 +11,9 @@ import Image from "next/image";
 import Mail from "@/assets/FormIcon/email.svg";
 import { LoadingSpinner } from "../../loading-spinner";
 
-
-
 type MobileLoginProps = {
-  onClose: () => void;   // ✅ close modal
- 
+  onClose: () => void; // ✅ close modal
+
   setStep: React.Dispatch<
     React.SetStateAction<
       "signup" | "verify" | "signin" | "forgot" | "resetVerify"
@@ -23,10 +21,8 @@ type MobileLoginProps = {
   >;
 };
 
-
 export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
-
- const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const [formData, setFormData] = useState<LoginParams>({
@@ -54,17 +50,13 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       return;
     }
 
-   
     dispatch(tokenActions.setToken(accessToken));
 
-  
     router.push("/dashboard/buyer");
     onClose();
-
   };
 
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -91,18 +83,17 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
           email: formData.email,
           password: formData.password,
         },
-        userType: "buyer", 
+        userType: "buyer",
         successMessage: "Login successful!",
       },
       successRes: (res: any) => {
-      loginSuccess(res);  // ✅ handle token + redirect
-      onClose();          // ✅ close modal only after success
-    },
+        loginSuccess(res); // ✅ handle token + redirect
+        onClose(); // ✅ close modal only after success
+      },
     });
   };
 
   const isFormValid = formData.email !== "" && formData.password !== "";
-
 
   return (
     <form onSubmit={handleLogin} className="space-y-8">
@@ -114,52 +105,52 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       </div>
 
       <div className="space-y-4">
-         {/* Email */}
-                  <div className="relative w-full">
-                    <Image
-                      src={Mail}
-                      alt="Email"
-                      width={16}
-                      height={16}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    />
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                      className="w-full border border-black/10 rounded-lg pl-10 pr-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-                      placeholder="Email address"
-                    />
-                  </div>
+        {/* Email */}
+        <div className="relative w-full">
+          <Image
+            src={Mail}
+            alt="Email"
+            width={16}
+            height={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full border border-black/10 rounded-lg pl-10 pr-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
+            placeholder="Email address"
+          />
+        </div>
 
-                  {/* Password */}
-                  <div className="relative w-full">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                      className="w-full border border-black/10 rounded-lg pr-10 pl-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-                      placeholder="Password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    >
-                      {showPassword ? (
-                        <EyeOffIcon className="w-5 h-5" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
+        {/* Password */}
+        <div className="relative w-full">
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full border border-black/10 rounded-lg pr-10 pl-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
+            placeholder="Password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+          >
+            {showPassword ? (
+              <EyeOffIcon className="w-5 h-5" />
+            ) : (
+              <EyeIcon className="w-5 h-5" />
+            )}
+          </button>
+        </div>
 
         <button className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center">
-          { logingLoading? <LoadingSpinner/>:"Sign In"}
+          {logingLoading ? <LoadingSpinner /> : "Sign In"}
         </button>
 
         <button

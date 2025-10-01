@@ -6,7 +6,6 @@ import Image from "next/image";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { DropdownModalProps } from "@/types/global";
 
-
 import Logo from "@/assets/Logos/authLogo.svg";
 import CloseModal from "@/assets/headerIcon/closeModal.png";
 import CaretDown from "@/assets/headerIcon/caretD.png";
@@ -15,13 +14,18 @@ import Currency from "@/assets/headerIcon/CurrencyCircleDollar.png";
 import speak from "@/assets/headerIcon/speakIcon.png";
 import shipto from "@/assets/headerIcon/shipto.png";
 import { Category } from "@/types/global";
-import English from "@/assets/headerIcon/englishicon.png"
-import French from "@/assets/headerIcon/FrienchIcon.png"
-import Spanish from "@/assets/headerIcon/spanish.png"
-import Portegual from "@/assets/headerIcon/Portugal.png"
+import English from "@/assets/headerIcon/englishicon.png";
+import French from "@/assets/headerIcon/FrienchIcon.png";
+import Spanish from "@/assets/headerIcon/spanish.png";
+import Portegual from "@/assets/headerIcon/Portugal.png";
 import { Button } from "../../Button/Button";
 import AuthModal from "../auth/sign-up";
-
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useLogout } from "@/utils/logout";
+import { useRouter } from "next/navigation";
+import { categories } from "@/utils/data/categories";
+import { title } from "process";
 
 const settings = [
   {
@@ -54,70 +58,22 @@ const settings = [
   },
 ];
 
-const categories: Category[] = [
-  {
-    name: "Fashion",
-    icon: CartIcon,
-    subcategories: ["Shoes & footwear", "Men’s wear", "Women’s wear"],
-  },
-  {
-    name: "Electronics",
-    icon: CartIcon,
-    subcategories: ["Phones", "Tablets", "Laptops & Desktop"],
-  },
-
-  {
-    name: "Home & Living",
-    icon: CartIcon,
-    subcategories: ["Furniture", "Decor", "Appliances"],
-  },
-  {
-    name: "Groceries & Essentials",
-    icon: CartIcon,
-    subcategories: ["Furniture", "Decor", "Appliances"],
-  },
-  {
-    name: "Health & Beauty",
-    icon: CartIcon,
-    subcategories: ["Furniture", "Decor", "Appliances"],
-  },
-  {
-    name: "Books, Media & Education",
-    icon: CartIcon,
-    subcategories: ["Furniture", "Decor", "Appliances"],
-  },
-  {
-    name: "Travel & Luggage",
-    icon: CartIcon,
-    subcategories: ["Furniture", "Decor", "Appliances"],
-  },
-  {
-    name: "Automotive & Industrial",
-    icon: CartIcon,
-    subcategories: ["Furniture", "Decor", "Appliances"],
-  },
-  {
-    name: "Kids & Babies",
-    icon: CartIcon,
-    subcategories: ["Furniture", "Decor", "Appliances"],
-  },
-  {
-    name: "Culture-specific",
-    icon: CartIcon,
-    subcategories: ["Furniture", "Decor", "Appliances"],
-  },
-];
-
-
-
 export default function DropdownModal({ open, onClose }: DropdownModalProps) {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
-
-    const [showModal, setShowModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<
+    null | (typeof categories)[0]
+  >(null);
+  const [showModal, setShowModal] = useState(false);
   const [modalStep, setModalStep] = useState<
     "signup" | "verify" | "signin" | "forgot" | "resetVerify"
   >("signup");
 
+  const router = useRouter();
+
+  const token = useSelector((state: RootState) => state.token?.token);
+  const buyer = useSelector((state: any) => state.buyer.BuyerData);
+  const dispatch = useDispatch();
+  const logout = useLogout(dispatch);
   // Close on ESC
   useEffect(() => {
     if (!open) return;
@@ -125,8 +81,6 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
-
-  // Container (unwrap) variants
 
   const modalVariants: Variants = {
     hidden: {
@@ -170,7 +124,7 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
         <>
           {/* Optional backdrop (click to close) */}
           <motion.div
-            className="fixed top-0 inset-0 z-40  w-full "
+            className="fixed top-0 inset-0 z-50  w-full "
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.08 }}
@@ -204,7 +158,6 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                   />
                 </button>
               </div>
-
               {/* Categories */}
               <div>
                 <h4 className="font-MontserratSemiBold text-c20  mb-6">
@@ -212,24 +165,25 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                 </h4>
                 <ul className="space-y-2">
                   {categories.map((cat) => {
-                    const isOpen = openCategory === cat.name;
+                    const isOpen = openCategory === cat.label;
                     return (
-                      <li key={cat.name} className="">
+                      <li key={cat.label} className="">
                         <button
-                          onClick={() =>
-                            setOpenCategory(isOpen ? null : cat.name)
-                          }
+                          onClick={() => {
+                            setOpenCategory(isOpen ? null : cat.label),
+                              setSelectedCategory(cat);
+                          }}
                           className="flex items-center justify-between w-full   h-c48  "
                         >
                           <span className="flex items-center gap-3">
                             <Image
-                              src={cat.icon}
-                              alt={cat.name}
+                              src={cat.iconSrc}
+                              alt={cat.label}
                               width={24}
                               height={24}
                             />
                             <span className="font-MontserratSemiBold text-c12">
-                              {cat.name}
+                              {cat.label}
                             </span>
                           </span>
 
@@ -253,13 +207,21 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                               exit="collapsed"
                             >
                               {cat.subcategories.map((sub) => (
-                                <li
-                                  key={sub}
+                                <button
+                                  key={`${cat.label}-${sub.title}`}
+                                  onClick={() =>
+                                    router.push(
+                                      `/categories/${encodeURIComponent(
+                                        cat.label
+                                      )}/${encodeURIComponent(sub.title)}`
+                                    )
+                                  }
                                   className="text-c12 font-MontserratNormal h-c32 flex items-center pl-c48"
                                 >
-                                  {sub}
-                                </li>
+                                  {sub.title}
+                                </button>
                               ))}
+                            
                             </motion.ul>
                           )}
                         </AnimatePresence>
@@ -268,7 +230,6 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                   })}
                 </ul>
               </div>
-
               {/* Settings */}
               <div className="mt-c24">
                 <h4 className="font-MontserratSemiBold text-c20  mb-6">
@@ -317,9 +278,17 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                               exit="collapsed"
                             >
                               {cat.options.map((opt) => (
-                                <li key={opt.name} className="text-c12 font-MontserratNormal  flex items-center h-c40 gap-3 pl-c48">
-                                    <Image src={opt.icon} alt={opt.name} width={24} height={24} />
-                                  <span>{opt.name}</span> 
+                                <li
+                                  key={opt.name}
+                                  className="text-c12 font-MontserratNormal  flex items-center h-c40 gap-3 pl-c48"
+                                >
+                                  <Image
+                                    src={opt.icon}
+                                    alt={opt.name}
+                                    width={24}
+                                    height={24}
+                                  />
+                                  <span>{opt.name}</span>
                                 </li>
                               ))}
                             </motion.ul>
@@ -330,40 +299,56 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                   })}
                 </ul>
               </div>
-
               {/* Logins */}
-
               <div className="flex gap-3 text-c12 font-MontserratSemiBold mt-c24 mb-c48">
-      {/* Open Sign In */}
-      <Button
-        variant="secondary"
-        onClick={() => {
-          setModalStep("signin");
-          setShowModal(true);
-        }}
-      >
-        Sign in
-      </Button>
+                {/* Open Sign In */}
+                {token ? (
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      router.push("/dashboard/buyer");
+                    }}
+                  >
+                    Settings
+                  </Button>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setModalStep("signin");
+                      setShowModal(true);
+                      onclose;
+                    }}
+                  >
+                    Sign in
+                  </Button>
+                )}
 
-      {/* Open Sign Up */}
-      <Button
-        variant="primary"
-        onClick={() => {
-          setModalStep("signup");
-          setShowModal(true);
-        }}
-      >
-        Sign up
-      </Button>
+                {/* Open Sign Up */}
+                {token ? (
+                  <Button variant="primary" onClick={logout}>
+                    Log out
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      setModalStep("signup");
+                      setShowModal(true);
+                    }}
+                  >
+                    Sign up
+                  </Button>
+                )}
 
-      {/* Auth Modal */}
-      <AuthModal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        defaultStep={modalStep}
-      />
-    </div>
-  ;
+                {/* Auth Modal */}
+                <AuthModal
+                  open={showModal}
+                  onClose={() => setShowModal(false)}
+                  defaultStep={modalStep}
+                />
+              </div>
+              ;
             </div>
           </motion.div>
         </>
