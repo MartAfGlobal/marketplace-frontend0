@@ -4,14 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import Cart from "@/assets/headerIcon/cart.svg";
 
 const backgrounds = [
   {
     id: 1,
-    className: "mobilebg-hero",
+    type: "hero",
     content: (
-      <div className="relative w-full h-95 mobilebg-hero  flex  px-c32  items-center">
+      <div className="relative w-full h-95 mobilebg-hero flex px-c32 items-center">
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/64 z-0"></div>
 
@@ -40,61 +39,54 @@ const backgrounds = [
       </div>
     ),
   },
-{
-  id: 2,
-  className: "ad-hero",
-  content: (
-    <div className="w-full h-52.5 relative  rounded-2xl flex items-center justify-center">
-      <Image
-        src="/assets/images/AdBanner.svg"
-        alt="Ad Banner"
-        fill
-        className="object-fill rounded-2xl"
-      />
-    </div>
-  ),
-}
-
-
+  {
+    id: 2,
+    type: "ad",
+    content: (
+      <div className="w-full h-52.5 relative rounded-2xl flex items-center justify-center">
+        <Image
+          src="/assets/images/AdBanner.svg"
+          alt="Ad Banner"
+          fill
+          className="object-fill rounded-2xl"
+        />
+      </div>
+    ),
+  },
 ];
 
-export default function MobileHeroBaground() {
+export default function MobileHeroBackground() {
   const [index, setIndex] = useState(0);
 
-  // Auto swipe every 5s
+  // Auto swipe every 3s
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % backgrounds.length);
-    }, 5000);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
+
   return (
     <div
-      className={`
-        "relative w-full  flex mt-3.75 px-c32 items-center"
-            ${backgrounds[index].id === 2
-              ? "w-full h-52.5 "
-              : " h-95"
-          }`}>
-      <AnimatePresence mode="sync">
-        {" "}
+      className={`relative w-full mt-3.75 px-c32 overflow-hidden ${
+        backgrounds[index].type === "ad" ? "h-52.5" : "h-95"
+      }`}
+    >
+      <AnimatePresence mode="sync" initial={false}>
         <motion.div
           key={backgrounds[index].id}
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "-100%" }}
+          className="absolute inset-0 w-full h-full flex items-center justify-center"
+          initial={
+            index === 0
+              ? { opacity: 0, scale: 1.1 } // zoom-in first load
+              : { x: "100%", opacity: 0 }  // slide in others
+          }
+          animate={{ x: 0, opacity: 1, scale: 1 }} // all settle here
+          exit={{ x: "-100%", opacity: 0 }} // all (including first) slide out
           transition={{
-            type: "spring",
-            stiffness: 160,
-            damping: 10,
-            bounce: 0.3,
             duration: 0.8,
+            ease: "easeInOut",
           }}
-          className={`${
-            backgrounds[index].id === 2
-              ? "w-full h-52.5 flex items-center overflow-hidden rounded-2xl"
-              : "absolute inset-0 flex items-center w-full"
-          }`}
         >
           {backgrounds[index].content}
         </motion.div>

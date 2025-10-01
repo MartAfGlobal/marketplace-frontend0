@@ -348,7 +348,7 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                   defaultStep={modalStep}
                 />
               </div>
-              ;
+              
             </div>
           </motion.div>
         </>
