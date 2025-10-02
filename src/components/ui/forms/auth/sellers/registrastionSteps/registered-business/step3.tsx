@@ -26,6 +26,7 @@ import { UploadedFile } from "@/types/global";
 import { useRouter } from "next/navigation";
 
 export default function DocumentUploadForm({
+  onContinue,
   goBack,
 }: {
   goBack: () => void;
@@ -70,6 +71,7 @@ export default function DocumentUploadForm({
 
   const registerUserRes = (res: any) => {
     toast.success("Documents submitted successfully!");
+     onContinue();
     
   };
 
@@ -91,53 +93,62 @@ export default function DocumentUploadForm({
   };
 
   const handleDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
-        id: crypto.randomUUID(),
-        name: file.name,
-        size: file.size,
-        uploadedSize: 0,
-        progress: 0,
-        uploaded: false,
-        title: title.trim(),
-        description: description.trim(),
-        rawFile: file,
-      }));
+  (acceptedFiles: File[]) => {
+    // check if title or description is missing
+    if (!title.trim() || !description.trim()) {
+      setShowError(true);
+      return; // 🚨 stop upload if missing
+    }
 
-      setFiles((prev) => [...prev, ...newFiles]);
+    setShowError(false); // reset error when valid
 
-      newFiles.forEach((file) => {
-        const interval = setInterval(() => {
-          setFiles((prev) =>
-            prev.map((f) => {
-              if (f.id === file.id) {
-                const nextProgress = Math.min(100, f.progress + 20);
-                const nextUploadedSize = Math.min(
-                  f.size,
-                  f.uploadedSize + f.size * 0.2
-                );
+    const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
+      id: crypto.randomUUID(),
+      name: file.name,
+      size: file.size,
+      uploadedSize: 0,
+      progress: 0,
+      uploaded: false,
+      title: title.trim(),
+      description: description.trim(),
+      rawFile: file,
+    }));
 
-                if (nextProgress >= 100) {
-                  clearInterval(interval); // ✅ stop interval once upload done
-                }
+    setFiles((prev) => [...prev, ...newFiles]);
 
-                return {
-                  ...f,
-                  progress: nextProgress,
-                  uploadedSize: nextUploadedSize,
-                  uploaded: nextProgress >= 100,
-                };
+    newFiles.forEach((file) => {
+      const interval = setInterval(() => {
+        setFiles((prev) =>
+          prev.map((f) => {
+            if (f.id === file.id) {
+              const nextProgress = Math.min(100, f.progress + 20);
+              const nextUploadedSize = Math.min(
+                f.size,
+                f.uploadedSize + f.size * 0.2
+              );
+
+              if (nextProgress >= 100) {
+                clearInterval(interval);
               }
-              return f;
-            })
-          );
-        }, 300);
 
-        intervalsRef.current.push(interval);
-      });
-    },
-    [title, description]
-  );
+              return {
+                ...f,
+                progress: nextProgress,
+                uploadedSize: nextUploadedSize,
+                uploaded: nextProgress >= 100,
+              };
+            }
+            return f;
+          })
+        );
+      }, 300);
+
+      intervalsRef.current.push(interval);
+    });
+  },
+  [title, description]
+);
+
 
   const handleCancelUpload = (id: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
@@ -256,7 +267,7 @@ export default function DocumentUploadForm({
 
           {/* Passport Upload */}
           <FileUpload
-            label="Upload Your Passport Photo"
+            label="Upload CAC Document"
             file={cacFile}
             inputRef={passportInputRef}
             onFileSelect={(e) => handleFileSelect(e, setCacFile)}
@@ -282,7 +293,7 @@ export default function DocumentUploadForm({
 
           {/* Selfie Upload */}
           <FileUpload
-            label="Upload Selfie with ID"
+            label="Upload TIN Document"
             file={tinFile}
             inputRef={idInputRef}
             onFileSelect={(e) => handleFileSelect(e, settinFile)}

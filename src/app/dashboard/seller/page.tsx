@@ -98,8 +98,7 @@ export default function SellerDashboardPage() {
 
   return (
     <div className="p-4 w-full">
-      <h1>Seller Dashboard</h1>
-      <h2>Fetching user data....</h2>
+      <h2>Fetching Seller data....</h2>
     </div>
   );
 }

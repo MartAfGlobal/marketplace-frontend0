@@ -111,10 +111,7 @@ export default function RegisteredBusinessStep1({
               className="mt-2"
             />
           </div> */}
-        </div>
 
-        {/* Row 2 */}
-        <div className="flex justify-center gap-20">
           <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">
               Business Type
@@ -126,6 +123,11 @@ export default function RegisteredBusinessStep1({
               onChange={(val) => setFormData({ ...formData, buisness_type: val })}
             />
           </div>
+        </div>
+
+        {/* Row 2 */}
+        <div className="flex justify-center gap-20">
+          
           <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">
               Business Category
@@ -150,11 +152,8 @@ export default function RegisteredBusinessStep1({
               }
             />
           </div>
-        </div>
 
-        {/* Row 3 */}
-        <div className="flex justify-center gap-20">
-          <div className="w-full max-w-125 h-fit">
+           <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">
               Short Business Introduction
             </label>
@@ -168,6 +167,11 @@ export default function RegisteredBusinessStep1({
               className="mt-2"
             />
           </div>
+        </div>
+
+        {/* Row 3 */}
+        <div className="flex justify-center gap-20">
+         
           <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">
               Business Phone Number
@@ -182,11 +186,8 @@ export default function RegisteredBusinessStep1({
               className="mt-2"
             />
           </div>
-        </div>
 
-        {/* Row 4 */}
-        <div className="flex justify-center gap-20">
-          <div className="w-full max-w-125 h-fit">
+            <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">
               Business Address
             </label>
@@ -200,6 +201,11 @@ export default function RegisteredBusinessStep1({
               className="mt-2"
             />
           </div>
+        </div>
+
+        {/* Row 4 */}
+        <div className="flex justify-center gap-20">
+        
           <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">
               Postal Code
@@ -214,11 +220,7 @@ export default function RegisteredBusinessStep1({
               className="mt-2"
             />
           </div>
-        </div>
-
-        {/* Row 5: Country, State, City */}
-        <div className="flex justify-center gap-20">
-          <div className="w-full max-w-125 h-fit">
+            <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">Country</label>
             <DropdownInput
               placeholder="Choose your country"
@@ -234,6 +236,11 @@ export default function RegisteredBusinessStep1({
               }
             />
           </div>
+        </div>
+
+        {/* Row 5: Country, State, City */}
+        <div className="flex justify-center gap-20">
+        
           <div className="w-full max-w-125 h-fit">
             <label className="font-MontserratSemiBold text-base">State</label>
             <DropdownInput
