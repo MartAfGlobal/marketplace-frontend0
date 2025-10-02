@@ -84,7 +84,7 @@ export default function BuyerDashboard() {
           <div className="flex items-center gap-3">
             <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300">
               <Image
-                src={buyer?.profile?.profile_picture || "Add +"}
+                src={buyer?.profile?.profile_picture || profilePicture}
                 alt="Profile Image"
                 width={64}
                 height={64}

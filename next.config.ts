@@ -5,7 +5,14 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ["res.cloudinary.com", "flagcdn.com"], // ✅ allow Cloudinary images
+    domains: ["res.cloudinary.com", "flagcdn.com"],
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "3000", // 👈 allow localhost images in dev
+      },
+    ],
   },
   webpack(config) {
     // 👇 SVG as React Component

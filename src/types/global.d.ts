@@ -160,7 +160,7 @@ export interface ResetPasswordModalProps {
 }
 
 export interface ProfileImageProps {
-  src: string | StaticImageData;
+  src: string | StaticImageData | null 
   alt?: string;
   onEditClick: () => void;
 }
