@@ -17,15 +17,15 @@ import { RootState } from "@/store";
 import DropdownModal from "../../mobile/modal/header-drop-modal";
 import { useEffect, useState } from "react";
 import CartButton from "../../cart/cartButton";
-import Gear from "@/assets/icons/Gear.svg"
-import LogOut from "@/assets/icons/ArrowBendDownRight.svg"
+import Gear from "@/assets/icons/Gear.svg";
+import LogOut from "@/assets/icons/ArrowBendDownRight.svg";
 
 import { useSearchParams } from "next/navigation";
 import { useLogout } from "@/utils/logout";
 import AuthModal from "../../mobile/auth/sign-up";
 
 export default function Header() {
-  const [open, setOpen] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
   const pathname = usePathname();
   const changeSearch = pathname?.startsWith("/others") ?? false;
@@ -35,6 +35,11 @@ export default function Header() {
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
+  const [openDropdown, setOpenDropdown] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authStep, setAuthStep] = useState<
+    "signup" | "verify" | "signin" | "forgot" | "resetVerify"
+  >("signup");
 
   const [userOpen, setUserOpen] = useState(false);
 
@@ -99,7 +104,25 @@ export default function Header() {
 
       {/* mobile screen */}
       <div className="w-full md:hidden">
-        <DropdownModal open={open} onClose={() => setOpen(false)} />
+        <DropdownModal
+          open={openDropdown}
+          onClose={() => setOpenDropdown(false)}
+          onOpenAuth={(step) => {
+            setAuthStep(step);
+            setAuthOpen(true);
+            setOpenDropdown(false);
+          }}
+        />
+        <AuthModal
+          open={authOpen || showModal}
+          onClose={() => {
+            setAuthOpen(false);
+            setShowModal(false);
+          }}
+          defaultStep={
+            authOpen ? authStep : showLogin === "true" ? "signin" : "signup"
+          }
+        />
       </div>
       <motion.header
         initial={{ opacity: 0, y: -40 }}
@@ -108,7 +131,10 @@ export default function Header() {
         className="w-full bg-[#6A0DAD] md:hidden h-[80px] pl-4 pr-6 flex items-center justify-between"
       >
         <div className="flex gap-3 items-center">
-          <button onClick={() => setOpen(true)} className=" px-1 py-1.75">
+          <button
+            onClick={() => setOpenDropdown(true)}
+            className=" px-1 py-1.75"
+          >
             <Image src={handburger} alt="categories" width={24} height={18} />
           </button>
 
@@ -138,10 +164,7 @@ export default function Header() {
             </div>
           )}
 
-          <div
-           
-            className="flex items-center gap-2"
-          >
+          <div className="flex items-center gap-2">
             <Image src={User} alt="User" width={19.52} height={18.77} />
           </div>
 
@@ -151,7 +174,7 @@ export default function Header() {
           </div>
         </div>
       </motion.header>
-      <div className="w-full px-3.75">
+      {/* <div className="w-full px-3.75">
         <div className="w-full px-3.75">
           <AuthModal
             open={showModal}
@@ -159,7 +182,7 @@ export default function Header() {
             defaultStep={showLogin === "true" ? "signin" : "signup"} // 👈 auto decide
           />
         </div>
-      </div>
+      </div> */}
       <AnimatePresence>
         {userOpen && (
           <motion.div
@@ -174,17 +197,13 @@ export default function Header() {
                 {token ? (
                   <Link
                     href="/dashboard/buyer"
-                   
                     className="gap-2.5 items-baseline-last text-ff715b px-4 h-6 flex "
                   >
-                     <Image  src={Gear} alt="gear" width={12} height={12}/>
+                    <Image src={Gear} alt="gear" width={12} height={12} />
                     Settings
                   </Link>
                 ) : (
-                  <Link
-                    href="/auth/login"
-                    className="block px-4 py-2  h-6"
-                  >
+                  <Link href="/auth/login" className="block px-4 py-2  h-6">
                     Login
                   </Link>
                 )}
@@ -193,10 +212,9 @@ export default function Header() {
                 {token ? (
                   <button
                     onClick={logout}
-                   className="gap-2.5 items-baseline-last text-000000/50 px-4 py-2 flex"
+                    className="gap-2.5 items-baseline-last text-000000/50 px-4 py-2 flex"
                   >
-                     <Image  src={LogOut} alt="gear" width={12} height={12}/>
-                    
+                    <Image src={LogOut} alt="gear" width={12} height={12} />
                     Log out
                   </button>
                 ) : (

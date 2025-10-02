@@ -6,7 +6,12 @@ import { tokenActions } from "@/store/token/token-slice";
 import { useRouter, useSearchParams } from "next/navigation";
 
 // ✅ Plain logout function (no hooks here)
-export const logout = (dispatch: AppDispatch, router: any, isSeller?: boolean) => {
+export const logout = (
+  dispatch: AppDispatch,
+  router: any,
+  isSeller?: boolean
+) => {
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
   try {
     // Remove token from localStorage
     localStorage.removeItem("token");
@@ -18,7 +23,13 @@ export const logout = (dispatch: AppDispatch, router: any, isSeller?: boolean) =
     if (isSeller) {
       router.push("/auth/seller/login");
     } else {
-      router.push("/auth/login");
+      if (isMobile) {
+        // Go to landing page and tell it to open login modal
+        router.replace("/?showLogin=true");
+      } else {
+        // Desktop → go to dedicated login page
+        router.replace("/auth/login");
+      }
     }
   } catch (error) {
     console.error("Logout error:", error);

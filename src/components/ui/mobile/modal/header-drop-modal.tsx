@@ -58,15 +58,14 @@ const settings = [
   },
 ];
 
-export default function DropdownModal({ open, onClose }: DropdownModalProps) {
+export default function DropdownModal({  open,
+  onClose,
+  onOpenAuth,
+}: DropdownModalProps & { onOpenAuth: (step: any) => void }) {
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<
     null | (typeof categories)[0]
   >(null);
-  const [showModal, setShowModal] = useState(false);
-  const [modalStep, setModalStep] = useState<
-    "signup" | "verify" | "signin" | "forgot" | "resetVerify"
-  >("signup");
 
   const router = useRouter();
 
@@ -206,22 +205,23 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
                               animate="expanded"
                               exit="collapsed"
                             >
+                              {/* Subcategories */}
                               {cat.subcategories.map((sub) => (
                                 <button
                                   key={`${cat.label}-${sub.title}`}
-                                  onClick={() =>
+                                  onClick={() => {
                                     router.push(
                                       `/categories/${encodeURIComponent(
                                         cat.label
                                       )}/${encodeURIComponent(sub.title)}`
-                                    )
-                                  }
+                                    );
+                                    onClose(); // ✅ close modal after navigation
+                                  }}
                                   className="text-c12 font-MontserratNormal h-c32 flex items-center pl-c48"
                                 >
                                   {sub.title}
                                 </button>
                               ))}
-                            
                             </motion.ul>
                           )}
                         </AnimatePresence>
@@ -301,54 +301,38 @@ export default function DropdownModal({ open, onClose }: DropdownModalProps) {
               </div>
               {/* Logins */}
               <div className="flex gap-3 text-c12 font-MontserratSemiBold mt-c24 mb-c48">
-                {/* Open Sign In */}
-                {token ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      router.push("/dashboard/buyer");
-                    }}
-                  >
-                    Settings
-                  </Button>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setModalStep("signin");
-                      setShowModal(true);
-                      onclose;
-                    }}
-                  >
-                    Sign in
-                  </Button>
-                )}
+            {token ? (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  router.push("/dashboard/buyer");
+                  onClose();
+                }}
+              >
+                Settings
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => onOpenAuth("signin")} // ✅ use callback
+              >
+                Sign in
+              </Button>
+            )}
 
-                {/* Open Sign Up */}
-                {token ? (
-                  <Button variant="primary" onClick={logout}>
-                    Log out
-                  </Button>
-                ) : (
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      setModalStep("signup");
-                      setShowModal(true);
-                    }}
-                  >
-                    Sign up
-                  </Button>
-                )}
-
-                {/* Auth Modal */}
-                <AuthModal
-                  open={showModal}
-                  onClose={() => setShowModal(false)}
-                  defaultStep={modalStep}
-                />
-              </div>
-              
+            {token ? (
+              <Button variant="primary" onClick={logout}>
+                Log out
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                onClick={() => onOpenAuth("signup")} // ✅ use callback
+              >
+                Sign up
+              </Button>
+            )}
+          </div>
             </div>
           </motion.div>
         </>

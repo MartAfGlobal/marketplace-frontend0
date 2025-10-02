@@ -55,7 +55,7 @@ export default function BuyerDashboard() {
     {
       name: "Addresses",
       icon: Address,
-      routerLink: "/dashboard/buyer/mobile/addresses"
+      routerLink: "/dashboard/buyer/mobile/addresses",
     },
   ];
 
@@ -84,7 +84,7 @@ export default function BuyerDashboard() {
           <div className="flex items-center gap-3">
             <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300">
               <Image
-                src={profilePicture}
+                src={buyer?.profile?.profile_picture || "Add +"}
                 alt="Profile Image"
                 width={64}
                 height={64}
@@ -92,13 +92,17 @@ export default function BuyerDashboard() {
               />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-MontserratSemiBold"> { buyer.first_name}</p>
-              <p className="text-c12 font-MontserratNormal">
-                {buyer.email}
+              <p className="text-sm font-MontserratSemiBold">
+                {" "}
+                {buyer.first_name}
               </p>
+              <p className="text-c12 font-MontserratNormal">{buyer.email}</p>
             </div>
           </div>
-          <button onClick={() => router.push("/dashboard/buyer/edit-user-profile")} className="rounded-full bg-ff715b w-c32 h-c32 flex items-center justify-center">
+          <button
+            onClick={() => router.push("/dashboard/buyer/edit-user-profile")}
+            className="rounded-full bg-ff715b w-c32 h-c32 flex items-center justify-center"
+          >
             <Image
               src={editPen}
               alt="edit profile"
@@ -117,7 +121,7 @@ export default function BuyerDashboard() {
                     .slice(rowIdx * 3, rowIdx * 3 + 3)
                     .map((item, i) => (
                       <motion.button
-                       onClick={()=> router.push(item.routerLink)}
+                        onClick={() => router.push(item.routerLink)}
                         key={i}
                         whileInView="visible"
                         viewport={{ once: false, amount: 0.2 }}

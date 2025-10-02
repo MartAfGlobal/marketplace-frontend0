@@ -23,13 +23,26 @@ export default function ProfileDetailsModal({
   onSave,
 }: ProfileDetailsModalProps) {
   const [details, setDetails] = useState(currentDetails);
+  const buyer = useSelector((state: any) => state.buyer.BuyerData);
 
-  const [formData, setFormData] = useState<BuyerEditParams>({
-    first_name: "",
-    last_name: "",
-    phone: "",
-    phone2: "",
-  });
+    const [formData, setFormData] = useState<BuyerEditParams>(() => ({
+      first_name: buyer?.first_name || "",
+      last_name: buyer?.last_name || "",
+      phone: buyer?.profil?.phone || "",
+      phone2: buyer?.profil?.phone2 || "",
+    }));
+  
+    // ✅ Sync form values with buyer data when it updates
+    useEffect(() => {
+      if (buyer) {
+        setFormData({
+          first_name: buyer.first_name || "",
+          last_name: buyer.last_name || "",
+          phone: buyer.profile.phone || "",
+          phone2: buyer.profile.phone2  || "",
+        });
+      }
+    }, [buyer]);
 
   const tokenSlice = useSelector((state: any) => state.token);
   const { token } = tokenSlice;
@@ -40,11 +53,12 @@ export default function ProfileDetailsModal({
   const handleeditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+   
     const form = new FormData();
-    form.append("first_name", formData.first_name);
-    form.append("last_name", formData.last_name);
-    form.append("phone", formData.phone);
-    form.append("phone2", formData.phone2);
+    form.append("first_name", formData.first_name ?? "");
+    form.append("last_name", formData.last_name ?? "");
+    form.append("phone", formData.phone ?? "");
+    form.append("phone2", formData.phone2 ?? "");
 
     const registerUserRes = (res: any) => {
       toast.success("Profile updated successfully!");

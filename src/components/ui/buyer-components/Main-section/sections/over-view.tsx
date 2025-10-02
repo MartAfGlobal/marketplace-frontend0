@@ -50,7 +50,8 @@ export default function OverView() {
     <>
       <div className="flex gap-c48">
         <ProfileImage
-          src={buyer?.profile?.profile_picture || profilePicture}
+          src={buyer?.profile?.profile_picture || "Add +"
+          }
           onEditClick={() => setProfileModalOpen(true)}
         />
         <div className="w-full">
