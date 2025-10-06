@@ -59,7 +59,7 @@ export default function ResetPasswordForm() {
       requestConfig: {
         url: `/accounts/reset-password/confirm/${token}/`, // 👈 dynamic token
         method: "POST",
-        body: { new_password: formData.newPassword },
+        body: { password: formData.newPassword },
         userType: "buyer",
         successMessage: "Password reset successful!",
       },
