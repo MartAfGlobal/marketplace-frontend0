@@ -1,57 +1,44 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation"; // 👈 added useParams
 import { useState } from "react";
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch } from "react-redux";
-
 import { Button } from "@/components/ui/Button/Button";
 import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
-
 import { ResetParams } from "@/types/global";
 import { toast } from "sonner";
 import { tokenActions } from "@/store/token/token-slice";
-
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-
 
 export default function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [showComfirmPass, setShowComfirmPass] = useState(false)
+  const [showComfirmPass, setShowComfirmPass] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
+  const { token } = useParams(); // 👈 get token from route
 
   const [formData, setFormData] = useState<ResetParams>({
     newPassword: "",
     comfirmPassword: "",
   });
 
-  const { loading, sendHttpRequest: loginRequest } = useHttp();
+  const { loading, sendHttpRequest: resetRequest } = useHttp();
 
+  const toggleVisibility = () => setShowPassword((prev) => !prev);
+  const toggleComfirmPassVisibility = () => setShowComfirmPass((prev) => !prev);
 
-
-  const toggleVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
-  const toggleComfirmPassVisibility = () =>{
-    setShowComfirmPass((prev)=> !prev)
-  }
-
-  const loginSuccess = (res: any) => {
+  const handleSuccess = (res: any) => {
     const accessToken = res?.data?.access;
-
     if (!accessToken) {
-      toast.error("Login failed: No token received.");
+      toast.success("Password reset successful!");
+      router.push("/auth/login");
       return;
     }
-
- 
-
     dispatch(tokenActions.setToken(accessToken));
+    toast.success("Password reset successful!");
     router.push("/auth/login");
   };
 
@@ -67,32 +54,28 @@ export default function ResetPasswordForm() {
       return;
     }
 
-    loginRequest({
+    // ✅ Use actual token from URL
+    resetRequest({
       requestConfig: {
-        url: "/accounts/reset-password/confirm/<str:token>/",
+        url: `/accounts/reset-password/confirm/${token}/`, // 👈 dynamic token
         method: "POST",
-        body: {
-          email: formData.newPassword,
-          password: formData.comfirmPassword,
-        },
+        body: { new_password: formData.newPassword },
         userType: "buyer",
         successMessage: "Password reset successful!",
       },
-      successRes: loginSuccess,
+      successRes: handleSuccess,
     });
   };
 
-  const isFormValid = formData.newPassword !== "" && formData.comfirmPassword !== "";
+  const isFormValid = formData.newPassword && formData.comfirmPassword;
 
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit}>
-        {/* Email */}
         <fieldset disabled={loading} className="w-full">
-        <div className="flex flex-col gap-2 pt-4">
-            <Label className="text-c12 font-MontserratMedium">
-              New password
-            </Label>
+          {/* New Password */}
+          <div className="flex flex-col gap-2 pt-4">
+            <Label className="text-c12 font-MontserratMedium">New password</Label>
             <Input
               type={showPassword ? "text" : "password"}
               icon={
@@ -112,7 +95,7 @@ export default function ResetPasswordForm() {
             />
           </div>
 
-          {/* Password */}
+          {/* Confirm Password */}
           <div className="flex flex-col gap-2 pt-4 mb-c32">
             <Label className="text-c12 font-MontserratMedium">
               Confirm password
@@ -135,10 +118,8 @@ export default function ResetPasswordForm() {
               }
             />
           </div>
-
-       
         </fieldset>
-        {/* Submit */}
+
         <Button type="submit" disabled={loading || !isFormValid}>
           {loading ? <LoadingSpinner /> : "Reset password"}
         </Button>
