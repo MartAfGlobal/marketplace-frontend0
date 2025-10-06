@@ -39,19 +39,20 @@ export default function Header() {
   const logout = useLogout(dispatch);
   const [openDropdown, setOpenDropdown] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [authStep, setAuthStep] = useState<AuthStep>()
+  const [authStep, setAuthStep] = useState<AuthStep>();
 
   const [userOpen, setUserOpen] = useState(false);
 
-  useEffect(() => {
-    if (showLogin === "true") {
-      setAuthStep("signin");
-      setShowModal(true);
-    } else if (resetToken) {
-      setAuthStep("resetPassword");
-      setShowModal(true);
-    }
-  }, [showLogin, resetToken]);
+useEffect(() => {
+  if (resetToken) {
+    setAuthStep("resetPassword");
+    setShowModal(true);
+  } else if (showLogin === "true") {
+    setAuthStep("signin");
+    setShowModal(true);
+  }
+}, [showLogin, resetToken]);
+
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -124,7 +125,7 @@ export default function Header() {
             setShowModal(false);
           }}
           defaultStep={
-            authOpen ? authStep : showLogin === "true" ? "signin" : "signup"
+            authStep ? authStep : showLogin === "true" ? "signin" : "signup"
           }
         />
       </div>
