@@ -152,6 +152,10 @@ export interface LoginParams {
   password: string;
   rememberMe: boolean;
 }
+export interface ResetParams {
+  newPassword: string;
+  comfirmPassword: string;
+}
 
 export interface ResetPasswordModalProps {
   isOpen: boolean;

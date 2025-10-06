@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button/Button";
 
 
 export default function RecoveryEmailSent() {
   const router = useRouter();
+
+    const searchParams = useSearchParams();
+    const email = searchParams.get("email");
 
   const handleReturnToSignIn = (e: React.FormEvent) => {
     e.preventDefault(); // prevent form submission
@@ -17,7 +20,7 @@ export default function RecoveryEmailSent() {
     <div className="full">
       <form className="full" onSubmit={handleReturnToSignIn}>
         <p className="text-base font-MontserratSemiBold text-center mt-c8 mb-c24 text-161616">
-          Testemail@gmail.com
+          {email}
         </p>
         <Button type="submit">Return to sign in</Button>
       </form>

@@ -5,7 +5,7 @@ import { ProfileImageProps } from "@/types/global";
 
 export default function ProfileImage({
   src,
-  alt = "Profile Image",  
+  alt = "ADD Image",  
   onEditClick,
 }: ProfileImageProps) {
   let safeSrc: string | StaticImageData = profilePicture;

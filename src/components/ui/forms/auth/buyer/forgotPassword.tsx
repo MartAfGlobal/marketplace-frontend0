@@ -22,7 +22,9 @@ export default function ForgotPassword() {
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
 
   const registerUserRes = (res: any) => {
-    router.push(`/auth/recovery-email-sent`);
+     router.push(
+      `/auth/recovery-email-sent?email=${encodeURIComponent(email)}`
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
