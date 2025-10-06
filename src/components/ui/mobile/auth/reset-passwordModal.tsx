@@ -51,7 +51,7 @@ export default function ResetPasswordModal({ onClose, setStep }: MobileLoginProp
       },
       successRes: () => {
         toast.success("Password reset successful!");
-        setStep("signin");
+        setStep("signin") ;
        
       },
     });
