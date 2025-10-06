@@ -1,6 +1,6 @@
 import { useHttp } from "@/hooks/use-http";
 import { tokenActions } from "@/store/token/token-slice";
-import { LoginParams } from "@/types/global";
+import { LoginParams, MobileLoginProps } from "@/types/global";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -11,15 +11,7 @@ import Image from "next/image";
 import Mail from "@/assets/FormIcon/email.svg";
 import { LoadingSpinner } from "../../loading-spinner";
 
-type MobileLoginProps = {
-  onClose: () => void; // ✅ close modal
 
-  setStep: React.Dispatch<
-    React.SetStateAction<
-      "signup" | "verify" | "signin" | "forgot" | "resetVerify"
-    >
-  >;
-};
 
 export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -105,7 +97,7 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       </div>
 
       <div className="space-y-4">
-        {/* Email */}
+        
         <div className="relative w-full">
           <Image
             src={Mail}
@@ -149,7 +141,7 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
           </button>
         </div>
 
-        <button className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center">
+        <button disabled={logingLoading || !isFormValid} className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center">
           {logingLoading ? <LoadingSpinner /> : "Sign In"}
         </button>
 

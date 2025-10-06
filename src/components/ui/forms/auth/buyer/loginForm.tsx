@@ -101,7 +101,7 @@ export default function LoginForm() {
     <div className="w-full">
       <form onSubmit={handleSubmit}>
         {/* Email */}
-        <fieldset disabled ={loading} className="w-full">
+        <fieldset disabled={loading} className="w-full">
           <div className="flex flex-col gap-2 pt-4">
             <Label className="text-c12 font-MontserratMedium">Email</Label>
             <Input
@@ -171,6 +171,29 @@ export default function LoginForm() {
           {loading ? <LoadingSpinner /> : "Sign in"}
         </Button>
       </form>
+      <div className="flex justify-between items-center gap-c24 mt-c8 mb-c8 h-c24">
+        <p className="h-c1 w-full bg-efefef"></p>
+        <p className="text-base font-MontserratNormal">or</p>
+        <p className="h-c1 w-full bg-efefef"></p>
+      </div>
+      <div>
+        <button className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8">
+          <Image
+            src={Google}
+            width={24}
+            height={24}
+            alt="google sign in"
+            className="h-c24 w-24"
+          />
+          Sign in with Google
+        </button>
+      </div>
+      <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
+        <p className="text-161616"> have an account?</p>
+        <Link href="/auth/register" className="text-ff715b">
+          Sign up
+        </Link>
+      </div>
     </div>
   );
 }

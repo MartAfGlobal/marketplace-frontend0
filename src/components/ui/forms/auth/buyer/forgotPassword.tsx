@@ -45,7 +45,7 @@ export default function ForgotPassword() {
       },
     });
 
-    console.log("Registration data:", { email });
+    console.log("reset form data:", { email });
   };
 
 

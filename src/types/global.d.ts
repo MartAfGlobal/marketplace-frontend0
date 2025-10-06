@@ -164,7 +164,7 @@ export interface ResetPasswordModalProps {
 }
 
 export interface ProfileImageProps {
-  src: string | StaticImageData | null 
+  src: string | StaticImageData | null;
   alt?: string;
   onEditClick: () => void;
 }
@@ -696,3 +696,16 @@ interface SellerState {
   data: SellerData;
   verificationStatus: SellerVerification | null;
 }
+export interface MobileLoginProps {
+  onClose: () => void;
+  setStep: React.Dispatch<React.SetStateAction<AuthStep>>;
+  email?: string;
+  setEmail?: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export type AuthStep =
+  | "signup"
+  | "signin"
+  | "forgot"
+  | "resetVerify"
+  | "resetPassword";

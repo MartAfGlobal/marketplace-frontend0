@@ -14,6 +14,11 @@ import { LoadingSpinner } from "../../loading-spinner";
 import { tokenActions } from "@/store/token/token-slice";
 import { useDispatch } from "react-redux";
 import MobileLogin from "./sign-in";
+import { AuthStep } from "@/types/global";
+
+import ResetVerify from "./reset-verifyModal";
+import ForgotPasswordModal from "./forgot-password";
+import ResetPasswordModal from "./reset-passwordModal";
 
 export default function AuthModal({
   open,
@@ -22,12 +27,15 @@ export default function AuthModal({
 }: {
   open: boolean;
   onClose: () => void;
-  defaultStep?: "signup" | "verify" | "signin" | "forgot" | "resetVerify";
-}) {
+  defaultStep?: AuthStep;
+})  {
   const [step, setStep] = useState<
-    "signup" | "verify" | "signin" | "forgot" | "resetVerify"
+    AuthStep
   >(defaultStep);
   const [email, setEmail] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
 
@@ -43,8 +51,7 @@ export default function AuthModal({
     }
   }, [defaultStep, open]);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+ 
 
   // ✅ Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,36 +242,6 @@ export default function AuthModal({
               </div>
             )}
 
-            {/* ---------- VERIFY EMAIL (SIGNUP) ---------- */}
-            {step === "verify" && (
-              <div className="space-y-6 text-center">
-                <div className="space-y-2">
-                  <h2 className="text-c20 font-MontserratSemiBold">
-                    Verify your email address
-                  </h2>
-                  <p className="font-MontserratNormal text-sm">
-                    A verification link has been sent to your email. Check your
-                    inbox and click the link to proceed.
-                  </p>
-                </div>
-
-                <button className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold">
-                  Open mail app
-                </button>
-
-                <div>
-                  <p className="text-sm font-MontserratNormal">
-                    Didn’t get the email?
-                  </p>
-                  <div className="flex justify-center gap-4 text-sm font-MontserratSemiBold text-6a0dad mt-2">
-                    <button>Resend verification</button>
-                    <button onClick={() => setStep("signup")}>
-                      Change email
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* ---------- SIGN IN ---------- */}
             {step === "signin" && (
@@ -274,74 +251,26 @@ export default function AuthModal({
               />
             )}
 
+
+
+
             {/* ---------- FORGOT PASSWORD ---------- */}
-            {step === "forgot" && (
-              <div className="space-y-6">
-                <div className="space-y-2 text-center">
-                  <h2 className="font-MontserratSemiBold text-c20">
-                    Forgot password
-                  </h2>
-                  <p className="font-MontserratNormal text-sm">
-                    Enter your email and we’ll send you a reset link.
-                  </p>
-                </div>
-
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-black/10 rounded-lg px-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-                  placeholder="Email address"
-                />
-
-                <button
-                  onClick={() => setStep("resetVerify")}
-                  className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold"
-                >
-                  Send reset link
-                </button>
-
-                <p className="text-sm text-center font-MontserratNormal">
-                  Remember your password?{" "}
-                  <span
-                    onClick={() => setStep("signin")}
-                    className="text-6a0dad font-medium cursor-pointer"
-                  >
-                    Sign in
-                  </span>
-                </p>
-              </div>
-            )}
+            {step === "forgot" && 
+              <ForgotPasswordModal
+              onClose={onClose}
+              setStep={setStep}
+               setEmail={setEmail} 
+          
+              />
+            }
 
             {/* ---------- RESET VERIFY (FORGOT PASSWORD) ---------- */}
             {step === "resetVerify" && (
-              <div className="space-y-6 text-center">
-                <div className="space-y-2">
-                  <h2 className="text-c20 font-MontserratSemiBold">
-                    Check your email
-                  </h2>
-                  <p className="font-MontserratNormal text-sm">
-                    We’ve sent a password reset link to your email. Click the
-                    link to reset your password.
-                  </p>
-                </div>
+             < ResetVerify onClose={onClose} setStep={setStep} email={email}/>
+            )}
 
-                <button className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold">
-                  Open mail app
-                </button>
-
-                <div>
-                  <p className="text-sm font-MontserratNormal">
-                    Didn’t get the email?
-                  </p>
-                  <div className="flex justify-center gap-4 text-sm font-MontserratSemiBold text-6a0dad mt-2">
-                    <button>Resend link</button>
-                    <button onClick={() => setStep("forgot")}>
-                      Change email
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {step ==="resetPassword" && (
+               <ResetPasswordModal onClose={onClose} setStep={setStep}/>
             )}
           </motion.div>
         </>

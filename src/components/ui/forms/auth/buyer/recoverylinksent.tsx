@@ -6,38 +6,36 @@ import { Button } from "@/components/ui/Button/Button";
 import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 
-
-
 export default function RecoveryEmailSent() {
   const router = useRouter();
 
-    const searchParams = useSearchParams();
-    const email = searchParams.get("email");
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
 
   const handleReturnToSignIn = (e: React.FormEvent) => {
     e.preventDefault(); // prevent form submission
     router.push("/auth/login"); // navigate to login page
   };
 
-   const registerUserRes = (res: any) => {
-   toast.success("verification link resents")
+  const registerUserRes = (res: any) => {
+    toast.success("verification link resents");
   };
 
-    const { loading, sendHttpRequest: resendUserReq } = useHttp();
+  const { loading, sendHttpRequest: resendUserReq } = useHttp();
 
-    const handleResentLink =(e: React.FormEvent)=>{
-      e.preventDefault()
-      resendUserReq({
+  const handleResentLink = (e: React.FormEvent) => {
+    e.preventDefault();
+    resendUserReq({
       successRes: registerUserRes,
       requestConfig: {
         url: "/accounts/resend-verification-email/",
         method: "POST",
-        body: {email},
-        
+        body: { email },
+
         successMessage: "verification link resent.",
       },
     });
-  }
+  };
 
   return (
     <div className="full">
@@ -49,8 +47,11 @@ export default function RecoveryEmailSent() {
       </form>
 
       <div className="mt-3">
-        <Button onClick={handleResentLink} className="text-ff715b bg-transparent border-0 hover:bg-tr">
-          {loading? "resending":"Resend recovery link"}
+        <Button
+          onClick={handleResentLink}
+          className="text-ff715b bg-transparent border-0 hover:bg-tr"
+        >
+          {loading ? "resending" : "Resend recovery link"}
         </Button>
       </div>
 

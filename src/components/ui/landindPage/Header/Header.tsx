@@ -23,31 +23,35 @@ import LogOut from "@/assets/icons/ArrowBendDownRight.svg";
 import { useSearchParams } from "next/navigation";
 import { useLogout } from "@/utils/logout";
 import AuthModal from "../../mobile/auth/sign-up";
+import { AuthStep } from "@/types/global";
 
 export default function Header() {
-
   const [showModal, setShowModal] = useState(false);
   const pathname = usePathname();
   const changeSearch = pathname?.startsWith("/others") ?? false;
   const searchParams = useSearchParams();
   const showLogin = searchParams.get("showLogin");
+  const resetToken = searchParams.get("resetToken");
+
   const token = useSelector((state: RootState) => state.token?.token);
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
   const [openDropdown, setOpenDropdown] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [authStep, setAuthStep] = useState<
-    "signup" | "verify" | "signin" | "forgot" | "resetVerify"
-  >("signup");
+  const [authStep, setAuthStep] = useState<AuthStep>()
 
   const [userOpen, setUserOpen] = useState(false);
 
   useEffect(() => {
     if (showLogin === "true") {
-      setShowModal(true); // auto open login modal
+      setAuthStep("signin");
+      setShowModal(true);
+    } else if (resetToken) {
+      setAuthStep("resetPassword");
+      setShowModal(true);
     }
-  }, [showLogin]);
+  }, [showLogin, resetToken]);
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
