@@ -67,7 +67,6 @@ export default function CartPage() {
     }
   };
 
-  console.log("is token true or false", token);
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -115,8 +114,7 @@ export default function CartPage() {
   product_id: item.id,
   variation_id: item.variations?.[0]?.id, // 👈 pick the selected variation
   quantity: item.quantity,
-
-  
+  price: item.price
 }));
 
 
