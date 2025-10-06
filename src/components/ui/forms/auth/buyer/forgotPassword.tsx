@@ -19,12 +19,10 @@ export default function ForgotPassword() {
 
   const router = useRouter();
 
-  const { loading, sendHttpRequest: registerUserReq } = useHttp();
+  const { loading, sendHttpRequest: UseremailingReq } = useHttp();
 
   const registerUserRes = (res: any) => {
-     router.push(
-      `/auth/recovery-email-sent?email=${encodeURIComponent(email)}`
-    );
+    router.push(`/auth/recovery-email-sent?email=${encodeURIComponent(email)}`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,7 +33,7 @@ export default function ForgotPassword() {
       return;
     }
 
-    registerUserReq({
+    UseremailingReq({
       successRes: registerUserRes,
       requestConfig: {
         url: "/accounts/reset-password/",
@@ -43,12 +41,14 @@ export default function ForgotPassword() {
         body: {
           email,
         },
-        successMessage: "Registration Complete, Please login.",
+        successMessage: "verification link sent.",
       },
     });
 
     console.log("Registration data:", { email });
   };
+
+
 
   return (
     <div className="full">
@@ -65,7 +65,7 @@ export default function ForgotPassword() {
           </div>
         </fieldset>
         <Button type="submit" disabled={!isFormValid || loading}>
-          {loading ? <LoadingSpinner /> : "Sign in"}
+          {loading ? <LoadingSpinner /> : "Send reset link"}
         </Button>
       </form>
 

@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button/Button";
+import { useHttp } from "@/hooks/use-http";
+import { toast } from "sonner";
+
 
 
 export default function RecoveryEmailSent() {
@@ -16,6 +19,26 @@ export default function RecoveryEmailSent() {
     router.push("/auth/login"); // navigate to login page
   };
 
+   const registerUserRes = (res: any) => {
+   toast.success("verification link resents")
+  };
+
+    const { loading, sendHttpRequest: resendUserReq } = useHttp();
+
+    const handleResentLink =(e: React.FormEvent)=>{
+      e.preventDefault()
+      resendUserReq({
+      successRes: registerUserRes,
+      requestConfig: {
+        url: "/accounts/resend-verification-email/",
+        method: "POST",
+        body: {email},
+        
+        successMessage: "verification link resent.",
+      },
+    });
+  }
+
   return (
     <div className="full">
       <form className="full" onSubmit={handleReturnToSignIn}>
@@ -26,8 +49,8 @@ export default function RecoveryEmailSent() {
       </form>
 
       <div className="mt-3">
-        <Button className="text-ff715b bg-transparent border-0 hover:bg-tr">
-          Resend recovery link
+        <Button onClick={handleResentLink} className="text-ff715b bg-transparent border-0 hover:bg-tr">
+          {loading? "resending":"Resend recovery link"}
         </Button>
       </div>
 
