@@ -42,40 +42,45 @@ export default function CartPage() {
   const { loading, sendHttpRequest } = useHttp();
 
   const handleCheckout = () => {
-  const selectedItemsData = cartItems.filter((item) => selectedItems[item.id]);
+    const selectedItemsData = cartItems.filter(
+      (item) => selectedItems[item.id]
+    );
 
- const checkoutItems = selectedItemsData.map((item) => ({
-  product_id: String(item.id),
-  variation_id: item.variations?.[0]?.id ? String(item.variations[0].id) : null,
-  quantity: Number(item.quantity),
-}));
+    const checkoutItem = selectedItemsData.map((item) => ({
+      product_id: String(item.id),
+      variation_id: item.variations?.[0]?.id
+        ? String(item.variations[0].id)
+        : null,
+      quantity: Number(item.quantity),
+    }));
 
+    console.log(
+      "✅ Payload being sent ===>",
+      JSON.stringify({ items: checkoutItem }, null, 2)
+    );
 
-  console.log("✅ Payload being sent ===>", JSON.stringify({ items: checkoutItems }, null, 2));
+    console.log("is token true or false", token);
 
-  console.log("is token true or false", token);
+    if (!token) {
+      setCheckoutModalOpen(true);
+      return;
+    }
 
-  if (!token) {
-    setCheckoutModalOpen(true);
-    return;
-  }
-
-  sendHttpRequest({
-    requestConfig: {
-      url: "/checkout/",
-      method: "POST",
-      body: { items: checkoutItems },
-      token,
-      isAuth: true,
-      successMessage: "Address added successfully!",
-      userType: "buyer",
-    },
-    successRes: () => {
-      router.replace("/cart/checkout/checkout-summary");
-    },
-  });
-};
-
+    sendHttpRequest({
+      requestConfig: {
+        url: "/checkout/",
+        method: "POST",
+        body: { items: checkoutItem },
+        token,
+        isAuth: true,
+        successMessage: "Address added successfully!",
+        userType: "buyer",
+      },
+      successRes: () => {
+        router.replace("/cart/checkout/checkout-summary");
+      },
+    });
+  };
 
   const router = useRouter();
   const dispatch = useDispatch();
