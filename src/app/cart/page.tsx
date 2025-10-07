@@ -42,30 +42,39 @@ export default function CartPage() {
   const { loading, sendHttpRequest } = useHttp();
 
   const handleCheckout = () => {
-    console.log("is token true or false", token);
+  const selectedItemsData = cartItems.filter((item) => selectedItems[item.id]);
 
-    if (token === null || token === undefined || token === "") {
-      // Token not present → show modal
-      setCheckoutModalOpen(true);
-    } else {
-      sendHttpRequest({
-        requestConfig: {
-          url: "/checkout/",
-          method: "POST",
-          body: {
-            items: checkoutItems, // ✅ only selected items
-          },
-          token,
-          isAuth: true,
-          successMessage: "Address added successfully!",
-          userType: "buyer",
-        },
-        successRes: () => {
-          router.replace("/cart/checkout/checkout-summary");
-        },
-      });
-    }
-  };
+ const checkoutItems = selectedItemsData.map((item) => ({
+  product_id: String(item.id),
+  variation_id: item.variations?.[0]?.id ? String(item.variations[0].id) : null,
+  quantity: Number(item.quantity),
+}));
+
+
+  console.log("✅ Payload being sent ===>", JSON.stringify({ items: checkoutItems }, null, 2));
+
+  console.log("is token true or false", token);
+
+  if (!token) {
+    setCheckoutModalOpen(true);
+    return;
+  }
+
+  sendHttpRequest({
+    requestConfig: {
+      url: "/checkout/",
+      method: "POST",
+      body: { items: checkoutItems },
+      token,
+      isAuth: true,
+      successMessage: "Address added successfully!",
+      userType: "buyer",
+    },
+    successRes: () => {
+      router.replace("/cart/checkout/checkout-summary");
+    },
+  });
+};
 
 
   const router = useRouter();
@@ -110,13 +119,11 @@ export default function CartPage() {
 
   const selectedItemsData = cartItems.filter((item) => selectedItems[item.id]);
 
-  const checkoutItems = selectedItemsData.map((item) => ({
-  product_id: item.id,
-  variation_id: item.variations?.[0]?.id, // 👈 pick the selected variation
-  quantity: item.quantity,
-  price: item.price
-}));
-
+  // const checkoutItems = selectedItemsData.map((item) => ({
+  //   product_id: item.id,
+  //   variation_id: item.variations?.[0]?.id, // 👈 pick the selected variation
+  //   quantity: item.quantity,
+  // }));
 
   const showMore = () => setVisible((prev) => prev + 10);
 
