@@ -11,6 +11,21 @@ interface CheckoutModalProps {
 
 export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const router = useRouter();
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+
+ const handleLogin = ()=>{
+   if (isMobile) {
+    // Go to landing page and tell it to open login modal
+    router.replace("/?showLogin=true");
+  } else {
+    // Desktop → go to dedicated login page
+    router.replace("/auth/login");
+  }
+
+ }
+ 
+  
 
   return (
     <AnimatePresence>
@@ -44,7 +59,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
                 variant="primary"
                 onClick={() => {
                   onClose();
-                  router.push("/auth/login"); // login flow
+                 handleLogin() // login flow
                 }}
               >
                 Login to Continue

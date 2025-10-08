@@ -141,10 +141,10 @@ export default function DropdownModal({  open,
             exit="exit"
           >
             <div
-              className="bg-white w-full px-6 py-6"
+              className="bg-white w-full h-screen overflow-y-scroll pb-20"
               onClick={(e) => e.stopPropagation()} // prevent backdrop close
             >
-              <div className="flex justify-between items-center gap-2 mb-c32 h-c42">
+              <div className="flex justify-between items-center py-6 px-6 w-full gap-2 mb-c32 h-c42 bg-ffffff fixed">
                 <Link href="/">
                   <Image src={Logo} alt="Logo" width={39.27} height={32} />
                 </Link>
@@ -158,7 +158,7 @@ export default function DropdownModal({  open,
                 </button>
               </div>
               {/* Categories */}
-              <div>
+              <div className=" px-6 pt-20" >
                 <h4 className="font-MontserratSemiBold text-c20  mb-6">
                   Categories
                 </h4>
@@ -231,7 +231,7 @@ export default function DropdownModal({  open,
                 </ul>
               </div>
               {/* Settings */}
-              <div className="mt-c24">
+              <div className="mt-c24 px-6">
                 <h4 className="font-MontserratSemiBold text-c20  mb-6">
                   Settings
                 </h4>
@@ -300,7 +300,7 @@ export default function DropdownModal({  open,
                 </ul>
               </div>
               {/* Logins */}
-              <div className="flex gap-3 text-c12 font-MontserratSemiBold mt-c24 mb-c48">
+              <div className="flex gap-3 text-c12 font-MontserratSemiBold mt-c24 mb-c48 px-6">
             {token ? (
               <Button
                 variant="secondary"
