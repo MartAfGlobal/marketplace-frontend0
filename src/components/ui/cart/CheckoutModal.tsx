@@ -57,7 +57,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
               </Button>
               <Button
                 variant="primary"
-                onClick={() => {
+                onClick={ () => {
                   onClose();
                  handleLogin() // login flow
                 }}
