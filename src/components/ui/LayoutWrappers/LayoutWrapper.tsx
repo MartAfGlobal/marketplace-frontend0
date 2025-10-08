@@ -37,7 +37,9 @@ const productPage = ["/product", "/cart", "/dashboard"].some(path => pathname?.s
   return (
     <>
       {!hideLayout && <Header />}
-      {children}
+     
+       {children}
+     
       {/* Hide footer on auth pages and on mobile product pages */}
       {!hideLayout &&
         (productPage ? (

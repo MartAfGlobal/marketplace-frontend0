@@ -96,11 +96,11 @@ export default function ItemAddToCart({
 
               <div className="hidden md:flex gap-c24 font-MontserratSemiBold text-c12 text-ff715b">
                 <button>Follow</button>
-                <button>Send Message</button>
+               
               </div>
             </div>
           </div>
-          <button className="font-MontserratSemiBold text-c12 text-ff715b">
+          <button className="font-MontserratSemiBold text-c12 text-ff715b md:hidden">
             Follow
           </button>
         </div>

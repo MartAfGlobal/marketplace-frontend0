@@ -58,7 +58,8 @@ useEffect(() => {
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <div className="w-full relative">
+    <div className="pb-20 h-fit">
+<div className="w-full  fixed z-50">
       <motion.header
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -236,5 +237,7 @@ useEffect(() => {
         )}
       </AnimatePresence>
     </div>
+    </div>
+    
   );
 }

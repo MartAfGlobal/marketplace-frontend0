@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Button } from "./Button/Button";
+import { div } from "framer-motion/client";
 
 export default function InstallButton() {
   const [prompt, setPrompt] = useState<any>(null);
@@ -39,8 +40,13 @@ export default function InstallButton() {
   if (!prompt) return null;
 
   return (
-    <Button onClick={handleInstall} className="fixed bottom-5 right-5 z-50">
-      Install App
-    </Button>
+    <div className="w-full">
+      <Button
+        onClick={handleInstall}
+        className="fixed bottom-5 right-5 z-50 w-full"
+      >
+        Install App
+      </Button>
+    </div>
   );
 }

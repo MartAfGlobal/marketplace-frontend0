@@ -1,7 +1,7 @@
 {
   "name": "Market Africa",
   "short_name": "MARTAF",
-  "description": "Installable Marketplace PWA for Android, iOS, and Windows",
+  "description": "Installable MARTAF PWA for Android, iOS, and Windows",
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
   "display": "standalone",
@@ -19,6 +19,6 @@
 
     { "src": "/icon/icon-512x512.png", "sizes": "512x512", "type": "image/png" },
     { "src": "/icon/mstile-150x150.png", "sizes": "150x150", "type": "image/png" },
-    { "src": "/icon/mstile-310x310.png", "sizes": "310x310", "type": "image/png" }
+    { "src": "/icon/mstile-400x400.png", "sizes": "310x310", "type": "image/png" }
   ]
 }
