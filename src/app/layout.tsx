@@ -6,8 +6,8 @@ import { Toaster } from "sonner";
 import InstallButton from "@/components/ui/InstallButton"; // <- import it
 
 export const metadata: Metadata = {
-  title: "market place",
-  description: "Buying and selling web app",
+  title: "market Africa",
+  description: "Martaf is a pan-African e-commerce platform that connects buyers worldwide to authentic, locally crafted African products",
   themeColor: "#ffffff",
   manifest: "/manifest.json",
 };
