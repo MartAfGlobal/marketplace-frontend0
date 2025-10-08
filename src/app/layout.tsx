@@ -8,7 +8,7 @@ import InstallButton from "@/components/ui/InstallButton"; // <- import it
 export const metadata: Metadata = {
   title: "market Africa",
   description: "Martaf is a pan-African e-commerce platform that connects buyers worldwide to authentic, locally crafted African products",
-  themeColor: "#ffffff",
+  themeColor: "#6A0DAD",
   manifest: "/manifest.json",
 };
 
@@ -22,7 +22,7 @@ export default function RootLayout({
       <head>
         {/* PWA manifest + favicons */}
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#6A0DAD" />
 
         {/* Favicons */}
         <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
