@@ -155,7 +155,7 @@ export default function CartPage() {
       </motion.div>
 
       {/* Cart Content */}
-      <div className="w-full md:px-15 pb-20 md:pb-0">
+      <div className="w-full md:px-15 px-6 pb-20 md:pb-0">
         {/* Back Button */}
         <button
           onClick={() => router.back()}
