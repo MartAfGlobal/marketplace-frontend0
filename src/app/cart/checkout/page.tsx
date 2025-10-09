@@ -20,6 +20,7 @@ import CheckoutItems from "@/components/ui/checkouts/Items-to-checkout";
 import PaymentSuccessful from "@/components/ui/checkouts/Payment-successful";
 import MobileCheckoutItems from "@/components/ui/mobile/checkout-items";
 
+
 export default function CartPage() {
   const [visible, setVisible] = useState(10);
   const router = useRouter();

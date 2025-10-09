@@ -7,8 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 
+
+
 import { RootState } from "@/store";
-import { removeFromCart, updateQuantity } from "@/store/cart/cartSlice";
+import { removeFromCart, updateQuantity, setCheckoutItems} from "@/store/cart/cartSlice";
 
 import padlock from "@/assets/icons/padlock.png";
 import NavBack from "@/assets/icons/navBacksmall.png";
@@ -41,46 +43,66 @@ export default function CartPage() {
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const { loading, sendHttpRequest } = useHttp();
 
-  const handleCheckout = () => {
-    const selectedItemsData = cartItems.filter(
-      (item) => selectedItems[item.id]
-    );
 
-    const checkoutItem = selectedItemsData.map((item) => ({
-      product_id: String(item.id),
-      variation_id: item.variations?.[0]?.id
-        ? String(item.variations[0].id)
-        : null,
-      quantity: Number(item.quantity),
-    }));
-
-    console.log(
-      "✅ Payload being sent ===>",
-      JSON.stringify({ items: checkoutItem }, null, 2)
-    );
-
-    console.log("is token true or false", token);
-
-    if (!token) {
-      setCheckoutModalOpen(true);
-      return;
+  const clearSelectedItems = () => {
+  Object.entries(selectedItems).forEach(([id, isSelected]) => {
+    if (isSelected) {
+      dispatch(removeFromCart(id));
     }
+  });
+  setSelectedItems({}); // reset local selection state
+};
+const handleCheckout = () => {
+  const selectedItemsData = cartItems.filter(
+    (item) => selectedItems[item.id]
+  );
 
-    sendHttpRequest({
-      requestConfig: {
-        url: "/checkout/",
-        method: "POST",
-        body: { items: checkoutItem },
-        token,
-        isAuth: true,
-        successMessage: "Address added successfully!",
-        userType: "buyer",
-      },
-      successRes: () => {
-        router.replace("/cart/checkout/checkout-summary");
-      },
-    });
-  };
+  const checkoutItem = selectedItemsData.map((item) => ({
+    product_id: String(item.id),
+    variation_id: item.variations?.[0]?.id
+      ? String(item.variations[0].id)
+      : null,
+    quantity: Number(item.quantity),
+  }));
+
+  console.log(
+    "✅ Payload being sent ===>",
+    JSON.stringify({ items: checkoutItem }, null, 2)
+  );
+
+  console.log("is token true or false", token);
+
+  if (!token) {
+    setCheckoutModalOpen(true);
+    return;
+  }
+
+  sendHttpRequest({
+    requestConfig: {
+      url: "/checkout/",
+      method: "POST",
+      body: { items: checkoutItem },
+      token,
+      isAuth: true,
+      successMessage: "Checkout successful!",
+      userType: "buyer",
+    },
+    successRes: () => {
+      // ✅ Save selected items to Redux
+      dispatch(setCheckoutItems(selectedItemsData));
+
+      // ✅ Clear selected items from the cart
+      Object.entries(selectedItems).forEach(([id, isSelected]) => {
+        if (isSelected) dispatch(removeFromCart(id));
+      });
+      setSelectedItems({});
+
+      // ✅ Redirect to checkout page
+      router.replace("/cart/checkout");
+    },
+  });
+};
+
 
   const router = useRouter();
   const dispatch = useDispatch();

@@ -4,51 +4,29 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/Button/Button";
-import VisaCard from "@/assets/icons/visa_inc_logo.svg.svg";
+
 import ShildCheck from "@/assets/icons/ShieldCheck.png";
 import { TrackOrders } from "@/types/global";
 import padlock from "@/assets/icons/padlock.png";
 import UserAddress from "@/components/ui/buyer-components/Main-section/sections/address-selector";
-import UserCard from "@/components/ui/buyer-components/Main-section/sections/user-cards";
+
 import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import MobileCards from "../mobile/mobile-payment-cards";
 import { Input } from "../forms/Input";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { selectCheckoutTotal } from "@/store/cart/cartSelectors";
 
 export default function CheckoutItems() {
-  const trackOrders: TrackOrders[] = [
-    {
-      id: 1,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-    {
-      id: 2,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-    {
-      id: 3,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-  ];
+  const checkoutItems = useSelector(
+    (state: RootState) => state.cart.checkoutItems
+  );
+ 
 
-  const TotalItems = trackOrders.length;
+  const TotalItems = checkoutItems.length;
+  const totalPrice = useSelector(selectCheckoutTotal);
+  const discount = 0
+  const shippingFee = 0
 
   return (
     <div className="md:pt-c48  w-full md:pb-c64 ">
@@ -80,19 +58,28 @@ export default function CheckoutItems() {
                   }}
                   className=" w-full h-fit flex md:flex-row flex-col gap-c24"
                 >
-                  {trackOrders.map((items) => (
-                    <div key={items.id} className="w-fit h-fit">
-                      <Image
-                        src={items.icon}
-                        alt={items.title}
-                        width={96}
-                        height={96}
-                      />
-                      <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
-                        ₦{items.totalAmount}
-                      </p>
-                    </div>
-                  ))}
+                  {checkoutItems.map((item) => {
+                    const subtotal =
+                      (Number(item.price) || 0) * (Number(item.quantity) || 1);
+                    const imageSrc =
+                      item.image && item.image[0]
+                        ? item.image[0]
+                        : "/images/placeholder.png";
+
+                    return (
+                      <div key={item.id} className="w-fit h-fit">
+                        <Image
+                          src={imageSrc}
+                          alt={item.name || "Product image"}
+                          width={96}
+                          height={96}
+                        />
+                        <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
+                          ₦{subtotal.toLocaleString()}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </motion.div>
               </div>
             </div>
@@ -103,9 +90,7 @@ export default function CheckoutItems() {
               <div className="md:hidden">
                 <MobileCards />
               </div>
-              <div className="pb-c32 border-b border-b-000000/5 mt-c32 hidden md:flex">
-                <UserCard className="w-64.25 h-36.75" />
-              </div>
+             
             </div>
           </div>
           <div className="w-full max-w-84.25 hidden md:flex md:flex-col">
@@ -113,31 +98,33 @@ export default function CheckoutItems() {
               Order Summary
             </p>
             <div className="flex gap-2 pb-3">
-              <Input  placeholder="Enter coupon code w-full"/>
-              <button className="w-full max-w-31.25 bg-transparent border border-ff715b text-c12 h-12 rounded-c8 font-MontserratSemiBold text-ff715b">Apply coupon</button>
+              <Input placeholder="Enter coupon code w-full" />
+              <button className="w-full max-w-31.25 bg-transparent border border-ff715b text-c12 h-12 rounded-c8 font-MontserratSemiBold text-ff715b">
+                Apply coupon
+              </button>
             </div>
             <div className="font-MontserratNormal text-sm text-000000 h-23 border-b border-b-000000/10 space-y-2">
               <div className="flex justify-between">
                 <p>Total items</p>
-                <p>N50,000</p>
+                <p>N{totalPrice}</p>
               </div>
               <div className="flex justify-between">
                 <p>Discounts</p>
-                <p>-N25,000</p>
+                <p>-N{discount}</p>
               </div>
               <div className="flex justify-between">
                 <p>Subtotal</p>
-                <p>N25,000</p>
+                <p>{totalPrice - discount}</p>
               </div>
             </div>
-              <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
-                <p>Shipping fee</p>
-                <p>N50,000</p>
-              </div>
-              <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
-                <p>Order total</p>
-                <p>N50,000</p>
-              </div>
+            <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
+              <p>Shipping fee</p>
+              <p>{shippingFee}</p>
+            </div>
+            <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
+              <p>Order total</p>
+              <p>{totalPrice + shippingFee}</p>
+            </div>
 
             <div className=" mt-3 mb-c32 flex gap-c42 items-center">
               <div>
@@ -148,25 +135,11 @@ export default function CheckoutItems() {
                   Please refer to your final actual payment amount.
                 </p>
               </div>
-              <p className="font-MontserratSemiBold text-c32 ">N30,000</p>
+              <p className="font-MontserratSemiBold text-c32 ">N{totalPrice + shippingFee}</p>
             </div>
             <Button>Checkout ({TotalItems})</Button>
             <div className="  w-full space-y-6 mt-c32 max-w-84">
-              <div className="space-y-3">
-                <p className="text-sm font-MontserratSemiBold">
-                  Payment method
-                </p>
-                <p>Credit/Debit card</p>
-                <div className="flex justify-between">
-                  <p className="text-c12">534780******7167</p>
-                  <Image
-                    src={VisaCard}
-                    alt="visa card"
-                    width={32}
-                    height={18.35}
-                  />
-                </div>
-              </div>
+             
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
                   <Image
@@ -175,7 +148,9 @@ export default function CheckoutItems() {
                     width={20}
                     height={20}
                   />
-                  <p className="text-c12 font-MontserratSemiBold">Secure payments</p>
+                  <p className="text-c12 font-MontserratSemiBold">
+                    Secure payments
+                  </p>
                 </div>
                 <p className="text-c12 font-MontserratNormal leading-4 ">
                   Every payment you make on MartAf is secured with strict SSL
@@ -190,7 +165,9 @@ export default function CheckoutItems() {
                     width={20}
                     height={20}
                   />
-                  <p className="text-c12 font-MontserratSemiBold">Secure privacy</p>
+                  <p className="text-c12 font-MontserratSemiBold">
+                    Secure privacy
+                  </p>
                 </div>
                 <p className="text-c12 font-MontserratNormal leading-4 ">
                   Protecting your privacy is important to us! Please be assured

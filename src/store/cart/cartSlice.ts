@@ -30,10 +30,12 @@ const saveCartToLocalStorage = (items: CartItem[]) => {
 
 interface CartState {
   items: CartItem[];
+  checkoutItems: CartItem[]; // ✅ properly typed array
 }
 
 const initialState: CartState = {
   items: loadCartFromLocalStorage(),
+  checkoutItems: [], // ✅ initialized correctly
 };
 
 const cartSlice = createSlice({
@@ -67,15 +69,26 @@ const cartSlice = createSlice({
       state.items = [];
       saveCartToLocalStorage(state.items);
     },
-    // ✅ NEW: set cart items (from backend)
+    // ✅ For restoring cart from backend or elsewhere
     setCartItems: (state, action: PayloadAction<CartItem[]>) => {
       state.items = action.payload;
       saveCartToLocalStorage(state.items);
     },
+    // ✅ For storing checkout items after successful checkout
+    setCheckoutItems: (state, action: PayloadAction<CartItem[]>) => {
+      state.checkoutItems = action.payload;
+    },
   },
 });
 
-export const { addToCart, removeFromCart, updateQuantity, clearCart, setCartItems } =
-  cartSlice.actions;
+// ✅ Export actions correctly
+export const {
+  addToCart,
+  removeFromCart,
+  updateQuantity,
+  clearCart,
+  setCartItems,
+  setCheckoutItems, // ✅ include this
+} = cartSlice.actions;
 
 export default cartSlice.reducer;
