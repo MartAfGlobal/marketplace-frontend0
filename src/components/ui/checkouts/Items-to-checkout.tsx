@@ -2,37 +2,60 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-
 import { Button } from "@/components/ui/Button/Button";
-
 import ShildCheck from "@/assets/icons/ShieldCheck.png";
-import { TrackOrders } from "@/types/global";
 import padlock from "@/assets/icons/padlock.png";
 import UserAddress from "@/components/ui/buyer-components/Main-section/sections/address-selector";
-
-import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import MobileCards from "../mobile/mobile-payment-cards";
 import { Input } from "../forms/Input";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { selectCheckoutTotal } from "@/store/cart/cartSelectors";
+import { useEffect, useState } from "react";
+import { useHttp } from "@/hooks/use-http";
+import { setCheckoutItems } from "@/store/cart/cartSlice";
 
 export default function CheckoutItems() {
+  const dispatch = useDispatch();
+  const token = useSelector((state: RootState) => state.token?.token);
   const checkoutItems = useSelector(
     (state: RootState) => state.cart.checkoutItems
   );
- 
+
+  const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
+  const { loading, sendHttpRequest } = useHttp();
+
+  // ✅ Fetch selected checkout items from backend once when page loads
+  useEffect(() => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/cart/summary/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (responseData: any) => {
+        if (responseData?.data) {
+          dispatch(setCheckoutItems(responseData.data));
+        }
+      },
+    });
+  }, [token, sendHttpRequest, dispatch]);
 
   const TotalItems = checkoutItems.length;
   const totalPrice = useSelector(selectCheckoutTotal);
-  const discount = 0
-  const shippingFee = 0
+  const discount = 0;
+  const shippingFee = 0;
 
   return (
     <div className="md:pt-c48  w-full md:pb-c64 ">
       <div className=" ">
         <div className="flex gap-18 justify-center ">
           <div className=" w-full pb-c32 flex md:flex-col md:max-w-207">
+            {/* ITEMS SECTION */}
             <div className=" border-b hidden w-full md:flex border-b-000000/5  mb-c32">
               <div className="w-full">
                 <div className="pb-c32 justify-between w-full flex ">
@@ -43,6 +66,7 @@ export default function CheckoutItems() {
                     View all
                   </button>
                 </div>
+
                 <motion.div
                   key="orders-list"
                   initial="hidden"
@@ -83,16 +107,23 @@ export default function CheckoutItems() {
                 </motion.div>
               </div>
             </div>
+
+            {/* ADDRESS SECTION */}
             <div className="w-full ">
               <div className="pb-c32 border-b border-b-000000/5">
-                <UserAddress className="md:w-64.25 h-31 " />
+                <UserAddress
+                  selectedAddressId={selectedAddress ?? undefined}
+                  onSelectAddress={setSelectedAddress}
+                  className="md:w-64.25 h-31 "
+                />
               </div>
               <div className="md:hidden">
                 <MobileCards />
               </div>
-             
             </div>
           </div>
+
+          {/* ORDER SUMMARY */}
           <div className="w-full max-w-84.25 hidden md:flex md:flex-col">
             <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
               Order Summary
@@ -135,39 +166,29 @@ export default function CheckoutItems() {
                   Please refer to your final actual payment amount.
                 </p>
               </div>
-              <p className="font-MontserratSemiBold text-c32 ">N{totalPrice + shippingFee}</p>
+              <p className="font-MontserratSemiBold text-c32 ">
+                N{totalPrice + shippingFee}
+              </p>
             </div>
             <Button>Checkout ({TotalItems})</Button>
+
+            {/* INFO */}
             <div className="  w-full space-y-6 mt-c32 max-w-84">
-             
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
-                  <Image
-                    src={ShildCheck}
-                    alt="shild check"
-                    width={20}
-                    height={20}
-                  />
-                  <p className="text-c12 font-MontserratSemiBold">
-                    Secure payments
-                  </p>
+                  <Image src={ShildCheck} alt="shild check" width={20} height={20} />
+                  <p className="text-c12 font-MontserratSemiBold">Secure payments</p>
                 </div>
                 <p className="text-c12 font-MontserratNormal leading-4 ">
                   Every payment you make on MartAf is secured with strict SSL
                   encryption and PCI DSS data protection protocols
                 </p>
               </div>
+
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
-                  <Image
-                    src={padlock}
-                    alt="shild check"
-                    width={20}
-                    height={20}
-                  />
-                  <p className="text-c12 font-MontserratSemiBold">
-                    Secure privacy
-                  </p>
+                  <Image src={padlock} alt="padlock" width={20} height={20} />
+                  <p className="text-c12 font-MontserratSemiBold">Secure privacy</p>
                 </div>
                 <p className="text-c12 font-MontserratNormal leading-4 ">
                   Protecting your privacy is important to us! Please be assured
@@ -179,7 +200,6 @@ export default function CheckoutItems() {
             </div>
           </div>
         </div>
-        <div className="flex justify-between"></div>
       </div>
     </div>
   );

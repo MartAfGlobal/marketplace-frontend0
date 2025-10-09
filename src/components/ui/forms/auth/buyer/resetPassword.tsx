@@ -100,7 +100,7 @@ export default function ResetPasswordForm() {
             onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
             icon={
               <button type="button" onClick={toggleVisibility}>
-                {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                {showPassword ?<EyeIcon className="w-5 h-5" /> : <EyeOffIcon className="w-5 h-5" /> }
               </button>
             }
           />

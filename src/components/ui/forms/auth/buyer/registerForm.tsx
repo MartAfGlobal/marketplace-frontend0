@@ -107,9 +107,10 @@ export default function RegisterForm() {
                 icon={
                   <button type="button" onClick={toggleVisibility}>
                     {showPassword ? (
-                      <EyeOffIcon className="w-5 h-5" />
-                    ) : (
                       <EyeIcon className="w-5 h-5" />
+                      
+                    ) : (
+                      <EyeOffIcon className="w-5 h-5" />
                     )}
                   </button>
                 }
@@ -133,9 +134,10 @@ export default function RegisterForm() {
                     onClick={toggleConfirmPasswordVisibility}
                   >
                     {showConfirmPassword ? (
-                      <EyeOffIcon className="w-5 h-5" />
-                    ) : (
                       <EyeIcon className="w-5 h-5" />
+                      
+                    ) : (
+                      <EyeOffIcon className="w-5 h-5" />
                     )}
                   </button>
                 }

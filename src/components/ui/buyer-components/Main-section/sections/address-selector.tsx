@@ -12,14 +12,21 @@ import AddcardBtn from "@/assets/icons/user-dashboard/atm-cards/plus.png";
 import ActiveCardBtn from "@/assets/icons/user-dashboard/atm-cards/activeButton.png";
 import SelectorBtn from "@/assets/icons/user-dashboard/atm-cards/SelectorButton.png";
 
-import { useDispatch, useSelector } from "react-redux";
-import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
+import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 
-export default function UserAddress({ className }: { className?: string }) {
-  const dispatch = useDispatch();
+interface UserAddressProps {
+  className?: string;
+  selectedAddressId?: number; // optional external control
+  onSelectAddress?: (id: number) => void; // callback to parent
+}
+
+export default function UserAddress({
+  className,
+  selectedAddressId,
+  onSelectAddress,
+}: UserAddressProps) {
   const router = useRouter();
-  const token = useSelector((state: RootState) => state.token?.token);
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses
   );
@@ -29,11 +36,17 @@ export default function UserAddress({ className }: { className?: string }) {
   const [editingAddress, setEditingAddress] = useState<Partial<Address>>();
   const [showAll, setShowAll] = useState(false);
 
-  // Automatically select default address when buyerAddresses updates
+  // Auto-select default or first address
   useEffect(() => {
-    const defaultAddr = buyerAddresses.find((a) => a.is_default);
-    setSelectedCardId(defaultAddr?.id ?? (buyerAddresses[0]?.id ?? 0));
-  }, [buyerAddresses]);
+    if (selectedAddressId) {
+      // Controlled by parent
+      setSelectedCardId(selectedAddressId);
+    } else {
+      // Fallback to default
+      const defaultAddr = buyerAddresses.find((a) => a.is_default);
+      setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0]?.id ?? 0);
+    }
+  }, [buyerAddresses, selectedAddressId]);
 
   const cardVariants: Variants[] = [
     { hidden: { x: -100, opacity: 0 }, visible: { x: 0, opacity: 1, transition: { duration: 0.6 } } },
@@ -41,33 +54,19 @@ export default function UserAddress({ className }: { className?: string }) {
     { hidden: { x: 100, opacity: 0 }, visible: { x: 0, opacity: 1, transition: { duration: 0.6 } } },
   ];
 
-  const handleSelectDefaultAddress = async (addressId: number) => {
-    setSelectedCardId(addressId);
-    dispatch(buyerActions.setDefaultBuyerAddress(addressId));
+  const handleSelectAddress = (addressId: number) => {
+    // Notify parent if controlled
+    if (onSelectAddress) onSelectAddress(addressId);
 
-    if (!token) return;
-
-    try {
-      const response = await fetch(`/shipping/shipping-addresses/${addressId}/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ is_default: true }),
-      });
-
-      if (!response.ok) throw new Error("Failed to update default address");
-      const updatedAddress = await response.json();
-      console.log("Default address updated:", updatedAddress);
-    } catch (err) {
-      console.error(err);
-    }
+    // Update internal state if not controlled
+    if (!selectedAddressId) setSelectedCardId(addressId);
   };
 
   const getVisibleAddresses = () => {
     if (showAll) return buyerAddresses;
-    return buyerAddresses.filter((_, idx) => (window.innerWidth >= 1024 ? idx < 3 : idx < 2));
+    return buyerAddresses.filter((_, idx) =>
+      typeof window !== "undefined" && window.innerWidth >= 1024 ? idx < 3 : idx < 2
+    );
   };
 
   return (
@@ -76,12 +75,14 @@ export default function UserAddress({ className }: { className?: string }) {
         <p className="font-MontserratSemiBold text-base leading-c24 hidden md:flex text-000000">
           Addresses
         </p>
-       {buyerAddresses.length > 3 && (<button
-          className="font-MontserratSemiBold text-sm hidden md:flex text-ff715b"
-          onClick={() => setShowAll(!showAll)}
-        >
-          {showAll ? "See less" : "See more"}
-        </button>)}
+        {buyerAddresses.length > 3 && (
+          <button
+            className="font-MontserratSemiBold text-sm hidden md:flex text-ff715b"
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? "See less" : "See more"}
+          </button>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 md:flex-row w-full md:gap-6 md:flex-wrap">
@@ -92,7 +93,7 @@ export default function UserAddress({ className }: { className?: string }) {
           return (
             <motion.div
               key={item.id}
-              onClick={() => handleSelectDefaultAddress(item.id)}
+              onClick={() => handleSelectAddress(item.id)}
               variants={variant}
               initial="hidden"
               whileInView="visible"
@@ -107,14 +108,25 @@ export default function UserAddress({ className }: { className?: string }) {
               )}
             >
               <div className="flex justify-between items-center">
-                <p className="font-MontserratSemiBold text-c12 leading-c16">{item.full_name}</p>
+                <p className="font-MontserratSemiBold text-c12 leading-c16">
+                  {item.full_name}
+                </p>
                 <motion.div layout transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                  <Image src={isSelected ? ActiveCardBtn : SelectorBtn} alt="Select" width={20} height={20} />
+                  <Image
+                    src={isSelected ? ActiveCardBtn : SelectorBtn}
+                    alt="Select"
+                    width={20}
+                    height={20}
+                  />
                 </motion.div>
               </div>
               <div className="w-full max-w-51">
-                <p className="text-c12 leading-4 font-MontserratNormal">{item.phone}</p>
-                <p className="text-c12 leading-4 font-MontserratNormal">{item.address} {item.state} {item.city}</p>
+                <p className="text-c12 leading-4 font-MontserratNormal">
+                  {item.phone}
+                </p>
+                <p className="text-c12 leading-4 font-MontserratNormal">
+                  {item.address} {item.state} {item.city}
+                </p>
               </div>
             </motion.div>
           );
@@ -122,7 +134,10 @@ export default function UserAddress({ className }: { className?: string }) {
 
         <motion.div
           key="add-address"
-          onClick={() => { setEditingAddress(undefined); setIsModalOpen(true); }}
+          onClick={() => {
+            setEditingAddress(undefined);
+            setIsModalOpen(true);
+          }}
           initial={{ scale: 0.8, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } }}
           whileHover={{ scale: 1.05 }}
@@ -133,7 +148,9 @@ export default function UserAddress({ className }: { className?: string }) {
           )}
         >
           <Image src={AddcardBtn} width={20} height={20} alt="Add address" />
-          <p className="text-center font-MontserratNormal text-base">Add new address</p>
+          <p className="text-center font-MontserratNormal text-base">
+            Add new address
+          </p>
         </motion.div>
       </div>
 
@@ -152,7 +169,10 @@ export default function UserAddress({ className }: { className?: string }) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         currentAddress={editingAddress}
-        onSave={(newAddress) => { console.log("Saved Address:", newAddress); setIsModalOpen(false); }}
+        onSave={(newAddress) => {
+          console.log("Saved Address:", newAddress);
+          setIsModalOpen(false);
+        }}
       />
     </div>
   );
