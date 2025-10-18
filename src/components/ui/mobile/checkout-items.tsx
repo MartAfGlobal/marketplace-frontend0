@@ -1,78 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 
 import { RootState } from "@/store";
-import { updateQuantity } from "@/store/cart/cartSlice";
 
-
-
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 import CaretDwn from "@/assets/mobile/carent-down.png";
 
-
-import QuantitySelector from "@/components/ui/cart/quantityControl";
 import ProductCard from "@/components/ui/cards/ProductCard";
 import { Button } from "@/components/ui/Button/Button";
 
+import { useHttp } from "@/hooks/use-http";
+
+
 export default function MobileCheckoutItems() {
-  const [selectedItems, setSelectedItems] = useState<{
-    [key: string]: boolean;
-  }>({});
+  // const [selectedItems, setSelectedItems] = useState<{
+  //   [key: string]: boolean;
+  // }>({});
+  const [visibleItems, setVisibleItems] = useState(2);
 
   const [openModal, setOpenModal] = useState(false);
   const [visible, setVisible] = useState(10);
 
   const router = useRouter();
-  const dispatch = useDispatch();
-  const cartItems = useSelector((state: RootState) => state.cart.items);
+ 
 
-  const allSelected =
-    cartItems.length > 0 && cartItems.every((item) => selectedItems[item.id]);
-
-  const toggleSelectAll = () => {
-    if (allSelected) {
-      // unselect all
-      const newState: { [key: string]: boolean } = {};
-      setSelectedItems(newState);
-    } else {
-      // select all
-      const newState: { [key: string]: boolean } = {};
-      cartItems.forEach((item) => {
-        newState[item.id] = true;
-      });
-      setSelectedItems(newState);
-    }
-  };
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
+  const checkoutItems = useSelector(
+    (state: RootState) => state.cart.checkoutItems
   );
 
- const totalPrice = cartItems.reduce((acc, item) => {
-  const price = Number(item.price); // removes commas & spaces
-  const quantity = item.quantity ?? 1; // default to 1 if undefined
-  return acc + (isNaN(price) ? 0 : price) * quantity;
-}, 0);
+  const checkoutSummary = useSelector(
+    (state: RootState) => state.cart.checkoutSummary
+  );
 
-  console.log(totalPrice);
+  const totalPrice = Number(checkoutSummary?.subtotal ?? 0);
+  const discount = Number(checkoutSummary?.discount_amount ?? 0);
+  const shippingFee = Number(checkoutSummary?.shipping_cost ?? 0);
+  const TotalItems = checkoutItems.length;
 
-  const showMore = () => setVisible((prev) => prev + 10);
 
+ 
   return (
-    <div className="relative md: md:h-full ">
+    <div className="relative md: md:h-full">
       {/* Cart Content */}
       <div className="w-full  pb-4 md:pb-0">
         <div className="flex justify-between items-center mb-c24">
           <p className="text-c12 font-MontserratSemiBold ">
-            Orders list ({cartItems.length})
+            Orders list ({checkoutItems.length})
           </p>
-          <button className="rounded-full bg-ff715b text-ffffff w-c32 h-c32">
-            +
-          </button>
+          {visibleItems < checkoutItems.length && (
+            <button
+              className="font-MontserratSemiBold text-sm text-ff715b mt-2"
+              onClick={() => setVisibleItems((prev) => prev + 2)}
+            >
+              See More
+            </button>
+          )}
         </div>
 
         <div className="">
@@ -95,9 +83,11 @@ export default function MobileCheckoutItems() {
                   }}
                   className="space-y-c24 w-full"
                 >
-                  {cartItems.map((item) => (
+                  {checkoutItems.slice(0, visibleItems).map((item) => (
                     <motion.div
-                      key={item.id}
+                      key={`${item.id}-${
+                        item.variations_data?.[0]?.id || "cart"
+                      }`}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
@@ -107,11 +97,11 @@ export default function MobileCheckoutItems() {
                         <div className="flex gap-4 w-full j items-center md:items-start">
                           <div className="flex gap-3  items-center w-full max-w-fit">
                             <Image
-                              src={item.image[0]}
-                              alt={item.slug}
-                              width={100}
-                              height={100}
-                              className="w-16 h-16 md:w-25 md:h-25"
+                              src={item.product_image || "/placeholder.png"}
+                              alt={item.name || "Product image"}
+                              width={96}
+                              height={96}
+                              className="rounded h-24 w-24"
                             />
                           </div>
                           <div className="w-full md:max-w-143.75">
@@ -127,25 +117,9 @@ export default function MobileCheckoutItems() {
                               </span>
                             </div>
                             <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">
-                              ₦{item.price}
+                              ₦{item.subtotal}
                             </p>
                           </div>
-                        </div>
-
-                        <div className="flex flex-col justify-between items-end">
-                          <QuantitySelector
-                            productId={item.id}
-                            quantity={item.quantity} // <-- get quantity directly from Redux
-                            onChange={(newQty, id) =>
-                              dispatch(updateQuantity({ id, quantity: newQty }))
-                            }
-                            increaseBg="bg-black/20"
-                            decreaseBorder="border-black/20"
-                            decreaseText="text-black/20"
-                            buttonHeight="h-6"
-                            buttonWidth="w-6"
-                            quantityFont="text-sm"
-                          />
                         </div>
                       </div>
                       <div className="flex justify-between items-center">
@@ -181,71 +155,67 @@ export default function MobileCheckoutItems() {
               <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
                 More to love
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
+              {/* <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
                 {fashionProducts.slice(0, visible).map((item) => (
                   <ProductCard key={item.id} product={item} />
                 ))}
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
       </div>
 
-       <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 300, opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className=" pt-3 pb-80"
-          >
-            <div className="flex justify-between pb-4">
-              <p className="text-base font-MontserratSemiBold">
-               Summary
-              </p>
-             
-            </div>
-            {/* Price Details */}
-            <div className=" space-y-2 text-sm font-MontserratNormal">
-              <div className="flex justify-between">
-                <p className="">Total items:</p>
-                <p className="">${totalPrice}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-MontserratSemiBold">Subtotal:</p>
-                <p className="">${totalPrice}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="">Discount:</p>
-                <p className=" text-ca0202">-₦50</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="">Shipping fee:</p>
-                <p className="">Free</p>
-              </div>
-              <div className="flex justify-between text-base font-MontserratSemiBold">
-                <p className="">Estimated total:</p>
-                <p className="">₦{totalPrice}</p>
-              </div>
-            
-            </div>
-          </motion.div>
+      <motion.div
+        initial={{ height: 0, opacity: 0 }}
+        animate={{ height: 300, opacity: 1 }}
+        exit={{ height: 0, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className=" pt-3 pb-80"
+      >
+        <div className="flex justify-between pb-4">
+          <p className="text-base font-MontserratSemiBold">Summary</p>
+        </div>
+        {/* Price Details */}
+        <div className=" space-y-2 text-sm font-MontserratNormal">
+          <div className="flex justify-between">
+            <p className="">Total items:</p>
+            <p className="">${totalPrice}</p>
+          </div>
+          <div className="flex justify-between">
+            <p className="font-MontserratSemiBold">Subtotal:</p>
+            <p className="">${totalPrice}</p>
+          </div>
+          <div className="flex justify-between">
+            <p className="">Discount:</p>
+            <p className=" text-ca0202">{discount}</p>
+          </div>
+          <div className="flex justify-between">
+            <p className="">Shipping fee: </p>
+            <p className="">{shippingFee}</p>
+          </div>
+          <div className="flex justify-between text-base font-MontserratSemiBold">
+            <p className="">Estimated total:</p>
+            <p className="">₦{totalPrice}</p>
+          </div>
+        </div>
+      </motion.div>
 
       <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
         <div className="flex items-center gap-3 w-full">
           <div>
-            <p className="font-MontserratSemiBold text-c20">₦{totalPrice}</p>
-            <p className="text-c12 font-MontserratNormal text-ca0202 line-through">
-              ₦1250.00
-            </p>
+            <p className="font-MontserratSemiBold text-c20">₦{TotalItems}</p>
+          { discount > 0 && <p className="text-c12 font-MontserratNormal text-ca0202 line-through">
+              ₦{totalPrice - discount}
+            </p>}
           </div>
-          <button
+          {/* <button
             className="w-full transition-transform"
             onClick={() => setOpenModal((prev) => !prev)}
           >
             <motion.div animate={{ rotate: openModal ? 180 : 0 }}>
               <Image src={CaretDwn} alt="view" width={16} height={16} />
             </motion.div>
-          </button>
+          </button> */}
         </div>
 
         <Button
@@ -255,8 +225,6 @@ export default function MobileCheckoutItems() {
           Place order
         </Button>
       </div>
-
-  
     </div>
   );
 }

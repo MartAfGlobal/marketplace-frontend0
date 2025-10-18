@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -17,16 +17,19 @@ import { TrackOrders } from "@/types/global";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import CheckoutItems from "@/components/ui/checkouts/Items-to-checkout";
-import PaymentSuccessful from "@/components/ui/checkouts/Payment-successful";
+
 import MobileCheckoutItems from "@/components/ui/mobile/checkout-items";
+import { useHttp } from "@/hooks/use-http";
+import { setCheckoutItems, setCheckoutSummary } from "@/store/cart/cartSlice";
 
 
-export default function CartPage() {
+export default function CheckoutPage() {
   const [visible, setVisible] = useState(10);
   const router = useRouter();
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
+   const token = useSelector((state: RootState) => state.token?.token);
 
   const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
@@ -34,7 +37,59 @@ export default function CartPage() {
 
   const showMore = () => setVisible((prev) => prev + 3);
 
+  const { loading, sendHttpRequest } = useHttp();
   
+useEffect(() => {
+  if (!token) return;
+
+  sendHttpRequest({
+    requestConfig: {
+      url: "/cart/summary/",
+      method: "GET",
+      token,
+      isAuth: true,
+      userType: "buyer",
+    },
+    successRes: (responseData: any) => {
+      const backendCart = responseData?.data;
+      console.log("summary datas:", backendCart);
+
+      if (backendCart) {
+        // Map backend items to frontend format
+        const mappedItems = (backendCart.items || []).map((item: any) => ({
+          id: item.product_id,
+          product_id: item.product_id,
+          name: item.product_name,
+          product_image: item.product_image,
+          quantity: item.quantity,
+          subtotal: Number(item.total_price), // numeric subtotal
+          unit_price: Number(item.unit_price),
+          variation_name: item.variation_name,
+        }));
+
+         console.log("summary datas444444:", mappedItems);
+
+        // Store items for checkout
+        dispatch(setCheckoutItems(mappedItems));
+
+        // Store full cart summary
+        dispatch(
+          setCheckoutSummary({
+            all_addresses: backendCart.all_addresses || [],
+            applied_coupon: backendCart.applied_coupon || null,
+            discount_amount: backendCart.discount_amount || "0.00",
+            shipping_address: backendCart.shipping_address || null,
+            shipping_cost: backendCart.shipping_cost || "0.00",
+            shipping_methods: backendCart.shipping_methods || [],
+            subtotal: backendCart.subtotal || "0.00",
+            total: backendCart.total || "0.00",
+          })
+        );
+      }
+    },
+  });
+}, [token, sendHttpRequest, dispatch]);
+
   
 
   return (
@@ -78,7 +133,7 @@ export default function CartPage() {
           </p>
         </Link>
 
-        <div className="flex justify-between mt-7 md:hidden">
+        <div className="flex justify-between mt-7 md:hidden ">
           <p className="text-c12 font-MontserratSemiBold ">Shipping address</p>
           <button onClick={() => router.push("/dashboard/buyer/mobile/addresses/add-address")} className="rounded-full bg-ff715b text-ffffff w-c32 h-c32">
             +
@@ -86,7 +141,7 @@ export default function CartPage() {
         </div>
 
         <CheckoutItems />
-         {/* <PaymentSuccessful/> */}
+     
         <div className="md:hidden">
           <MobileCheckoutItems />
         </div>

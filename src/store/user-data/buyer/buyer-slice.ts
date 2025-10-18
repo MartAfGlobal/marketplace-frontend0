@@ -1,4 +1,7 @@
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { BuyerSliceParams, BuyerItem, Address, BuyerData } from "@/types/global";
+
+// Initial buyer data
 export const buyerInitialData: BuyerData = {
   id: "",
   email: "",
@@ -40,16 +43,15 @@ export const buyerInitialData: BuyerData = {
   },
 };
 
-
-
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-const buyerInitialState: BuyerSliceParams = {
+// Initial state
+const buyerInitialState: BuyerSliceParams & { selectedAddressId?: number | null } = {
   BuyerData: buyerInitialData,
   BuyerItems: [],
   BuyerAddresses: [],
+  selectedAddressId: null, // stores the selected address for checkout
 };
 
+// Slice
 const buyerSlice = createSlice({
   name: "buyer",
   initialState: buyerInitialState,
@@ -71,18 +73,23 @@ const buyerSlice = createSlice({
       state.BuyerItems = action.payload;
     },
 
+    addBuyerItem(state, action: PayloadAction<BuyerItem>) {
+      state.BuyerItems.push(action.payload);
+    },
+
     setBuyerAddresses(state, action: PayloadAction<Address[]>) {
       state.BuyerAddresses = action.payload;
     },
+
     setDefaultBuyerAddress(state, action: PayloadAction<number>) {
       state.BuyerAddresses = state.BuyerAddresses.map((addr) => {
-        if (!addr.id) return addr; // skip addresses without id
+        if (!addr.id) return addr;
         return { ...addr, defaultAddress: addr.id === action.payload };
       });
     },
 
-    addBuyerItem(state, action: PayloadAction<BuyerItem>) {
-      state.BuyerItems.push(action.payload);
+    setSelectedAddress(state, action: PayloadAction<number>) {
+      state.selectedAddressId = action.payload;
     },
 
     clearBuyer() {

@@ -443,9 +443,9 @@ export interface OrderDetailsPageProps {
 
 // types/global.ts (or wherever QuantitySelectorProps is defined)
 export interface QuantitySelectorProps {
-  productId: string | number;
+  productId?: string | number;
   quantity: number;
-  onChange?: (newQty: number, id: string | number) => void;
+  onChange: (newQty: number, id?: string | number) => void;
 
   // optional styling props
   increaseBg?: string;

@@ -3,11 +3,16 @@
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import ProductSection from "./shoppingItemComponent/ProductSection";
+import { LoadingSpinner } from "../../loading-spinner";
 
 export default function ProductListPage() {
   const products = useSelector((state: RootState) => state.products.items);
 
-  if (!products || products.length === 0) return <p>Loading products...</p>;
+  if (!products) {<p>Loading products <LoadingSpinner/></p>} else if (products.length === 0) {
+    (
+      <div>No product found</div>
+    )
+  };
 
   const grouped = products.reduce((acc: Record<string, typeof products>, product) => {
     const section = product.section|| "Today";

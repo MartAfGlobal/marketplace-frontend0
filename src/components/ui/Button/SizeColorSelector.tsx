@@ -4,10 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import NavButton from "@/assets/icons/thickNav.svg";
 import SizeGuideModal from "../Modals/sizeGuideModal";
-import { Product } from "@/types/global";
+import { Product, Variations } from "@/types/global";
 
 interface Props {
   product: Product;
+  selectedVariation: Variations | null;
+  setSelectedVariation: (variation: Variations) => void;
 }
 
 // ✅ Map color names to hex codes (extend this as needed)
@@ -22,7 +24,9 @@ const colorHexMap: Record<string, string> = {
   gray: "#808080",
 };
 
-export default function SizeColorSelector({ product }: Props) {
+export default function SizeColorSelector({  product,
+  selectedVariation,
+  setSelectedVariation}: Props) {
   const [selectedSize, setSelectedSize] = useState<string | number | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,6 +51,26 @@ export default function SizeColorSelector({ product }: Props) {
         })
     ).values()
   );
+
+   // ✅ Whenever user selects a size or color, find the corresponding variation
+  const handleVariationChange = (size?: string | number, color?: string) => {
+    const newSize = size ?? selectedSize;
+    const newColor = color ?? selectedColor;
+
+    setSelectedSize(newSize ?? null);
+    setSelectedColor(newColor ?? null);
+
+    const variation = variations.find(
+      (v) =>
+        (newSize ? v.size === newSize : true) &&
+        (newColor ? v.color?.toLowerCase() === newColor.toLowerCase() : true)
+    );
+
+    if (variation) {
+      setSelectedVariation(variation); // send variation back to parent
+    }
+  };
+
 
   // ✅ Decide which size guide to show
   const category = product?.category?.toLowerCase() || "";
@@ -79,7 +103,7 @@ export default function SizeColorSelector({ product }: Props) {
             {sizes.map((size) => (
               <button
                 key={size}
-                onClick={() => setSelectedSize(size ?? null)}
+                onClick={() => handleVariationChange(size, undefined)}
                 className={`h-c47 w-c44 border rounded-lg transition text-sm flex-shrink-0 font-MontserratSemiBold text-000000
                   ${
                     selectedSize === size ? "border-ff715b" : "border-gray-300"
@@ -103,7 +127,7 @@ export default function SizeColorSelector({ product }: Props) {
             {colors.map((color) => (
               <button
                 key={color.name}
-                onClick={() => setSelectedColor(color.name ?? null)}
+                onClick={() => handleVariationChange(undefined, color.name)}
                 className={`flex flex-col items-center transition w-c48 h-c48
                   ${
                     selectedColor === color.name

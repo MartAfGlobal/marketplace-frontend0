@@ -1,12 +1,19 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Product } from "@/types/global";
+import { Product, Variations } from "@/types/global";
 
-// Extend Product with quantity
+// Extend Product with cart-specific fields
 export interface CartItem extends Product {
   quantity: number;
+  checked?: boolean;
+  subtotal?: number; // numeric subtotal from backend
+  formatted_subtotal?: string; // formatted subtotal e.g. "₦10.00"
+  price_at_purchase?: number;
+  variation_display?: string; // for cases like “XL / Black”
+  product_image?: string;
+  selectedVariation?: Variations;
 }
 
-// Helper to load cart from localStorage
+// -------------------- LocalStorage Helpers --------------------
 const loadCartFromLocalStorage = (): CartItem[] => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("cart");
@@ -21,40 +28,61 @@ const loadCartFromLocalStorage = (): CartItem[] => {
   return [];
 };
 
-// Helper to save cart to localStorage
 const saveCartToLocalStorage = (items: CartItem[]) => {
   if (typeof window !== "undefined") {
     localStorage.setItem("cart", JSON.stringify(items));
   }
 };
 
+// -------------------- Slice State --------------------
 interface CartState {
   items: CartItem[];
-  checkoutItems: CartItem[]; // ✅ properly typed array
+  checkoutItems: CartItem[];
+  checkoutSummary: {
+    all_addresses: any[];
+    applied_coupon: string | null;
+    discount_amount: string;
+    shipping_address: any | null;
+    shipping_cost: string;
+    shipping_methods: any[];
+    subtotal: string;
+    total: string;
+  } | null;
 }
 
 const initialState: CartState = {
   items: loadCartFromLocalStorage(),
-  checkoutItems: [], // ✅ initialized correctly
+  checkoutItems: [],
+  checkoutSummary: null,
 };
 
+// -------------------- Slice --------------------
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addToCart: (state, action: PayloadAction<Product>) => {
-      const existing = state.items.find((item) => item.id === action.payload.id);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        state.items.push({ ...action.payload, quantity: 1 });
-      }
-      saveCartToLocalStorage(state.items);
-    },
+ addToCart: (state, action: PayloadAction<CartItem>) => {
+  const existing = state.items.find(
+    (item) =>
+      item.id === action.payload.id &&
+      item.variation_display === action.payload.variation_display // optional: treat variation as unique
+  );
+
+  if (existing) {
+    existing.quantity += action.payload.quantity; // add quantity
+  } else {
+    state.items.push({ ...action.payload, checked: true });
+  }
+
+  saveCartToLocalStorage(state.items);
+},
+
+
     removeFromCart: (state, action: PayloadAction<string | number>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
       saveCartToLocalStorage(state.items);
     },
+
     updateQuantity: (
       state,
       action: PayloadAction<{ id: string | number; quantity: number }>
@@ -65,30 +93,70 @@ const cartSlice = createSlice({
       }
       saveCartToLocalStorage(state.items);
     },
+
+    updateCheckedState: (
+      state,
+      action: PayloadAction<{ id: string; checked: boolean }>
+    ) => {
+      const { id, checked } = action.payload;
+      const item = state.items.find((i) => i.id === id);
+      if (item) {
+        item.checked = checked;
+      }
+      saveCartToLocalStorage(state.items);
+    },
+
     clearCart: (state) => {
       state.items = [];
       saveCartToLocalStorage(state.items);
     },
-    // ✅ For restoring cart from backend or elsewhere
+
     setCartItems: (state, action: PayloadAction<CartItem[]>) => {
-      state.items = action.payload;
+      state.items = action.payload.map((item) => {
+        const price = item.price_at_purchase ?? (item as any).price ?? 0;
+        const subtotal = price * item.quantity;
+        return {
+          ...item,
+          checked: item.checked ?? true,
+          subtotal,
+          formatted_subtotal: `₦${subtotal.toFixed(2)}`,
+        };
+      });
       saveCartToLocalStorage(state.items);
     },
-    // ✅ For storing checkout items after successful checkout
+
     setCheckoutItems: (state, action: PayloadAction<CartItem[]>) => {
-      state.checkoutItems = action.payload;
+      state.checkoutItems = action.payload.map((item) => {
+        const subtotal =
+          item.subtotal ?? (item.price_at_purchase ?? 0) * item.quantity;
+        return {
+          ...item,
+          subtotal,
+          formatted_subtotal: `₦${subtotal.toLocaleString()}`,
+        };
+      });
+    },
+
+    // ✅ New reducer: store full cart summary from backend
+    setCheckoutSummary: (
+      state,
+      action: PayloadAction<CartState["checkoutSummary"]>
+    ) => {
+      state.checkoutSummary = action.payload;
     },
   },
 });
 
-// ✅ Export actions correctly
+// -------------------- Export --------------------
 export const {
   addToCart,
   removeFromCart,
   updateQuantity,
   clearCart,
   setCartItems,
-  setCheckoutItems, // ✅ include this
+  setCheckoutItems,
+  updateCheckedState,
+  setCheckoutSummary,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

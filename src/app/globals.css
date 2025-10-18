@@ -423,6 +423,38 @@ select option {
   .shadow-customW {
     box-shadow: 0px 3px 8px 0px #6A0DAD14;
   }
+  /* Base checkbox */
+.custom-checkbox {
+  width: 1.25rem; /* 20px */
+  height: 1.25rem; /* 20px */
+  border: 2px solid #ff715b;
+  border-radius: 9999px; /* fully round */
+  background-color: #ffffff;
+  appearance: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Checked state */
+.custom-checkbox:checked {
+  background-color: #ff715b;
+  border-color: #ff715b;
+}
+
+/* White checkmark */
+.custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
 }
 
 @media (min-width: 340px) {

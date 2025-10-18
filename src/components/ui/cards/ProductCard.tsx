@@ -3,17 +3,16 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Product, Variations } from "@/types/global";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/store/cart/cartSlice";
 import { addToWishlist } from "@/store/cart/wishlist-slice";
 import { setSelectedProduct } from "@/store/user-data/products/selectedProduct-slice";
+import { RootState } from "@/store";
 import { useRouter } from "next/navigation";
 import LoveIcon from "@/assets/images/loveIcone.svg";
 import Cart from "@/assets/headerIcon/cart.svg";
 import { useHttp } from "@/hooks/use-http";
-import { addToCartBackend } from "../cart/AddToCart";
 import { LoadingSpinner } from "../loading-spinner";
-
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -25,17 +24,52 @@ export default function ProductCard({ product }: ProductCardProps) {
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading, sendHttpRequest } = useHttp();
+  const token = useSelector((state: RootState) => state.token?.token);
 
   const [selectedVariation, setSelectedVariation] = useState<Variations | null>(
     product.variations?.[0] || null
   );
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  // ✅ Add to cart handler
+  // ✅ Add to Cart Handler
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log("checking user token add to cart :", token);
+    // --- If user is not logged in, store locally
+    if (!token) {
+      dispatch(addToCart(product));
+      toast.success("Item added to cart (offline mode)");
+      return;
+    }
 
-    dispatch(addToCart(product)); // ✅ just pass the whole product
+    // --- Logged in → send to backend
+    sendHttpRequest({
+      requestConfig: {
+        url: "/cart/add", // 👈 your backend endpoint
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        body: {
+          product_id: product.id,
+          variation_id: selectedVariation?.id,
+          quantity: 1,
+          check: true
+        },
+        successMessage: "Item added to cart successfully",
+      },
 
-    toast.success("Item added to cart successfully");
+      // ✅ Called when backend responds successfully
+      successRes: (res: any) => {
+        dispatch(addToCart(product));
+        console.log("Cart API success:", res.data);
+      },
+    }).catch((err: any) => {
+      // ✅ Called only if the hook itself throws (rare)
+      console.error("Cart API failed:", err);
+      dispatch(addToCart(product));
+      toast.error("Network error — added to local cart");
+    });
   };
 
   const handleClick = () => {
@@ -74,6 +108,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             onClick={(e) => {
               e.stopPropagation();
               dispatch(addToWishlist(product));
+              toast.success("Added to wishlist");
             }}
             className="absolute top-4 right-4 w-[32px] h-[32px] bg-white rounded-full shadow flex items-center justify-center"
           >
@@ -82,13 +117,13 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Product Info */}
-        <div className="flex  items-end justify-between p-4 h-[104px]">
+        <div className="flex items-end justify-between p-4 h-[104px]">
           <div className="text-sm">
             <p className="font-MontserratMedium text-[12px] text-[#161616]">
               Free shipping
             </p>
 
-            {/* Dynamic Rating */}
+            {/* Rating */}
             <div className="flex items-center">
               {Array.from({ length: 5 }, (_, i) => (
                 <span
@@ -109,22 +144,19 @@ export default function ProductCard({ product }: ProductCardProps) {
               {product.discount_price &&
               product.discount_price < product.price ? (
                 <>
-                  <span className="line-through text-gray-400 mr-2">
-                    N{product.price}
-                  </span>
-                  <span>N{product.discount_price}</span>
+                  <span className=" text-gray-400 mr-2 ">₦{product.price}</span>
                 </>
               ) : (
-                <span>N{product.price}</span>
+                <span>₦{product.price}</span>
               )}
             </p>
           </div>
 
-          {/* Add to Cart */}
+          {/* Add to Cart Button */}
           <button
             onClick={handleAddToCart}
             disabled={loading}
-            className="w-c44 hidden md:flex h-[41.97px] items-center justify-center gap-2 py-1 bg-[#FF715B] rounded-[8px]"
+            className="w-c44 hidden flex-shrink-0 md:flex h-[41.97px] items-center justify-center gap-2 py-1 bg-[#FF715B] rounded-[8px]"
           >
             {loading ? (
               <LoadingSpinner />

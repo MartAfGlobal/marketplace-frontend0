@@ -7,8 +7,12 @@ import { useParams } from "next/navigation";
 
 import Image from "next/image";
 import DetailPageNavbar from "@/components/ui/navigation/detail-page-nav";
-import YellowStar from "@/assets/icons/Star1.svg";
-import Star from "@/assets/icons/Star2.svg";
+import truck from "@/assets/icons/truck.png";
+import Security from "@/assets/icons/security-check.svg";
+import refund from "@/assets/icons/refund.svg";
+
+import Location from "@/assets/mobile/MapPinArea.png";
+import phone from "@/assets/mobile/Phone.png";
 import Heart from "@/assets/icons/heart.svg";
 import Share from "@/assets/icons/share.svg";
 import SizeColorSelector from "@/components/ui/Button/SizeColorSelector";
@@ -22,6 +26,7 @@ import CartButton from "@/components/ui/cart/cartButton";
 import { Button } from "@/components/ui/Button/Button";
 import { addToCart, updateQuantity } from "@/store/cart/cartSlice";
 import CartBtn from "@/assets/mobile/cart.png";
+import { Variations } from "@/types/global";
 
 export default function ProductPage() {
   const dispatch = useDispatch();
@@ -35,6 +40,9 @@ export default function ProductPage() {
     state.products.items.find((p) => p.slug === slug)
   );
 
+  const [selectedVariation, setSelectedVariation] = useState<Variations | null>(
+    product?.variations?.[0] || null
+  );
   // if product not found, return fallback
   if (!product) {
     return (
@@ -167,7 +175,9 @@ export default function ProductPage() {
                       productId={product.id}
                       quantity={quantity}
                       onChange={(newQty, id) => {
-                        dispatch(updateQuantity({ id, quantity: newQty }));
+                        dispatch(
+                          updateQuantity({ id: product.id, quantity: newQty })
+                        );
                       }}
                     />
                   </div>
@@ -194,7 +204,11 @@ export default function ProductPage() {
               <h1 className="font-MontserratSemiBold text-base mt-c32 md:mt-c24 text-161616">
                 Variations available
               </h1>
-              <SizeColorSelector product={product} />
+              <SizeColorSelector
+                product={product}
+                selectedVariation={selectedVariation}
+                setSelectedVariation={setSelectedVariation}
+              />
             </div>
           </div>
 
@@ -209,11 +223,116 @@ export default function ProductPage() {
           </div>
         </div>
 
-        <div className=" w-full max-w-105.5">
+        <div className="md:hidden flex flex-col-reverse mt-c32 m  gap-c24 pb-4 md:border-b md:border-gray-100 px-6">
+          <div className="w-full flex justify-between items-start">
+            <div className="flex gap-4">
+              <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center">
+                <p className="font-MontserratBold text-c12 text-000000">
+                  COMPANY LOGO
+                </p>
+              </div>
+              <div>
+                <h1 className="font-MontserratSemiBold text-161616 text-c18">
+                  Seller Name
+                </h1>
+                <div className="flex gap-2 items-center">
+                  <div className="w-5 h-5">
+                    <Image
+                      src={Location}
+                      alt="location"
+                      width={20}
+                      height={20}
+                    />
+                  </div>
+                  <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
+                    Suppliers Location
+                  </p>
+                </div>
+                <div className="md:hidden flex gap-2 items-center">
+                  <div className="w-5 h-5">
+                    <Image src={phone} alt="phone" width={20} height={20} />
+                  </div>
+                  <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
+                    +234 80312345678
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Shipping Info */}
+          <div className="md:flex gap-4 items-start hidden">
+            <div>
+              <Image src={truck} alt="truck" width={22.5} height={15.76} />
+            </div>
+            <div className="md:flex flex-col gap-2">
+              <p className="font-MontserratSemiBold text-base text-161616">
+                Shipping fee
+              </p>
+              <p className="text-c12 font-MontserratMedium text-gray-500">
+                Delivery:{" "}
+                <span className="font-MontserratSemiBold text-c12 text-161616">
+                  May 25, 2020
+                </span>
+              </p>
+              <p className="text-c12 font-MontserratMedium text-gray-500">
+                Courier company:{" "}
+                <span className="font-MontserratSemiBold text-c12 text-161616">
+                  SpeedAf
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {/* Security & Refund */}
+          <div className="space-y-6">
+            <div className="flex gap-4 items-start">
+              <Image
+                src={Security}
+                alt="security check"
+                width={22.5}
+                height={15.76}
+              />
+              <div className="flex flex-col gap-2">
+                <p className="font-MontserratSemiBold text-sm text-161616">
+                  Secure payments
+                </p>
+                <p className="text-sm font-MontserratNormal text-gray-500">
+                  Every payment you make on MartAf is secured with strict SSL
+                  encryption and PCI DSS data protection protocols
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-start">
+              <Image src={refund} alt="refund" width={26} height={24.76} />
+              <div className="flex flex-col gap-2">
+                <p className="font-MontserratSemiBold text-sm text-161616">
+                  Standard refund policy
+                </p>
+                <p className="text-sm font-MontserratNormal text-gray-500">
+                  Claim a refund if your order doesn&apos;t ship, is missing, or
+                  arrives with product issues
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="md:hidden flex w-full px-6 gap-2 mb-c32  md:gap-0  md:flex-col">
+          <Button className="" variant="secondary">
+            View profile
+          </Button>
+          <Button variant="primary">Send message</Button>
+        </div>
+
+        <div className=" w-full md:flex hidden max-w-105.5">
           <ItemAddToCart
             product={product}
             quantity={selectedQty}
             setSelectedQty={setSelectedQty}
+            selectedVariation={selectedVariation}
+            setSelectedVariation={setSelectedVariation}
           />
         </div>
       </div>
@@ -244,18 +363,14 @@ export default function ProductPage() {
       {/* Mobile Cart Button */}
       <div className="flex gap-9.75 items-center left-0 px-6 bg-ffffff fixed bottom-0 h-20 w-full md:hidden">
         <CartButton image={CartBtn} size={32} />
-        <div className="flex gap-2 w-full text-c12">
-          <Button
-            className="bg-transparent border border-ff715b hover:border-0 text-ff715b focus:ring-0"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              dispatch(addToCart(product));
-            }}
-          >
-            Add to cart
-          </Button>
-          <Button>Buy now</Button>
+        <div className="w-full">
+          <ItemAddToCart
+            product={product}
+            quantity={selectedQty}
+            setSelectedQty={setSelectedQty}
+            selectedVariation={selectedVariation}
+            setSelectedVariation={setSelectedVariation}
+          />
         </div>
       </div>
     </main>

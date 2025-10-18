@@ -24,7 +24,7 @@ import Coupon from "./sections/coupon";
 import Seller from "./sections/sellers";
 import { motion } from "framer-motion";
 import { Variants } from "framer-motion";
-import UserCard from "./sections/user-cards";
+
 import UserAddress from "./sections/address-selector";
 import NotificationSettings from "./sections/notification-settings";
 import CountryLanguageCurrencySelect from "./sections/language-region";
@@ -45,7 +45,7 @@ export default function UserMain() {
     { id: "wishlist", label: "Wishlist", icon: Btn3 },
     { id: "coupons", label: "Coupons", icon: Btn4 },
     { id: "sellers", label: "Sellers", icon: Btn5 },
-    { id: "cards", label: "Cards", icon: Btn6 },
+    // { id: "cards", label: "Cards", icon: Btn6 },
     { id: "addresses", label: "Addresses", icon: Btn7 },
     { id: "notifications", label: "Notifications", icon: Btn8 },
     { id: "language-regions", label: "Language & regions", icon: Btn9 },
@@ -203,7 +203,7 @@ export default function UserMain() {
         >
           <Seller />
         </motion.section>
-        <motion.section
+        {/* <motion.section
           id="cards"
           className="section-offset scroll-mt-28"
           initial="hidden"
@@ -212,7 +212,7 @@ export default function UserMain() {
           variants={sellerVariants}
         >
           <UserCard />
-        </motion.section>
+        </motion.section> */}
         <motion.section
           id="addresses"
           className="section-offset scroll-mt-28 border-b pb-c48 border-b-000000/5"

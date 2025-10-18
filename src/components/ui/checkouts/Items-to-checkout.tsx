@@ -6,49 +6,133 @@ import { Button } from "@/components/ui/Button/Button";
 import ShildCheck from "@/assets/icons/ShieldCheck.png";
 import padlock from "@/assets/icons/padlock.png";
 import UserAddress from "@/components/ui/buyer-components/Main-section/sections/address-selector";
-import MobileCards from "../mobile/mobile-payment-cards";
+
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
+
 import { Input } from "../forms/Input";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
-import { selectCheckoutTotal } from "@/store/cart/cartSelectors";
+import { useRouter } from "next/navigation";
+
 import { useEffect, useState } from "react";
+
 import { useHttp } from "@/hooks/use-http";
-import { setCheckoutItems } from "@/store/cart/cartSlice";
+import { LoadingSpinner } from "../loading-spinner";
 
 export default function CheckoutItems() {
-  const dispatch = useDispatch();
+  const buyerAddresses = useSelector(
+    (state: RootState) => state.buyer.BuyerAddresses
+  );
+  const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
+  const [visibleItems, setVisibleItems] = useState(14);
+ const dispatch = useDispatch();
+
+const selectedAddressId = useSelector(
+  (state: RootState) => state.buyer.selectedAddressId
+);
+
+useEffect(() => {
+  if (buyerAddresses.length > 0 && !selectedAddressId) {
+    const defaultAddr = buyerAddresses.find((a) => a.is_default);
+    dispatch(
+      buyerActions.setSelectedAddress(defaultAddr?.id ?? buyerAddresses[0].id)
+    );
+  }
+}, [buyerAddresses, selectedAddressId, dispatch]);
+
+const handleSelectAddress = (addressId: number) => {
+  dispatch(buyerActions.setSelectedAddress(addressId));
+};
+
   const token = useSelector((state: RootState) => state.token?.token);
+
   const checkoutItems = useSelector(
     (state: RootState) => state.cart.checkoutItems
   );
 
-  const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
-  const { loading, sendHttpRequest } = useHttp();
+  const router = useRouter();
 
-  // ✅ Fetch selected checkout items from backend once when page loads
-  useEffect(() => {
-    if (!token) return;
+  const checkoutSummary = useSelector(
+    (state: RootState) => state.cart.checkoutSummary
+  );
+
+  const totalPrice = Number(checkoutSummary?.subtotal ?? 0);
+  const discount = Number(checkoutSummary?.discount_amount ?? 0);
+  const shippingFee = Number(checkoutSummary?.shipping_cost ?? 0);
+  const TotalItems = checkoutItems.length;
+
+  const { sendHttpRequest, loading } = useHttp();
+
+  const handleCheckout = () => {
+ 
 
     sendHttpRequest({
       requestConfig: {
-        url: "/cart/summary/",
-        method: "GET",
-        token,
+        url: "/checkout/",
+        method: "POST",
+        body: { address: selectedAddressId },
+        token: token ?? undefined,
         isAuth: true,
+        successMessage: "Checkout successful!",
         userType: "buyer",
       },
-      successRes: (responseData: any) => {
-        if (responseData?.data) {
-          dispatch(setCheckoutItems(responseData.data));
+      successRes: (res) => {
+        console.log("respons data:", res.data);
+
+        if (res.data?.paystack_payment_url) {
+          window.location.href = res.data.paystack_payment_url;
+        } else {
+          // Fallback: navigate to your summary page
+          return;
         }
       },
     });
-  }, [token, sendHttpRequest, dispatch]);
+  };
 
-  const TotalItems = checkoutItems.length;
-  const totalPrice = useSelector(selectCheckoutTotal);
-  const discount = 0;
-  const shippingFee = 0;
+  // const handleCheckout = async () => {
+  //   if (!selectedAddress) {
+  //     alert("Please select a shipping address");
+  //     return;
+  //   }
+
+  //   if (checkoutItems.length === 0) {
+  //     alert("Your cart is empty");
+  //     return;
+  //   }
+
+  //   // Prepare payload
+  //   const payload = {
+  //     address_id: selectedAddress,
+  //     items: checkoutItems
+  //       .filter(item => item.checked !== false) // only checked items
+  //       .map(item => ({
+  //         id: item.id,
+  //         variation_id: item.variation.id || null, // or whatever your backend expects
+  //         quantity: item.quantity,
+  //       })),
+  //   };
+
+  //   try {
+  //     await sendHttpRequest({
+  //       requestConfig: {
+  //         url: "/cart/checkout/",
+  //         method: "POST",
+  //         token: useSelector((state: RootState) => state.token?.token), // if required
+  //         body: payload,
+  //         isAuth: true,
+  //       },
+  //       successRes: (res) => {
+  //         console.log("Checkout successful:", res);
+  //         alert("Order placed successfully!");
+  //         // Optionally redirect to success page:
+  //         // router.push("/order/success");
+  //       },
+  //     });
+  //   } catch (err) {
+  //     console.error("Checkout failed:", err);
+  //     alert("Checkout failed. Please try again.");
+  //   }
+  // };
 
   return (
     <div className="md:pt-c48  w-full md:pb-c64 ">
@@ -62,9 +146,14 @@ export default function CheckoutItems() {
                   <p className="font-MontserratSemiBold text-c16 ">
                     Items details
                   </p>
-                  <button className="font-MontserratSemiBold text-sm text-ff715b">
-                    View all
-                  </button>
+                  {visibleItems < checkoutItems.length && (
+                    <button
+                      className="font-MontserratSemiBold text-sm text-ff715b mt-2"
+                      onClick={() => setVisibleItems((prev) => prev + 14)}
+                    >
+                      See More
+                    </button>
+                  )}
                 </div>
 
                 <motion.div
@@ -82,28 +171,25 @@ export default function CheckoutItems() {
                   }}
                   className=" w-full h-fit flex md:flex-row flex-col gap-c24"
                 >
-                  {checkoutItems.map((item) => {
-                    const subtotal =
-                      (Number(item.price) || 0) * (Number(item.quantity) || 1);
-                    const imageSrc =
-                      item.image && item.image[0]
-                        ? item.image[0]
-                        : "/images/placeholder.png";
-
-                    return (
-                      <div key={item.id} className="w-fit h-fit">
-                        <Image
-                          src={imageSrc}
-                          alt={item.name || "Product image"}
-                          width={96}
-                          height={96}
-                        />
-                        <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
-                          ₦{subtotal.toLocaleString()}
+                  {checkoutItems.slice(0, visibleItems).map((item) => (
+                    <div key={item.id} className="w-fit h-fit">
+                      <Image
+                        src={item.product_image || "/placeholder.png"}
+                        alt={item.name || "Product image"}
+                        width={96}
+                        height={96}
+                        className="rounded h-24 w-24"
+                      />
+                      <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
+                        ₦{Number(item.subtotal).toLocaleString()}
+                      </p>
+                      {item.variation_display && (
+                        <p className="text-c12 text-000000/70">
+                          {item.variation_display}
                         </p>
-                      </div>
-                    );
-                  })}
+                      )}
+                    </div>
+                  ))}
                 </motion.div>
               </div>
             </div>
@@ -113,12 +199,9 @@ export default function CheckoutItems() {
               <div className="pb-c32 border-b border-b-000000/5">
                 <UserAddress
                   selectedAddressId={selectedAddress ?? undefined}
-                  onSelectAddress={setSelectedAddress}
+                  onSelectAddress={handleSelectAddress}
                   className="md:w-64.25 h-31 "
                 />
-              </div>
-              <div className="md:hidden">
-                <MobileCards />
               </div>
             </div>
           </div>
@@ -154,7 +237,7 @@ export default function CheckoutItems() {
             </div>
             <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
               <p>Order total</p>
-              <p>{totalPrice + shippingFee}</p>
+              <p>{totalPrice - discount + shippingFee}</p>
             </div>
 
             <div className=" mt-3 mb-c32 flex gap-c42 items-center">
@@ -167,17 +250,29 @@ export default function CheckoutItems() {
                 </p>
               </div>
               <p className="font-MontserratSemiBold text-c32 ">
-                N{totalPrice + shippingFee}
+                N{totalPrice - discount + shippingFee}
               </p>
             </div>
-            <Button>Checkout ({TotalItems})</Button>
+            <Button
+              onClick={handleCheckout}
+              disabled={loading || !selectedAddress}
+            >
+              {loading ? <LoadingSpinner /> : " Checkout"}({TotalItems})
+            </Button>
 
             {/* INFO */}
             <div className="  w-full space-y-6 mt-c32 max-w-84">
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
-                  <Image src={ShildCheck} alt="shild check" width={20} height={20} />
-                  <p className="text-c12 font-MontserratSemiBold">Secure payments</p>
+                  <Image
+                    src={ShildCheck}
+                    alt="shild check"
+                    width={20}
+                    height={20}
+                  />
+                  <p className="text-c12 font-MontserratSemiBold">
+                    Secure payments
+                  </p>
                 </div>
                 <p className="text-c12 font-MontserratNormal leading-4 ">
                   Every payment you make on MartAf is secured with strict SSL
@@ -188,7 +283,9 @@ export default function CheckoutItems() {
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
                   <Image src={padlock} alt="padlock" width={20} height={20} />
-                  <p className="text-c12 font-MontserratSemiBold">Secure privacy</p>
+                  <p className="text-c12 font-MontserratSemiBold">
+                    Secure privacy
+                  </p>
                 </div>
                 <p className="text-c12 font-MontserratNormal leading-4 ">
                   Protecting your privacy is important to us! Please be assured

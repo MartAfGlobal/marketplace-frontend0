@@ -35,23 +35,42 @@ export default function UserAddress({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Partial<Address>>();
   const [showAll, setShowAll] = useState(false);
+  const [windowWidth, setWindowWidth] = useState<number>(0);
+
+  // Track window width for responsive "See More / See Less"
+  useEffect(() => {
+    setWindowWidth(typeof window !== "undefined" ? window.innerWidth : 1024);
+    const handleResize = () =>
+      setWindowWidth(typeof window !== "undefined" ? window.innerWidth : 1024);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Auto-select default or first address
   useEffect(() => {
     if (selectedAddressId) {
-      // Controlled by parent
+      // Controlled externally by parent
       setSelectedCardId(selectedAddressId);
-    } else {
-      // Fallback to default
+    } else if (buyerAddresses.length > 0) {
+      // Select the default address, or fallback to the first one
       const defaultAddr = buyerAddresses.find((a) => a.is_default);
-      setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0]?.id ?? 0);
+      setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0].id);
     }
   }, [buyerAddresses, selectedAddressId]);
 
   const cardVariants: Variants[] = [
-    { hidden: { x: -100, opacity: 0 }, visible: { x: 0, opacity: 1, transition: { duration: 0.6 } } },
-    { hidden: { y: 100, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { duration: 0.6 } } },
-    { hidden: { x: 100, opacity: 0 }, visible: { x: 0, opacity: 1, transition: { duration: 0.6 } } },
+    {
+      hidden: { x: -100, opacity: 0 },
+      visible: { x: 0, opacity: 1, transition: { duration: 0.6 } },
+    },
+    {
+      hidden: { y: 100, opacity: 0 },
+      visible: { y: 0, opacity: 1, transition: { duration: 0.6 } },
+    },
+    {
+      hidden: { x: 100, opacity: 0 },
+      visible: { x: 0, opacity: 1, transition: { duration: 0.6 } },
+    },
   ];
 
   const handleSelectAddress = (addressId: number) => {
@@ -62,11 +81,11 @@ export default function UserAddress({
     if (!selectedAddressId) setSelectedCardId(addressId);
   };
 
+  // Show first 3 on desktop, 2 on mobile by default
   const getVisibleAddresses = () => {
     if (showAll) return buyerAddresses;
-    return buyerAddresses.filter((_, idx) =>
-      typeof window !== "undefined" && window.innerWidth >= 1024 ? idx < 3 : idx < 2
-    );
+    const limit = windowWidth >= 768 ? 3 : 2;
+    return buyerAddresses.slice(0, limit);
   };
 
   return (
@@ -111,7 +130,10 @@ export default function UserAddress({
                 <p className="font-MontserratSemiBold text-c12 leading-c16">
                   {item.full_name}
                 </p>
-                <motion.div layout transition={{ type: "spring", stiffness: 300, damping: 20 }}>
+                <motion.div
+                  layout
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
                   <Image
                     src={isSelected ? ActiveCardBtn : SelectorBtn}
                     alt="Select"
@@ -139,7 +161,11 @@ export default function UserAddress({
             setIsModalOpen(true);
           }}
           initial={{ scale: 0.8, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } }}
+          whileInView={{
+            scale: 1,
+            opacity: 1,
+            transition: { duration: 0.6, ease: "easeOut" },
+          }}
           whileHover={{ scale: 1.05 }}
           viewport={{ once: false, amount: 0.3 }}
           className={twMerge(
@@ -154,13 +180,14 @@ export default function UserAddress({
         </motion.div>
       </div>
 
-      {buyerAddresses.length > 3 && (
+      {/* Mobile See More / See Less */}
+      {buyerAddresses.length > 2 && (
         <div className="w-full flex pt-6 justify-end md:hidden">
           <button
             className="font-MontserratSemiBold text-sm text-ff715b"
-            onClick={() => router.push("/dashboard/buyer/mobile/addresses")}
+            onClick={() => setShowAll(!showAll)}
           >
-            See more
+            {showAll ? "See less" : "See more"}
           </button>
         </div>
       )}

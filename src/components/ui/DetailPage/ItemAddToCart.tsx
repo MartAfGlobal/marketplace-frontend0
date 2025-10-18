@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { Button } from "../Button/Button";
 import Image from "next/image";
@@ -8,95 +9,153 @@ import refund from "@/assets/icons/refund.svg";
 
 import Location from "@/assets/mobile/MapPinArea.png";
 import phone from "@/assets/mobile/Phone.png";
-import { Product } from "@/types/global";
+import { Product, Variations } from "@/types/global";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/index";
 
 import QuantitySelector from "../cart/quantityControl";
-import { updateQuantity, addToCart } from "@/store/cart/cartSlice";
+import { addToCart } from "@/store/cart/cartSlice";
+import { toast } from "sonner";
+import { useHttp } from "@/hooks/use-http";
+import { useRouter } from "next/navigation";
+import { LoadingSpinner } from "../loading-spinner";
 
+type ItemAddToCartProps = {
+  product: Product;
+  quantity: number;
+  selectedVariation: Variations | null;
+  setSelectedQty: (qty: number) => void;
+  setSelectedVariation: (variation: Variations) => void;
+};
 
 export default function ItemAddToCart({
   product,
   quantity,
+  selectedVariation,
   setSelectedQty,
-}: {
-  product: Product;
-  quantity: number;
-  setSelectedQty: (qty: number) => void;
-}) {
+  setSelectedVariation,
+}: ItemAddToCartProps) {
   const dispatch = useDispatch();
+  const router = useRouter();
+  const {loading, sendHttpRequest } = useHttp();
+  const token = useSelector((state: RootState) => state.token?.token);
 
-  const cartItem = useSelector((state: RootState) =>
-    state.cart.items.find((item) => item.id === product.id)
-  );
+  const [localQty, setLocalQty] = useState<number>(quantity);
 
-  const [localQty, setLocalQty] = useState<number>(quantity ?? cartItem?.quantity ?? 1);
-
+  // ✅ Set default variation on mount
   useEffect(() => {
-    setLocalQty(quantity ?? cartItem?.quantity ?? 1);
-  }, [cartItem?.quantity, quantity]);
+    setLocalQty(quantity);
+
+    if (!selectedVariation && product?.variations?.length) {
+      setSelectedVariation(product.variations[0]);
+    }
+    // Only watch product.variations reference safely
+  }, [quantity, product?.variations, selectedVariation, setSelectedVariation]);
 
   const handleQtyChange = (newQty: number) => {
     if (newQty < 1) return;
     setLocalQty(newQty);
-    setSelectedQty(newQty); // sync back up
-    dispatch(updateQuantity({ id: product.id, quantity: newQty }));
+    setSelectedQty(newQty); // update parent
   };
 
-  const handleAddToCart = () => {
-    dispatch(addToCart({ ...product, quantity: localQty }));
+  const handleAddToCart = async () => {
+    if (!selectedVariation) {
+      toast.error("No variation selected");
+      return;
+    }
+
+    console.log("Adding to cart:", {
+      productId: product.id,
+      variationId: selectedVariation?.id,
+      quantity: localQty,
+    });
+
+    if (!token) {
+      dispatch(
+        addToCart({ ...product, quantity: localQty, selectedVariation })
+      );
+      toast.success("Item added to cart (offline mode)");
+      return;
+    }
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/cart/add",
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        body: {
+          product_id: product.id,
+          variation_id: selectedVariation.id,
+          quantity: localQty,
+        },
+        successMessage: "Item added to cart successfully",
+      },
+      successRes: (res: any) => {
+        dispatch(
+          addToCart({
+            ...product,
+            quantity: localQty,
+            variation_display: selectedVariation
+              ? `${selectedVariation.size} / ${selectedVariation.color}`
+              : undefined,
+            price_at_purchase: product.price,
+          })
+        );
+        toast.success("Item added to cart successfully");
+      },
+    }).catch((err: any) => {
+      console.error("Cart API failed:", err);
+      dispatch(
+        addToCart({
+          ...product,
+          quantity: localQty,
+          variation_display: selectedVariation
+            ? `${selectedVariation.size} / ${selectedVariation.color}`
+            : undefined,
+          price_at_purchase: product.price,
+        })
+      );
+
+      toast.error("Network error — added to local cart");
+    });
   };
 
-  const empty =""
+  const handleClick = () => {
+    router.push(`/product/${product.slug}`);
+  };
+
   return (
-    <div className="w-full md:min-w-c386-58  md:shadow p-6 flex flex-col gap-6 ">
-      <div className="flex flex-col-reverse md:flex-col gap-c24 md:pb-c32 md:border-b md:border-gray-100">
+    <div className="w-full md:min-w-c386-58 md:shadow  md:p-6 flex flex-col gap-6">
+      {/* Seller Info */}
+      <div className="md:flex flex-col-reverse hidden md:flex-col gap-c24 md:pb-c32 md:border-b md:border-gray-100">
         <div className="w-full flex justify-between items-start">
-          <div className="flex gap-4  ">
-            {empty === "" && (
-              <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center">
-                <p className="font-MontserratBold text-c12 text-000000">
-                  COMPANY LOGO
-                </p>
-              </div>
-            )}
+          <div className="flex gap-4">
+            <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center">
+              <p className="font-MontserratBold text-c12 text-000000">
+                COMPANY LOGO
+              </p>
+            </div>
             <div>
               <h1 className="font-MontserratSemiBold text-161616 text-c18">
                 Seller Name
               </h1>
               <div className="flex gap-2 items-center">
                 <div className="w-5 h-5">
-                  <Image
-                    src={Location}
-                    alt="location"
-                    width={20}
-                    height={20}
-                    className="w-full h-full object-cover"
-                  />
+                  <Image src={Location} alt="location" width={20} height={20} />
                 </div>
                 <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
                   Suppliers Location
                 </p>
               </div>
-              <div className=" md:hidden flex gap-2 items-center">
+              <div className="md:hidden flex gap-2 items-center">
                 <div className="w-5 h-5">
-                  <Image
-                    src={phone}
-                    alt="location"
-                    width={20}
-                    height={20}
-                    className="w-full h-full object-cover"
-                  />
+                  <Image src={phone} alt="phone" width={20} height={20} />
                 </div>
                 <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
                   +234 80312345678
                 </p>
-              </div>
-
-              <div className="hidden md:flex gap-c24 font-MontserratSemiBold text-c12 text-ff715b">
-                <button>Follow</button>
-               
               </div>
             </div>
           </div>
@@ -105,17 +164,12 @@ export default function ItemAddToCart({
           </button>
         </div>
 
-        <div className="md:flex gap-4 items-start hidden mt-">
+        {/* Shipping Info */}
+        <div className="md:flex gap-4 items-start hidden">
           <div>
-            <Image
-              className="mt-1"
-              src={truck}
-              alt="truck"
-              width={22.5}
-              height={15.76}
-            />
+            <Image src={truck} alt="truck" width={22.5} height={15.76} />
           </div>
-          <div className=" md:flex flex-col gap-2 ">
+          <div className="md:flex flex-col gap-2">
             <p className="font-MontserratSemiBold text-base text-161616">
               Shipping fee
             </p>
@@ -133,20 +187,19 @@ export default function ItemAddToCart({
             </p>
           </div>
         </div>
+
+        {/* Security & Refund */}
         <div className="space-y-6">
-          <div className="flex gap-4 items-start mt-">
-            <div>
-              <Image
-                className="mt-1 flex-shrink-0"
-                src={Security}
-                alt="security check"
-                width={22.5}
-                height={15.76}
-              />
-            </div>
-            <div className=" flex flex-col gap-2">
+          <div className="flex gap-4 items-start">
+            <Image
+              src={Security}
+              alt="security check"
+              width={22.5}
+              height={15.76}
+            />
+            <div className="flex flex-col gap-2">
               <p className="font-MontserratSemiBold text-sm text-161616">
-                Secure payments{" "}
+                Secure payments
               </p>
               <p className="text-sm font-MontserratNormal text-gray-500">
                 Every payment you make on MartAf is secured with strict SSL
@@ -154,17 +207,10 @@ export default function ItemAddToCart({
               </p>
             </div>
           </div>
-          <div className="flex gap-4 items-start mt-">
-            <div>
-              <Image
-                className="mt-1"
-                src={refund}
-                alt="refund"
-                width={26}
-                height={24.76}
-              />
-            </div>
-            <div className=" flex flex-col gap-2">
+
+          <div className="flex gap-4 items-start">
+            <Image src={refund} alt="refund" width={26} height={24.76} />
+            <div className="flex flex-col gap-2">
               <p className="font-MontserratSemiBold text-sm text-161616">
                 Standard refund policy
               </p>
@@ -176,28 +222,31 @@ export default function ItemAddToCart({
           </div>
         </div>
       </div>
+
+      {/* Quantity Selector */}
       <div className="hidden md:flex mt-3">
-         <QuantitySelector
-          productId={product.id}
-          quantity={localQty} // controlled value
-          onChange={(qty) => handleQtyChange(qty)}
-        />
+        <QuantitySelector quantity={localQty} onChange={handleQtyChange} />
       </div>
-      <div className="space-y-c32 hidden md:flex flex-col">
+
+      {/* Add to Cart & Buy Now */}
+      <div className="md:space-y-c32 flex w-full gap-2  md:gap-0  md:flex-col">
         <Button
           onClick={handleAddToCart}
+          disabled= {loading}
           className="bg-transparent border text-ff715b border-ff715b hover:bg-gray-50"
         >
-          Add to cart
+         {loading? <LoadingSpinner/>: " Add to cart"}
         </Button>
         <Button>Buy now</Button>
       </div>
-      <div className="flex gap-2 md:hidden">
+
+      {/* Mobile Buttons */}
+      {/* <div className="flex gap-2 md:hidden">
         <Button className="bg-transparent border text-ff715b border-ff715b hover:bg-gray-50">
           View profile
         </Button>
         <Button>Send message</Button>
-      </div>
+      </div> */}
     </div>
   );
 }

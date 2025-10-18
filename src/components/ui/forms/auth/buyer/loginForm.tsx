@@ -87,6 +87,7 @@ export default function LoginForm() {
         body: {
           email: formData.email,
           password: formData.password,
+          check: formData.rememberMe
         },
         userType: "buyer",
         successMessage: "Login successful!",

@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { tokenActions } from "@/store/token/token-slice";
 import { useDispatch } from "react-redux";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export default function SellerLogin() {
   const [showPassword, setShowPassword] = useState(false);
@@ -95,6 +96,7 @@ export default function SellerLogin() {
         body: {
           email: formData.email,
           password: formData.password,
+          check: formData.rememberMe
         },
         userType: "seller",
         successMessage: "Login successful!",
@@ -140,7 +142,7 @@ export default function SellerLogin() {
                 type={showPassword ? "text" : "password"}
                 icon={
                   <button type="button" onClick={toggleVisibility}>
-                    <Image src={eye} alt="email" width={20} height={20} />
+                     {showPassword ?<EyeIcon className="w-5 h-5" /> : <EyeOffIcon className="w-5 h-5" /> }
                   </button>
                 }
                 value={formData.password}

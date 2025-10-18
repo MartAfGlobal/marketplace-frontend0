@@ -92,14 +92,12 @@ export default function PaymentSuccessful() {
 
   return (
     <>
-      <div>
-   
-
+      <div className="w-full">
         <div className="w-full px-15">
         
-          <div className="pt-c32 pb-c64 px-62.5 ">
+          <div className="pt-c32 pb-c64 w-full  flex justify-center ">
             
-            <div className="px-c32 pt-c32 rounded-2xl border border-000000/10">
+            <div className="w-205 px-8 pt-c32 rounded-2xl border border-000000/10">
              <PaymentSuccess/>
               <div className="flex justify-between space-y-c32">
                 <div className="w-full max-w-57">

@@ -7,8 +7,10 @@ import { motion } from "framer-motion";
 import NavBack from "@/assets/icons/navBacksmall.png";
 import OrdersPage from "@/components/ui/buyer-components/orders/orders";
 import SearchBtn from "@/assets/mobile/searchBtn.png"
+import { useRouter } from "next/navigation";
 
 export default function OrderPage() {
+  const router = useRouter()
   return (
     <div className="w-full">
       <motion.div
@@ -40,7 +42,7 @@ export default function OrderPage() {
       </motion.div>
       <div className="w-full  md:px-15">
         <div className="flex justify-between px-6 md:px-0  mt-3 md:mt-c32">
-         <div className="flex items-center gap-4">
+         <button onClick={()=> router.back()} className="flex items-center gap-4">
            <Image
             src={NavBack}
             alt="<"
@@ -49,7 +51,7 @@ export default function OrderPage() {
             className="brightness-20 w-2.25 h-[16.5px] "
           />
           <p className="font-MontserratSemiBold text-c16 text-161616">orders</p>
-         </div>
+         </button>
          <div className="h-6 w-6 md:hidden flex items-center justify-center">
           <Image
             src={SearchBtn}

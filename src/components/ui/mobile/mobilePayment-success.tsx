@@ -11,17 +11,13 @@ import { useRouter } from "next/navigation";
 import { motion} from "framer-motion";
 
 
-import { useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import { RootState } from "@/store";
-import ProductCard from "@/components/ui/cards/ProductCard";
 
-export default function PaymentSuccessfulPage() {
+
+export default function MobilePaymentSuccessfulPage() {
   const router = useRouter();
 
-
-
-  
-  const dispatch = useDispatch();
 
 
 
@@ -29,9 +25,7 @@ export default function PaymentSuccessfulPage() {
 
 
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+
 
   const totalPrice = cartItems.reduce((acc, item) => {
     const price = Number(String(item.price).replace(/[, ]/g, ""));  // removes commas & spaces
@@ -44,7 +38,7 @@ export default function PaymentSuccessfulPage() {
 
 
   return (
-    <div className="w-full pt-11 px-6">
+    <div className="w-full pt-11 px-6 ">
       <div>
         <PaymentSuccess />
       </div>
@@ -61,7 +55,7 @@ export default function PaymentSuccessfulPage() {
             </p>
           </div>
 
-          <div className=" w-full h-90 overflow-y-auto">
+          <div className=" w-full h-fit max-h-90 overflow-y-auto">
             <div className="md:flex gap-18 justify-center">
               {/* Cart Items */}
               <div className="">
@@ -89,8 +83,8 @@ export default function PaymentSuccessfulPage() {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.8 }}
                       >
-                        <div className="w-full justify-between  items-end  pb-8 flex-flex-col md:flex-row">
-                          <div className="flex gap-4 w-full j items-center md:items-start">
+                        <div className="w-full justify-between  items-end  pb-8 flex">
+                          <div className="flex gap-4 w-full  items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
                               <Image
                                 src={item.image[0]}
@@ -122,16 +116,6 @@ export default function PaymentSuccessfulPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="pt-c32 pb-20 w-full">
-        <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
-          More to love
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-          {fashionProducts.map((item) => (
-            <ProductCard key={item.id} product={item} />
-          ))}
         </div>
       </div>
     </div>

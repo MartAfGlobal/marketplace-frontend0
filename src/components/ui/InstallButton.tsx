@@ -40,10 +40,10 @@ export default function InstallButton() {
   if (!prompt) return null;
 
   return (
-    <div className="w-full">
+    <div className=" w-full">
       <Button
         onClick={handleInstall}
-        className="fixed bottom-5 right-5 z-50 w-full"
+        className="fixed top-20 right-5 z-50 w-fit left-0 px-2 py-2"
       >
         Install App
       </Button>
