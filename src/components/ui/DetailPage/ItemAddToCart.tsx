@@ -47,7 +47,7 @@ export default function ItemAddToCart({
     setLocalQty(quantity);
 
     if (!selectedVariation && product?.variations?.length) {
-      setSelectedVariation(product.variations[0]);
+      setSelectedVariation(product.variations?.[0]);
     }
     // Only watch product.variations reference safely
   }, [quantity, product?.variations, selectedVariation, setSelectedVariation]);
@@ -59,10 +59,7 @@ export default function ItemAddToCart({
   };
 
   const handleAddToCart = async () => {
-    if (!selectedVariation) {
-      toast.error("No variation selected");
-      return;
-    }
+ 
 
     console.log("Adding to cart:", {
       productId: product.id,
@@ -70,10 +67,17 @@ export default function ItemAddToCart({
       quantity: localQty,
     });
 
-    if (!token) {
-      dispatch(
-        addToCart({ ...product, quantity: localQty, selectedVariation })
-      );
+     if (!token) {
+        dispatch(
+          addToCart({
+            ...product,
+            quantity: localQty,
+            variation_display: selectedVariation
+              ? `${selectedVariation.size} / ${selectedVariation.color}`
+              : undefined,
+            price_at_purchase: product.price,
+          })
+        );
       toast.success("Item added to cart (offline mode)");
       return;
     }
@@ -87,7 +91,7 @@ export default function ItemAddToCart({
         userType: "buyer",
         body: {
           product_id: product.id,
-          variation_id: selectedVariation.id,
+          variation_id: selectedVariation?.id,
           quantity: localQty,
         },
         successMessage: "Item added to cart successfully",

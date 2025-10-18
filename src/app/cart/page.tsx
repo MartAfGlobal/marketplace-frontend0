@@ -524,9 +524,8 @@ export default function CartPage() {
                   >
                     {cartItems.map((item) => (
                       <motion.div
-                        key={`${item.id}-${
-                          item.variations_data?.[0]?.id || "cart"
-                        }`}
+                       key={`${item.id}-${item.variations_data?.[0]?.id ?? Math.random()}`}
+
                         className="flex justify-between items-start md:border-b border-gray-200 pb-4"
                       >
                         <div className="flex items-center md:items-start  gap-4">

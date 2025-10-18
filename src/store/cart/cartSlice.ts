@@ -19,7 +19,11 @@ const loadCartFromLocalStorage = (): CartItem[] => {
     const stored = localStorage.getItem("cart");
     if (stored) {
       try {
-        return JSON.parse(stored) as CartItem[];
+        const parsed = JSON.parse(stored) as CartItem[];
+        return parsed.map(item => ({
+          ...item,
+          quantity: Number(item.quantity || 0),
+        }));
       } catch (e) {
         console.error("Failed to parse cart from localStorage", e);
       }
@@ -27,6 +31,7 @@ const loadCartFromLocalStorage = (): CartItem[] => {
   }
   return [];
 };
+
 
 const saveCartToLocalStorage = (items: CartItem[]) => {
   if (typeof window !== "undefined") {

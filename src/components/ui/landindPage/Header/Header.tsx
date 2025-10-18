@@ -57,6 +57,9 @@ useEffect(() => {
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
+  console.log("lets check coundydy", cartCount)
+
+
   return (
     <div className="pb-20 h-fit">
 <div className="w-full  fixed z-50">

@@ -34,8 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   // ✅ Add to Cart Handler
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("checking user token add to cart :", token);
-    // --- If user is not logged in, store locally
+  
     if (!token) {
       dispatch(addToCart(product));
       toast.success("Item added to cart (offline mode)");
