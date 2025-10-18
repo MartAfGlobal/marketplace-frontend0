@@ -49,7 +49,6 @@ export default function CartPage() {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  // ---------- Helpers ----------
   const persistLocalCart = (items: any[]) => {
     try {
       localStorage.setItem("cart", JSON.stringify(items || []));
@@ -66,16 +65,13 @@ export default function CartPage() {
     return selected;
   };
 
-  // Utility to update Redux + localStorage with a changed checked flag
   const applyCheckedToLocal = (id: string, checked: boolean) => {
-    // update local Redux cartItems copy
     const updated = (cartItems || []).map((it: any) =>
       it.id === id ? { ...it, checked } : it
     );
     dispatch(setCartItems(updated));
     persistLocalCart(updated);
 
-    // keep selectedItems UI in sync
     setSelectedItems((prev) => ({ ...prev, [id]: checked }));
   };
 
@@ -91,15 +87,12 @@ export default function CartPage() {
     setSelectedItems(updatedSelected);
   };
 
-  // ---------- Initial load & sync ----------
   useEffect(() => {
-    // On mount: if there's no token, load localStorage cart into Redux.
-    // If there's a token, fetch backend cart.
     const init = async () => {
       if (!token) {
         try {
           const local = JSON.parse(localStorage.getItem("cart") || "[]");
-          // ensure shape matches expected cart items (optional mapping)
+
           dispatch(setCartItems(local));
           const sel = hydrateSelectionFromItems(local);
           setSelectedItems(sel);
@@ -109,44 +102,31 @@ export default function CartPage() {
           setSelectedItems({});
         }
       } else {
-        // if token present, call fetchBackendCart which will set items & selection
         await fetchBackendCart();
       }
       initialHydratedRef.current = true;
     };
 
     init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // If cartItems change in Redux because other parts of app updated it,
-  // we should make sure selectedItems reflect the new items:
-  // but don't clobber user toggles for unchanged items.
   useEffect(() => {
-    // don't run until initial hydration happened
     if (!initialHydratedRef.current) return;
 
-    // Build new selected map for items that are new or not presently in selectedItems
     const newSelected = { ...selectedItems };
     let changed = false;
 
     cartItems.forEach((it: any) => {
       const id = it.id;
       const serverChecked = typeof it.checked === "boolean" ? it.checked : true;
-      // If we don't have this id in selectedItems (new item), adopt serverChecked
+
       if (newSelected[id] === undefined) {
         newSelected[id] = serverChecked;
         changed = true;
       } else {
-        // if the server provided an explicit checked value that differs from our UI selection,
-        // we should keep UI if user has recently toggled. To avoid flip-flop, only update if
-        // serverChecked differs and our selectedItems equals old server value.
-        // (This avoids overwriting user choice after they toggled).
-        // For simplicity: do not overwrite existing selection here.
       }
     });
 
-    // Remove selections for items that no longer exist
     const existingIds = new Set(cartItems.map((it: any) => it.id));
     Object.keys(newSelected).forEach((k) => {
       if (!existingIds.has(k)) {
@@ -157,7 +137,7 @@ export default function CartPage() {
 
     if (changed) {
       setSelectedItems(newSelected);
-      // persist a merged cart to localStorage to keep fallback consistent
+
       const merged = cartItems.map((it: any) => ({
         ...it,
         checked: !!newSelected[it.id],
@@ -165,86 +145,112 @@ export default function CartPage() {
       persistLocalCart(merged);
       dispatch(setCartItems(merged));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cartItems]);
 
   const fetchBackendCart = async () => {
-    if (!token) return;
-    try {
-      await sendHttpRequest({
-        requestConfig: {
-          url: "/cart/",
-          method: "GET",
-          token,
-          isAuth: true,
-          userType: "buyer",
-        },
-        successRes: (res: any) => {
-          const items = res?.data?.items || [];
+  if (!token) return;
 
-          console.log("checking back ed cart:", items);
-          const mapped = items.map((item: any) => {
-            const variation = item.variation || {};
-            return {
-              id: item.id,
-              product_id: item.product?.id,
-              name:
-                item.product_name ||
-                item.product?.description ||
-                "Unnamed Product",
-              price:
-                item.product?.discount_price || item.price_at_purchase || 0,
-              quantity: item.quantity || 1,
-              image: [item.product_image || "/placeholder.png"],
-              variations_data: variation ? [variation] : [],
-              variation_display: item.variation_display,
-              color: variation.color || null,
-              size: variation.size || null,
-              product_image: item.product_image || "/placeholder.png",
-              checked: typeof item.checked === "boolean" ? item.checked : true,
-            };
-          });
+  try {
+    await sendHttpRequest({
+      requestConfig: {
+        url: "/cart/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: async (res: any) => {
+        const backendItems = res?.data?.items || [];
 
-          dispatch(setCartItems(mapped));
-          persistLocalCart(mapped);
+        const mappedBackend = backendItems.map((item: any) => {
+          const variation = item.variation || {};
+          return {
+            id: item.id,
+            product_id: item.product?.id,
+            name:
+              item.product_name ||
+              item.product?.description ||
+              "Unnamed Product",
+            price:
+              item.product?.discount_price || item.price_at_purchase || 0,
+            quantity: item.quantity || 1,
+            image: [item.product_image || "/placeholder.png"],
+            variations_data: variation ? [variation] : [],
+            variation_display: item.variation_display,
+            color: variation.color || null,
+            size: variation.size || null,
+            product_image: item.product_image || "/placeholder.png",
+            checked: typeof item.checked === "boolean" ? item.checked : true,
+          };
+        });
 
-          // Build selection map from backend's checked flags
-          const newSelected: Record<string, boolean> = {};
-          mapped.forEach((mi: any) => {
-            newSelected[mi.id] =
-              typeof mi.checked === "boolean" ? mi.checked : true;
-          });
+        // ✅ Load local (guest) cart
+        const localItems: any[] = JSON.parse(localStorage.getItem("cart") || "[]");
 
-          setSelectedItems((prev) => {
-            // Merge: prefer existing prev selections for items that already exist,
-            // but adopt backend value for newly added items.
-            const merged = { ...newSelected };
-            Object.keys(prev).forEach((k) => {
-              if (merged[k] !== undefined) merged[k] = prev[k];
-            });
-            return merged;
-          });
+        // ✅ Merge logic (based on product_id + variation)
+        const merged: any[] = [...mappedBackend];
 
-          toast.success("Cart synced successfully");
-        },
-      });
-    } catch (err) {
-      console.error("fetchBackendCart failed", err);
-      toast.error("Failed to fetch cart from server");
-    }
-  };
+        localItems.forEach((local) => {
+          const existing = merged.find(
+            (b) =>
+              (b.product_id && b.product_id === local.product_id) &&
+              (b.variation_display === local.variation_display)
+          );
 
-  // ---------- Toggle single item ----------
+          if (existing) {
+            // Merge quantity and keep backend checked state
+            existing.quantity = (existing.quantity || 0) + (local.quantity || 0);
+          } else {
+            // Add local-only items
+            merged.push(local);
+          }
+        });
+
+        // ✅ Save merged cart to Redux and localStorage
+        dispatch(setCartItems(merged));
+        persistLocalCart(merged);
+
+        // ✅ Update selection state
+        const newSelected: Record<string, boolean> = {};
+        merged.forEach((mi: any) => {
+          newSelected[mi.id || mi.product_id] =
+            typeof mi.checked === "boolean" ? mi.checked : true;
+        });
+        setSelectedItems(newSelected);
+
+        toast.success("Cart synced and merged successfully");
+
+        // ✅ Optional: push merged cart to backend
+        await sendHttpRequest({
+          requestConfig: {
+            url: "/cart/sync/",
+            method: "POST",
+            token,
+            isAuth: true,
+            userType: "buyer",
+            body: { items: merged.map(({ id, ...r }) => r) },
+           
+          },
+           successRes: () => {
+             toast.success("updated successful")
+            }, 
+          
+        });
+      },
+    });
+  } catch (err) {
+    console.error("fetchBackendCart failed", err);
+    toast.error("Failed to sync cart with server");
+  }
+};
+
+
   const handleToggleItem = async (item: any) => {
     const newChecked = !selectedItems[item.id];
 
-    // Optimistic UI + local persistence
     applyCheckedToLocal(item.id, newChecked);
 
-    // If guest, only local changes needed
     if (!token) {
-      // updateCheckedState action may update Redux slice (you already dispatch that elsewhere)
-      // Keep Redux in sync already via setCartItems above
       try {
         dispatch(updateCheckedState({ id: item.id, checked: newChecked }));
       } catch (e) {
@@ -253,7 +259,6 @@ export default function CartPage() {
       return;
     }
 
-    // Logged-in: send change to server. Revert on failure.
     try {
       await sendHttpRequest({
         requestConfig: {
@@ -265,32 +270,26 @@ export default function CartPage() {
           body: { checked: newChecked, quantity: item.quantity },
         },
         successRes: (res) => {
-          // Update Redux slice to reflect server ack (safe no-op if already matches)
           dispatch(updateCheckedState({ id: item.id, checked: newChecked }));
-          // also ensure local storage matches server ack (we already persisted optimistically)
-          // optionally we could call fetchBackendCart() here to re-sync fully
         },
       });
     } catch (error) {
       console.error("Error toggling item on server:", error);
       toast.error("Failed to update item selection on server. Reverting...");
-      // revert optimistic
       applyCheckedToLocal(item.id, !newChecked);
     }
   };
 
-  // ---------- Select All ----------
   const allSelected =
     cartItems.length > 0 && cartItems.every((i) => !!selectedItems[i.id]);
 
   const handleSelectAll = async () => {
     const newChecked = !allSelected;
 
-    // Optimistic local update
     applyBulkCheckedToLocal(newChecked);
 
     if (!token) {
-      // guest: dispatch updates to slice for consistency
+      
       try {
         cartItems.forEach((it: any) =>
           dispatch(updateCheckedState({ id: it.id, checked: newChecked }))
@@ -301,9 +300,8 @@ export default function CartPage() {
       return;
     }
 
-    // logged-in: try updating server for each item
     try {
-      // send requests in parallel but wait for all
+
       await Promise.all(
         cartItems.map((item: any) =>
           sendHttpRequest({
@@ -333,9 +331,9 @@ export default function CartPage() {
     }
   };
 
-  // ---------- Delete Item ----------
+
   const handleDeleteItem = async (id: string) => {
-    // remove locally immediately
+ 
     dispatch(removeFromCart(id));
     setSelectedItems((p) => {
       const copy = { ...p };
@@ -343,7 +341,7 @@ export default function CartPage() {
       return copy;
     });
 
-    // persist local cart
+
     const updatedLocal = (cartItems || []).filter((it: any) => it.id !== id);
     persistLocalCart(updatedLocal);
 
@@ -361,14 +359,14 @@ export default function CartPage() {
       });
     } catch {
       toast.error("Failed to delete item on server");
-      // try to re-sync
+
       await fetchBackendCart();
     }
   };
 
-  // ---------- Delete Selected ----------
+
   const handleDeleteSelected = async () => {
-    // 1️⃣ Collect only checked item IDs
+
     const selectedIds = Object.entries(selectedItems)
       .filter(([_, checked]) => checked)
       .map(([id]) => id);
@@ -378,21 +376,19 @@ export default function CartPage() {
       return;
     }
 
-    // 2️⃣ Remove locally
+
     selectedIds.forEach((id) => dispatch(removeFromCart(id)));
 
     const remaining = (cartItems || []).filter(
       (it) => !selectedIds.includes(it.id)
     );
 
-    // 3️⃣ Persist locally
     persistLocalCart(remaining);
     setSelectedItems({});
 
-    // 4️⃣ If guest user, stop here
+ 
     if (!token) return;
 
-    // 5️⃣ Send delete request for selected IDs
     try {
       await sendHttpRequest({
         requestConfig: {
@@ -507,7 +503,7 @@ export default function CartPage() {
                   )}
                 </div>
 
-                <div className="flex px-6 w-full justify-between">
+                <div className="flex px-6 w-full justify-between mb-15 md:mb-0">
                   <motion.div
                     initial="hidden"
                     animate="visible"
@@ -524,8 +520,9 @@ export default function CartPage() {
                   >
                     {cartItems.map((item) => (
                       <motion.div
-                       key={`${item.id}-${item.variations_data?.[0]?.id ?? Math.random()}`}
-
+                        key={`${item.id}-${
+                          item.variations_data?.[0]?.id ?? Math.random()
+                        }`}
                         className="flex justify-between items-start md:border-b border-gray-200 pb-4"
                       >
                         <div className="flex items-center md:items-start  gap-4">
@@ -685,8 +682,8 @@ export default function CartPage() {
               </div>
             </div>
           </div>
-          {/* Mobile Footer */}
-          <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed bottom-0 md:hidden z-50 flex items-center gap-4">
+         
+          <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed bottom-0 md:hidden z-50 flex items-center gap-4 ">
             <div className="flex items-center gap-2 w-11">
               <button
                 onClick={handleSelectAll}

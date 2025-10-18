@@ -8,7 +8,7 @@ import { LoadingSpinner } from "../../loading-spinner";
 export default function ProductListPage() {
   const products = useSelector((state: RootState) => state.products.items);
 
-  if (!products) {<p>Loading products <LoadingSpinner/></p>} else if (products.length === 0) {
+  if (!products) {<p>Loading products <LoadingSpinner color="border-ff715b"/></p>} else if (products.length === 0) {
     (
       <div>No product found</div>
     )

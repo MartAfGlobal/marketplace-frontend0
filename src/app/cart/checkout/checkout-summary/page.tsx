@@ -211,7 +211,7 @@ export default function CheckoutSummary() {
       </div> */}
 
       {/* Orders List */}
-      <div className="relative md:h-full">
+      <div className="relative md:h-full mt-c28">
         <div className="w-full pb-4 md:pb-0">
           <div className="flex justify-between items-center mb-c24">
             <p className="text-c12 font-MontserratSemiBold ">

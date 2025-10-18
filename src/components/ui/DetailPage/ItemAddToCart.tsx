@@ -42,14 +42,13 @@ export default function ItemAddToCart({
 
   const [localQty, setLocalQty] = useState<number>(quantity);
 
-  // ✅ Set default variation on mount
   useEffect(() => {
     setLocalQty(quantity);
 
     if (!selectedVariation && product?.variations?.length) {
       setSelectedVariation(product.variations?.[0]);
     }
-    // Only watch product.variations reference safely
+
   }, [quantity, product?.variations, selectedVariation, setSelectedVariation]);
 
   const handleQtyChange = (newQty: number) => {
@@ -239,7 +238,7 @@ export default function ItemAddToCart({
           disabled= {loading}
           className="bg-transparent border text-ff715b border-ff715b hover:bg-gray-50"
         >
-         {loading? <LoadingSpinner/>: " Add to cart"}
+         {loading? <LoadingSpinner color="border-ff715b"/>: " Add to cart"}
         </Button>
         <Button>Buy now</Button>
       </div>
