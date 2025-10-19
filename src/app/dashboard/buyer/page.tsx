@@ -23,8 +23,7 @@ export default function BuyerDashBoardPage() {
 
   useEffect(() => {
     if (!token) {
-      const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
       if (isMobile) {
         // Go to landing page and tell it to open login modal
         router.replace("/?showLogin=true");

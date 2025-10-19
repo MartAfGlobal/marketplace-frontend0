@@ -4,6 +4,7 @@ import { Product, Variations } from "@/types/global";
 // Extend Product with cart-specific fields
 export interface CartItem extends Product {
   quantity: number;
+    product_id: string;
   checked?: boolean;
   subtotal?: number; // numeric subtotal from backend
   formatted_subtotal?: string; // formatted subtotal e.g. "₦10.00"
@@ -152,7 +153,6 @@ const cartSlice = createSlice({
   },
 });
 
-// -------------------- Export --------------------
 export const {
   addToCart,
   removeFromCart,

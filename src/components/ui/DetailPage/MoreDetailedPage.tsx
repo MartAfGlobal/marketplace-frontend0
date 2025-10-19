@@ -104,8 +104,11 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
 
       {/* ================= PRODUCT SPECIFICATIONS ================= */}
       <section id="specifications" className="mb-8">
-        <h3 className="font-MontserratSemiBold text-base mb-2">Specifications</h3>
-        {product.specifications_data && product.specifications_data.length > 0 ? (
+        <h3 className="font-MontserratSemiBold text-base mb-2">
+          Specifications
+        </h3>
+        {product.specifications_data &&
+        product.specifications_data.length > 0 ? (
           <ul className="list-disc pl-5">
             {product.specifications_data.map((spec: any) => (
               <li key={spec.id} className="text-sm text-gray-700">
@@ -285,7 +288,15 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              dispatch(addToCart(product));
+              dispatch(
+                addToCart({
+                  ...product,
+                  product_id: product.id, // ✅ Required by CartItem
+                  quantity: 1,
+                  variation_display: "default", // ✅ Safe fallback
+                  price_at_purchase: product.price,
+                })
+              );
             }}
           >
             Add to cart

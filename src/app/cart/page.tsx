@@ -14,6 +14,7 @@ import {
   setCartItems,
   clearCart,
   updateCheckedState,
+  CartItem,
 } from "@/store/cart/cartSlice";
 
 import padlock from "@/assets/icons/padlock.png";
@@ -146,104 +147,122 @@ export default function CartPage() {
       dispatch(setCartItems(merged));
     }
   }, [cartItems]);
-
   const fetchBackendCart = async () => {
-  if (!token) return;
+    if (!token) return;
 
-  try {
-    await sendHttpRequest({
-      requestConfig: {
-        url: "/cart/",
-        method: "GET",
-        token,
-        isAuth: true,
-        userType: "buyer",
-      },
-      successRes: async (res: any) => {
-        const backendItems = res?.data?.items || [];
+    try {
+      await sendHttpRequest({
+        requestConfig: {
+          url: "/cart/",
+          method: "GET",
+          token,
+          isAuth: true,
+          userType: "buyer",
+        },
+        successRes: async (res: any) => {
+          // 🟩 1️⃣ Map backend cart items
+          const backendItems = res?.data?.items || [];
 
-        const mappedBackend = backendItems.map((item: any) => {
-          const variation = item.variation || {};
-          return {
-            id: item.id,
-            product_id: item.product?.id,
-            name:
-              item.product_name ||
-              item.product?.description ||
-              "Unnamed Product",
-            price:
-              item.product?.discount_price || item.price_at_purchase || 0,
-            quantity: item.quantity || 1,
-            image: [item.product_image || "/placeholder.png"],
-            variations_data: variation ? [variation] : [],
-            variation_display: item.variation_display,
-            color: variation.color || null,
-            size: variation.size || null,
-            product_image: item.product_image || "/placeholder.png",
-            checked: typeof item.checked === "boolean" ? item.checked : true,
-          };
-        });
+          const mappedBackend: CartItem[] = backendItems.map((item: any) => {
+            const variation = item.variation || {};
+            return {
+              id: item.id,
+              product_id: item.product?.id,
+              name:
+                item.product_name ||
+                item.product?.description ||
+                "Unnamed Product",
+              price:
+                item.product?.discount_price ?? item.price_at_purchase ?? 0,
+              quantity: item.quantity ?? 1,
+              image: [item.product_image || "/placeholder.png"],
+              variations_data: variation ? [variation] : [],
+              variation_display: (
+                item.variation_display || "default"
+              ).toLowerCase(),
+              color: variation.color || null,
+              size: variation.size || null,
+              product_image: item.product_image || "/placeholder.png",
+              checked: typeof item.checked === "boolean" ? item.checked : true,
+            };
+          });
 
-        // ✅ Load local (guest) cart
-        const localItems: any[] = JSON.parse(localStorage.getItem("cart") || "[]");
-
-        // ✅ Merge logic (based on product_id + variation)
-        const merged: any[] = [...mappedBackend];
-
-        localItems.forEach((local) => {
-          const existing = merged.find(
-            (b) =>
-              (b.product_id && b.product_id === local.product_id) &&
-              (b.variation_display === local.variation_display)
+          // 🟩 2️⃣ Get local cart
+          const localItems: CartItem[] = JSON.parse(
+            localStorage.getItem("cart") || "[]"
           );
 
-          if (existing) {
-            // Merge quantity and keep backend checked state
-            existing.quantity = (existing.quantity || 0) + (local.quantity || 0);
-          } else {
-            // Add local-only items
-            merged.push(local);
+          console.log("🟨 Local cart items:", localItems);
+
+          // Normalize variation_display in local
+          localItems.forEach((item) => {
+            item.variation_display = (
+              item.variation_display || "default"
+            ).toLowerCase();
+          });
+
+          // 🟩 3️⃣ Create consistent merge key
+          const mapKey = (item: CartItem) => `${item.product_id} || "default"}`;
+
+          // Step 1: Build merged map from backend
+          const mergedMap: Record<string, CartItem> = {};
+          for (const item of mappedBackend) {
+            const key = mapKey(item);
+            mergedMap[key] = { ...item };
           }
-        });
 
-        // ✅ Save merged cart to Redux and localStorage
-        dispatch(setCartItems(merged));
-        persistLocalCart(merged);
+          // Step 2: Merge local cart
+          for (const local of localItems) {
+            const key = mapKey(local);
+            if (mergedMap[key]) {
+              mergedMap[key].checked =
+                typeof local.checked === "boolean"
+                  ? local.checked
+                  : mergedMap[key].checked ?? true;
+            } else {
+              mergedMap[key] = { ...local };
+            }
+          }
 
-        // ✅ Update selection state
-        const newSelected: Record<string, boolean> = {};
-        merged.forEach((mi: any) => {
-          newSelected[mi.id || mi.product_id] =
-            typeof mi.checked === "boolean" ? mi.checked : true;
-        });
-        setSelectedItems(newSelected);
+          // Step 3: Convert map → array
+          const merged = Object.values(mergedMap);
+          console.log("✅ Final merged cart:", merged);
 
-        toast.success("Cart synced and merged successfully");
+          // 🟩 4️⃣ Save to Redux + localStorage
+          dispatch(setCartItems(merged));
+          persistLocalCart(merged);
 
-        // ✅ Optional: push merged cart to backend
-        await sendHttpRequest({
-          requestConfig: {
-            url: "/cart/sync/",
-            method: "POST",
-            token,
-            isAuth: true,
-            userType: "buyer",
-            body: { items: merged.map(({ id, ...r }) => r) },
-           
-          },
-           successRes: () => {
-             toast.success("updated successful")
-            }, 
-          
-        });
-      },
-    });
-  } catch (err) {
-    console.error("fetchBackendCart failed", err);
-    toast.error("Failed to sync cart with server");
-  }
-};
+          // 🟩 5️⃣ Update selected state
+          const newSelected: Record<string, boolean> = {};
+          merged.forEach((mi) => {
+            newSelected[mi.id || mi.product_id] =
+              typeof mi.checked === "boolean" ? mi.checked : true;
+          });
+          setSelectedItems(newSelected);
 
+          toast.success("Cart synced and merged successfully");
+
+          // 🟩 6️⃣ Push merged cart to backend
+          await sendHttpRequest({
+            requestConfig: {
+              url: "/cart/sync/",
+              method: "POST",
+              token,
+              isAuth: true,
+              userType: "buyer",
+              body: { items: merged.map(({ id, ...r }) => r) },
+            },
+            successRes: () => {
+              toast.success("Updated successfully");
+            },
+          });
+        },
+      });
+    } catch (err) {
+      console.error("fetchBackendCart failed", err);
+      toast.error("Failed to sync cart with server");
+    }
+  };
 
   const handleToggleItem = async (item: any) => {
     const newChecked = !selectedItems[item.id];
@@ -289,7 +308,6 @@ export default function CartPage() {
     applyBulkCheckedToLocal(newChecked);
 
     if (!token) {
-      
       try {
         cartItems.forEach((it: any) =>
           dispatch(updateCheckedState({ id: it.id, checked: newChecked }))
@@ -301,7 +319,6 @@ export default function CartPage() {
     }
 
     try {
-
       await Promise.all(
         cartItems.map((item: any) =>
           sendHttpRequest({
@@ -331,16 +348,13 @@ export default function CartPage() {
     }
   };
 
-
   const handleDeleteItem = async (id: string) => {
- 
     dispatch(removeFromCart(id));
     setSelectedItems((p) => {
       const copy = { ...p };
       delete copy[id];
       return copy;
     });
-
 
     const updatedLocal = (cartItems || []).filter((it: any) => it.id !== id);
     persistLocalCart(updatedLocal);
@@ -364,9 +378,7 @@ export default function CartPage() {
     }
   };
 
-
   const handleDeleteSelected = async () => {
-
     const selectedIds = Object.entries(selectedItems)
       .filter(([_, checked]) => checked)
       .map(([id]) => id);
@@ -375,7 +387,6 @@ export default function CartPage() {
       toast.info("No items selected to delete.");
       return;
     }
-
 
     selectedIds.forEach((id) => dispatch(removeFromCart(id)));
 
@@ -386,7 +397,6 @@ export default function CartPage() {
     persistLocalCart(remaining);
     setSelectedItems({});
 
- 
     if (!token) return;
 
     try {
@@ -516,16 +526,14 @@ export default function CartPage() {
                         transition: { staggerChildren: 0.1 },
                       },
                     }}
-                    className="space-y-c24 w-full"
+                    className="space-y-c24 w-full "
                   >
                     {cartItems.map((item) => (
                       <motion.div
-                        key={`${item.id}-${
-                          item.variations_data?.[0]?.id ?? Math.random()
-                        }`}
-                        className="flex justify-between items-start md:border-b border-gray-200 pb-4"
+                        key={item.id}
+                        className="flex justify-between items-center md:border-b  border-gray-200 pb-4"
                       >
-                        <div className="flex items-center md:items-start  gap-4">
+                        <div className="flex items-center md:items-start  gap-4 ">
                           <input
                             type="checkbox"
                             checked={!!selectedItems[item.id]}
@@ -556,29 +564,66 @@ export default function CartPage() {
                           </div>
                         </div>
 
-                        <div className="flex flex-col justify-between h-26 md:h-31.5 items-end  ">
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="ml-2"
+                        <motion.div
+                          layout
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 250,
+                            damping: 25,
+                          }}
+                          className="flex flex-col items-end justify-center h-full space-y-9"
+                        >
+                          <AnimatePresence mode="popLayout">
+                            {selectedItems[item.id] && (
+                              <motion.button
+                                key="delete"
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="ml-2 transition-opacity hover:opacity-70"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 200,
+                                  damping: 22,
+                                }}
+                              >
+                                <Image
+                                  src={Trash}
+                                  alt="delete"
+                                  width={15}
+                                  height={16}
+                                />
+                              </motion.button>
+                            )}
+                          </AnimatePresence>
+
+                          <motion.div
+                            layout
+                            transition={{
+                              layout: {
+                                type: "spring",
+                                stiffness: 250,
+                                damping: 25,
+                              },
+                            }}
+                            className="w-full flex justify-end"
                           >
-                            <Image
-                              src={Trash}
-                              alt="delete"
-                              width={15}
-                              height={16}
+                            <QuantitySelector
+                              productId={item.id}
+                              token={token ?? undefined}
+                              quantity={item.quantity}
+                              onChange={(q) =>
+                                dispatch(
+                                  updateQuantity({ id: item.id, quantity: q })
+                                )
+                              }
                             />
-                          </button>
-                          <QuantitySelector
-                            productId={item.id} // cart item id
-                            token={token ?? undefined}
-                            quantity={item.quantity}
-                            onChange={(q) =>
-                              dispatch(
-                                updateQuantity({ id: item.id, quantity: q })
-                              )
-                            }
-                          />
-                        </div>
+                          </motion.div>
+                        </motion.div>
                       </motion.div>
                     ))}
                   </motion.div>
@@ -682,7 +727,7 @@ export default function CartPage() {
               </div>
             </div>
           </div>
-         
+
           <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed bottom-0 md:hidden z-50 flex items-center gap-4 ">
             <div className="flex items-center gap-2 w-11">
               <button

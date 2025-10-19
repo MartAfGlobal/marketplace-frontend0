@@ -55,7 +55,7 @@ export default function MobilePaymentSuccessfulPage() {
             </p>
           </div>
 
-          <div className=" w-full h-fit max-h-90 overflow-y-auto">
+          <div className=" w-full h-fit max-h-90 overflow-y-auto  pr-2">
             <div className="md:flex gap-18 justify-center">
               {/* Cart Items */}
               <div className="">
@@ -83,12 +83,12 @@ export default function MobilePaymentSuccessfulPage() {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.8 }}
                       >
-                        <div className="w-full justify-between  items-end  pb-8 flex">
+                        <div className="w-full justify-between  items-end  pb-8 flex ">
                           <div className="flex gap-4 w-full  items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
                               <Image
                                 src={item.image[0]}
-                                alt={item.slug}
+                                alt={item.name}
                                 width={100}
                                 height={100}
                                 className="w-16 h-16 md:w-25 md:h-25"

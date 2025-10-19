@@ -34,9 +34,19 @@ export default function ProductCard({ product }: ProductCardProps) {
   // ✅ Add to Cart Handler
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
-  
+
     if (!token) {
-      dispatch(addToCart(product));
+      dispatch(
+        addToCart({
+          ...product,
+          product_id: product.id, // ✅ Fix here
+          quantity: 1,
+          variation_display: selectedVariation
+            ? `${selectedVariation.size} / ${selectedVariation.color}`
+            : undefined,
+          price_at_purchase: product.price,
+        })
+      );
       toast.success("Item added to cart (offline mode)");
       return;
     }
@@ -53,26 +63,57 @@ export default function ProductCard({ product }: ProductCardProps) {
           product_id: product.id,
           variation_id: selectedVariation?.id,
           quantity: 1,
-          check: true
+          check: true,
         },
         successMessage: "Item added to cart successfully",
       },
 
       // ✅ Called when backend responds successfully
       successRes: (res: any) => {
-        dispatch(addToCart(product));
+        dispatch(
+          addToCart({
+            ...product,
+            product_id: product.id, // ✅ Fix here
+            quantity: 1,
+            variation_display: selectedVariation
+              ? `${selectedVariation.size} / ${selectedVariation.color}`
+              : undefined,
+            price_at_purchase: product.price,
+          })
+        );
+
         console.log("Cart API success:", res.data);
       },
     }).catch((err: any) => {
       // ✅ Called only if the hook itself throws (rare)
       console.error("Cart API failed:", err);
-      dispatch(addToCart(product));
+      dispatch(
+        addToCart({
+          ...product,
+          product_id: product.id, // ✅ Fix here
+          quantity: 1,
+          variation_display: selectedVariation
+            ? `${selectedVariation.size} / ${selectedVariation.color}`
+            : undefined,
+          price_at_purchase: product.price,
+        })
+      );
+
       toast.error("Network error — added to local cart");
     });
   };
 
   const handleClick = () => {
-    dispatch(setSelectedProduct(product));
+    dispatch(
+      addToCart({
+        ...product,
+        product_id: product.id, // ✅ Fix here
+        variation_display: selectedVariation
+          ? `${selectedVariation.size} / ${selectedVariation.color}`
+          : undefined,
+        price_at_purchase: product.price,
+      })
+    );
     router.push(`/product/${product.slug}`);
   };
 

@@ -83,10 +83,10 @@ export default function MobileCheckoutItems() {
                   }}
                   className="space-y-c24 w-full"
                 >
-                  {checkoutItems.slice(0, visibleItems).map((item) => (
+                  {checkoutItems.slice(0, visibleItems).map((item, index) => (
                     <motion.div
-                      key={`${item.id}-${
-                        item.variations_data?.[0]?.id || "cart"
+                       key={`${item.id || item.product_id || "item"}-${
+                        item.variation_display || index 
                       }`}
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}

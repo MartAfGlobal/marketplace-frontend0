@@ -23,26 +23,26 @@ export default function CheckoutItems() {
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses
   );
-  const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
+
   const [visibleItems, setVisibleItems] = useState(14);
- const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-const selectedAddressId = useSelector(
-  (state: RootState) => state.buyer.selectedAddressId
-);
+  const selectedAddressId = useSelector(
+    (state: RootState) => state.buyer.selectedAddressId
+  );
 
-useEffect(() => {
-  if (buyerAddresses.length > 0 && !selectedAddressId) {
-    const defaultAddr = buyerAddresses.find((a) => a.is_default);
-    dispatch(
-      buyerActions.setSelectedAddress(defaultAddr?.id ?? buyerAddresses[0].id)
-    );
-  }
-}, [buyerAddresses, selectedAddressId, dispatch]);
+  useEffect(() => {
+    if (buyerAddresses.length > 0 && !selectedAddressId) {
+      const defaultAddr = buyerAddresses.find((a) => a.is_default);
+      dispatch(
+        buyerActions.setSelectedAddress(defaultAddr?.id ?? buyerAddresses[0].id)
+      );
+    }
+  }, [buyerAddresses, selectedAddressId, dispatch]);
 
-const handleSelectAddress = (addressId: number) => {
-  dispatch(buyerActions.setSelectedAddress(addressId));
-};
+  const handleSelectAddress = (addressId: number) => {
+    dispatch(buyerActions.setSelectedAddress(addressId));
+  };
 
   const token = useSelector((state: RootState) => state.token?.token);
 
@@ -64,8 +64,6 @@ const handleSelectAddress = (addressId: number) => {
   const { sendHttpRequest, loading } = useHttp();
 
   const handleCheckout = () => {
- 
-
     sendHttpRequest({
       requestConfig: {
         url: "/checkout/",
@@ -89,7 +87,7 @@ const handleSelectAddress = (addressId: number) => {
     });
   };
 
-  // const handleCheckout = async () => {
+
   //   if (!selectedAddress) {
   //     alert("Please select a shipping address");
   //     return;
@@ -172,7 +170,10 @@ const handleSelectAddress = (addressId: number) => {
                   className=" w-full h-fit flex md:flex-row flex-col gap-c24"
                 >
                   {checkoutItems.slice(0, visibleItems).map((item) => (
-                    <div key={item.id} className="w-fit h-fit">
+                    <div
+                      key={item.id || item.product_id }
+                      className="w-fit h-fit"
+                    >
                       <Image
                         src={item.product_image || "/placeholder.png"}
                         alt={item.name || "Product image"}
@@ -198,7 +199,7 @@ const handleSelectAddress = (addressId: number) => {
             <div className="w-full ">
               <div className="pb-c32 border-b border-b-000000/5">
                 <UserAddress
-                  selectedAddressId={selectedAddress ?? undefined}
+                  selectedAddressId={selectedAddressId ?? undefined}
                   onSelectAddress={handleSelectAddress}
                   className="md:w-64.25 h-31 "
                 />
@@ -255,7 +256,7 @@ const handleSelectAddress = (addressId: number) => {
             </div>
             <Button
               onClick={handleCheckout}
-              disabled={loading || !selectedAddress}
+              disabled={loading || !selectedAddressId}
             >
               {loading ? <LoadingSpinner /> : " Checkout"}({TotalItems})
             </Button>

@@ -93,7 +93,7 @@ export const useHttp = () => {
           dispatch(tokenActions.deleteToken());
 
           const userType = requestConfig.userType ?? "seller"; // default buyer
-          const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
           if (userType === "seller") {
             router.replace("/auth/seller/login");

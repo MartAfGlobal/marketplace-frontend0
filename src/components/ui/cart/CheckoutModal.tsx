@@ -11,8 +11,8 @@ interface CheckoutModalProps {
 
 export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const router = useRouter();
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-
+ 
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
  const handleLogin = ()=>{
    if (isMobile) {

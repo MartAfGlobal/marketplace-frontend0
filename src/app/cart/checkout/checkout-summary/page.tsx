@@ -48,49 +48,53 @@ export default function CheckoutSummary() {
 
   const { sendHttpRequest, loading } = useHttp();
 
-  // --- FIXED FETCHING ---
-  useEffect(() => {
-    if (checkoutItems.length === 0 && token) {
-      sendHttpRequest({
-        requestConfig: {
-          url: "/cart/summary/",
-          method: "GET",
-          token,
-          isAuth: true,
-        },
-        successRes: (res: any) => {
-          const backendCart = res?.data;
-          if (!backendCart) return;
+ const [hasFetched, setHasFetched] = useState(false);
 
-          const mappedItems = backendCart.items.map((item: any) => ({
-            id: item.product_id,
-            name: item.product_name,
-            product_image: item.product_image,
-            quantity: item.quantity,
-            subtotal: Number(item.total_price),
-            unit_price: Number(item.unit_price),
-            variation_name: item.variation_name,
-          }));
+useEffect(() => {
+  if (!hasFetched && checkoutItems.length === 0 && token) {
+    sendHttpRequest({
+      requestConfig: {
+        url: "/cart/summary/",
+        method: "GET",
+        token,
+        isAuth: true,
+      },
+      successRes: (res: any) => {
+        const backendCart = res?.data;
+        if (!backendCart) return;
 
-          dispatch(setCheckoutItems(mappedItems));
-          dispatch(
-            setCheckoutSummary({
-              all_addresses: backendCart.all_addresses || [],
-              applied_coupon: backendCart.applied_coupon || null,
-              discount_amount:
-                backendCart.discount_amount?.toString() || "0.00",
-              shipping_address: backendCart.shipping_address || null,
-              shipping_cost: backendCart.shipping_cost?.toString() || "0.00",
-              shipping_methods: backendCart.shipping_methods || [],
-              subtotal: backendCart.subtotal?.toString() || "0.00",
-              total: backendCart.total?.toString() || "0.00",
-            })
-          );
-        },
-      });
-    }
-  }, [checkoutItems, token, dispatch, sendHttpRequest]);
-  // --- END FETCHING FIX ---
+        console.log ("lets check bank cart:", backendCart)
+
+        const mappedItems = backendCart.items.map((item: any) => ({
+          id: item.product_id,
+          name: item.product_name,
+          product_image: item.product_image,
+          quantity: item.quantity,
+          subtotal: Number(item.total_price),
+          unit_price: Number(item.unit_price),
+          variation_name: item.variation_name,
+        }));
+
+        dispatch(setCheckoutItems(mappedItems));
+        dispatch(
+          setCheckoutSummary({
+            all_addresses: backendCart.all_addresses || [],
+            applied_coupon: backendCart.applied_coupon || null,
+            discount_amount: backendCart.discount_amount?.toString() || "0.00",
+            shipping_address: backendCart.shipping_address || null,
+            shipping_cost: backendCart.shipping_cost?.toString() || "0.00",
+            shipping_methods: backendCart.shipping_methods || [],
+            subtotal: backendCart.subtotal?.toString() || "0.00",
+            total: backendCart.total?.toString() || "0.00",
+          })
+        );
+
+        setHasFetched(true); // ✅ prevent re-fetch
+      },
+    });
+  }
+}, [checkoutItems.length, token]);
+
 
   if (!selectedAddress) {
     return <p className="text-c12">No address selected</p>;
@@ -236,9 +240,9 @@ export default function CheckoutSummary() {
                 }}
                 className="space-y-c24 w-full"
               >
-                {checkoutItems.map((item) => (
+                {checkoutItems.map((item, index) => (
                   <motion.div
-                    key={item.id}
+                    key={item.id || item.product_id || index}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}

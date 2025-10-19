@@ -11,7 +11,8 @@ export const logout = (
   router: any,
   isSeller?: boolean
 ) => {
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
   try {
     // Remove token from localStorage
     localStorage.removeItem("token");

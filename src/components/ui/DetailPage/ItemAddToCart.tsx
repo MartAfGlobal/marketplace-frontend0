@@ -37,7 +37,7 @@ export default function ItemAddToCart({
 }: ItemAddToCartProps) {
   const dispatch = useDispatch();
   const router = useRouter();
-  const {loading, sendHttpRequest } = useHttp();
+  const { loading, sendHttpRequest } = useHttp();
   const token = useSelector((state: RootState) => state.token?.token);
 
   const [localQty, setLocalQty] = useState<number>(quantity);
@@ -48,7 +48,6 @@ export default function ItemAddToCart({
     if (!selectedVariation && product?.variations?.length) {
       setSelectedVariation(product.variations?.[0]);
     }
-
   }, [quantity, product?.variations, selectedVariation, setSelectedVariation]);
 
   const handleQtyChange = (newQty: number) => {
@@ -58,34 +57,29 @@ export default function ItemAddToCart({
   };
 
   const handleAddToCart = async () => {
- 
-
     console.log("Adding to cart:", {
       productId: product.id,
       variationId: selectedVariation?.id,
       quantity: localQty,
     });
 
-     if (!token) {
-        dispatch(
-          addToCart({
-            ...product,
-            quantity: localQty,
-            variation_display: selectedVariation
-              ? `${selectedVariation.size} / ${selectedVariation.color}`
-              : undefined,
-            price_at_purchase: product.price,
-          })
-        );
-      toast.success("Item added to cart (offline mode)");
-      return;
-    }
+    dispatch(
+      addToCart({
+        ...product,
+        product_id: product.id, // ✅ explicitly include it
+        quantity: localQty,
+        variation_display: selectedVariation
+          ? `${selectedVariation.size} / ${selectedVariation.color}`
+          : undefined,
+        price_at_purchase: product.price,
+      })
+    );
 
     sendHttpRequest({
       requestConfig: {
         url: "/cart/add",
         method: "POST",
-        token,
+        token: token?? undefined,
         isAuth: true,
         userType: "buyer",
         body: {
@@ -100,6 +94,7 @@ export default function ItemAddToCart({
           addToCart({
             ...product,
             quantity: localQty,
+            product_id: product.id,
             variation_display: selectedVariation
               ? `${selectedVariation.size} / ${selectedVariation.color}`
               : undefined,
@@ -114,6 +109,7 @@ export default function ItemAddToCart({
         addToCart({
           ...product,
           quantity: localQty,
+          product_id: product.id,
           variation_display: selectedVariation
             ? `${selectedVariation.size} / ${selectedVariation.color}`
             : undefined,
@@ -235,10 +231,10 @@ export default function ItemAddToCart({
       <div className="md:space-y-c32 flex w-full gap-2  md:gap-0  md:flex-col">
         <Button
           onClick={handleAddToCart}
-          disabled= {loading}
+          disabled={loading}
           className="bg-transparent border text-ff715b border-ff715b hover:bg-gray-50"
         >
-         {loading? <LoadingSpinner color="border-ff715b"/>: " Add to cart"}
+          {loading ? <LoadingSpinner color="border-ff715b" /> : " Add to cart"}
         </Button>
         <Button>Buy now</Button>
       </div>
