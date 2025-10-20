@@ -55,7 +55,19 @@ useEffect(() => {
 
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const [mounted, setMounted] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      const count = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+      setCartCount(count);
+    }
+  }, [mounted, cartItems]);
 
   console.log("lets check coundydy", cartCount)
 
@@ -87,7 +99,7 @@ useEffect(() => {
             </button>
           </div>
 
-          {cartCount > 0 && <CartButton />}
+          <CartButton/>
 
           <button
             onClick={() => setUserOpen((prev) => !prev)}
@@ -154,24 +166,11 @@ useEffect(() => {
         </div>
 
         <div className="flex gap-3 items-center">
-          {cartCount > 0 && (
+          
             <div className="w-fit h-fit relative">
-              <Link href="/cart">
-                <button className="h-[25.32px] w-[25.32px] ">
-                  <Image
-                    src={Cart}
-                    alt="Cart"
-                    width={20.25}
-                    height={20.25}
-                    className="object-cover"
-                  />
-                </button>
-                <span className="bg-[#CA0202] text-ffffff absolute -top-2 -right-2 flex items-center justify-center w-4 h-4 rounded-full font-MontserratSemiBold text-[8px]">
-                  {cartCount}
-                </span>
-              </Link>
+             <CartButton/>
             </div>
-          )}
+        
 
           <div className="flex items-center gap-2">
             <Image src={User} alt="User" width={19.52} height={18.77} />

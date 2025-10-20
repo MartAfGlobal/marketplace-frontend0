@@ -20,12 +20,18 @@ import PaymentSuccessful from "@/components/ui/checkouts/Payment-successful";
 
 import { useHttp } from "@/hooks/use-http";
 import MobilePaymentSuccessfulPage from "@/components/ui/mobile/mobilePayment-success";
+import { removeCheckedOutItems } from "@/store/cart/cartSlice";
 
 export default function CartPage() {
   const [visible, setVisible] = useState(10);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
+
+  useEffect(() => {
+    dispatch(removeCheckedOutItems());
+  }, [dispatch]);
 
   const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"

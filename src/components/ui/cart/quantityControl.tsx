@@ -1,8 +1,9 @@
 "use client";
 import { QuantitySelectorProps } from "@/types/global";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { updateQuantity } from "@/store/cart/cartSlice";
+import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 
 type QuantitySelectorPropsWithBackend = Omit<QuantitySelectorProps, "productId"> & {
@@ -31,39 +32,40 @@ export default function QuantitySelector({
   const [safeQty, setSafeQty] = useState(Number(quantity) || 1);
   const dispatch = useDispatch();
   const { sendHttpRequest } = useHttp();
+  const cartItems = useSelector((state: RootState) => state.cart.items);
 
-  // ✅ Update backend quantity (only if logged in)
+  const itemExistsInCart = productId && cartItems.some((i) => i.product_id === productId);
+
   const updateBackendQuantity = async (newQty: number) => {
     if (!token || !productId) return;
 
-    await sendHttpRequest({
-      requestConfig: {
-        url: `/cart/item/${productId}/update_quantity/`,
-        method: "PATCH",
-        body: { quantity: newQty },
-        token,
-        isAuth: true,
-        userType: "buyer",
-        successMessage: "Quantity updated successfully!",
-      },
-      successRes: (res) => {
-        console.log("✅ Quantity updated successfully:", res);
-      },
-    });
+   await sendHttpRequest({
+  requestConfig: {
+    url: `/cart/item/${productId}/update_quantity/`,
+    method: "PATCH",
+    body: { quantity: newQty },
+    token,
+    isAuth: true,
+    userType: "buyer",
+    successMessage: "Quantity updated successfully!",
+  },
+  successRes: () => {}, // ✅ Added empty callback
+});
+
   };
 
   const handleQuantityChange = async (newQty: number) => {
-    if (newQty < 1) return; // safety
+    if (newQty < 1) return;
     setSafeQty(newQty);
     onChange?.(newQty, productId);
 
-    // ✅ Always update Redux for instant UI
-    if (productId) {
+    // ✅ Only update Redux if item already exists in cart
+    if (itemExistsInCart) {
       dispatch(updateQuantity({ id: productId, quantity: newQty }));
     }
 
-    // ✅ Sync backend only if logged in
-    if (token) {
+    // ✅ Sync backend only if logged in and in cart
+    if (token && itemExistsInCart) {
       await updateBackendQuantity(newQty);
     }
   };
@@ -72,7 +74,7 @@ export default function QuantitySelector({
     <div className="flex md:items-center gap-2 md:gap-3">
       <button
         onClick={() => handleQuantityChange(safeQty - 1)}
-        className={`md:w-6 md:h-6  ${buttonWidth} ${buttonHeight} rounded-full flex items-center justify-center border ${decreaseBorder} ${decreaseText} ${hoverDecreaseBg} ${hoverDecreaseText} hover:border-0 transition
+        className={`md:w-6 md:h-6 ${buttonWidth} ${buttonHeight} rounded-full flex items-center justify-center border ${decreaseBorder} ${decreaseText} ${hoverDecreaseBg} ${hoverDecreaseText} hover:border-0 transition
           md:border-ff715b md:text-ff715b md:hover:bg-transparent md:hover:text-ff715b`}
       >
         -

@@ -4,7 +4,7 @@ import { Product, Variations } from "@/types/global";
 // Extend Product with cart-specific fields
 export interface CartItem extends Product {
   quantity: number;
-    product_id: string;
+  product_id: string;
   checked?: boolean;
   subtotal?: number; // numeric subtotal from backend
   formatted_subtotal?: string; // formatted subtotal e.g. "₦10.00"
@@ -21,7 +21,7 @@ const loadCartFromLocalStorage = (): CartItem[] => {
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as CartItem[];
-        return parsed.map(item => ({
+        return parsed.map((item) => ({
           ...item,
           quantity: Number(item.quantity || 0),
         }));
@@ -32,7 +32,6 @@ const loadCartFromLocalStorage = (): CartItem[] => {
   }
   return [];
 };
-
 
 const saveCartToLocalStorage = (items: CartItem[]) => {
   if (typeof window !== "undefined") {
@@ -67,22 +66,21 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
- addToCart: (state, action: PayloadAction<CartItem>) => {
-  const existing = state.items.find(
-    (item) =>
-      item.id === action.payload.id &&
-      item.variation_display === action.payload.variation_display // optional: treat variation as unique
-  );
+    addToCart: (state, action: PayloadAction<CartItem>) => {
+      const existing = state.items.find(
+        (item) =>
+          item.id === action.payload.id &&
+          item.variation_display === action.payload.variation_display // optional: treat variation as unique
+      );
 
-  if (existing) {
-    existing.quantity += action.payload.quantity; // add quantity
-  } else {
-    state.items.push({ ...action.payload, checked: true });
-  }
+      if (existing) {
+        existing.quantity += action.payload.quantity; // add quantity
+      } else {
+        state.items.push({ ...action.payload, checked: true });
+      }
 
-  saveCartToLocalStorage(state.items);
-},
-
+      saveCartToLocalStorage(state.items);
+    },
 
     removeFromCart: (state, action: PayloadAction<string | number>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
@@ -150,6 +148,18 @@ const cartSlice = createSlice({
     ) => {
       state.checkoutSummary = action.payload;
     },
+
+    removeCheckedOutItems: (state) => {
+      // Remove from cart only the items that are currently checked (checked === true)
+      state.items = state.items.filter((item) => !item.checked);
+
+      // Clear checkoutItems and checkoutSummary
+      state.checkoutItems = [];
+      state.checkoutSummary = null;
+
+      // Save updated cart to localStorage
+      saveCartToLocalStorage(state.items);
+    },
   },
 });
 
@@ -162,6 +172,7 @@ export const {
   setCheckoutItems,
   updateCheckedState,
   setCheckoutSummary,
+    removeCheckedOutItems,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

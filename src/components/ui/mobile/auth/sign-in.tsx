@@ -44,7 +44,7 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
 
     dispatch(tokenActions.setToken(accessToken));
 
-    router.push("/dashboard/buyer");
+    router.back();
     onClose();
   };
 

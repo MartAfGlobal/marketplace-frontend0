@@ -16,7 +16,7 @@ import phone from "@/assets/mobile/Phone.png";
 import Heart from "@/assets/icons/heart.svg";
 import Share from "@/assets/icons/share.svg";
 import SizeColorSelector from "@/components/ui/Button/SizeColorSelector";
-import ItemAddToCart from "@/components/ui/DetailPage/ItemAddToCart";
+import ItemAddToCart from "@/components/ui/ItemAddToCart";
 import ProductNav from "@/components/ui/navigation/ProductNavView";
 import MoreDetailedPage from "@/components/ui/DetailPage/MoreDetailedPage";
 import ProductCard from "@/components/ui/cards/ProductCard";

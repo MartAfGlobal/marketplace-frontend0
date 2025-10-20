@@ -65,7 +65,7 @@ export default function LoginForm() {
     }
 
     dispatch(tokenActions.setToken(accessToken));
-    router.push("/dashboard/buyer");
+    router.back();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
