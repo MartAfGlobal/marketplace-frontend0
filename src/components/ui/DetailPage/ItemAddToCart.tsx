@@ -40,7 +40,7 @@ export default function ItemAddToCart({
   const { loading, sendHttpRequest } = useHttp();
   const token = useSelector((state: RootState) => state.token?.token);
 
-  const [localQty, setLocalQty] = useState<number>(quantity);
+  const [localQty, setLocalQty] = useState<number>(quantity || 1);
 
   useEffect(() => {
     setLocalQty(quantity);
@@ -63,18 +63,21 @@ export default function ItemAddToCart({
       quantity: localQty,
     });
 
+    if(!token){
     dispatch(
       addToCart({
         ...product,
         product_id: product.id, // ✅ explicitly include it
-        quantity: localQty,
+        quantity: localQty || 1,
         variation_display: selectedVariation
           ? `${selectedVariation.size} / ${selectedVariation.color}`
           : undefined,
         price_at_purchase: product.price,
       })
     );
-
+      toast.success("Item added to cart (offline mode)");
+      return;
+  }
     sendHttpRequest({
       requestConfig: {
         url: "/cart/add",

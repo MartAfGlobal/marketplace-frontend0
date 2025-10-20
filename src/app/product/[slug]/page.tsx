@@ -326,7 +326,7 @@ export default function ProductPage() {
           <Button variant="primary">Send message</Button>
         </div>
 
-        <div className=" w-full md:flex hidden max-w-105.5">
+        <div className=" w-full md:flex hidden max-w-105.5 ">
           <ItemAddToCart
             product={product}
             quantity={selectedQty}
