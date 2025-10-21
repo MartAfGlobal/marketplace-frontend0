@@ -30,7 +30,7 @@ export default function BuyerDashboard() {
     {
       name: "Wishlist",
       icon: Heart,
-      routerLink: "/dashboard/buyer/mobile/wishlist",
+      routerLink: "/dashboard/buyer/wishlist",
     },
     {
       name: "Orders",

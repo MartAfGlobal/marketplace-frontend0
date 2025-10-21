@@ -13,6 +13,7 @@ export default function Wishlist() {
 
     const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
+   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
 
   const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
@@ -34,7 +35,7 @@ export default function Wishlist() {
         )}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 ">
-        {fashionProducts.slice(0, visible).map((item) => (
+        {wishlistItems.slice(0, visible).map((item) => (
           <ProductCard key={item.id} product={item} />
         ))}
       </div>

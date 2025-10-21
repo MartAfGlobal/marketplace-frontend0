@@ -24,6 +24,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading, sendHttpRequest } = useHttp();
+  const { loading: loadingWishlist, sendHttpRequest:addWishlistReq } = useHttp();
   const token = useSelector((state: RootState) => state.token?.token);
 
   const [selectedVariation, setSelectedVariation] = useState<Variations | null>(
@@ -103,6 +104,47 @@ export default function ProductCard({ product }: ProductCardProps) {
     });
   };
 
+  const handleAddToWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!token) {
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      toast.info("Please log in to add items to your wishlist");  
+      if (isMobile) {
+       
+        router.replace("/?showLogin=true");
+      } else {
+        // Desktop → go to dedicated login page
+        router.replace("/auth/login");
+      }
+      return;
+    }
+    addWishlistReq({
+      requestConfig: {
+        url:`/wishlist/add/${product.id}/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        successMessage: "Added to wishlist",
+      },
+      successRes: () => {
+       dispatch(
+  addToWishlist({
+    ...product,
+    product_id: product.id, // ✅ required
+    quantity: 1,
+    variation_display: selectedVariation
+      ? `${selectedVariation.size} / ${selectedVariation.color}`
+      : undefined,
+    price_at_purchase: product.price,
+  })
+);
+
+        toast.success("Added to wishlist");
+      }
+    })
+  };
+
   const handleClick = () => {
     dispatch(
       addToCart({
@@ -145,14 +187,14 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Love Button */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              dispatch(addToWishlist(product));
-              toast.success("Added to wishlist");
-            }}
-            className="absolute top-4 right-4 w-[32px] h-[32px] bg-white rounded-full shadow flex items-center justify-center"
+            onClick={handleAddToWishlist} 
+            disabled={loadingWishlist}
+            className="absolute top-4 right-4 w-[32px] h-[32px]  bg-white rounded-full shadow flex items-center justify-center"
           >
-            <Image src={LoveIcon} alt="LoveIcon" width={19} height={16} />
+            {
+              loadingWishlist? <LoadingSpinner color="ff715b"/>: <Image src={LoveIcon} alt="LoveIcon" width={19} height={16} />
+            }
+           
           </button>
         </div>
 
@@ -198,7 +240,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             disabled={loading}
             className="w-c44 hidden flex-shrink-0 md:flex h-[41.97px] items-center justify-center gap-2 py-1 bg-[#FF715B] rounded-[8px]"
           >
-            {loading ? (
+            {loading? (
               <LoadingSpinner />
             ) : (
               <Image src={Cart} alt="cart" width={20} height={17.6} />

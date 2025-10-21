@@ -3,21 +3,94 @@
 import Image from "next/image";
 import GoodMark from "@/assets/mobile/good.png";
 import { RootState } from "@/store";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CartButton from "@/assets/mobile/coloureCart.png";
 import Filter from "@/assets/icons/filter.png";
+import { addToCart } from "@/store/cart/cartSlice";
+import { toast } from "sonner";
+import {  Product, Variations } from "@/types/global";
+import { useHttp } from "@/hooks/use-http";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+interface ProductCardProps {
+  product: Product;
+}
+
 
 export default function AllWishlist() {
+
+
   const [selectedItems, setSelectedItems] = useState<{
     [key: string]: boolean;
   }>({});
+ 
+  
+
+  const [selectedVariations, setSelectedVariations] = useState<{ [key: string]: Variations | null }>({});
+
+
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+const dispatch = useDispatch();
+const token = useSelector((state: RootState) => state.token?.token);
+  const { loading, sendHttpRequest } = useHttp();
 
   const allSelected =
     wishlistItems.length > 0 &&
     wishlistItems.every((item) => selectedItems[item.id]);
+
+const handleAddToCart = (item: Product) => (e: React.MouseEvent) => {
+  e.stopPropagation();
+
+  // Check for variation if product has any
+  const variation = selectedVariations[item.id] || item.variations?.[0] || null;
+
+  if (item.variations?.length && !variation) {
+    // Product has variations but none selected
+    toast.error("Please select a variation for this product");
+    return;
+  }
+
+  // Dispatch local Redux state
+  dispatch(
+    addToCart({
+      ...item,
+      product_id: item.id,
+      quantity: 1,
+      variation_display: variation ? `${variation.size} / ${variation.color}` : undefined,
+      price_at_purchase: item.price,
+      selectedVariation: variation || undefined,
+    })
+  );
+
+  // If logged in, send request to backend
+  if (token) {
+    sendHttpRequest({
+      requestConfig: {
+        url: "/cart/add",
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        body: {
+          product_id: item.id,
+          variation_id: variation?.id,
+          quantity: 1,
+          check: true,
+        },
+        successMessage: "Item added to cart successfully",
+      },
+      successRes: (res) => console.log("Cart API success:", res.data),
+    }).catch((err) => {
+      console.error("Cart API failed:", err);
+      toast.error("Network error — added to local cart");
+    });
+  } else {
+    toast.success("Item added to cart (offline mode)");
+  }
+};
+
 
   return (
     <div>
@@ -131,13 +204,13 @@ export default function AllWishlist() {
                       </p>
                     </div>
                   </div>
-                  <button className="w-10 h-10 flex justify-center items-center rounded-full border flex-shrink-0 border-ff715b">
-                    <Image
+                  <button onClick={handleAddToCart(item)} className="w-10 h-10  flex justify-center items-center rounded-full border flex-shrink-0 border-ff715b">
+                  { loading ? <LoadingSpinner color="#ff715b"/>: <Image
                       src={CartButton}
                       alt="Add to cart"
                       width={16}
                       height={16}
-                    />
+                    />}
                   </button>
                 </div>
               </motion.div>

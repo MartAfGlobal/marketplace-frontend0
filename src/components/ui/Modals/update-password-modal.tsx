@@ -9,12 +9,22 @@ import EyeIcon from "@/assets/icons/eye.png"; // open eye
 import EyeOffIcon from "@/assets/icons/eyeOff.png"; // closed eye
 import { ResetPasswordModalProps } from "@/types/global";
 import Image from "next/image";
+import { useHttp } from "@/hooks/use-http";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
+import { LoadingSpinner } from "../loading-spinner";
 
 export default function ResetPasswordModal({
   isOpen,
   onClose,
   onSave,
 }: ResetPasswordModalProps) {
+  const tokenSlice = useSelector((state: any) => state.token);
+
+  const { token } = tokenSlice;
+
+  const { loading, sendHttpRequest: changePasswordUserReq } = useHttp();
+
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -44,9 +54,35 @@ export default function ResetPasswordModal({
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const handleSave = () => {
-    onSave(passwords);
+  const registerUserRes = (res: any) => {
+    toast.success("Password updated successfully!");
     onClose();
+  };
+
+  const handleSave = () => {
+    const payload = {
+      old_password: passwords.currentPassword,
+      new_password: passwords.newPassword,
+      confirm_password: passwords.confirmPassword,
+    };
+
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      toast.error("New password and confirm password do not match.");
+      return;
+    }
+
+    changePasswordUserReq({
+      requestConfig: {
+        url: "/accounts/password/change",
+        method: "POST",
+        token,
+        body: payload,
+        isAuth: true, // ✅ r
+        userType: "buyer",
+        successMessage: "Password successfully.",
+      },
+      successRes: registerUserRes,
+    });
   };
 
   return (
@@ -55,8 +91,14 @@ export default function ResetPasswordModal({
         <motion.div
           className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}
-          exit={{ opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
+          animate={{
+            opacity: 1,
+            transition: { duration: 0.3, ease: "easeOut" },
+          }}
+          exit={{
+            opacity: 0,
+            transition: { duration: 0.3, ease: "easeInOut" },
+          }}
           onClick={onClose}
           aria-modal="true"
           role="dialog"
@@ -64,8 +106,16 @@ export default function ResetPasswordModal({
           <motion.div
             className="bg-white p-8 rounded-2xl max-w-101.5 w-full h-fit max-h-109 relative"
             initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}
-            exit={{ scale: 0.8, opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              transition: { duration: 0.3, ease: "easeOut" },
+            }}
+            exit={{
+              scale: 0.8,
+              opacity: 0,
+              transition: { duration: 0.3, ease: "easeInOut" },
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
@@ -76,11 +126,18 @@ export default function ResetPasswordModal({
               ✕
             </button>
 
-            <h2 className="font-MontserratSemiBold text-c16 mb-c32">Reset Password</h2>
+            <h2 className="font-MontserratSemiBold text-c16 mb-c32">
+              Reset Password
+            </h2>
 
             <div className="flex flex-col gap-c24 text-000000/72">
-              {(["currentPassword", "newPassword", "confirmPassword"] as const).map((field) => (
-                <div key={field} className="flex flex-col gap-2 relative w-full">
+              {(
+                ["currentPassword", "newPassword", "confirmPassword"] as const
+              ).map((field) => (
+                <div
+                  key={field}
+                  className="flex flex-col gap-2 relative w-full"
+                >
                   <Label className="text-c12 font-MontserratMedium">
                     {field === "currentPassword"
                       ? "Current Password"
@@ -92,7 +149,7 @@ export default function ResetPasswordModal({
                     <Input
                       type={showPassword[field] ? "text" : "password"}
                       value={passwords[field]}
-                      placeholder= "******"
+                      placeholder="******"
                       onChange={(e) => handleChange(field, e.target.value)}
                       className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium pr-10"
                     />
@@ -102,7 +159,7 @@ export default function ResetPasswordModal({
                       className="absolute right-3 top-1/2 -translate-y-1/2"
                     >
                       <Image
-                        src={showPassword[field] ? EyeIcon.src : EyeOffIcon.src}
+                        src={showPassword[field] ? EyeIcon.src  : EyeOffIcon.src}
                         alt={showPassword[field] ? "Hide" : "Show"}
                         width={18.75}
                         height={15.01}
@@ -117,10 +174,11 @@ export default function ResetPasswordModal({
             {/* Save Button */}
             <div className="w-full flex justify-end mt-c32">
               <Button
+              disabled={loading}
                 onClick={handleSave}
                 className="w-full max-w-50.5 bg-ff715b text-white flex justify-center items-center"
               >
-                Save Password
+                {loading? <LoadingSpinner/>:"Save Password"}
               </Button>
             </div>
           </motion.div>

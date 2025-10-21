@@ -12,18 +12,29 @@ import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 import { motion } from "framer-motion";
 import BuyerDashboard from "@/components/ui/mobile/dashbords/buyer-dashboard/dashboard";
 import { useRouter } from "next/navigation";
+import {
+  addToWishlist,
+  removeFromWishlist,
+  updateQuantity,
+  clearWishlist,
+} from "@/store/cart/wishlist-slice";
+import { RootState } from "@/store";
+
+
+// Example:
 
 export default function BuyerDashBoardPage() {
   const { sendHttpRequest: userInforHttpRequest } = useHttp();
   const { sendHttpRequest: userAddressHttpRequest } = useHttp();
+  const { sendHttpRequest: wishlistReq } = useHttp();
   const dispatch = useDispatch();
   const router = useRouter();
-
+ 
   const token = useSelector((state: any) => state.token?.token);
 
   useEffect(() => {
     if (!token) {
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isMobile) {
         // Go to landing page and tell it to open login modal
         router.replace("/?showLogin=true");
@@ -34,9 +45,32 @@ export default function BuyerDashBoardPage() {
       return;
     }
 
+  
+    wishlistReq({
+      requestConfig: {
+        url: "/wishlist/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res) => {
+        const wishlistItems =
+          res?.data?.map((item: any) => ({
+            id: item.id,
+            product_id: item.product_id,
+            variation_id: item.variation_id,
+            quantity: item.quantity,
+            product: item.product,
+            variation: item.variation,
+          })) || [];
+        dispatch(addToWishlist(wishlistItems));
+      },
+    });
+
     const fetchUserSucRes = (res: any) => {
       const resData = res?.data;
-    
+
       userAddressHttpRequest({
         requestConfig: {
           url: "shipping/shipping-addresses/",
@@ -58,7 +92,7 @@ export default function BuyerDashBoardPage() {
               defaultAddress: addr.defaultAddress || false,
             })) || [];
 
-             console.log("User address info:", addresses);
+          console.log("User address info:", addresses);
 
           dispatch(buyerActions.setBuyerAddresses(addresses));
         },
@@ -124,7 +158,7 @@ export default function BuyerDashBoardPage() {
       },
       successRes: fetchUserSucRes,
     });
-  }, [token, dispatch, router, userInforHttpRequest, userAddressHttpRequest]);
+  }, [token, dispatch, router, userInforHttpRequest, userAddressHttpRequest, wishlistReq]);
 
   return (
     <>

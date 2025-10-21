@@ -28,6 +28,8 @@ export default function CartPage() {
   const dispatch = useDispatch();
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
+  
+    const { loading, sendHttpRequest: getOrderRequest } = useHttp();
 
   useEffect(() => {
     dispatch(removeCheckedOutItems());
@@ -36,6 +38,31 @@ export default function CartPage() {
   const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
+  // Example React useEffect
+useEffect(() => {
+  const queryParams = new URLSearchParams(window.location.search);
+  const reference = queryParams.get("ref");
+
+  if (reference) {
+    // fetch(BASE_URL/)
+    //   .then((res) => res.json())
+    //   .then((data) => setOrderDetails(data.orders));
+
+        getOrderRequest({
+      requestConfig: {
+        url: "/cart/order-details/?ref=${reference}",
+        method: "FETCH",
+       
+        userType: "buyer",
+        successMessage: "Login successful!",
+      },
+      successRes: (orderData) => {
+        console.log("Order Data:", orderData);
+        // You can set state or perform other actions with orderData here
+      }
+    });
+  }
+}, []);
 
   return (
     <motion.div

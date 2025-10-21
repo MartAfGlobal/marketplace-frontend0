@@ -1,10 +1,17 @@
 // store/cart/cartSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Product } from "@/types/global";
-
+import { Product, Variations } from "@/types/global";
 
 export interface WishlistItem extends Product {
   quantity: number;
+  product_id: string;
+  checked?: boolean;
+  subtotal?: number; // numeric subtotal from backend
+  formatted_subtotal?: string; // formatted subtotal e.g. "₦10.00"
+  price_at_purchase?: number;
+  variation_display?: string; // for cases like “XL / Black”
+  product_image?: string;
+  selectedVariation?: Variations;
 }
 
 // Helper to load cart from localStorage
@@ -41,15 +48,18 @@ const wishlistSlice = createSlice({
   name: "wishlist",
   initialState,
   reducers: {
-    addToWishlist: (state, action: PayloadAction<Product>) => {
-      const existing = state.items.find((item) => item.id === action.payload.id);
+    addToWishlist: (state, action: PayloadAction<WishlistItem>) => {
+      const existing = state.items.find(
+        (item) => item.id === action.payload.id
+      );
       if (existing) {
         existing.quantity += 1;
       } else {
-        state.items.push({ ...action.payload, quantity: 1 });
+        state.items.push(action.payload);
       }
       saveWishlistToLocalStorage(state.items);
     },
+
     removeFromWishlist: (state, action: PayloadAction<string | number>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
       saveWishlistToLocalStorage(state.items);
@@ -71,7 +81,11 @@ const wishlistSlice = createSlice({
   },
 });
 
-export const { addToWishlist, removeFromWishlist, updateQuantity, clearWishlist } =
-  wishlistSlice.actions;
+export const {
+  addToWishlist,
+  removeFromWishlist,
+  updateQuantity,
+  clearWishlist,
+} = wishlistSlice.actions;
 
 export default wishlistSlice.reducer;
