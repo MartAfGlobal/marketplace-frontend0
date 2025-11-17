@@ -22,7 +22,7 @@ import GoodMark from "@/assets/mobile/good.png";
 
 import CreateListModal from "@/components/ui/Modals/create-wishlist-list-modal";
 import NextBtn from "@/assets/icons/pointerfront.svg";
-import { useRouter } from "next/navigation";
+import { useRouter} from "next/navigation";
 
 interface MylistProps {
   onSelectionChange?: (selectedIds: string[]) => void;
