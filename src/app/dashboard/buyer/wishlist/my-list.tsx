@@ -16,7 +16,7 @@ import Cookies from "js-cookie";
 import { Button } from "@/components/ui/Button/Button";
 import close from "@/assets/Icons2/cancel.svg";
 import Adding from "@/assets/Icons2/PlusWhite.svg";
-import Add from "@/assets/icons/plusOrange.svg";
+import Add from "@/assets/icons/plusorange.svg";
 
 import GoodMark from "@/assets/mobile/good.png";
 

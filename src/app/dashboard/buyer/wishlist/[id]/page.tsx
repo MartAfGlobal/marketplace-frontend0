@@ -20,7 +20,7 @@ import { addToCart } from "@/store/cart/cartSlice";
 import Trash from "@/assets/icons/trash.svg";
 import AddItemtoLabelModal from "@/components/ui/Modals/addItemToLabelModal";
 import Adding from "@/assets/Icons2/PlusWhite.svg";
-import Add from "@/assets/icons/plusOrange.svg";
+import Add from "@/assets/icons/plusorange.svg";
 
 import { Button } from "@/components/ui/Button/Button";
 import GoodCheckOrange from "@/assets/Icons2/GoodCheckOrange.svg";
