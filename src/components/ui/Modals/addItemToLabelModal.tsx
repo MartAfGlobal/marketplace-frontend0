@@ -7,7 +7,7 @@ import { Button } from "../Button/Button";
 
 import { LoadingSpinner } from "../loading-spinner";
 import close from "@/assets/Icons2/cancel.svg";
-import Add from "@/assets/icons2/plusOrange.svg";
+import Add from "@/assets/icons/plusOrange.svg";
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";

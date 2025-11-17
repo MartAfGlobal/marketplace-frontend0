@@ -16,12 +16,12 @@ import Cookies from "js-cookie";
 import { Button } from "@/components/ui/Button/Button";
 import close from "@/assets/Icons2/cancel.svg";
 import Adding from "@/assets/Icons2/PlusWhite.svg";
-import Add from "@/assets/icons2/plusOrange.svg";
+import Add from "@/assets/icons/plusOrange.svg";
 
 import GoodMark from "@/assets/mobile/good.png";
 
 import CreateListModal from "@/components/ui/Modals/create-wishlist-list-modal";
-import NextBtn from "@/assets/icons2/pointer-front.svg";
+import NextBtn from "@/assets/icons/pointerfront.svg";
 import { useRouter } from "next/navigation";
 
 interface MylistProps {
