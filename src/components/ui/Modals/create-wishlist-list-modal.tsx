@@ -40,7 +40,7 @@ export default function CreateListModal({
 
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !=="undefined") {
       if (isOpen) {
         document.body.classList.add("overflow-hidden");
       } else {
