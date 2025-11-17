@@ -9,8 +9,10 @@ import EyeOff from "@/assets/icons/eyeOff.png";
 import CloseX from "@/assets/mobile/closeX.png"; // your close icon
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
+import Cookies from "js-cookie";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { RootState } from "@/store";
 
 export default function ChangePasswordModal({
   isOpen,
@@ -25,9 +27,10 @@ export default function ChangePasswordModal({
     confirmPassword: "",
   });
 
-  const tokenSlice = useSelector((state: any) => state.token);
+  const token = useSelector((state: RootState) => state.token.token);
+  // const tokenSlice = useSelector((state: any) => state.token);
 
-  const { token } = tokenSlice;
+  // const { token } = tokenSlice;
 
   const { loading, sendHttpRequest: changePasswordUserReq } = useHttp();
 
@@ -50,6 +53,9 @@ export default function ChangePasswordModal({
   };
 
   const handleSave = () => {
+    if (!token){
+      return
+    }
     const payload = {
       old_password: formData.currentPassword,
       new_password: formData.newPassword,
@@ -60,6 +66,7 @@ export default function ChangePasswordModal({
       toast.error("New password and confirm password do not match.");
       return;
     }
+    
 
     changePasswordUserReq({
       requestConfig: {

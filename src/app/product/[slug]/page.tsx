@@ -81,7 +81,7 @@ export default function ProductPage() {
               <div className="w-full md:min-w-c397 h-fit md:h-c386-58 mb-1 md:mb-4 flex-shrink-0">
                 <Image
                   src={selectedImage}
-                  alt={product.category || product.name}
+                  alt={product.category || product.name || "name"}
                   width={397}
                   height={387}
                   className="object-cover w-full md:max-w-c397 md:h-c386-58 h-85 rounded-lg border"
@@ -338,7 +338,7 @@ export default function ProductPage() {
       </div>
 
       <div className="md:hidden">
-        <ProductDetailCategory slug={product.slug} />
+        <ProductDetailCategory slug={product.category || "new"} />
       </div>
 
       {/* Similar products */}

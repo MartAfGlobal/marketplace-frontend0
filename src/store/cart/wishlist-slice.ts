@@ -1,35 +1,40 @@
-// store/cart/cartSlice.ts
+// store/cart/wishlist-slice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Product, Variations } from "@/types/global";
 
-export interface WishlistItem extends Product {
+export interface WishlistItem {
+  id: number | string;            
+  product: Product;               
+  variation?: Variations | null;  
+  image?: string;                
+  label?: string | null;
+  price?: number;
   quantity: number;
-  product_id: string;
   checked?: boolean;
-  subtotal?: number; // numeric subtotal from backend
-  formatted_subtotal?: string; // formatted subtotal e.g. "₦10.00"
+  subtotal?: number;
+  formatted_subtotal?: string;
   price_at_purchase?: number;
-  variation_display?: string; // for cases like “XL / Black”
-  product_image?: string;
+  variation_display?: string;
   selectedVariation?: Variations;
+  
 }
 
-// Helper to load cart from localStorage
-const loadCartFromLocalStorage = (): WishlistItem[] => {
+
+const loadWishlistFromLocalStorage = (): WishlistItem[] => {
   if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("cart");
+    const stored = localStorage.getItem("wishlist");
     if (stored) {
       try {
         return JSON.parse(stored) as WishlistItem[];
       } catch (e) {
-        console.error("Failed to parse cart from localStorage", e);
+        console.error("Failed to parse wishlist from localStorage", e);
       }
     }
   }
   return [];
 };
 
-// Helper to save cart to localStorage
+
 const saveWishlistToLocalStorage = (items: WishlistItem[]) => {
   if (typeof window !== "undefined") {
     localStorage.setItem("wishlist", JSON.stringify(items));
@@ -41,13 +46,14 @@ interface WishlistState {
 }
 
 const initialState: WishlistState = {
-  items: loadCartFromLocalStorage(),
+  items: loadWishlistFromLocalStorage(),
 };
 
 const wishlistSlice = createSlice({
   name: "wishlist",
   initialState,
   reducers: {
+    // ✅ Add or increment a single item
     addToWishlist: (state, action: PayloadAction<WishlistItem>) => {
       const existing = state.items.find(
         (item) => item.id === action.payload.id
@@ -60,10 +66,17 @@ const wishlistSlice = createSlice({
       saveWishlistToLocalStorage(state.items);
     },
 
+    // ✅ New reducer to set full wishlist (used after fetching from API)
+    setWishlist: (state, action: PayloadAction<WishlistItem[]>) => {
+      state.items = action.payload || [];
+      saveWishlistToLocalStorage(state.items);
+    },
+
     removeFromWishlist: (state, action: PayloadAction<string | number>) => {
       state.items = state.items.filter((item) => item.id !== action.payload);
       saveWishlistToLocalStorage(state.items);
     },
+
     updateQuantity: (
       state,
       action: PayloadAction<{ id: string | number; quantity: number }>
@@ -74,6 +87,7 @@ const wishlistSlice = createSlice({
       }
       saveWishlistToLocalStorage(state.items);
     },
+
     clearWishlist: (state) => {
       state.items = [];
       saveWishlistToLocalStorage(state.items);
@@ -83,6 +97,7 @@ const wishlistSlice = createSlice({
 
 export const {
   addToWishlist,
+  setWishlist, // ✅ export new reducer
   removeFromWishlist,
   updateQuantity,
   clearWishlist,

@@ -11,17 +11,20 @@ import { ResetPasswordModalProps } from "@/types/global";
 import Image from "next/image";
 import { useHttp } from "@/hooks/use-http";
 import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
+// token is read from Redux store instead of cookies
 
 export default function ResetPasswordModal({
   isOpen,
   onClose,
   onSave,
 }: ResetPasswordModalProps) {
-  const tokenSlice = useSelector((state: any) => state.token);
+  // const tokenSlice = useSelector((state: any) => state.token);
 
-  const { token } = tokenSlice;
+  // const { token } = tokenSlice;
+  const token = useSelector((state: RootState) => state.token.token);
 
   const { loading, sendHttpRequest: changePasswordUserReq } = useHttp();
 
@@ -75,7 +78,7 @@ export default function ResetPasswordModal({
       requestConfig: {
         url: "/accounts/password/change",
         method: "POST",
-        token,
+        token: token ?? undefined,
         body: payload,
         isAuth: true, // ✅ r
         userType: "buyer",

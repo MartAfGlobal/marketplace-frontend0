@@ -52,6 +52,21 @@ export default function SearchInput({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+  useEffect(() => {
+  if (isFocused) {
+    document.body.style.overflow = "hidden"; // Prevent scrolling
+  } else {
+    document.body.style.overflow = "";
+  }
+
+  // Clean up on unmount
+  return () => {
+    document.body.style.overflow = "";
+  };
+}, [isFocused]);
+
+
   const handleRemoveHistoryItem = (item: string) => {
     setHistory((prev) => prev.filter((i) => i !== item));
   };
@@ -81,7 +96,7 @@ export default function SearchInput({
   };
 
   return (
-    <div ref={inputRef} className={` w-full md:max-w-[464px] ${className}`}>
+    <div ref={inputRef} className={`relative md:static  w-full md:max-w-[464px] ${className}`}>
       {/* Input */}
       <div className="relative w-full h-12 bg-ffffff shadow-customW rounded-c8">
         <Image
@@ -112,7 +127,7 @@ export default function SearchInput({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-full translate-x-1/2 left-0 w-157.5 -mt-1.5 py-4 px-4 bg-white rounded-c8 shadow-custom  z-50 overflow-hidden"
+              className="absolute top-full md:top-full md:translate-x-1/2 left-0 w-full md:w-157.5 mt-1 md:-mt-1.5 py-4 px-4 bg-white rounded-c8 shadow-custom  z-50 overflow-hidden"
             >
               {searchValue === "" ? (
                 <>

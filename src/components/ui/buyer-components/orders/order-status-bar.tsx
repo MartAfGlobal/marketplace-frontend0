@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
@@ -7,15 +8,16 @@ interface OrdersNavProps {
   tabs: string[];
   activeTab: string;
   onTabChange: (tab: string) => void;
+  className?: string
 }
 
-export default function OrdersNav({ tabs, activeTab, onTabChange }: OrdersNavProps) {
+export default function OrdersNav({ tabs, activeTab, onTabChange, className= "" }: OrdersNavProps) {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
     const activeIndex = tabs.findIndex((t) => t === activeTab);
 
-    // ✅ Only run scroll on mobile (below md: 768px)
+    // Only run scroll on mobile (below md: 768px)
     if (
       typeof window !== "undefined" &&
       window.innerWidth < 768 &&
@@ -31,14 +33,14 @@ export default function OrdersNav({ tabs, activeTab, onTabChange }: OrdersNavPro
   }, [activeTab, tabs]);
 
   return (
-    <div className="relative flex gap-2 justify-center bg-947fff/10 w-full md:max-w-152.25 overflow-x-auto  no-scrollbar text-nowrap scroll-smooth">
+    <div className={clsx("relative  flex gap-2 justify-center md:justify-center bg-947fff/10 w-full md:max-w-152.25 overflow-x-auto  no-scrollbar text-nowrap scroll-smooth", className)}>
       {tabs.map((tab, index) => {
         const isActive = activeTab === tab;
         return (
           <button
             key={tab}
             ref={(el) => {
-              tabRefs.current[index] = el; // ✅ no return
+              tabRefs.current[index] = el; 
             }}
             onClick={() => onTabChange(tab)}
             className="relative p-4 text-c12 font-MontserratSemiBold text-6a0dad"

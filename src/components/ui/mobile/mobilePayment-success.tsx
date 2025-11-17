@@ -87,8 +87,8 @@ export default function MobilePaymentSuccessfulPage() {
                           <div className="flex gap-4 w-full  items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
                               <Image
-                                src={item.image[0]}
-                                alt={item.name}
+                                src={item.image || "profile image"}
+                                alt={item.name || "name"}
                                 width={100}
                                 height={100}
                                 className="w-16 h-16 md:w-25 md:h-25"

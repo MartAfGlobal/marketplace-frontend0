@@ -8,8 +8,18 @@ import NavBack from "@/assets/icons/navBacksmall.png";
 import OrdersPage from "@/components/ui/buyer-components/orders/orders";
 import SearchBtn from "@/assets/mobile/searchBtn.png"
 import { useRouter } from "next/navigation";
+import { useHttp } from "@/hooks/use-http";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useEffect } from "react";
+import { fetchOrdersSuccess } from "@/store/orders/order-slice";
+
 
 export default function OrderPage() {
+  
+
+
+  
   const router = useRouter()
   return (
     <div className="w-full">
@@ -40,7 +50,8 @@ export default function OrderPage() {
           </span>
         </nav>
       </motion.div>
-      <div className="w-full  md:px-15">
+      <div className="w-full   md:px-15">
+        
         <div className="flex justify-between px-6 md:px-0  mt-3 md:mt-c32">
          <button onClick={()=> router.back()} className="flex items-center gap-4">
            <Image
@@ -62,7 +73,7 @@ export default function OrderPage() {
           />
          </div>
         </div>
-        <div>
+        <div className="w-full ">
           <OrdersPage />
         </div>
       </div>

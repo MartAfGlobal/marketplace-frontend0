@@ -1,5 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { BuyerSliceParams, BuyerItem, Address, BuyerData } from "@/types/global";
+import {
+  BuyerSliceParams,
+  BuyerItem,
+  Address,
+  BuyerData,
+} from "@/types/global";
 
 // Initial buyer data
 export const buyerInitialData: BuyerData = {
@@ -44,7 +49,9 @@ export const buyerInitialData: BuyerData = {
 };
 
 // Initial state
-const buyerInitialState: BuyerSliceParams & { selectedAddressId?: number | null } = {
+const buyerInitialState: BuyerSliceParams & {
+  selectedAddressId?: number | null;
+} = {
   BuyerData: buyerInitialData,
   BuyerItems: [],
   BuyerAddresses: [],
@@ -91,7 +98,9 @@ const buyerSlice = createSlice({
     setSelectedAddress(state, action: PayloadAction<number>) {
       state.selectedAddressId = action.payload;
     },
-
+    addBuyerAddress(state, action: PayloadAction<Address>) {
+      state.BuyerAddresses.push(action.payload);
+    },
     clearBuyer() {
       return buyerInitialState;
     },

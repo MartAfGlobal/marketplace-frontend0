@@ -4,243 +4,520 @@ import Image from "next/image";
 import GoodMark from "@/assets/mobile/good.png";
 import { RootState } from "@/store";
 import { useSelector, useDispatch } from "react-redux";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CartButton from "@/assets/mobile/coloureCart.png";
 import Filter from "@/assets/icons/filter.png";
 import { addToCart } from "@/store/cart/cartSlice";
 import { toast } from "sonner";
-import {  Product, Variations } from "@/types/global";
+import { Product, Variations } from "@/types/global";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-interface ProductCardProps {
-  product: Product;
+import { Button } from "@/components/ui/Button/Button";
+import GoodCheckOrange from "@/assets/Icons2/GoodCheckOrange.svg";
+import close from "@/assets/Icons2/cancel.svg";
+import CreateListModal from "@/components/ui/Modals/create-wishlist-list-modal";
+import {
+  removeFromWishlist,
+  setWishlist,
+  WishlistItem,
+} from "@/store/cart/wishlist-slice";
+import { addItemToWishlistLabel } from "@/store/wishlistLabel/wishlistLabelSlice";
+
+interface AllWishlistProps {
+  onSelectionChange?: (hasSelected: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onOpen: () => void;
 }
 
-
-export default function AllWishlist() {
-
-
+export default function AllWishlist({
+  onSelectionChange,
+  isOpen,
+  onClose,
+  onOpen,
+}: AllWishlistProps) {
+  // Selection keyed by actual product id
   const [selectedItems, setSelectedItems] = useState<{
-    [key: string]: boolean;
+    [productId: string]: boolean;
   }>({});
- 
-  
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
 
-  const [selectedVariations, setSelectedVariations] = useState<{ [key: string]: Variations | null }>({});
+  useEffect(() => {
+    const hasAnySelected = Object.values(selectedItems).some(
+      (isSelected) => isSelected
+    );
+    onSelectionChange?.(hasAnySelected);
+  }, [selectedItems, onSelectionChange]);
 
+  const [selectedVariations, setSelectedVariations] = useState<{
+    [key: string]: Variations | null;
+  }>({});
 
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
-const dispatch = useDispatch();
-const token = useSelector((state: RootState) => state.token?.token);
+  const labels = useSelector((state: RootState) => state.wishlistLabel.labels);
+  const dispatch = useDispatch();
+  const { token } = useSelector((state: RootState) => state.token);
   const { loading, sendHttpRequest } = useHttp();
+  const { loading: addingItem, sendHttpRequest: addToListReq } = useHttp();
+  const { loading: rmoving, sendHttpRequest: removeReq } = useHttp();
+  const [CreateModal, setCreateModal] = useState(false);
+  const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
+  const [loadingRem, setLoadRem] = useState<Record<string, boolean>>({});
 
+  // allSelected now based on product ids
   const allSelected =
     wishlistItems.length > 0 &&
-    wishlistItems.every((item) => selectedItems[item.id]);
+    wishlistItems.every((item) => {
+      const productId = String(item.product?.id ?? item.id);
+      return selectedItems[productId];
+    });
 
-const handleAddToCart = (item: Product) => (e: React.MouseEvent) => {
-  e.stopPropagation();
+  const handleToggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedItems({});
+    } else {
+      const newSelections: { [key: string]: boolean } = {};
+      wishlistItems.forEach((item) => {
+        const productId = String(item.product?.id ?? item.id);
+        newSelections[productId] = true;
+      });
+      setSelectedItems(newSelections);
+    }
+  };
 
-  // Check for variation if product has any
-  const variation = selectedVariations[item.id] || item.variations?.[0] || null;
+  const handleAddToCart =
+    (wishlistItem: WishlistItem) => async (e: React.MouseEvent) => {
+      e.stopPropagation();
 
-  if (item.variations?.length && !variation) {
-    // Product has variations but none selected
-    toast.error("Please select a variation for this product");
-    return;
-  }
+      const product: Product = wishlistItem.product ?? (wishlistItem as any);
+      const productId = String(product.id);
 
-  // Dispatch local Redux state
-  dispatch(
-    addToCart({
-      ...item,
-      product_id: item.id,
-      quantity: 1,
-      variation_display: variation ? `${variation.size} / ${variation.color}` : undefined,
-      price_at_purchase: item.price,
-      selectedVariation: variation || undefined,
-    })
-  );
+      setLoadingIds((s) => ({ ...s, [productId]: true }));
 
-  // If logged in, send request to backend
-  if (token) {
-    sendHttpRequest({
+      const selectedVariation: Variations | null =
+        selectedVariations[productId] ??
+        (Array.isArray(product?.variations) ? product.variations[0] : null);
+
+      try {
+        if (!token) {
+          dispatch(
+            addToCart({
+              ...product,
+              product_id: productId,
+              quantity: 1,
+              variation_display: selectedVariation
+                ? `${selectedVariation.size} / ${selectedVariation.color}`
+                : undefined,
+              price_at_purchase: product.price,
+            })
+          );
+          toast.success("Item added to cart (offline mode)");
+          return;
+        }
+
+        await sendHttpRequest({
+          requestConfig: {
+            url: "/cart/add",
+            method: "POST",
+            token,
+            isAuth: true,
+            userType: "buyer",
+            body: {
+              product_id: productId,
+              variation_id: selectedVariation?.id,
+              quantity: 1,
+              check: true,
+            },
+            successMessage: "Item added to cart successfully",
+          },
+          successRes: (res: any) => {
+            dispatch(
+              addToCart({
+                ...product,
+                product_id: productId,
+                quantity: 1,
+                variation_display: selectedVariation
+                  ? `${selectedVariation.size} / ${selectedVariation.color}`
+                  : undefined,
+                price_at_purchase: product.price,
+              })
+            );
+          },
+        });
+      } catch (err: any) {
+        console.error("label API failed:", err);
+        dispatch(
+          addToCart({
+            ...product,
+            product_id: productId,
+            quantity: 1,
+            variation_display: selectedVariation
+              ? `${selectedVariation.size} / ${selectedVariation.color}`
+              : undefined,
+            price_at_purchase: product.price,
+          })
+        );
+        toast.error("Network error — added to local cart");
+      } finally {
+        setLoadingIds((s) => ({ ...s, [productId]: false }));
+      }
+    };
+  const handleCreateFirstList = () => {
+    setCreateModal(true);
+    if (CreateModal) {
+      onClose();
+    }
+  };
+
+  const handleAddItemToLIst = (labelId: string | null) => {
+    if (!token) return;
+    if (!labelId) {
+      toast.error("Please select a label first");
+      return;
+    }
+    const selectedProductIds = Object.keys(selectedItems).filter(
+      (id) => selectedItems[id]
+    );
+
+    if (selectedProductIds.length === 0) {
+      toast.error("Please select at least one item to add");
+      return;
+    }
+    const selectedLabelObj = labels.find((label: any) => label.id === labelId);
+    const labelName = selectedLabelObj ? selectedLabelObj.name : selectedLabel;
+
+    addToListReq({
       requestConfig: {
-        url: "/cart/add",
-        method: "POST",
+        url: "/wishlist/items/move-items-to-label/",
+        method: "PATCH",
         token,
         isAuth: true,
         userType: "buyer",
         body: {
-          product_id: item.id,
-          variation_id: variation?.id,
-          quantity: 1,
-          check: true,
+          item_ids: selectedProductIds,
+          label_id: labelId,
         },
-        successMessage: "Item added to cart successfully",
+        successMessage: `Item added to ${labelName} successfully`,
       },
-      successRes: (res) => console.log("Cart API success:", res.data),
+      successRes: (res) => {
+        console.log("item added  success:", res.data);
+        res.data.items.forEach((item: WishlistItem) => {
+          dispatch(
+            addItemToWishlistLabel({
+              labelId: labelId,
+              item,
+            })
+          );
+        });
+
+        onClose();
+      },
     }).catch((err) => {
       console.error("Cart API failed:", err);
       toast.error("Network error — added to local cart");
     });
-  } else {
-    toast.success("Item added to cart (offline mode)");
-  }
-};
+  };
+  const handleRemoveItem = (itemId: string | number) => {
+    setLoadRem((s) => ({ ...s, [itemId]: true }));
 
+    if (!token) {
+      setLoadRem((s) => ({ ...s, [itemId]: false }));
+      return;
+    }
+
+    removeReq({
+      requestConfig: {
+        url: `wishlist/items/remove/${itemId}/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        successMessage: `Item removed successfully`,
+      },
+      successRes: (res) => {
+        setLoadRem((s) => ({ ...s, [itemId]: false }));
+        console.log("Cart API success:", res.data);
+
+        dispatch(removeFromWishlist(itemId));
+        onClose();
+      },
+    }).catch((err) => {
+      console.error("Cart API failed:", err);
+      setLoadRem((s) => ({ ...s, [itemId]: false }));
+      toast.error("Network error — added to local cart");
+    });
+  };
 
   return (
     <div>
-      <div className="w-full max-w-207">
-        {/* Header */}
-        <div className="w-full h-c56 mb-4 md:mb-c32 flex px-6 justify-between items-center">
-          {/* Select All Button */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                if (allSelected) {
-                  setSelectedItems({});
-                } else {
-                  const newSelections: { [key: string]: boolean } = {};
-                  wishlistItems.forEach((item) => {
-                    newSelections[item.id] = true;
-                  });
-                  setSelectedItems(newSelections);
-                }
-              }}
-              className={`w-5 h-5 rounded-c4 border-1 border-000000/5 flex items-center justify-center transition-colors ${
-                allSelected ? "bg-ff715b" : "border-000000/5 bg-transparent"
-              }`}
-            >
-              {allSelected && (
-                <Image
-                  src={GoodMark}
-                  alt="checked"
-                  width={9.75}
-                  height={7.13}
-                />
-              )}
-            </button>
-            <span className="text-c12 font-MontserratSemiBold">Select all</span>
+      {wishlistItems.length === 0 ? (
+        <div className="w-full flex justify-center h-75.5 items-center">
+          <div>
+            <p className="text-c18 font-MontserratMedium text-000000/32 mb-8">
+              No items added to wishlist
+            </p>
+            <Button variant="primary">Start shopping</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full px-6 md:px-0">
+          <div className="w-full h-c56 mb-4 md:mb-c32 flex justify-between items-center md:hidden">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleToggleSelectAll}
+                className={`w-5 h-5 rounded-c4 border-1 border-000000/32 flex items-center justify-center transition-colors ${
+                  allSelected ? "bg-ff715b" : "border-000000/5 bg-transparent"
+                }`}
+              >
+                {allSelected && (
+                  <Image
+                    src={GoodMark}
+                    alt="checked"
+                    width={9.75}
+                    height={7.13}
+                  />
+                )}
+              </button>
+              <span className="text-c12 font-MontserratSemiBold">
+                Select all
+              </span>
+            </div>
+            <Image src={Filter} alt="filter" width={24} height={24} />
           </div>
 
-          <Image src={Filter} alt="filter" width={24} height={24} />
-        </div>
-
-        {/* Wishlist Items */}
-        <div className="flex px-6 w-full justify-between">
-          <motion.div
-            key="orders-list"
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            variants={{
-              hidden: { opacity: 0, height: 0 },
-              visible: {
-                opacity: 1,
-                height: "auto",
-                transition: { staggerChildren: 0.1 },
-              },
-            }}
-            className="space-y-c24 w-full"
-          >
-            {wishlistItems.map((item) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.8 }}
+          <div className="flex flex-col md:flex-row md:divide-x md:divide-gray-200 w-full justify-between">
+            {["left", "right"].map((col, idx) => (
+              <div
+                key={col}
+                className={`w-full md:w-1/2 ${
+                  col === "left" ? "md:pr-4" : "md:pl-4"
+                }`}
               >
-                <div className="w-full justify-between items-end pb-8 flex">
-                  <div className="flex gap-4 w-full items-center md:items-start">
-                    {/* Checkbox + Image */}
-                    <div className="flex gap-3 items-center w-full max-w-fit">
-                      <button
-                        onClick={() =>
-                          setSelectedItems((prev) => ({
-                            ...prev,
-                            [item.id]: !prev[item.id],
-                          }))
-                        }
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          selectedItems[item.id]
-                            ? "bg-ff715b border-ff715b"
-                            : "border-ff715b bg-transparent"
-                        }`}
+                {wishlistItems
+                  .slice(
+                    col === "left" ? 0 : Math.ceil(wishlistItems.length / 2),
+                    col === "left"
+                      ? Math.ceil(wishlistItems.length / 2)
+                      : wishlistItems.length
+                  )
+                  .map((item: WishlistItem) => {
+                    const product: Product = item.product ?? (item as any);
+                    const productId = String(product.id);
+                    const whishlistItemSelected = item.id;
+                    return (
+                      <div
+                        key={whishlistItemSelected}
+                        className="w-full justify-between items-end pb-8 flex"
                       >
-                        {selectedItems[item.id] && (
-                          <Image
-                            src={GoodMark}
-                            alt="checked"
-                            width={9.75}
-                            height={7.13}
-                          />
-                        )}
-                      </button>
+                        <div className="flex gap-4 w-full items-center md:items-start">
+                          <div className="flex gap-3 items-center w-full max-w-fit">
+                            <button
+                              onClick={() =>
+                                setSelectedItems((prev) => ({
+                                  ...prev,
+                                  [whishlistItemSelected]:
+                                    !prev[whishlistItemSelected],
+                                }))
+                              }
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                selectedItems[whishlistItemSelected]
+                                  ? "bg-ff715b border-ff715b"
+                                  : "border-ff715b bg-transparent"
+                              }`}
+                            >
+                              {selectedItems[whishlistItemSelected] && (
+                                <Image
+                                  src={GoodMark}
+                                  alt="checked"
+                                  width={9.75}
+                                  height={7.13}
+                                />
+                              )}
+                            </button>
+                            <Image
+                              src={product.image || "/placeholder.png"}
+                              alt={
+                                product.product_name || "Wishlist item image"
+                              }
+                              width={100}
+                              height={100}
+                              className="w-16 h-16 md:w-25 md:h-25"
+                            />
+                          </div>
+                          <div className="w-full md:max-w-143.75">
+                            <p className="font-MontserratSemiBold text-c12 md:text-sm pb-1 text-000000">
+                              {product.product_name}
+                            </p>
+                            <p className="font-MontserratSemiBold  text-base md:text-c18 pt-3 leading-6.5">
+                              ₦{product.price}
+                            </p>
+                          </div>
+                        </div>
 
-                      <Image
-                        src={item.image[0]}
-                        alt={item.slug}
-                        width={100}
-                        height={100}
-                        className="w-16 h-16 md:w-25 md:h-25"
-                      />
-                    </div>
+                        <button
+                          onClick={handleAddToCart(item)}
+                          className={`w-10 h-10 flex justify-center md:hidden items-center rounded-full border flex-shrink-0 border-ff715b $}`}
+                        >
+                          {loadingIds[productId] ? (
+                            <LoadingSpinner color="border-ff715b" />
+                          ) : (
+                            <Image
+                              src={CartButton}
+                              alt="Add to cart"
+                              width={16}
+                              height={16}
+                            />
+                          )}
+                        </button>
 
-                    {/* Item Details */}
-                    <div className="w-full md:max-w-143.75">
-                      <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                        {item.name}
-                      </p>
-                      <p className="font-MontserratNormal text-c12 pb-3">
-                        Two piece shop
-                      </p>
-                      <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">
-                        ₦{item.price}
-                      </p>
-                    </div>
-                  </div>
-                  <button onClick={handleAddToCart(item)} className="w-10 h-10  flex justify-center items-center rounded-full border flex-shrink-0 border-ff715b">
-                  { loading ? <LoadingSpinner color="#ff715b"/>: <Image
-                      src={CartButton}
-                      alt="Add to cart"
-                      width={16}
-                      height={16}
-                    />}
-                  </button>
-                </div>
-              </motion.div>
+                        <div className="hidden md:flex flex-col w-full max-w-52.5 space-y-4">
+                          <Button onClick={handleAddToCart(item)}>
+                            {loadingIds[productId] ? (
+                              <LoadingSpinner />
+                            ) : (
+                              "Add to cart"
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => handleRemoveItem(item.id)}
+                            variant="secondary"
+                          >
+                            {loadingRem[item.id] ? (
+                              <LoadingSpinner color="border-ff715b" />
+                            ) : (
+                              "Remove"
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
             ))}
-          </motion.div>
+          </div>
+          <AnimatePresence>
+            {Object.values(selectedItems).some(Boolean) && (
+              <motion.div
+                initial={{ y: 80, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 80, opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="w-full md:hidden fixed left-0 bottom-0 py-4 px-6 bg-white shadow-custom z-[60]"
+              >
+                <Button onClick={onOpen} variant="secondary" className="w-full">
+                  Add to list
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      )}
 
       <AnimatePresence>
-      <div className="mt-20">
-          {Object.values(selectedItems).some((isSelected) => isSelected) && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }} // start hidden (below screen)
-            animate={{ y: 0, opacity: 1 }} // slide up into view
-            exit={{ y: 100, opacity: 0 }} // slide back down when hidden
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4"
-          >
-            <div className="w-full flex gap-2 text-c12 font-MontserratSemiBold">
-              <button className="h-c48 border border-ff715b rounded-lg w-full max-w-28 text-ff715b">
-                Add to list
-              </button>
-              <button className="w-full h-c48 rounded-lg bg-ff715b text-ffffff">
-                Remove from list
-              </button>
-            </div>
-          </motion.div>
+        {isOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/40 z-[9998]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={onClose}
+            />
+            <motion.div
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="fixed z-[9999] bg-white h-fit shadow-xl flex flex-col items-center gap-8
+                bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-30px)] rounded-t-2xl p-6 
+                max-h-[90vh] overflow-y-auto
+                md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 
+                md:rounded-c16 md:p-8 md:max-w-102.25"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between w-full">
+                <h2 className="text-base font-MontserratSemiBold text-gray-800">
+                  Select list
+                </h2>
+                <button onClick={onClose}>
+                  <Image src={close} alt="close" width={15} height={15} />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-6 w-full max-h-70 custom-scrollrailes">
+                {labels.length === 0 && (
+                  <div className="w-full flex flex-col justify-center items-center gap-6">
+                    <p className="w-full max-w-34.75 text-center text-sm font-MontserratNormal text-000000/50 leading-c20">
+                      You haven’t created any lists yet
+                    </p>
+                    <Button onClick={handleCreateFirstList}>
+                      Create your first list
+                    </Button>
+                  </div>
+                )}
+
+                {labels.map((item: any) => (
+                  <div key={item.id} className="gap-6 w-full">
+                    <button
+                      onClick={() => setSelectedLabel(item.id)}
+                      className={`w-full flex justify-between items-center ${
+                        selectedLabel === item.id
+                          ? "text-primary font-semibold"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex flex-col ">
+                        <span className="font-MontserratSemiBold text-c12">
+                          {item.name}
+                        </span>
+                        <span className="font-MontserratNormal text-c12 text-left">
+                          {item.items.length} items
+                        </span>
+                      </div>
+                      {selectedLabel === item.id && (
+                        <Image
+                          src={GoodCheckOrange}
+                          alt="checked"
+                          width={18.75}
+                          height={13.5}
+                        />
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-2 justify-center w-full">
+                {labels.length > 0 && (
+                  <Button
+                    disabled={addingItem || !selectedLabel}
+                    onClick={() => handleAddItemToLIst(selectedLabel)}
+                  >
+                    {addingItem ? <LoadingSpinner /> : "Add to selected list"}
+                  </Button>
+                )}
+                {labels.length === 0 && (
+                  <Button
+                    variant="secondary"
+                    onClick={handleCreateFirstList}
+                    className="w-full "
+                  >
+                    Create List
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          </>
         )}
-      </div>
       </AnimatePresence>
+
+      <CreateListModal
+        isOpen={CreateModal}
+        onClose={() => setCreateModal(false)}
+      />
     </div>
   );
 }

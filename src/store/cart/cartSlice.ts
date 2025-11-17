@@ -1,20 +1,23 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Product, Variations } from "@/types/global";
+import { StaticImageData } from "next/image";
 
 // Extend Product with cart-specific fields
 export interface CartItem extends Product {
   quantity: number;
+  image: string | StaticImageData | null;
   product_id: string;
   checked?: boolean;
-  subtotal?: number; // numeric subtotal from backend
-  formatted_subtotal?: string; // formatted subtotal e.g. "₦10.00"
+  subtotal?: number; 
+  formatted_subtotal?: string; 
   price_at_purchase?: number;
-  variation_display?: string; // for cases like “XL / Black”
+  variation_display?: string; 
   product_image?: string;
   selectedVariation?: Variations;
+  variation_name?: string;
 }
 
-// -------------------- LocalStorage Helpers --------------------
+
 const loadCartFromLocalStorage = (): CartItem[] => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("cart");
@@ -39,7 +42,6 @@ const saveCartToLocalStorage = (items: CartItem[]) => {
   }
 };
 
-// -------------------- Slice State --------------------
 interface CartState {
   items: CartItem[];
   checkoutItems: CartItem[];
@@ -61,7 +63,7 @@ const initialState: CartState = {
   checkoutSummary: null,
 };
 
-// -------------------- Slice --------------------
+
 const cartSlice = createSlice({
   name: "cart",
   initialState,
@@ -149,15 +151,16 @@ const cartSlice = createSlice({
       state.checkoutSummary = action.payload;
     },
 
+    setOrderDetails: (state, action: PayloadAction<any>) => {
+      
+    },
     removeCheckedOutItems: (state) => {
-      // Remove from cart only the items that are currently checked (checked === true)
+     
       state.items = state.items.filter((item) => !item.checked);
 
-      // Clear checkoutItems and checkoutSummary
       state.checkoutItems = [];
       state.checkoutSummary = null;
 
-      // Save updated cart to localStorage
       saveCartToLocalStorage(state.items);
     },
   },
@@ -176,3 +179,7 @@ export const {
 } = cartSlice.actions;
 
 export default cartSlice.reducer;
+import { RootState } from "@/store"; 
+
+export const selectCheckedItems = (state: RootState) =>
+  state.cart.items.filter((item) => item.checked);

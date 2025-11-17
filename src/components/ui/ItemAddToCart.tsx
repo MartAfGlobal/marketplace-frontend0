@@ -16,6 +16,7 @@ import { addToCart } from "@/store/cart/cartSlice";
 import { toast } from "sonner";
 import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
+// token comes from Redux / in-memory set by axios interceptor
 import { LoadingSpinner } from "./loading-spinner";
 
 type ItemAddToCartProps = {
@@ -36,7 +37,7 @@ export default function ItemAddToCart({
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading, sendHttpRequest } = useHttp();
-  const token = useSelector((state: RootState) => state.token?.token);
+  const token = useSelector((state: RootState) => state.token.token);
   const cart = useSelector((state: RootState) => state.cart); // ✅ move here
 
   const [localQty, setLocalQty] = useState<number>(quantity || 1);

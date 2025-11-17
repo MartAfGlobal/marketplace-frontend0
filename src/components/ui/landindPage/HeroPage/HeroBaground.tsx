@@ -27,7 +27,14 @@ const backgrounds = [
           >
             Become a seller
           </Link>
-          <button className="w-[179px] h-[44px] rounded-[8px] bg-[#FF715B] text-white flex items-center justify-center gap-3">
+          <button
+            onClick={() => {
+              document.getElementById("production-section")?.scrollIntoView({
+                behavior: "smooth",
+              });
+            }}
+            className="w-[179px] h-[44px] rounded-[8px] bg-[#FF715B] text-white flex items-center justify-center gap-3"
+          >
             <Image src={Cart} alt="cart" width={24.15} height={24.15} />
             <p>Shop now</p>
           </button>
@@ -38,11 +45,7 @@ const backgrounds = [
   {
     id: 2,
     className: "ad-hero",
-    content: (
-      <div className="text-white text-4xl font-bold">
-        
-      </div>
-    ),
+    content: <div className="text-white text-4xl font-bold"></div>,
   },
 ];
 
@@ -59,7 +62,9 @@ export default function HeroBackground() {
 
   return (
     <div className="relative max-w-[970px] w-full h-[582px] overflow-hidden rounded-2xl">
-      <AnimatePresence mode="sync"> {/* sync keeps both present until animation ends */}
+      <AnimatePresence mode="sync">
+        {" "}
+        {/* sync keeps both present until animation ends */}
         <motion.div
           key={backgrounds[index].id}
           initial={{ x: "100%" }}
@@ -68,8 +73,8 @@ export default function HeroBackground() {
           transition={{
             type: "spring",
             stiffness: 160, // how fast it moves
-            damping: 13,   // how much it resists (less = more bounce)
-            bounce: 0.3,   // bounce intensity
+            damping: 13, // how much it resists (less = more bounce)
+            bounce: 0.3, // bounce intensity
             duration: 0.3,
           }}
           className={`absolute inset-0 flex items-center pl-[34px] ${backgrounds[index].className}`}

@@ -20,4 +20,4 @@ const tokenSlice = createSlice({
 });
 
 export const tokenActions = tokenSlice.actions;
-export default tokenSlice;
+export default tokenSlice.reducer;

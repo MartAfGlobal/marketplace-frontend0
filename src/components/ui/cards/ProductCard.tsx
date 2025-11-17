@@ -15,6 +15,7 @@ import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "../loading-spinner";
 import { useState } from "react";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 
 interface ProductCardProps {
   product: Product;
@@ -24,15 +25,14 @@ export default function ProductCard({ product }: ProductCardProps) {
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading, sendHttpRequest } = useHttp();
-  const { loading: loadingWishlist, sendHttpRequest:addWishlistReq } = useHttp();
-  const token = useSelector((state: RootState) => state.token?.token);
+  const { loading: loadingWishlist, sendHttpRequest: addWishlistReq } =
+    useHttp();
+  const token = useSelector((state: RootState) => state.token.token);
 
   const [selectedVariation, setSelectedVariation] = useState<Variations | null>(
     product.variations?.[0] || null
   );
 
-  // ✅ Add to cart handler
-  // ✅ Add to Cart Handler
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
@@ -52,10 +52,9 @@ export default function ProductCard({ product }: ProductCardProps) {
       return;
     }
 
-    // --- Logged in → send to backend
     sendHttpRequest({
       requestConfig: {
-        url: "/cart/add", // 👈 your backend endpoint
+        url: "/cart/add",
         method: "POST",
         token,
         isAuth: true,
@@ -69,12 +68,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         successMessage: "Item added to cart successfully",
       },
 
-      // ✅ Called when backend responds successfully
       successRes: (res: any) => {
         dispatch(
           addToCart({
             ...product,
-            product_id: product.id, // ✅ Fix here
+            product_id: product.id,
             quantity: 1,
             variation_display: selectedVariation
               ? `${selectedVariation.size} / ${selectedVariation.color}`
@@ -107,10 +105,9 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!token) {
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-      toast.info("Please log in to add items to your wishlist");  
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      toast.info("Please log in to add items to your wishlist");
       if (isMobile) {
-       
         router.replace("/?showLogin=true");
       } else {
         // Desktop → go to dedicated login page
@@ -120,29 +117,34 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
     addWishlistReq({
       requestConfig: {
-        url:`/wishlist/add/${product.id}/`,
+        url: "wishlist/items/",
         method: "POST",
         token,
+        body: {
+          product_id: product.id,
+          variation_id: selectedVariation?.id,
+        },
         isAuth: true,
         userType: "buyer",
         successMessage: "Added to wishlist",
       },
       successRes: () => {
-       dispatch(
-  addToWishlist({
-    ...product,
-    product_id: product.id, // ✅ required
-    quantity: 1,
-    variation_display: selectedVariation
-      ? `${selectedVariation.size} / ${selectedVariation.color}`
-      : undefined,
-    price_at_purchase: product.price,
-  })
-);
+        dispatch(
+          addToWishlist({
+            id: product.id, // wishlist id (can be same as product)
+            product: product, // full product
+            quantity: 1,
+            variation: selectedVariation || null,
+            variation_display: selectedVariation
+              ? `${selectedVariation.size} / ${selectedVariation.color}`
+              : undefined,
+            price_at_purchase: product.price,
+          })
+        );
 
         toast.success("Added to wishlist");
-      }
-    })
+      },
+    });
   };
 
   const handleClick = () => {
@@ -159,7 +161,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     router.push(`/product/${product.slug}`);
   };
 
-  const productImage = product.image?.[0] || "/placeholder.png";
+  const productImage = product.image || "/placeholder.png";
+  console.log("imageeeeeeeeeeeeeeeeeee", productImage);
 
   return (
     <div onClick={handleClick} className="cursor-pointer">
@@ -179,7 +182,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="object-cover"
           />
 
-          {product.onSale && (
+          {product.inventory && product.inventory > 0 && (
             <span className="absolute top-4 left-4 font-MontserratSemiBold bg-[#FFAC06] text-[12px] text-white w-[71px] h-[32px] flex items-center justify-center rounded-[8px]">
               On sale
             </span>
@@ -187,14 +190,15 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Love Button */}
           <button
-            onClick={handleAddToWishlist} 
+            onClick={handleAddToWishlist}
             disabled={loadingWishlist}
             className="absolute top-4 right-4 w-[32px] h-[32px]  bg-white rounded-full shadow flex items-center justify-center"
           >
-            {
-              loadingWishlist? <LoadingSpinner color="ff715b"/>: <Image src={LoveIcon} alt="LoveIcon" width={19} height={16} />
-            }
-           
+            {loadingWishlist ? (
+              <LoadingSpinner color="ff715b" />
+            ) : (
+              <Image src={LoveIcon} alt="LoveIcon" width={19} height={16} />
+            )}
           </button>
         </div>
 
@@ -223,24 +227,21 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Price */}
             <p className="font-MontserratSemiBold text-base">
-              {product.discount_price &&
-              product.discount_price < product.price ? (
-                <>
-                  <span className=" text-gray-400 mr-2 ">₦{product.price}</span>
-                </>
-              ) : (
-                <span>₦{product.price}</span>
-              )}
+              ₦{product.price}
             </p>
           </div>
 
-          {/* Add to Cart Button */}
           <button
             onClick={handleAddToCart}
-            disabled={loading}
-            className="w-c44 hidden flex-shrink-0 md:flex h-[41.97px] items-center justify-center gap-2 py-1 bg-[#FF715B] rounded-[8px]"
+            disabled={loading || product.inventory === 0}
+            className={`w-c44 hidden flex-shrink-0 md:flex h-[41.97px] items-center justify-center gap-2 py-1 rounded-[8px] transition
+    ${
+      loading || product.inventory === 0
+        ? "bg-gray-400 cursor-not-allowed"
+        : "bg-[#FF715B] hover:bg-[#e6604a]"
+    }`}
           >
-            {loading? (
+            {loading ? (
               <LoadingSpinner />
             ) : (
               <Image src={Cart} alt="cart" width={20} height={17.6} />

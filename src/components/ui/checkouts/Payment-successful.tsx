@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -21,6 +21,7 @@ import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import PaymentSuccess from "./success";
 import { RootState } from "@/store";
 import { useDispatch, useSelector } from "react-redux";
+import { useHttp } from "@/hooks/use-http";
 
 export default function PaymentSuccessful() {
   const [copied, setCopied] = useState(false);
@@ -37,6 +38,41 @@ export default function PaymentSuccessful() {
     const trackingId = trackOrders[0]?.id?.toString() ?? "";
     router.push(`/dashboard/buyer/orders/tracking/${trackingId}`);
   };
+  
+    const { loading, sendHttpRequest:fetchSuccOrderRequest } = useHttp();
+
+// useEffect(() => {
+//   const queryParams = new URLSearchParams(window.location.search);
+//   const reference = queryParams.get("ref");
+  
+//   if (reference){
+//      fetchSuccOrderRequest({
+//       requestConfig: {
+//         url: `cart/order-details/?ref=${reference}`,
+//         method: "GET",
+       
+//         successMessage: "Redirecting to payment gateway...",
+//       },
+//       successRes: (res) => {
+//         console.log("respons data:", res.data);
+
+//         if (res.data?.paystack_payment_url) {
+//           window.location.href = res.data.paystack_payment_url;
+          
+//         } else {
+          
+//           return;
+//         }
+//       },
+//     });
+//   }
+  
+// //  {
+// //     re(url/cart/order-details/?ref=${reference})
+// //       .then((res) => res.json())
+// //       .then((data) => setOrderDetails(data.orders));
+// //   }
+// }, []);
 
   const showMore = () => setVisible((prev) => prev + 10);
 

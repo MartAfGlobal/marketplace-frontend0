@@ -4,22 +4,24 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useHttp } from "@/hooks/use-http";
 import { BuyerEditParams } from "@/types/global";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-// Assets
+
 import NavBack from "@/assets/icons/navBacksmall.png";
 import profilePicture from "@/assets/icons/user-dashboard/profile-picture.png";
 import User from "@/assets/mobile/User.png";
 import Phone from "@/assets/mobile/Phone.png";
 import Mobile from "@/assets/mobile/mobile.png";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 export default function MobileEditProfile() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dispatch = useDispatch();
 
   const tokenSlice = useSelector((state: any) => state.token);
   const { token } = tokenSlice;
@@ -27,7 +29,6 @@ export default function MobileEditProfile() {
 
   const { loading, sendHttpRequest: editRegisterUserReq } = useHttp();
 
-  // Local state (prefilled from buyer if available)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<BuyerEditParams>(() => ({
     first_name: buyer?.first_name || "",
@@ -71,12 +72,45 @@ export default function MobileEditProfile() {
     if (selectedFile) {
       form.append("profile_picture", selectedFile);
     }
+      const registerUserRes = (res: any) => {
+          toast.success("Profile updated successfully!");
+
+          dispatch(
+            buyerActions.updateBuyerData({
+              first_name: formData.first_name,
+              last_name: formData.last_name,
+            })
+          );
+
+          dispatch(
+            buyerActions.updateBuyerData({
+              profile: {
+                ...buyer.profile,
+                phone: formData.phone,
+                phone2: formData.phone2,
+              },
+            })
+          );
+
+          if (selectedFile) {
+            const profileURL = URL.createObjectURL(selectedFile);
+
+            dispatch(
+              buyerActions.updateBuyerData({
+                profile: {
+                  ...buyer.profile,
+                  profile_picture: profileURL,
+                },
+              })
+            );
+          }
+          console.log("profile edited:", res.data);
+
+          router.push(`/dashboard/buyer`);
+        };
 
     editRegisterUserReq({
-      successRes: () => {
-        toast.success("Profile updated successfully!");
-        router.push(`/dashboard/buyer`);
-      },
+      successRes: registerUserRes,
       requestConfig: {
         url: "/accounts/UserDetails/",
         method: "PATCH",
@@ -160,7 +194,13 @@ export default function MobileEditProfile() {
             First name
           </label>
           <div className="flex items-center border border-000000/15 rounded-lg px-4 py-2 focus-within:ring-1 focus-within:ring-[#FF715B] focus-within:border-[#FF715B]">
-            <Image src={User} alt="first name" width={16} height={16} className="mr-2" />
+            <Image
+              src={User}
+              alt="first name"
+              width={16}
+              height={16}
+              className="mr-2"
+            />
             <input
               type="text"
               name="first_name"
@@ -178,7 +218,13 @@ export default function MobileEditProfile() {
             Last Name
           </label>
           <div className="flex items-center border border-000000/15 rounded-lg px-4 py-2 focus-within:ring-1 focus-within:ring-[#FF715B] focus-within:border-[#FF715B]">
-            <Image src={User} alt="surname" width={16} height={16} className="mr-2" />
+            <Image
+              src={User}
+              alt="surname"
+              width={16}
+              height={16}
+              className="mr-2"
+            />
             <input
               type="text"
               name="last_name"
@@ -196,7 +242,13 @@ export default function MobileEditProfile() {
             Phone Number
           </label>
           <div className="flex items-center border border-000000/15 rounded-lg px-4 py-2 focus-within:ring-1 focus-within:ring-[#FF715B] focus-within:border-[#FF715B]">
-            <Image src={Phone} alt="phone" width={16} height={16} className="mr-2" />
+            <Image
+              src={Phone}
+              alt="phone"
+              width={16}
+              height={16}
+              className="mr-2"
+            />
             <input
               type="text"
               name="phone"
@@ -214,7 +266,13 @@ export default function MobileEditProfile() {
             Mobile Number
           </label>
           <div className="flex items-center border border-000000/15 rounded-lg px-4 py-2 focus-within:ring-1 focus-within:ring-[#FF715B] focus-within:border-[#FF715B]">
-            <Image src={Mobile} alt="mobile" width={16} height={16} className="mr-2" />
+            <Image
+              src={Mobile}
+              alt="mobile"
+              width={16}
+              height={16}
+              className="mr-2"
+            />
             <input
               type="text"
               name="phone2"

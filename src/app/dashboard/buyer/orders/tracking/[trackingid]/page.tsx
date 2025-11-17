@@ -1,12 +1,12 @@
 "use client";
-import { use } from "react"; // <-- Important
-import { useRouter } from "next/navigation";
+import { use, useEffect } from "react"; // <-- Important
+import { useParams, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/Button/Button";
 import SpeedOf from "@/assets/icons/speedof.png";
 import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import Copy from "@/assets/icons/Copy.png";
-import { TrackOrders } from "@/types/global";
+import { OrderItem, TrackOrders } from "@/types/global";
 import { useState } from "react";
 
 import ProductCard from "@/components/ui/cards/ProductCard";
@@ -17,60 +17,120 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 import NavBack from "@/assets/icons/navBacksmall.png";
+
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { useHttp } from "@/hooks/use-http";
+import { setTrackingData } from "@/store/orders/tracking-slice";
+import Cookies from "js-cookie";
 
 export default function TrackingDetail() {
   const [copied, setCopied] = useState(false);
+  const [copiedtrackno, setCopiedtrackno] = useState(false);
   const [visible, setVisible] = useState(10);
   const showMore = () => setVisible((prev) => prev + 10);
+  const [open, setOpen] = useState(false);
   const router = useRouter();
-  
+  const { trackingid } = useParams();
+  const [isMobile, setIsMobile] = useState(false);
 
-    const cartItems = useSelector((state: RootState) => state.cart.items);
+  const { orders, loading } = useSelector((state: any) => state.orders);
+
+  const OrderDetails = orders.find((item: any) => item.id === trackingid);
+
+  const oderItems = OrderDetails.items;
+
+  console.log("checking order items", oderItems);
+
   const dispatch = useDispatch();
+  const token = useSelector((state: RootState) => state.token.token);
+
+  const { sendHttpRequest } = useHttp(); // ✅ hook instance
+  // const token = useSelector((state: any) => state.token?.token);
+
+  const buyerAddresses = useSelector(
+    (state: RootState) => state.buyer.BuyerAddresses
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // adjust breakpoint as needed
+    };
+
+    handleResize(); // check on mount
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleClick = (id: string) => {
+    if (isMobile) {
+      router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`); // redirect on mobile
+    } else {
+      setOpen(true); // open modal on desktop
+    }
+  };
+
+  useEffect(() => {
+    if (!token || !trackingid) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `orders/${trackingid}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res) => {
+        console.log("✅ User tracking info:", res);
+        const TrackingDetail = res.data;
+        dispatch(setTrackingData(TrackingDetail));
+      },
+    });
+  }, [token, trackingid, dispatch]);
+
+  const trackingData = useSelector((state: any) => state.tracking.trackingData);
+  console.log("lets see redux store:", trackingData);
+
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+
+  const selectedAddress = buyerAddresses.find(
+    (item: any) => item.id === trackingData.shipping_address
+  );
+   
+const isoDate = trackingData.paid_at;
+const orderCreateDate = trackingData.created_at
+
+const formattedCtreateDate = new Date (orderCreateDate).toLocaleString("en-GB", {
+    day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+})
+
+const formattedDate = new Date(isoDate).toLocaleString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+console.log(formattedDate);
+// 👉 "15 May 2025, 3:09 pm"
+
 
   const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 
-  const trackOrders: TrackOrders[] = [
-    {
-      id: 1,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-    {
-      id: 2,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-    {
-      id: 3,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-  ];
-  const orderId = "304657846532";
-  const trackingNumber = "NG020645529915";
-  const handleCopy = () => {
+  const handleCopy = (trackingid: string) => {
     navigator.clipboard
-      .writeText(trackingNumber)
+      .writeText(trackingid)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
@@ -79,11 +139,11 @@ export default function TrackingDetail() {
         console.error("Failed to copy: ", err);
       });
   };
-  const handleCopyTrack = () => {
+  const handleCopyTrack = (trackingNumber: any) => {
     navigator.clipboard
       .writeText(trackingNumber)
       .then(() => {
-        setCopied(true);
+        setCopiedtrackno(true);
         setTimeout(() => setCopied(false), 1500);
       })
       .catch((err) => {
@@ -182,15 +242,23 @@ export default function TrackingDetail() {
                   <div className="">
                     <div className="flex gap-4 items-center text-6a0dad ">
                       <div className="md:max-w-20.25 w-full max-w-16.25 h-fit flex items-center gap-1">
-                        <p className="md:text-5xl md:font-MontserratBold font-MontserratSemiBold text-c32">15</p>
-                        <p className="text-c12 font-MontserratSemiBold">May 2025</p>
+                        <p className="md:text-5xl md:font-MontserratBold font-MontserratSemiBold text-c32">
+                          15
+                        </p>
+                        <p className="text-c12 font-MontserratSemiBold">
+                          May 2025
+                        </p>
                       </div>
                       <p className="font-MontserratNormal text-sm text-000000">
                         -
                       </p>
                       <div className="md:max-w-20.25 w-full max-w-16.25 h-fit flex items-center gap-1">
-                        <p className="md:text-5xl md:font-MontserratBold font-MontserratSemiBold text-c32">21</p>
-                        <p className="text-c12 font-MontserratSemiBold">Jun 2025</p>
+                        <p className="md:text-5xl md:font-MontserratBold font-MontserratSemiBold text-c32">
+                          21
+                        </p>
+                        <p className="text-c12 font-MontserratSemiBold">
+                          Jun 2025
+                        </p>
                       </div>
                     </div>
                     <div className="mt-3">
@@ -205,9 +273,17 @@ export default function TrackingDetail() {
                   </div>
                   <div className="flex gap-2 mt-2  items-center">
                     <p className="text-sm  font-MontserratNormal">
-                      Order ID: <span className="text-c12 font-MontserratSemiBold"> {orderId} </span>
+                      Order ID:{" "}
+                      <span className="text-c12 font-MontserratSemiBold">
+                        {" "}
+                        {trackingData.id}{" "}
+                      </span>
                     </p>
-                    <button onClick={handleCopy}>
+                    <button
+                      onClick={() => {
+                        handleCopy(trackingData.id);
+                      }}
+                    >
                       <Image
                         src={Copy}
                         alt="copy"
@@ -224,15 +300,21 @@ export default function TrackingDetail() {
                   </div>
                   <div className="flex gap-2 mt-2 md:items-center pb-6 md:pb-0 border-b border-b-000000/5">
                     <p className="md:text-sm font-MontserratNormal text-c12">
-                      Tracking number:<span className="text-c12 font-MontserratSemiBold"> {trackingNumber} </span>
+                      Tracking number:
+                      <span className="text-c12 font-MontserratSemiBold">
+                        {" "}
+                        {trackingData.tracking_number}{" "}
+                      </span>
                     </p>
                     <button
-                      onClick={handleCopyTrack}
+                      onClick={() => {
+                        handleCopyTrack(trackingData.tracking_number);
+                      }}
                       className="flex   items-center justify-center"
                     >
                       <Image src={Copy} alt="copy" width={12} height={12} />
                     </button>
-                    {copied && (
+                    {copiedtrackno && (
                       <span className="text-green-600 text-c12 font-MontserratMedium">
                         Copied!
                       </span>
@@ -243,12 +325,9 @@ export default function TrackingDetail() {
                       Address for delivery
                     </p>
                     <div className="space-y-2">
-                      <p>Chisom Ebube Chris</p>
-                      <p>+2347034562314s</p>
-                      <p>
-                        LEA Primary School Dakwo, Abuja Kabusa, Abuja, Nigeria,
-                        900102
-                      </p>
+                      <p>{selectedAddress?.full_name}</p>
+                      <p>{selectedAddress?.phone}</p>
+                      <p>{selectedAddress?.address}</p>
                     </div>
                   </div>
                 </div>
@@ -272,7 +351,7 @@ export default function TrackingDetail() {
                       }}
                       className="space-y-c24"
                     >
-                      {trackOrders.map((item) => (
+                      {oderItems.map((item: any) => (
                         <motion.div
                           key={item.id}
                           initial={{ opacity: 0, y: -10 }}
@@ -283,23 +362,23 @@ export default function TrackingDetail() {
                           <div className="w-full justify-between md:pb-8 flex ">
                             <div className="flex gap-4 items-start  border-b border-b-000000/5  md:border-0 pb-c20 md:pb-0 h-fit">
                               <Image
-                                src={item.icon}
-                                alt={item.title}
+                                src={item.product.image}
+                                alt={item.product.name}
                                 width={100}
                                 height={100}
                               />
                               <div className="w-full md:max-w-143.75">
                                 <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
-                                  {item.title}
+                                  {item.product.name}
                                 </p>
 
                                 <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                                   <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                                    {item.totalQuantity}PC, {item.colour}
+                                    {item.quantity}PC, {item.variant?.color}
                                   </span>
                                 </div>
                                 <p className="font-MontserratSemiBold hidden md:flex text-c18 pt-3 leading-6.5">
-                                  ₦{item.totalAmount}
+                                  ₦{item.total_price}
                                 </p>
                               </div>
                             </div>
@@ -404,7 +483,7 @@ export default function TrackingDetail() {
                     Order Paid Successfully
                   </p>
                   <p className="text-c12 font-MontserratNormal">
-                    15 May, 2025, 3:09 pm
+                    {formattedDate}
                   </p>
                 </div>
                 <div className="space-y-1 text-000000/70">
@@ -412,7 +491,7 @@ export default function TrackingDetail() {
                     Order Submitted
                   </p>
                   <p className="text-c12 font-MontserratNormal">
-                    15 May, 2025, 3:09 pm
+                    {formattedCtreateDate}
                   </p>
                 </div>
               </div>

@@ -50,15 +50,15 @@ useEffect(() => {
 
         getOrderRequest({
       requestConfig: {
-        url: "/cart/order-details/?ref=${reference}",
-        method: "FETCH",
+        url: `/orders/payment-details/?ref=${reference}`,
+        method: "GET",
        
         userType: "buyer",
         successMessage: "Login successful!",
       },
       successRes: (orderData) => {
         console.log("Order Data:", orderData);
-        // You can set state or perform other actions with orderData here
+        
       }
     });
   }

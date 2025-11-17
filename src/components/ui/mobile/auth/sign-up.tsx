@@ -11,8 +11,7 @@ import { RegisterParams } from "@/types/global";
 import { useRouter } from "next/navigation";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "../../loading-spinner";
-import { tokenActions } from "@/store/token/token-slice";
-import { useDispatch } from "react-redux";
+
 import MobileLogin from "./sign-in";
 import { AuthStep } from "@/types/global";
 

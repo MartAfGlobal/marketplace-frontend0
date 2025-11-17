@@ -46,13 +46,12 @@ export default function UserAddress({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Auto-select default or first address
   useEffect(() => {
     if (selectedAddressId) {
-      // Controlled externally by parent
+    
       setSelectedCardId(selectedAddressId);
     } else if (buyerAddresses.length > 0) {
-      // Select the default address, or fallback to the first one
+     
       const defaultAddr = buyerAddresses.find((a) => a.is_default);
       setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0].id);
     }

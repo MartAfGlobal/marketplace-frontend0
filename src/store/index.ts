@@ -12,8 +12,11 @@ import selectedProductReducer from "@/store/user-data/products/selectedProduct-s
 import tokenReducer from "@/store/token/token-slice";
 import buyerReducer from "@/store/user-data/buyer/buyer-slice";
 import sellerReducer from "@/store/user-data/seller/seller-slice";
+import orderReducer from "@/store/orders/order-slice";
+import trackingReducer from "@/store/orders/tracking-slice"
+import wishlistLabelReducer from "./wishlistLabel/wishlistLabelSlice"
 
-// ✅ Persist configs
+
 const tokenPersistConfig = {
   key: "token",
   storage,
@@ -29,13 +32,11 @@ const sellerPersistConfig = {
   storage,
 };
 
-// ✅ Add persist config for cart
 const cartPersistConfig = {
   key: "cart",
   storage,
 };
 
-// (Optional) You can persist wishlist too
 const wishlistPersistConfig = {
   key: "wishlist",
   storage,
@@ -46,15 +47,31 @@ const productsPersistConfig = {
   storage,
 };
 
+const ordersPersistConfig = {
+  key: "orders",
+  storage,
+};
+const trackingPersistCobfig ={
+  key: "tracking",
+  storage,
+}
+const wishlistLabelPersistCobfig ={
+  key: "labels",
+  storage,
+}
+
 const rootReducer = combineReducers({
-  token: persistReducer(tokenPersistConfig, tokenReducer.reducer),
+  tracking: persistReducer (trackingPersistCobfig, trackingReducer),
+  token: persistReducer(tokenPersistConfig,  tokenReducer),
   buyer: persistReducer(buyerPersistConfig, buyerReducer),
   seller: persistReducer(sellerPersistConfig, sellerReducer),
   cart: persistReducer(cartPersistConfig, cartReducer),
   wishlist: persistReducer(wishlistPersistConfig, wishlistReducer),
-  products: persistReducer(productsPersistConfig, productReducer), // ✅ now persisted
+  products: persistReducer(productsPersistConfig, productReducer),
   counter: counterReducer,
   selectedProduct: selectedProductReducer,
+  wishlistLabel:persistReducer(wishlistLabelPersistCobfig, wishlistLabelReducer),
+  orders: persistReducer(ordersPersistConfig, orderReducer),
 });
 
 

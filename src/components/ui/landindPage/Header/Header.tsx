@@ -117,7 +117,7 @@ export default function Header() {
 
               {token && (
                 <span className="text-base font-MontserratSemiBold text-ffffff">
-                  Hi, {buyer.first_name || "not set"}
+                  Hi, {`${buyer.first_name ? buyer.first_name.charAt(0).toUpperCase() + buyer.first_name.slice(1) : "Not set"}`}
                 </span>
               )}
               <Image

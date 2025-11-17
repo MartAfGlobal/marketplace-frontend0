@@ -13,19 +13,60 @@ import { useDispatch } from "react-redux";
 import { setProducts } from "@/store/user-data/products/product-slice";
 import { transformApiProduct } from "@/utils/transformApiProduct";
 
+import { usePathname } from "next/navigation";
 export default function Home() {
+    const pathname = usePathname();
   const dispatch = useDispatch();
   const { sendHttpRequest } = useHttp();
   const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+ 
+  const waitForElement = (id: string, timeout = 5000): Promise<HTMLElement | null> =>
+    new Promise((resolve) => {
+      const start = performance.now();
+      const check = () => {
+        const el = document.getElementById(id);
+        if (el) return resolve(el);
+        if (performance.now() - start > timeout) return resolve(null);
+        requestAnimationFrame(check);
+      };
+      check();
+    });
+
+
+  const doScrollToHash = async () => {
+    const hash = window.location.hash;
+    if (!hash) return;
+    const id = hash.slice(1);
+    const el = await waitForElement(id, 5000); 
+    if (el) {
+      
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      console.warn(`Element #${id} not found within timeout.`);
+    }
+  };
+
+  doScrollToHash();
+
+ 
+  window.addEventListener("hashchange", doScrollToHash);
+
+  return () => window.removeEventListener("hashchange", doScrollToHash);
+}, []);
+
+
+
 
   useEffect(() => {
     const handleProducts = (res: any) => {
       console.log("Raw API Response:", res);
 
-      const apiResults = res?.data?.results || []; // drill into .data
-      console.log("API Results:", apiResults);
+      const products = res?.data?.results; // drill into .data
+      console.log("API Results:", products);
 
-      const products = apiResults.map(transformApiProduct);
+      // const products = apiResults.map(transformApiProduct);
       console.log("Mapped products:", products);
 
       dispatch(setProducts(products));
@@ -58,7 +99,10 @@ export default function Home() {
         <div className="md:hidden">
           <Gallary />
         </div>
-        <ProductListPage />
+        <section className="w-full" id="production-section">
+          <ProductListPage />
+        </section>
+
         <AboutPage />
       </div>
       <JoinUsPage />

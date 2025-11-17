@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { RootState } from "@/store";
+import GuestCheckoutModal from "@/components/ui/Modals/guestCheckoutModal";
+import { selectCheckedItems } from "@/store/cart/cartSlice";
 import {
   removeFromCart,
   updateQuantity,
@@ -34,6 +36,7 @@ import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
 import EmptyCartIcon from "@/components/ui/cart/EmptyCartIcon";
+import DotSpinner from "@/components/reloadSpinner/DotSpinner";
 
 export default function CartPage() {
   const [selectedItems, setSelectedItems] = useState<{
@@ -43,12 +46,17 @@ export default function CartPage() {
   const [visible, setVisible] = useState(10);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const initialHydratedRef = useRef(false);
+  const [deleting, setDeleting] = useState("")
 
   const token = useSelector((state: RootState) => state.token?.token);
   const cartItems = useSelector((state: RootState) => state.cart.items || []);
   const { loading, sendHttpRequest } = useHttp();
+  const {  sendHttpRequest:deleteReq } = useHttp();
+  const {  sendHttpRequest:toggleReq } = useHttp();
   const dispatch = useDispatch();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [syncingCart, setSyncingCart] = useState(false);
 
   const persistLocalCart = (items: any[]) => {
     try {
@@ -149,7 +157,7 @@ export default function CartPage() {
   }, [cartItems]);
   const fetchBackendCart = async () => {
     if (!token) return;
-
+    setSyncingCart(true);
     try {
       await sendHttpRequest({
         requestConfig: {
@@ -160,7 +168,6 @@ export default function CartPage() {
           userType: "buyer",
         },
         successRes: async (res: any) => {
-          // 🟩 1️⃣ Map backend cart items
           const backendItems = res?.data?.items || [];
 
           const mappedBackend: CartItem[] = backendItems.map((item: any) => {
@@ -187,31 +194,26 @@ export default function CartPage() {
             };
           });
 
-          // 🟩 2️⃣ Get local cart
           const localItems: CartItem[] = JSON.parse(
             localStorage.getItem("cart") || "[]"
           );
 
           console.log("🟨 Local cart items:", localItems);
 
-          // Normalize variation_display in local
           localItems.forEach((item) => {
             item.variation_display = (
               item.variation_display || "default"
             ).toLowerCase();
           });
 
-          // 🟩 3️⃣ Create consistent merge key
           const mapKey = (item: CartItem) => `${item.product_id} || "default"}`;
 
-          // Step 1: Build merged map from backend
           const mergedMap: Record<string, CartItem> = {};
           for (const item of mappedBackend) {
             const key = mapKey(item);
             mergedMap[key] = { ...item };
           }
 
-          // Step 2: Merge local cart
           for (const local of localItems) {
             const key = mapKey(local);
             if (mergedMap[key]) {
@@ -224,15 +226,12 @@ export default function CartPage() {
             }
           }
 
-          // Step 3: Convert map → array
           const merged = Object.values(mergedMap);
           console.log("✅ Final merged cart:", merged);
 
-          // 🟩 4️⃣ Save to Redux + localStorage
           dispatch(setCartItems(merged));
           persistLocalCart(merged);
 
-          // 🟩 5️⃣ Update selected state
           const newSelected: Record<string, boolean> = {};
           merged.forEach((mi) => {
             newSelected[mi.id || mi.product_id] =
@@ -240,9 +239,6 @@ export default function CartPage() {
           });
           setSelectedItems(newSelected);
 
-          toast.success("Cart synced and merged successfully");
-
-          // 🟩 6️⃣ Push merged cart to backend
           await sendHttpRequest({
             requestConfig: {
               url: "/cart/sync/",
@@ -252,15 +248,15 @@ export default function CartPage() {
               userType: "buyer",
               body: { items: merged.map(({ id, ...r }) => r) },
             },
-            successRes: () => {
-              toast.success("Updated successfully");
-            },
+            successRes: () => {},
           });
+          setSyncingCart(false);
         },
       });
     } catch (err) {
       console.error("fetchBackendCart failed", err);
       toast.error("Failed to sync cart with server");
+      setSyncingCart(false);
     }
   };
 
@@ -279,7 +275,7 @@ export default function CartPage() {
     }
 
     try {
-      await sendHttpRequest({
+      await toggleReq({
         requestConfig: {
           url: `/cart/item/${item.id}/`,
           method: "PATCH",
@@ -321,7 +317,7 @@ export default function CartPage() {
     try {
       await Promise.all(
         cartItems.map((item: any) =>
-          sendHttpRequest({
+          toggleReq({
             requestConfig: {
               url: `/cart/item/${item.id}/`,
               method: "PATCH",
@@ -349,7 +345,14 @@ export default function CartPage() {
   };
 
   const handleDeleteItem = async (id: string) => {
-    dispatch(removeFromCart(id));
+    setDeleting(id)
+    if (!token) {
+      dispatch(removeFromCart(id));
+        setDeleting("");
+      return;
+    }
+     
+
     setSelectedItems((p) => {
       const copy = { ...p };
       delete copy[id];
@@ -361,7 +364,7 @@ export default function CartPage() {
 
     if (!token) return;
     try {
-      await sendHttpRequest({
+      await deleteReq({
         requestConfig: {
           url: `/cart/item/${id}/remove/`,
           method: "DELETE",
@@ -369,12 +372,14 @@ export default function CartPage() {
           isAuth: true,
           userType: "buyer",
         },
-        successRes: fetchBackendCart,
+        successRes: (res) => {
+          dispatch(removeFromCart(id));
+            setDeleting("");
+        },
       });
     } catch {
       toast.error("Failed to delete item on server");
-
-      await fetchBackendCart();
+        setDeleting("");
     }
   };
 
@@ -402,12 +407,12 @@ export default function CartPage() {
     try {
       await sendHttpRequest({
         requestConfig: {
-          url: `/cart/item/batch_delete/`, // ✅ Your delete endpoint
+          url: `/cart/item/batch_delete/`,
           method: "DELETE",
           token,
           isAuth: true,
           userType: "buyer",
-          body: { item_ids: selectedIds }, // ✅ pass selected IDs array
+          body: { item_ids: selectedIds },
         },
         successRes: fetchBackendCart,
       });
@@ -417,13 +422,11 @@ export default function CartPage() {
     }
   };
 
-  // ---------- Checkout ----------
   const handleCheckout = () => {
     if (token) router.push("/cart/checkout");
     else setCheckoutModalOpen(true);
   };
 
-  // ---------- Derived values ----------
   const totalPrice = Number(
     (cartItems || [])
       .reduce(
@@ -441,7 +444,6 @@ export default function CartPage() {
 
   return (
     <div className="relative md: md:h-full h-dvh">
-      {/* Desktop Breadcrumb */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -462,7 +464,6 @@ export default function CartPage() {
       </motion.div>
 
       <div className="w-full md:px-15 px-0 pb-3 md:pb-0">
-        {/* Back Button */}
         <button
           onClick={() => router.back()}
           className="flex items-center gap-4 pl-6  mt-3 md:mt-c32"
@@ -479,24 +480,42 @@ export default function CartPage() {
           </p>
         </button>
       </div>
+     
       {cartItems.length === 0 ? (
         <EmptyCartIcon />
       ) : (
         <>
           <div className="md:pt-c48 pb-c64">
             <div className="md:flex gap-18 justify-center">
-              {/* Cart Items */}
               <div className="w-full max-w-207">
                 <div className="w-full h-c56 mb-4 md:mb-c32 flex px-6 justify-between items-center bg-947fff/10">
                   <div className="flex items-center gap-4">
-                    <input
+                    {/* <input
                       type="checkbox"
                       className="h-5 w-5 border border-black rounded  accent-black checked:bg-black checked:text-white"
                       checked={allSelected}
                       onChange={handleSelectAll}
-                    />
+                    /> */}
+
+                    <button
+                      onClick={handleSelectAll}
+                      className={`w-5 h-5 rounded-c4 border-1 border-000000/32 flex items-center justify-center transition-colors ${
+                        allSelected
+                          ? "bg-ff715b"
+                          : "border-000000/5 bg-transparent"
+                      }`}
+                    >
+                      {allSelected && (
+                        <Image
+                          src={GoodMark}
+                          alt="checked"
+                          width={9.75}
+                          height={7.13}
+                        />
+                      )}
+                    </button>
                     <span className="text-c12 font-MontserratSemiBold">
-                      Select
+                      Select All
                     </span>
                   </div>
                   {Object.values(selectedItems).some(
@@ -528,104 +547,109 @@ export default function CartPage() {
                     }}
                     className="space-y-c24 w-full "
                   >
-                    {cartItems.map((item) => (
-                      <motion.div
-                        key={item.id}
-                        className="flex justify-between items-center md:border-b  border-gray-200 pb-4"
-                      >
-                        <div className="flex items-center md:items-start  gap-4 ">
-                          <input
-                            type="checkbox"
-                            checked={!!selectedItems[item.id]}
-                            onChange={() => handleToggleItem(item)}
-                            className="custom-checkbox flex-shrink-0"
-                          />
-
-                          <Image
-                            src={item.image[0] || "/placeholder.png"}
-                            alt={item.name || "Product image"}
-                            width={96}
-                            height={96}
-                            className="rounded md:h-24 md:w-24 w-c56 h-c56"
-                          />
-
-                          <div>
-                            <p className="font-MontserratSemiBold text-c12 md:text-base mb-1">
-                              {item.name}
-                            </p>
-                            <p className="bg-000000/5 px-3 py-1 md:px-4 md:py-2 w-fit rounded-c12 text-000000/36 mb-3 text-c12 font-MontserratSemiBold">
-                              {item.quantity}pc,{" "}
-                              {item.variations_data?.[0]?.color || "black"}
-                            </p>
-
-                            <p className="font-MontserratNormal text-base md:text-c12 text-gray-600">
-                              ₦{item.price}
-                            </p>
-                          </div>
-                        </div>
-
+                    {token && syncingCart ? (
+                      <div className="w-full flex justify-center py-10">
+                        <DotSpinner size={10} color="#ff715b" gap={8} />
+                      </div>
+                    ) : (
+                      cartItems.map((item) => (
                         <motion.div
-                          layout
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 250,
-                            damping: 25,
-                          }}
-                          className="flex flex-col items-end justify-center h-full space-y-9"
+                          key={item.id}
+                          className="flex justify-between items-center md:border-b  border-gray-200 pb-4"
                         >
-                          <AnimatePresence mode="popLayout">
-                            {selectedItems[item.id] && (
-                              <motion.button
-                                key="delete"
-                                onClick={() => handleDeleteItem(item.id)}
-                                className="ml-2 transition-opacity hover:opacity-70"
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{
-                                  type: "spring",
-                                  stiffness: 200,
-                                  damping: 22,
-                                }}
-                              >
-                                <Image
-                                  src={Trash}
-                                  alt="delete"
-                                  width={15}
-                                  height={16}
-                                />
-                              </motion.button>
+                          <div className="flex items-center md:items-start  gap-4 ">
+                            <input
+                              type="checkbox"
+                              checked={!!selectedItems[item.id]}
+                              onChange={() => handleToggleItem(item)}
+                              className="custom-checkbox flex-shrink-0"
+                            />
+
+                            {item.product_image && (
+                              <Image
+                                src={item.product_image || "/placeholder.png"}
+                                alt={item.name || "Product image"}
+                                width={96}
+                                height={96}
+                                className="rounded md:h-24 md:w-24 w-c56 h-c56"
+                              />
                             )}
-                          </AnimatePresence>
+
+                            <div>
+                              <p className="font-MontserratSemiBold  text-c12 md:text-base mb-1">
+                                {item.name}
+                              </p>
+                              <p className="bg-000000/5 px-3 py-1 md:px-4 md:py-2 w-fit rounded-c12 text-000000/36 mb-3 text-c12 font-MontserratSemiBold">
+                                {item.quantity}pc,{" "}
+                                {item.variations_data?.[0]?.color || "black"}
+                              </p>
+
+                              <p className="font-MontserratNormal text-base md:text-c12 text-gray-600">
+                                ₦{item.price}
+                              </p>
+                            </div>
+                          </div>
 
                           <motion.div
                             layout
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
                             transition={{
-                              layout: {
-                                type: "spring",
-                                stiffness: 250,
-                                damping: 25,
-                              },
+                              type: "spring",
+                              stiffness: 250,
+                              damping: 25,
                             }}
-                            className="w-full flex justify-end"
+                            className="flex flex-col items-end justify-center h-full space-y-9"
                           >
-                            <QuantitySelector
-                              productId={item.id}
-                              token={token ?? undefined}
-                              quantity={item.quantity}
-                              onChange={(q) =>
-                                dispatch(
-                                  updateQuantity({ id: item.id, quantity: q })
-                                )
-                              }
-                            />
+                            <motion.button
+                              key="delete"
+                              disabled={deleting===item.id}
+                              onClick={() => handleDeleteItem(item.id)}
+                              className="ml-2 transition-opacity hover:opacity-70"
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 200,
+                                damping: 22,
+                              }}
+                            >
+                              { deleting ===item.id ? <LoadingSpinner color="border-ff715b"/> :<Image
+                                src={Trash}
+                                alt="delete"
+                                width={15}
+                                height={16}
+                              />}
+                            </motion.button>
+
+                            <motion.div
+                              layout
+                              transition={{
+                                layout: {
+                                  type: "spring",
+                                  stiffness: 250,
+                                  damping: 25,
+                                },
+                              }}
+                              className="w-full flex justify-end"
+                            >
+                              <QuantitySelector
+                                productId={item.id}
+                                token={token ?? undefined}
+                                quantity={item.quantity}
+                                onChange={(q) =>
+                                  dispatch(
+                                    updateQuantity({ id: item.id, quantity: q })
+                                  )
+                                }
+                              />
+                            </motion.div>
                           </motion.div>
                         </motion.div>
-                      </motion.div>
-                    ))}
+                      ))
+                    )}
                   </motion.div>
                 </div>
               </div>
@@ -643,7 +667,7 @@ export default function CartPage() {
                     </div>
                     <div className="flex justify-between">
                       <p>Discount:</p>
-                      <p className="text-ca0202">-₦50</p>
+                      <p className="text-ca0202">0</p>
                     </div>
                     <div className="flex justify-between">
                       <p>Subtotal:</p>
@@ -712,7 +736,6 @@ export default function CartPage() {
             </div>
           </div>
 
-          {/* More Products */}
           <div className="hidden w-full md:flex">
             <div className="w-full">
               <div className="py-c32">
@@ -778,7 +801,6 @@ export default function CartPage() {
             </Button>
           </div>
 
-          {/* Mobile Checkout Modal */}
           <AnimatePresence>
             {openModal && (
               <motion.div
@@ -803,8 +825,8 @@ export default function CartPage() {
                     .map((item) => (
                       <Image
                         key={item.id}
-                        src={item.image[0]}
-                        alt={item.name}
+                        src={item.product_image || "/placeholder.png"}
+                        alt={item.product_name || "product name"}
                         width={56}
                         height={56}
                         className="flex-shrink-0 rounded w-14 h-14"
@@ -841,6 +863,12 @@ export default function CartPage() {
           <CheckoutModal
             isOpen={checkoutModalOpen}
             onClose={() => setCheckoutModalOpen(false)}
+            onGuestCheckout={() => setOpen(true)}
+          />
+          <GuestCheckoutModal
+            isOpen={open}
+            onClose={() => setOpen(false)}
+            selectedItems={cartItems.filter((item) => selectedItems[item.id])}
           />
         </>
       )}

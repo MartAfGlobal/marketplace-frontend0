@@ -92,13 +92,30 @@ export default function PaymentSuccessfulPage() {
                         <div className="w-full justify-between  items-end  pb-8 flex-flex-col md:flex-row">
                           <div className="flex gap-4 w-full j items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
-                              <Image
-                                src={item.image[0]}
-                                alt={item.slug}
-                                width={100}
-                                height={100}
-                                className="w-16 h-16 md:w-25 md:h-25"
-                              />
+                              {(() => {
+                                const imageSrc = Array.isArray(item.image)
+                                  ? item.image[0]
+                                  : item.image ?? "";
+
+                                // If no image, render a simple placeholder div to avoid Next/Image errors
+                                if (!imageSrc) {
+                                  return (
+                                    <div className="w-16 h-16 md:w-25 md:h-25 bg-gray-100 flex items-center justify-center text-c12 text-gray-400">
+                                      No image
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <Image
+                                    src={imageSrc}
+                                    alt={item.product_name || "profile name"}
+                                    width={100}
+                                    height={100}
+                                    className="w-16 h-16 md:w-25 md:h-25"
+                                  />
+                                );
+                              })()}
                             </div>
                             <div className="w-full md:max-w-143.75">
                               <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">

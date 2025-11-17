@@ -14,7 +14,6 @@ import ProductCard from "@/components/ui/cards/ProductCard";
 import { RootState } from "@/store";
 import { useDispatch, useSelector } from "react-redux";
 
-
 const tabs = [
   "All",
   "Awaiting Payment",
@@ -34,9 +33,8 @@ export default function OrdersPage() {
   );
 
   return (
-    <div className="w-full   flex flex-col">
-      
-      <div className="flex justify-between pt-c32 border-b border-black/10">
+    <div className="w-full  justify-center  flex flex-col">
+      <div className="flex justify-between sticky top-16 z-10 bg-white pt-c32 border-b border-black/10">
         <OrdersNav
           tabs={tabs}
           activeTab={activeTab}
@@ -48,29 +46,19 @@ export default function OrdersPage() {
         />
       </div>
 
-      {/* Scrollable content section */}
-      <div className="flex-1   overflow-y-auto no-scrollbar">
+      <div className="flex-1 overflow-y-auto no-scrollbar">
         <div className="md:pt-c32 md:pb-c60 ">
           {activeTab === "All" && <Orders />}
-          {activeTab === "Awaiting Payment" && (
-            <div className=""><AwaitingOrders/></div>
-          )}
-          {activeTab === "To Ship" && (
-            <div className=""><ToShip/></div>
-          )}
-          {activeTab === "Shipped" && (
-            <div className=""><Shipped/></div>
-          )}
-          {activeTab === "Processed" && (
-            <div className=""><Proccessed/></div>
-          )}
+          {activeTab === "Awaiting Payment" && <AwaitingOrders />}
+          {activeTab === "To Ship" && <ToShip />}
+          {activeTab === "Shipped" && <Shipped />}
+          {activeTab === "Processed" && <Proccessed />}
           {activeTab === "In Dispute" && (
             <div className="p-4 bg-red-100 rounded">In Dispute UI</div>
           )}
         </div>
-
       </div>
-       
+
       <div className="pb-3 px-6  md:hidden">
         <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
           More to love

@@ -3,13 +3,15 @@ import { RootState } from "@/store";
 
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 
 
 
 export default function Wishlist() {
   const [visible, setVisible] = useState(10); // Show 6 items by default
+  const router = useRouter()
 
-  const showMore = () => setVisible((prev) => prev + 10);
+const showMore = ()=> router.push("/dashboard/buyer/wishlist")
 
     const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
@@ -25,18 +27,18 @@ export default function Wishlist() {
         <h2 className="text-lg font-MontserratMedium text-[#161616]">
           <p>Wishlist</p>
         </h2>
-        {visible < fashionProducts.length && (
+        {/* {visible < fashionProducts.length && ( */}
           <button
             onClick={showMore}
             className="font-MontserratSemiBold text-[#FF715B] hover:underline text-sm"
           >
-            View More
+            View All
           </button>
-        )}
+       
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 ">
         {wishlistItems.slice(0, visible).map((item) => (
-          <ProductCard key={item.id} product={item} />
+          <ProductCard key={item.id} product={item.product} />
         ))}
       </div>
     </div>

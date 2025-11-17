@@ -14,7 +14,8 @@ import { useRouter } from "next/navigation";
 import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 export default function ProfileDetailsModal({
   isOpen,
@@ -24,6 +25,7 @@ export default function ProfileDetailsModal({
 }: ProfileDetailsModalProps) {
   const [details, setDetails] = useState(currentDetails);
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
+  const dispatch = useDispatch()
 
     const [formData, setFormData] = useState<BuyerEditParams>(() => ({
       first_name: buyer?.first_name || "",
@@ -62,6 +64,25 @@ export default function ProfileDetailsModal({
 
     const registerUserRes = (res: any) => {
       toast.success("Profile updated successfully!");
+
+        dispatch(
+    buyerActions.updateBuyerData({
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+    })
+  );
+
+  // Update nested profile fields separately
+  dispatch(
+    buyerActions.updateBuyerData({
+      profile: {
+        ...buyer.profile,
+        phone: formData.phone,
+        phone2: formData.phone2,
+      },
+    })
+  );
+      console.log ("profile edited:", res.data)
       onClose();
       router.push(`/dashboard/buyer`);
     };

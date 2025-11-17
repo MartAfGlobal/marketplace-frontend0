@@ -12,7 +12,7 @@ export default function OverviewBody() {
  
  
   return (
-    <div className="space-y-6 pb-c32">
+    <div className="space-y-6 pb-c32 ">
       
       <OverviewHeader />
       <div>

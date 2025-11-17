@@ -2,7 +2,7 @@ import { useHttp } from "@/hooks/use-http";
 import { tokenActions } from "@/store/token/token-slice";
 import { LoginParams, MobileLoginProps } from "@/types/global";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
@@ -10,8 +10,6 @@ import Image from "next/image";
 
 import Mail from "@/assets/FormIcon/email.svg";
 import { LoadingSpinner } from "../../loading-spinner";
-
-
 
 export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -31,32 +29,49 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
 
   const { loading: logingLoading, sendHttpRequest: loginRequest } = useHttp();
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // ✅ Load saved credentials on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberEmail");
+    const savedPassword = localStorage.getItem("rememberPassword");
+    if (savedEmail && savedPassword) {
+      setFormData({
+        email: savedEmail,
+        password: savedPassword,
+        rememberMe: true,
+      });
+    }
+  }, []);
+
   const loginSuccess = (res: any) => {
-    // backend sends { access: "..." }
     const accessToken = res?.data?.access;
-    console.log("Full response:", res);
-    console.log("Access token:", accessToken);
 
     if (!accessToken) {
       toast.error("Login failed: No token received.");
       return;
     }
 
-    dispatch(tokenActions.setToken(accessToken));
+    // ✅ Save email & password if "Remember me" is checked
+    if (formData.rememberMe) {
+      localStorage.setItem("rememberEmail", formData.email);
+      localStorage.setItem("rememberPassword", formData.password);
+    } else {
+      localStorage.removeItem("rememberEmail");
+      localStorage.removeItem("rememberPassword");
+    }
 
+    dispatch(tokenActions.setToken(accessToken));
     router.back();
     onClose();
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.email || !formData.password) {
       toast.error("Please fill in all fields!");
       return;
@@ -66,7 +81,6 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       return;
     }
 
-    // Login request
     loginRequest({
       requestConfig: {
         url: "/accounts/login",
@@ -74,14 +88,12 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
         body: {
           email: formData.email,
           password: formData.password,
+          check: formData.rememberMe,
         },
         userType: "buyer",
         successMessage: "Login successful!",
       },
-      successRes: (res: any) => {
-        loginSuccess(res); // ✅ handle token + redirect
-        onClose(); // ✅ close modal only after success
-      },
+      successRes: loginSuccess,
     });
   };
 
@@ -97,7 +109,6 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       </div>
 
       <div className="space-y-4">
-        
         <div className="relative w-full">
           <Image
             src={Mail}
@@ -141,7 +152,29 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
           </button>
         </div>
 
-        <button disabled={logingLoading || !isFormValid} className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <label className="relative flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.rememberMe}
+              onChange={(e) =>
+                setFormData({ ...formData, rememberMe: e.target.checked })
+              }
+              className="peer h-5 w-5 rounded-c4 border cursor-pointer border-ff715b appearance-none checked:bg-ff715b checked:border-ff715b"
+            />
+            <span className="absolute left-0 top-0 h-5 w-5 flex items-center justify-center text-white font-bold scale-0 peer-checked:scale-100 transition-transform">
+              ✓
+            </span>
+            <span className="text-c12 font-MontserratMedium text-161616">
+              Remember me
+            </span>
+          </label>
+        </div>
+
+        <button
+          disabled={logingLoading || !isFormValid}
+          className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center"
+        >
           {logingLoading ? <LoadingSpinner /> : "Sign In"}
         </button>
 

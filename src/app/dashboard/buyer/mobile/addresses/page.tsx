@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 import type { RootState } from "@/store";
+import Cookies from "js-cookie";
 
 // icons
 
@@ -17,12 +18,10 @@ import NavBack from "@/assets/icons/navBacksmall.png";
 
 export default function AllAddressesPage() {
   const router = useRouter();
- 
-
 
   const dispatch = useDispatch();
-
-  const token = useSelector((state: RootState) => state.token?.token);
+  const token = useSelector((state: RootState) => state.token.token);
+  // const token = useSelector((state: RootState) => state.token?.token);
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses
   );
@@ -37,7 +36,7 @@ export default function AllAddressesPage() {
   }, [buyerAddresses]);
 
   const handleDelete = (id: number) => {
-   return
+    return;
   };
 
   const handleSelectDefaultAddress = async (addressId: number) => {
@@ -47,14 +46,17 @@ export default function AllAddressesPage() {
     if (!token) return;
 
     try {
-      const response = await fetch(`/shipping/shipping-addresses/${addressId}/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ is_default: true }),
-      });
+      const response = await fetch(
+        `/shipping/shipping-addresses/${addressId}/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ is_default: true }),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to update default address");
       const updatedAddress = await response.json();
@@ -82,12 +84,12 @@ export default function AllAddressesPage() {
       </button>
       <div className=" w-full pb-25 space-y-3">
         {buyerAddresses.map((item) => {
-           const isSelected = item.id === selectedCardId;
+          const isSelected = item.id === selectedCardId;
 
           return (
             <motion.div
               key={item.id}
-                  onClick={() => handleSelectDefaultAddress(item.id)}
+              onClick={() => handleSelectDefaultAddress(item.id)}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
@@ -128,9 +130,7 @@ export default function AllAddressesPage() {
                   <p className="font-MontserratSemiBold text-c12">
                     {item.full_name}
                   </p>
-                  <p className="text-c12 font-MontserratNormal">
-                    {item.phone}
-                  </p>
+                  <p className="text-c12 font-MontserratNormal">{item.phone}</p>
                   <p className="text-c12 font-MontserratNormal">
                     {item.address}
                   </p>

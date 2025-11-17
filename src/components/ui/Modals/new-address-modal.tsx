@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { Label } from "../forms/Label";
 import { Input } from "../forms/Input";
 import Image from "next/image";
-import { AddressModalProps, Address} from "@/types/global";
+import { AddressModalProps, Address } from "@/types/global";
 
 import MobileIcon from "@/assets/icons/callIcon.png";
 import StateIcon from "@/assets/icons/mobileIcon.png";
@@ -14,13 +14,20 @@ import CityIcon from "@/assets/icons/callIcon.png";
 
 import NigerianFlag from "@/assets/icons/user-dashboard/Flags/Nigeria.png";
 import { useDispatch, useSelector } from "react-redux";
+
 import { useRouter } from "next/navigation";
+import { RootState } from "@/store";
 
 // country-state-city
 import { Country, State } from "country-state-city";
 import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
+
+// ✅ IMPORT CUSTOM DROPDOWN (same as GuestCheckout)
+import CountryStateDropdown from "../forms/CountryStateDropdown";
+import UserCountryStateDropdown from "../forms/userCountryStateDropdown";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 // helper: map ISO code to flag URL
 const getFlagUrl = (isoCode: string) =>
@@ -45,14 +52,13 @@ export default function AddressModal({
   });
 
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [streetError, setStreetError] = useState("");
 
   const [states, setStates] = useState<any[]>([]);
   const [flag, setFlag] = useState<string>(NigerianFlag.src);
-  const tokenSlice = useSelector((state: any) => state.token);
-  const { token } = tokenSlice;
-
+  const token = useSelector((state: RootState) => state.token.token);
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
@@ -82,9 +88,10 @@ export default function AddressModal({
 
   const SaveSuccess = (res: any) => {
     console.log("address INFO:", res);
+     dispatch(buyerActions.addBuyerAddress(res.data))
 
     setStreetError("");
-    onSave(formData);
+    onSave?.(formData);
     onClose();
 
     return;
@@ -96,14 +103,12 @@ export default function AddressModal({
     console.log("Token in handleSave:", token);
     const { id, ...bodyWithoutId } = formData;
 
-    // Login request
     saveRequest({
       requestConfig: {
         url: "shipping/shipping-addresses/",
         method: "POST",
         body: bodyWithoutId,
-
-        token,
+        token: token ?? undefined,
         isAuth: true,
         successMessage: "address added successful!",
       },
@@ -144,7 +149,6 @@ export default function AddressModal({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
             <button
               onClick={onClose}
               className="absolute top-6 right-6 text-gray-500 hover:text-gray-800 text-lg"
@@ -157,42 +161,12 @@ export default function AddressModal({
             </h2>
 
             <div className="flex flex-col gap-3">
-              {/* Country / Region */}
-              <div className="w-full flex gap-c24 justify-between">
-                <div className="flex flex-col gap-2 relative w-full max-w-67.5">
-                  <Label className="text-c12 font-MontserratMedium">
-                    Country/Region
-                  </Label>
-                  <div className="relative w-full flex items-center rounded-c8 p-4 border border-efefef ">
-                    {flag && (
-                      <div className="absolute  left-3 top-1/2 -translate-y-1/2">
-                        <Image
-                          src={flag}
-                          alt="Country"
-                          width={18}
-                          height={18}
-                          className="rounded-full h-4.5 w-4.5"
-                        />
-                      </div>
-                    )}
-                    <select
-                      value={formData.country}
-                      onChange={(e) => handleChange("country", e.target.value)}
-                      className="  pl-5  focus:ring-0 focus:outline-0 w-full text-c12 font-MontserratMedium"
-                    >
-                      {Country.getAllCountries().map((c) => (
-                        <option
-                          className="-ml-12"
-                          key={c.isoCode}
-                          value={c.name}
-                        >
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
+              {/* ✅ REPLACED OLD SELECT WITH CUSTOM DROPDOWN */}
+              <UserCountryStateDropdown
+                country={formData.country}
+                state={formData.state}
+                onChange={handleChange}
+              />
 
               <div>
                 <p className="font-MontserratSemiBold text-c12 mb-3  text-000000">
@@ -249,28 +223,9 @@ export default function AddressModal({
                 </p>
                 <div className="flex flex-col gap-c24">
                   <div className="flex gap-c24 w-full">
-                    {/* State */}
-                    <div className="flex flex-col gap-2 relative w-1/2">
-                      <Label className="text-c12 font-MontserratMedium">
-                        State / Province
-                      </Label>
-                      <select
-                        id="state"
-                        name="state"
-                        value={formData.state}
-                        onChange={(e) => handleChange("state", e.target.value)}
-                        className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
-                      >
-                        <option value="">Select State</option>
-                        {states.map((s) => (
-                          <option key={s.isoCode} value={s.name}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  
+                    <div className="hidden"></div>
 
-                    {/* City */}
                     <div className="flex flex-col gap-2 relative w-1/2">
                       <Label className="text-c12 font-MontserratMedium">
                         City
@@ -308,9 +263,7 @@ export default function AddressModal({
                       <Input
                         type="text"
                         value={formData.address}
-                        onChange={(e) =>
-                          handleChange("address", e.target.value)
-                        }
+                        onChange={(e) => handleChange("address", e.target.value)}
                         placeholder="12 Broad Street"
                         className={`border rounded-c8 p-4 pl-10 w-full text-c12 font-MontserratMedium ${
                           streetError ? "border-red-500" : "border-efefef"

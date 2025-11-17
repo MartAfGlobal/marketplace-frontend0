@@ -15,9 +15,12 @@ import { Label } from "@/components/ui/forms/Label";
 import { Button } from "@/components/ui/Button/Button";
 import { Country, State, City } from "country-state-city";
 import { useHttp } from "@/hooks/use-http";
-import { useSelector } from "react-redux";
+import {useDispatch, useSelector } from "react-redux";
+import Cookies from "js-cookie";
 
 import { AddressModalProps, Address } from "@/types/global";
+import { RootState } from "@/store";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 // Helper to close dropdowns on outside click
 function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
@@ -39,8 +42,10 @@ const getFlagUrl = (isoCode: string) =>
 
 export default function AddNewAddreess() {
   const router = useRouter();
-  const tokenSlice = useSelector((state: any) => state.token);
-  const { token } = tokenSlice;
+  // const tokenSlice = useSelector((state: any) => state.token);
+  // const { token } = tokenSlice;
+  const dispatch = useDispatch()
+  const token = useSelector((state: RootState) => state.token.token);
 
   const [formData, setFormData] = useState<Address>({
     id: 0,
@@ -213,6 +218,10 @@ export default function AddNewAddreess() {
 
   const handleSave = (e?: React.FormEvent) => {
     e?.preventDefault();
+
+    if (!token) {
+      return;
+    }
     const { id, ...bodyWithoutId } = formData;
 
     sendHttpRequest({
@@ -225,9 +234,12 @@ export default function AddNewAddreess() {
         successMessage: "Address added successfully!",
         userType: "buyer",
       },
-      successRes: () => {
-        router.back();
-      },
+      successRes: (res) => {
+        console.log("address INFO:", res)
+        dispatch(buyerActions.addBuyerAddress(res.data));
+
+        router.back();}
+      ,
     });
   };
 

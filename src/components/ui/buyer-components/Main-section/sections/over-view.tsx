@@ -4,11 +4,14 @@ import ProfileImage from "@/components/ui/buyer-components/profile-picture";
 import profilePicture from "@/assets/icons/user-dashboard/profile-picture.png";
 import { StaticImageData } from "next/image";
 
+
 import ProfileImageModal from "@/components/ui/Modals/ProfileImageModal";
 import ProfileDetailsModal from "@/components/ui/Modals/edit-profile-modal";
 import { AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+
+
 
 export default function OverView() {
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
@@ -49,6 +52,8 @@ export default function OverView() {
   return (
     <>
       <div className="flex gap-c48">
+
+
         <ProfileImage
           src={buyer?.profile?.profile_picture || "Add +"
           }
@@ -73,7 +78,8 @@ export default function OverView() {
                 Full name
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                {buyer.first_name || "not set"} 
+                {`${buyer.first_name ? buyer.first_name.charAt(0).toUpperCase() + buyer.first_name.slice(1) : "Not set"} ${buyer.last_name ? buyer.last_name.charAt(0).toUpperCase() + buyer.last_name.slice(1) : ""}`}
+
               </span>
             </div>
             <div className="flex gap-c32">
@@ -89,7 +95,7 @@ export default function OverView() {
                 Mobile number
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                 {buyer.profile.phone || "N/A"}
+                 {buyer?.profile?.phone || "N/A"}
               </span>
             </div>
             <div className="flex gap-c32">
@@ -97,7 +103,7 @@ export default function OverView() {
                 Home number
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                 {buyer.profile.phone2 || "N/A"}
+                 {buyer?.profile?.phone2 || "N/A"}
               </span>
             </div>
           </div>

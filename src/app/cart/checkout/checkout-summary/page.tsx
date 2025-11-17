@@ -10,7 +10,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { Button } from "@/components/ui/Button/Button";
 
-
 import { setCheckoutItems, setCheckoutSummary } from "@/store/cart/cartSlice";
 
 import { Input } from "@/components/ui/forms/Input";
@@ -24,7 +23,8 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 export default function CheckoutSummary() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const token = useSelector((state: RootState) => state.token?.token);
+  // Prefer Redux token (set by login or axios refresh)
+  const token = useSelector((state: RootState) => state.token.token);
 
   const checkoutItems = useSelector(
     (state: RootState) => state.cart.checkoutItems
@@ -49,53 +49,61 @@ export default function CheckoutSummary() {
 
   const { sendHttpRequest, loading } = useHttp();
 
- const [hasFetched, setHasFetched] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
+  useEffect(() => {
+    if (!hasFetched && token) {
+      sendHttpRequest({
+        requestConfig: {
+          url: "/cart/summary/",
+          method: "GET",
+          token,
+          isAuth: true,
+        },
+        successRes: (res: any) => {
+          const backendCart = res?.data;
+          console.log("kkkkkkkkkkkkkkk", res);
+          if (!backendCart) return;
 
-useEffect(() => {
-  if (!hasFetched && checkoutItems.length === 0 && token) {
-    sendHttpRequest({
-      requestConfig: {
-        url: "/cart/summary/",
-        method: "GET",
-        token,
-        isAuth: true,
-      },
-      successRes: (res: any) => {
-        const backendCart = res?.data;
-        if (!backendCart) return;
+          const uniqueMap = new Map();
 
-        console.log ("lets check bank cart:", backendCart)
+          backendCart.items.forEach((item: any) => {
+            const key = `${item.product_id}-${item.variation_name || "no-var"}`;
+            if (!uniqueMap.has(key)) {
+              uniqueMap.set(key, {
+                id: item.product_id,
+                name: item.product_name,
+                product_image: item.product_image,
+                quantity: item.quantity,
+                subtotal: Number(item.total_price),
+                unit_price: Number(item.unit_price),
+                variation_name: item.variation_name,
+                variation_id: item.variation_id,
+              });
+            }
+          });
 
-        const mappedItems = backendCart.items.map((item: any) => ({
-          id: item.product_id,
-          name: item.product_name,
-          product_image: item.product_image,
-          quantity: item.quantity,
-          subtotal: Number(item.total_price),
-          unit_price: Number(item.unit_price),
-          variation_name: item.variation_name,
-        }));
+          const mappedItems = Array.from(uniqueMap.values());
 
-        dispatch(setCheckoutItems(mappedItems));
-        dispatch(
-          setCheckoutSummary({
-            all_addresses: backendCart.all_addresses || [],
-            applied_coupon: backendCart.applied_coupon || null,
-            discount_amount: backendCart.discount_amount?.toString() || "0.00",
-            shipping_address: backendCart.shipping_address || null,
-            shipping_cost: backendCart.shipping_cost?.toString() || "0.00",
-            shipping_methods: backendCart.shipping_methods || [],
-            subtotal: backendCart.subtotal?.toString() || "0.00",
-            total: backendCart.total?.toString() || "0.00",
-          })
-        );
+          dispatch(setCheckoutItems(mappedItems));
+          dispatch(
+            setCheckoutSummary({
+              all_addresses: backendCart.all_addresses || [],
+              applied_coupon: backendCart.applied_coupon || null,
+              discount_amount:
+                backendCart.discount_amount?.toString() || "0.00",
+              shipping_address: backendCart.shipping_address || null,
+              shipping_cost: backendCart.shipping_cost?.toString() || "0.00",
+              shipping_methods: backendCart.shipping_methods || [],
+              subtotal: backendCart.subtotal?.toString() || "0.00",
+              total: backendCart.total?.toString() || "0.00",
+            })
+          );
 
-        setHasFetched(true); // ✅ prevent re-fetch
-      },
-    });
-  }
-}, [checkoutItems.length, token]);
-
+          setHasFetched(true);
+        },
+      });
+    }
+  }, [token]);
 
   if (!selectedAddress) {
     return <p className="text-c12">No address selected</p>;
@@ -118,7 +126,7 @@ useEffect(() => {
         successMessage: "Checkout successful!",
         userType: "buyer",
       },
-     successRes: (res) => {
+      successRes: (res) => {
         console.log("respons data:", res.data);
 
         if (res.data?.paystack_payment_url) {
@@ -243,7 +251,7 @@ useEffect(() => {
               >
                 {checkoutItems.map((item, index) => (
                   <motion.div
-                    key={item.id || item.product_id || index}
+                    key={`${item.id}-${item.variations || "no-var"}`}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -254,7 +262,7 @@ useEffect(() => {
                         <div className="flex gap-3 items-center w-full max-w-fit">
                           <Image
                             src={item.product_image || "/placeholder.png"}
-                            alt={item.name}
+                            alt={item.product_name || "name"}
                             width={100}
                             height={100}
                             className="w-16 h-16 md:w-25 md:h-25"
@@ -262,7 +270,7 @@ useEffect(() => {
                         </div>
                         <div className="w-full md:max-w-143.75">
                           <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                            {item.name}
+                            {item.product_name}
                           </p>
                           <p className="font-MontserratNormal text-c12 pb-3">
                             Two piece shop
@@ -336,7 +344,6 @@ useEffect(() => {
             <p className="text-base font-MontserratSemiBold mb-3">Total</p>
             <p className="font-MontserratSemiBold text-c20">₦{totalPrice}</p>
           </div>
-        
         </div>
 
         <Button
@@ -344,7 +351,7 @@ useEffect(() => {
           className="border-0"
           disabled={loading}
         >
-          {loading? <LoadingSpinner/>: "Confirm order"}
+          {loading ? <LoadingSpinner /> : "Confirm order"}
         </Button>
       </div>
     </div>

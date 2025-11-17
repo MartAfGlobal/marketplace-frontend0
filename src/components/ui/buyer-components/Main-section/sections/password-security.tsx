@@ -29,7 +29,7 @@ export default function PassWordSecurity() {
 
   const handleSavePassword = (passwords: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
     console.log("Passwords submitted:", passwords);
-    // Here you can call your API to update the password
+  
   };
 
   return (

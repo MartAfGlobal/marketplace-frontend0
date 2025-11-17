@@ -12,43 +12,35 @@ import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 import { motion } from "framer-motion";
 import BuyerDashboard from "@/components/ui/mobile/dashbords/buyer-dashboard/dashboard";
 import { useRouter } from "next/navigation";
-import {
-  addToWishlist,
-  removeFromWishlist,
-  updateQuantity,
-  clearWishlist,
-} from "@/store/cart/wishlist-slice";
+import { setWishlist } from "@/store/cart/wishlist-slice";
 import { RootState } from "@/store";
+import { fetchOrdersSuccess } from "@/store/orders/order-slice";
 
-
-// Example:
+import WireframeLoader from "@/components/ui/WireframeLoader";
 
 export default function BuyerDashBoardPage() {
   const { sendHttpRequest: userInforHttpRequest } = useHttp();
   const { sendHttpRequest: userAddressHttpRequest } = useHttp();
   const { sendHttpRequest: wishlistReq } = useHttp();
+  const { loading, sendHttpRequest:fetchUserReq } = useHttp();
   const dispatch = useDispatch();
   const router = useRouter();
- 
-  const token = useSelector((state: any) => state.token?.token);
+  const token = useSelector((state: RootState) => state.token.token);
 
   useEffect(() => {
     if (!token) {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isMobile) {
-        // Go to landing page and tell it to open login modal
         router.replace("/?showLogin=true");
       } else {
-        // Desktop → go to dedicated login page
         router.replace("/auth/login");
       }
       return;
     }
 
-  
     wishlistReq({
       requestConfig: {
-        url: "/wishlist/",
+        url: "/wishlist/all",
         method: "GET",
         token,
         isAuth: true,
@@ -56,52 +48,56 @@ export default function BuyerDashBoardPage() {
       },
       successRes: (res) => {
         const wishlistItems =
-          res?.data?.map((item: any) => ({
+          res?.data?.results?.map((item: any) => ({
             id: item.id,
             product_id: item.product_id,
             variation_id: item.variation_id,
             quantity: item.quantity,
             product: item.product,
             variation: item.variation,
+            label: item.label,
+            image: item.product.image,
+            name: item.product.name,
+            price: item.product.price,
+            manufacturer: item.manufacturer,
           })) || [];
-        dispatch(addToWishlist(wishlistItems));
+
+        console.log("Wishlist items fetched:", res);
+        dispatch(setWishlist(wishlistItems));
       },
     });
 
+    userAddressHttpRequest({
+      requestConfig: {
+        url: "shipping/shipping-addresses/",
+        method: "GET",
+        token,
+        isAuth: true,
+      },
+      successRes: (res) => {
+        const addresses =
+          res?.data?.map((addr: any) => ({
+            id: addr.id,
+            country: addr.country,
+            full_name: addr.full_name,
+            phone: addr.phone,
+            state: addr.state,
+            city: addr.city,
+            postal_code: addr.postal_code,
+            address: addr.address,
+            defaultAddress: addr.defaultAddress || false,
+          })) || [];
+
+        console.log("User address info:", addresses);
+
+        dispatch(buyerActions.setBuyerAddresses(addresses));
+      },
+    });
     const fetchUserSucRes = (res: any) => {
       const resData = res?.data;
 
-      userAddressHttpRequest({
-        requestConfig: {
-          url: "shipping/shipping-addresses/",
-          method: "GET",
-          token,
-          isAuth: true,
-        },
-        successRes: (res) => {
-          const addresses =
-            res?.data?.map((addr: any) => ({
-              id: addr.id,
-              country: addr.country,
-              full_name: addr.full_name,
-              phone: addr.phone,
-              state: addr.state,
-              city: addr.city,
-              postal_code: addr.postal_code,
-              address: addr.address,
-              defaultAddress: addr.defaultAddress || false,
-            })) || [];
-
-          console.log("User address info:", addresses);
-
-          dispatch(buyerActions.setBuyerAddresses(addresses));
-        },
-      });
-
-      // Adjust depending on backend response shape
       const user = resData?.buyerDetails || resData?.user || resData;
 
-      // ✅ Save to redux
       dispatch(
         buyerActions.updateBuyerData({
           id: user?.id ?? "",
@@ -147,6 +143,21 @@ export default function BuyerDashBoardPage() {
       );
     };
 
+    fetchUserReq({
+      requestConfig: {
+        url: "/orders/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (responseData: any) => {
+        const backendOrders = responseData?.data?.results;
+        console.log("order details listed:", backendOrders);
+        dispatch(fetchOrdersSuccess(backendOrders));
+      },
+    });
+
     userInforHttpRequest({
       requestConfig: {
         url: "/accounts/UserDetails/",
@@ -158,7 +169,16 @@ export default function BuyerDashBoardPage() {
       },
       successRes: fetchUserSucRes,
     });
-  }, [token, dispatch, router, userInforHttpRequest, userAddressHttpRequest, wishlistReq]);
+  }, [
+    token,
+    dispatch,
+    router,
+    userInforHttpRequest,
+    userAddressHttpRequest,
+    wishlistReq,
+  ]);
+
+  if (loading) return <WireframeLoader />;
 
   return (
     <>

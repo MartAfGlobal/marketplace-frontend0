@@ -10,57 +10,47 @@ import Copy from "@/assets/icons/Copy.png";
 import Visa from "@/assets/mobile/cards/visa.png";
 
 import Security from "@/assets/icons/ShieldCheck.png";
-import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
+
 
 import NavBack from "@/assets/icons/navBacksmall.png";
-import { TrackOrders } from "@/types/global";
-import { Button } from "@/components/ui/Button/Button";
+
 import ResponseModal from "@/components/ui/mobile/modal/ResponseModal";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { useParams } from "next/navigation";
 
 export default function OrderOnTheWayPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState<"yes" | "no">("no");
+  const [modalType, setModalType] = useState<"yes" | "no">("no");
   const [copied, setCopied] = useState(false);
   const router = useRouter();
-  const orderId = "1234567890";
-    const cartItems = useSelector((state: RootState) => state.cart.items);
-  const dispatch = useDispatch();
 
-  const trackOrders: TrackOrders[] = [
-    // Uncomment to test non-empty state
-    {
-      id: 1,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-    {
-      id: 2,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-    {
-      id: 3,
-      date: "Delivery: May 15, 2025",
-      title: "Nike shoes with white an",
-      discription: "Two piece shop",
-      icon: Shoes,
-      totalQuantity: "2",
-      colour: "black",
-      totalAmount: "14,000",
-    },
-  ];
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+
+  const { id } = useParams();
+  const { orders } = useSelector((state: any) => state.orders);
+
+  const order = orders.find((o: any) => o.id === id);
+  const orderId = order.id;
+
+  const isoDate = order.created_at;
+  const formattedDate = new Date(isoDate).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const buyerAddresses = useSelector(
+    (state: RootState) => state.buyer.BuyerAddresses
+  );
+  const selectedAddress = buyerAddresses.find(
+    (item: any) => item.id === order.shipping_address
+  );
+
+ 
+
+  const orderItems = order.items;
+
 
   const handleCopy = () => {
     navigator.clipboard
@@ -120,8 +110,8 @@ export default function OrderOnTheWayPage() {
                 )}
               </div>
               <div className="font-MontserratNormal text-c12 space-y-1 pt-3 pb-4 border-b border-black/5">
-                <p>Seller: Kinicho stores</p>
-                <p>Order date: May 15, 2025 </p>
+                <p>Seller: {order.manufacturer}s</p>
+                <p>Order date: {formattedDate || "no delivery"} </p>
                 <p>Delivery date: June 15, 2025 - July 25, 2025 </p>
               </div>
             </div>
@@ -140,11 +130,9 @@ export default function OrderOnTheWayPage() {
                 </p>
               </div>
               <div className="font-MontserratNormal text-c12 space-y-1 pt-3 pb-4  border-b border-black/5">
-                <p>Chisom Ebube Chris</p>
-                <p>+2347034562314 </p>
-                <p>
-                  LEA Primary School Dakwo, Abuja Kabusa, Abuja, Nigeria, 900102
-                </p>
+                <p>{selectedAddress?.full_name}</p>
+                <p>{selectedAddress?.phone} </p>
+                <p>{selectedAddress?.address}</p>
               </div>
             </div>
           </motion.div>
@@ -197,7 +185,7 @@ export default function OrderOnTheWayPage() {
             <div>
               <p>Package details</p>
             </div>
-            {trackOrders.map((item) => (
+            {orderItems.map((item: any) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: -10 }}
@@ -208,23 +196,25 @@ export default function OrderOnTheWayPage() {
                 <div className="w-full md:justify-between flex-col pb-5 border-b border-000000/5 flex md:flex-row">
                   <div className="flex gap-4 items-start">
                     <Image
-                      src={item.icon}
-                      alt={item.title}
-                      width={96}
-                      height={96}
+                      src={item.product.image}
+                      alt={item.product.name}
+                      width={64}
+                      height={64}
+                      className="md:hidden"
                     />
                     <div className="w-full max-w-143.75">
                       <p className="font-MontserratSemiBold text-base leading-c24 pb-1 text-000000">
-                        {item.title}
+                        {item.product.name}
+                     
                       </p>
 
                       <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                         <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                          {item.totalQuantity}PC, {item.colour}
+                          {item.quantity}PC, {item.variant?.color}
                         </span>
                       </div>
                       <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
-                        ₦{item.totalAmount}
+                        ₦{item.total_price}
                       </p>
                     </div>
                   </div>
@@ -249,28 +239,28 @@ export default function OrderOnTheWayPage() {
           <div className=" space-y-2 text-sm font-MontserratNormal">
             <div className="pb-3 border-b border-000000/5">
               <p className="">Total</p>
-              <p className="text-c20 font-MontserratSemiBold">N30,000</p>
+              <p className="text-c20 font-MontserratSemiBold">₦{order.total_price}</p>
             </div>
             <div className="flex justify-between">
               <p className="">Total items:</p>
-              <p className="">N50,000</p>
+              <p className="">₦{order.total_price}</p>
             </div>
             <div className="flex justify-between">
               <p className="">Discount:</p>
-              <p className=" text-ca0202">-₦50</p>
+              <p className=" text-ca0202">₦{order.discount_amount}</p>
             </div>
             <div className="flex justify-between pb-3 border-b border-000000/5">
               <p className="">Subtotal:</p>
-              <p className="">N30,000</p>
+              <p className="">₦{order.subtotal}</p>
             </div>
 
             <div className="flex justify-between pb-3 border-b border-000000/5">
               <p className="">Shipping fee:</p>
-              <p className="">N5,000</p>
+              <p className="">₦{order.shipping_cost}</p>
             </div>
             <div className="flex justify-between pb-3 border-b border-000000/5">
               <p className="">Order total:</p>
-              <p className="">N30,000</p>
+              <p className="">₦{order.total_price}</p>
             </div>
           </div>
         </motion.div>
@@ -305,10 +295,10 @@ export default function OrderOnTheWayPage() {
             No
           </button>
           <button
-             onClick={() => {
-          setModalType("yes");
-          setIsModalOpen(true);
-        }}
+            onClick={() => {
+              setModalType("yes");
+              setIsModalOpen(true);
+            }}
             className=" rounded-lg h-c48 flex items-center justify-center w-full bg-ff715b text-white"
           >
             Yes
@@ -318,7 +308,7 @@ export default function OrderOnTheWayPage() {
       <ResponseModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-         type={modalType}
+        type={modalType}
       />
     </div>
   );

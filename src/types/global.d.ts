@@ -56,7 +56,7 @@ interface Question {
 interface OrderHistoryItem {
   title: string;
   icon: string | StaticImageData;
-  total: string;
+  total: number;
 }
 
 interface TrackOrders {
@@ -170,10 +170,18 @@ export interface ProfileImageProps {
 }
 
 export interface AddressModalProps {
+  id?: string | null
   isOpen: boolean;
   onClose: () => void;
-  onSave: (address: Address) => void;
+  onSave?: (address: Address) => void;
   currentAddress?: Partial<Address>; // optional for pre-filling form
+}
+export interface CheckOutModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  selectedItems?: any[];
+
+  currentAddress?: Partial<GuestCheckoutAddress>; // optional for pre-filling form
 }
 
 export interface AtmCardProps {
@@ -291,9 +299,9 @@ export interface Variations {
 
 export interface Product {
   id: string;
-   product_id?: string;
-  name: string;
-  slug: string;
+  product_id: string;
+  name?: string;
+  slug?: string;
   description: string;
   price: number;
   discount_price?: number;
@@ -302,7 +310,7 @@ export interface Product {
   category?: string; // e.g., gender or type
   inventory?: number;
   sold?: number;
-  onSale?: boolean; // derived from discount_percent
+  onSale?: boolean; 
   rating_average?: number;
   gender?: string;
   age_group?: string;
@@ -316,13 +324,108 @@ export interface Product {
   is_published?: boolean;
   created_at?: string;
   updated_at?: string;
-  manufacturer?: number;
+  manufacturer?: Manufacturer[] | string | null;
   warehouse?: number | null;
   reviews_data?: Review[];
-  image;
+ image: string | StaticImageData | null;
   variations?: Variation[];
   quantity: number;
-  section?: string;
+  section?: string;  
+product_name?: string
+
+}
+
+
+export interface Manufacturer {
+  id: number;
+  company_name: string;
+  company_address?: string | null;
+  company_city?: string | null;
+  company_country?: string | null;
+  company_state?: string | null;
+  company_logo_url?: string | null;
+  business_description?: string | null;
+  business_industry?: string | null;
+  business_registration_location?: string | null;
+  business_type?: string | null;
+  bank_verification_status?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  phone2?: string | null;
+  website?: string | null;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
+  postal_code?: string | null;
+  address?: string | null;
+}
+export interface OrderProduct {
+  discription: string;
+  id: string;
+  images: ImageData[];
+}
+export interface OrderItem {
+  id: string;
+  status: string;
+  order_no: string | null;
+  manufacturer?: string | null;
+  estimated_delivery_date: string | null;
+  tracking_number: string | null;
+  items: [
+    {
+      id: string;
+      product: Product;
+      total_price: string;
+      quantity: number;
+      price_at_purchase: number;
+      total_price: string;
+      variant?: {
+        id: string;
+        sku: string;
+        size?: string | null;
+        color?: string | null;
+        stock?: number;
+      } | null;
+    }
+  ];
+
+  total_price: string;
+}
+
+export interface GuestShippingAddress {
+  city: string | null;
+  line1: string | null;
+  line2: string | null;
+  state: string | null;
+  country: string | null;
+  postal_code: string | null;
+}
+
+export interface OrderDetails {
+  id: string;
+  order_no: string;
+  checkout: string;
+  user: string;
+  payment_reference: string;
+  payment_status: string;
+  status: string;
+  coupon: string | null;
+  discount_amount: number;
+  subtotal: number;
+  total_price: number;
+  tax: number;
+  shipping_cost: number;
+  shipping_method: string | null;
+  shipping_address: string | null;
+  tracking_number: string | null;
+  estimated_delivery_date: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+  wallet_paid: boolean;
+  manufacturer?: string | Manufacturer | null;
+  guest_shipping_address?: GuestShippingAddress | null;
+  items: OrderItem[];
 }
 
 interface AddToCartParams {
@@ -340,12 +443,12 @@ export interface UploadedFile {
   uploaded: boolean;
   title: string;
   description: string;
-  rawFile: File; // ✅ always required
+  rawFile: File;
   url?: string;
 }
 
 export interface ProductPageProps {
-  params: { slug: string }; // still declare type for TS
+  params: { slug: string };
 }
 
 type RatingKey = 1 | 2 | 3 | 4 | 5;
@@ -535,6 +638,29 @@ export type Address = {
   postal_code: string;
   address: string;
   is_default: boolean;
+};
+export type OrderAddress = {
+  id: string|null;
+  country: string;
+  full_name: string;
+  phone: string;
+  state: string;
+  city: string;
+  postal_code: string;
+  address: string;
+  is_default: boolean;
+};
+export type GuestCheckoutAddress = {
+  guest_email: string;
+  guest_phone: string;
+  guest_address_line1: string;
+  guest_address_line2: string;
+  guest_city: string;
+  guest_state: string;
+  guest_postal_code: string;
+  guest_country: string;
+  shipping_cost: number;
+  discount_amount: number;
 };
 
 export type BuyerSliceParams = {

@@ -35,7 +35,7 @@ export default function HeroPage() {
         <div className="md:hidden">
           <MobileHeroBaground />
         </div>
-        <div className="hidden md:flex">
+        <div className="hidden md:flex" >
           <HeroBaground />
         </div>
       </motion.div>

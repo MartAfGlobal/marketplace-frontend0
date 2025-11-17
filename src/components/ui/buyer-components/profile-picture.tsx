@@ -1,28 +1,29 @@
 import Camera from "@/assets/icons/user-dashboard/Camera.svg";
-import profilePicture from "@/assets/icons/user-dashboard/profile-picture.png"; // fallback
+
 import Image, { StaticImageData } from "next/image";
 import { ProfileImageProps } from "@/types/global";
+import profileImage from "@/assets/icons/profile-averter.svg"; // new default
 
 export default function ProfileImage({
   src,
   alt = "ADD Image",  
   onEditClick,
 }: ProfileImageProps) {
-  let safeSrc: string | StaticImageData = profilePicture;
+  // Use profileImage as default
+  let safeSrc: string | StaticImageData = profileImage;
 
   if (typeof src === "string" && src.trim() !== "") {
     try {
-      // check if it's an absolute URL (http/https)
       const url = new URL(src, window.location.origin);
       safeSrc = url.href;
     } catch {
-      // if not valid URL, fallback stays profilePicture
+      // stays profileImage if invalid
     }
   }
 
   return (
     <div className="relative w-fit h-fit">
-      <div className="w-26 h-26 rounded-full flex justify-center items-center bg-2d7565 border border-gray-300 relative">
+      <div className="w-26 h-26 rounded-full flex justify-center items-center  border-gray-300 relative">
         <Image
           src={safeSrc}
           alt={alt}

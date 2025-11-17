@@ -26,7 +26,6 @@ import { useLogout } from "@/utils/logout";
 import { useRouter } from "next/navigation";
 import { categories } from "@/utils/data/categories";
 import { title } from "process";
-
 const settings = [
   {
     icon: Currency,
@@ -68,8 +67,7 @@ export default function DropdownModal({  open,
   >(null);
 
   const router = useRouter();
-
-  const token = useSelector((state: RootState) => state.token?.token);
+ const token = useSelector((state: RootState) => state.token.token);
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);

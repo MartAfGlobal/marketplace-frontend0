@@ -130,7 +130,7 @@ export default function BuyerDashboard() {
                       >
                         <Image
                           src={item.icon}
-                          alt={item.name}
+                          alt={item.name || "name"}
                           width={24}
                           height={24}
                         />

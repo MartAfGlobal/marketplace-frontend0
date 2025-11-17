@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 
 import clearIcon from "@/assets/icons/close.png";
 import UploadIcon from "@/assets/uploadIcon.png";
@@ -52,7 +53,8 @@ export default function DocumentUploadForm({
   // ✅ Grab seller data from Redux
   const sellerId = useSelector((state: any) => state.seller.data?.id);
   const sellerData = useSelector((state: RootState) => state.seller.data);
-  const token = useSelector((state: any) => state.token?.token);
+  // const token = useSelector((state: any) => state.token?.token);
+  const token = useSelector((state: RootState) => state.token.token);
   const router = useRouter();
 
   const formData = new FormData();
@@ -193,6 +195,9 @@ export default function DocumentUploadForm({
 
   const handleSubmit = async () => {
     const newFormData = new FormData();
+    if(!token){
+      return
+    }
 
     // Append seller data
     if (sellerData) {

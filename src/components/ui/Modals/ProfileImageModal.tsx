@@ -6,12 +6,15 @@ import Image, { StaticImageData } from "next/image";
 import UploadIcon from "@/assets/icons/user-dashboard/uploadIcon.svg";
 import { Button } from "@/components/ui/Button/Button";
 import { useHttp } from "@/hooks/use-http";
-import { useSelector } from "react-redux";
-import { BuyerEditParams } from "@/types/global";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
+
+import profileImage from "@/assets/icons/profile-averter.svg"; 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
-
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
+// token read from Redux store instead of cookies
 
 interface ProfileImageModalProps {
   isOpen: boolean;
@@ -31,9 +34,13 @@ export default function ProfileImageModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
+  const token = useSelector((state: RootState) => state.token.token);
+  const dispatch = useDispatch();
 
-  const tokenSlice = useSelector((state: any) => state.token);
-  const { token } = tokenSlice;
+
+
+  // const tokenSlice = useSelector((state: any) => state.token);
+  // const { token } = tokenSlice;
   const router = useRouter();
 
   const { loading, sendHttpRequest: editRegisterUserReq } = useHttp();
@@ -45,13 +52,31 @@ export default function ProfileImageModal({
       toast.error("Please select an image to upload.");
       return;
     }
+    
 
     const form = new FormData();
     form.append("profile_picture", selectedFile);
 
    const registerUserRes = (res: any) => {
   toast.success("Profile picture updated successfully!");
-  onUpload(selectedFile!);  // ✅ only update parent after success
+   
+  if (selectedFile) {
+    const profileURL = URL.createObjectURL(selectedFile);
+
+    dispatch(
+      buyerActions.updateBuyerData({
+        profile: {
+          ...buyer.profile,
+          profile_picture: profileURL,
+        },
+      })
+    );
+
+   
+    onUpload(selectedFile!);
+  }
+
+  onUpload(selectedFile!);  // ✅ 
   onClose();
   router.push(`/dashboard/buyer`);
 };
@@ -62,7 +87,7 @@ export default function ProfileImageModal({
         url: "/accounts/UserDetails/",
         method: "PATCH",
         body: form, // ✅ send FormData directly
-        token,
+        token: token ?? undefined,
         isAuth: true,
         userType: "buyer",
       },
@@ -133,7 +158,7 @@ function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
 
             {/* Profile Preview */}
             <div className="flex justify-center h-26 w-26 m-auto">
-              {(selectedFile || buyer?.profile?.profile_picture) && (
+              {(selectedFile || buyer?.profile?.profile_picture || profileImage) && (
                 <Image
                   src={
                     selectedFile
@@ -169,7 +194,7 @@ function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
 
               <Button
                 onClick={onRemove}
-                className="bg-transparent border border-ff715b text-ff715b rounded"
+                variant="secondary"
               >
                 No profile picture
               </Button>

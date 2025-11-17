@@ -8,6 +8,7 @@ import padlock from "@/assets/icons/padlock.png";
 import UserAddress from "@/components/ui/buyer-components/Main-section/sections/address-selector";
 
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
+import Cookies from "js-cookie";
 
 import { Input } from "../forms/Input";
 import { useSelector, useDispatch } from "react-redux";
@@ -19,7 +20,11 @@ import { useEffect, useState } from "react";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "../loading-spinner";
 
-export default function CheckoutItems() {
+interface loadinProps {
+  loadingState: boolean;
+}
+
+export default function CheckoutItems({ loadingState }: loadinProps) {
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses
   );
@@ -44,12 +49,13 @@ export default function CheckoutItems() {
     dispatch(buyerActions.setSelectedAddress(addressId));
   };
 
-  const token = useSelector((state: RootState) => state.token?.token);
-
+  // const token = useSelector((state: RootState) => state.token?.token);
+  const token = useSelector((state: RootState) => state.token.token);
   const checkoutItems = useSelector(
     (state: RootState) => state.cart.checkoutItems
   );
 
+  console.log("itemsdhdhhhhh", checkoutItems);
   const router = useRouter();
 
   const checkoutSummary = useSelector(
@@ -80,14 +86,21 @@ export default function CheckoutItems() {
         if (res.data?.paystack_payment_url) {
           window.location.href = res.data.paystack_payment_url;
         } else {
-          // Fallback: navigate to your summary page
           return;
         }
       },
     });
   };
 
-
+  const uniqueCheckoutItems = [
+    ...new Map(
+      checkoutItems.map((item) => [
+        `${item.product_id}-${item.variation_name || "no-var"}`,
+        item,
+      ])
+    ).values(),
+  ];
+  console.log("uuuuuuuuuuuuuuu", uniqueCheckoutItems);
   //   if (!selectedAddress) {
   //     alert("Please select a shipping address");
   //     return;
@@ -136,167 +149,184 @@ export default function CheckoutItems() {
     <div className="md:pt-c48  w-full md:pb-c64 ">
       <div className=" ">
         <div className="flex gap-18 justify-center ">
-          <div className=" w-full pb-c32 flex md:flex-col md:max-w-207">
-            {/* ITEMS SECTION */}
-            <div className=" border-b hidden w-full md:flex border-b-000000/5  mb-c32">
-              <div className="w-full">
-                <div className="pb-c32 justify-between w-full flex ">
-                  <p className="font-MontserratSemiBold text-c16 ">
-                    Items details
-                  </p>
-                  {visibleItems < checkoutItems.length && (
-                    <button
-                      className="font-MontserratSemiBold text-sm text-ff715b mt-2"
-                      onClick={() => setVisibleItems((prev) => prev + 14)}
-                    >
-                      See More
-                    </button>
-                  )}
-                </div>
-
-                <motion.div
-                  key="orders-list"
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={{
-                    hidden: { opacity: 0, height: 0 },
-                    visible: {
-                      opacity: 1,
-                      height: "auto",
-                      transition: { staggerChildren: 0.1 },
-                    },
-                  }}
-                  className=" w-full h-fit flex md:flex-row flex-col gap-c24"
-                >
-                  {checkoutItems.slice(0, visibleItems).map((item) => (
-                    <div
-                      key={item.id || item.product_id }
-                      className="w-fit h-fit"
-                    >
-                      <Image
-                        src={item.product_image || "/placeholder.png"}
-                        alt={item.name || "Product image"}
-                        width={96}
-                        height={96}
-                        className="rounded h-24 w-24"
-                      />
-                      <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
-                        ₦{Number(item.subtotal).toLocaleString()}
+          {loadingState ? (
+            <div className="w-full flex justify-center py-10">
+              <LoadingSpinner  color="border-ff715b" size={50}/>
+            </div>
+          ) : (
+            <>
+              <div className=" w-full pb-c32 flex md:flex-col md:max-w-207">
+                <div className=" border-b hidden w-full md:flex border-b-000000/5  mb-c32">
+                  <div className="w-full">
+                    <div className="pb-c32 justify-between w-full flex ">
+                      <p className="font-MontserratSemiBold text-c16 ">
+                        Items details
                       </p>
-                      {item.variation_display && (
-                        <p className="text-c12 text-000000/70">
-                          {item.variation_display}
-                        </p>
+
+                      {visibleItems < checkoutItems.length && (
+                        <button
+                          className="font-MontserratSemiBold text-sm text-ff715b mt-2"
+                          onClick={() => setVisibleItems((prev) => prev + 14)}
+                        >
+                          See More
+                        </button>
                       )}
                     </div>
-                  ))}
-                </motion.div>
-              </div>
-            </div>
 
-            {/* ADDRESS SECTION */}
-            <div className="w-full ">
-              <div className="pb-c32 border-b border-b-000000/5">
-                <UserAddress
-                  selectedAddressId={selectedAddressId ?? undefined}
-                  onSelectAddress={handleSelectAddress}
-                  className="md:w-64.25 h-31 "
-                />
-              </div>
-            </div>
-          </div>
+                    <motion.div
+                      key="orders-list"
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      variants={{
+                        hidden: { opacity: 0, height: 0 },
+                        visible: {
+                          opacity: 1,
+                          height: "auto",
+                          transition: { staggerChildren: 0.1 },
+                        },
+                      }}
+                      className="w-full h-fit flex md:flex-row flex-col gap-c24"
+                    >
+                      {uniqueCheckoutItems
+                        .slice(0, visibleItems)
+                        .map((item) => {
+                          // Create a reliable unique key
+                          const uniqueKey = `${item.product_id}-${
+                            item.variation_name || "no-var"
+                          }`;
 
-          {/* ORDER SUMMARY */}
-          <div className="w-full max-w-84.25 hidden md:flex md:flex-col">
-            <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
-              Order Summary
-            </p>
-            <div className="flex gap-2 pb-3">
-              <Input placeholder="Enter coupon code w-full" />
-              <button className="w-full max-w-31.25 bg-transparent border border-ff715b text-c12 h-12 rounded-c8 font-MontserratSemiBold text-ff715b">
-                Apply coupon
-              </button>
-            </div>
-            <div className="font-MontserratNormal text-sm text-000000 h-23 border-b border-b-000000/10 space-y-2">
-              <div className="flex justify-between">
-                <p>Total items</p>
-                <p>N{totalPrice}</p>
-              </div>
-              <div className="flex justify-between">
-                <p>Discounts</p>
-                <p>-N{discount}</p>
-              </div>
-              <div className="flex justify-between">
-                <p>Subtotal</p>
-                <p>{totalPrice - discount}</p>
-              </div>
-            </div>
-            <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
-              <p>Shipping fee</p>
-              <p>{shippingFee}</p>
-            </div>
-            <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
-              <p>Order total</p>
-              <p>{totalPrice - discount + shippingFee}</p>
-            </div>
+                          return (
+                            <div key={uniqueKey} className="w-fit h-fit">
+                              <Image
+                                src={item.product_image || "/placeholder.png"}
+                                alt={item.name || "Product image"}
+                                width={96}
+                                height={96}
+                                className="rounded h-24 w-24"
+                              />
+                              <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
+                                ₦{Number(item.subtotal).toLocaleString()}
+                              </p>
+                              {item.variation_name && (
+                                <p className="text-c12 text-000000/70">
+                                  {item.variation_name}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </motion.div>
+                  </div>
+                </div>
 
-            <div className=" mt-3 mb-c32 flex gap-c42 items-center">
-              <div>
-                <p className="font-MontserratNormal text-sm text-000000">
-                  Total
+                <div className="w-full ">
+                  <div className="pb-c32 border-b border-b-000000/5">
+                    <UserAddress
+                      selectedAddressId={selectedAddressId ?? undefined}
+                      onSelectAddress={handleSelectAddress}
+                      className="md:w-64.25 h-31 "
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full max-w-84.25 hidden md:flex md:flex-col">
+                <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
+                  Order Summary
                 </p>
-                <p className="text-c10">
-                  Please refer to your final actual payment amount.
-                </p>
-              </div>
-              <p className="font-MontserratSemiBold text-c32 ">
-                N{totalPrice - discount + shippingFee}
-              </p>
-            </div>
-            <Button
-              onClick={handleCheckout}
-              disabled={loading || !selectedAddressId}
-            >
-              {loading ? <LoadingSpinner /> : " Checkout"}({TotalItems})
-            </Button>
+                <div className="flex gap-2 pb-3">
+                  <Input placeholder="Enter coupon code w-full" />
+                  <button className="w-full max-w-31.25 bg-transparent border border-ff715b text-c12 h-12 rounded-c8 font-MontserratSemiBold text-ff715b">
+                    Apply coupon
+                  </button>
+                </div>
+                <div className="font-MontserratNormal text-sm text-000000 h-23 border-b border-b-000000/10 space-y-2">
+                  <div className="flex justify-between">
+                    <p>Total items</p>
+                    <p>N{totalPrice}</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <p>Discounts</p>
+                    <p>-N{discount}</p>
+                  </div>
+                  <div className="flex justify-between">
+                    <p>Subtotal</p>
+                    <p>{totalPrice - discount}</p>
+                  </div>
+                </div>
+                <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
+                  <p>Shipping fee</p>
+                  <p>{shippingFee}</p>
+                </div>
+                <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
+                  <p>Order total</p>
+                  <p>{totalPrice - discount + shippingFee}</p>
+                </div>
 
-            {/* INFO */}
-            <div className="  w-full space-y-6 mt-c32 max-w-84">
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={ShildCheck}
-                    alt="shild check"
-                    width={20}
-                    height={20}
-                  />
-                  <p className="text-c12 font-MontserratSemiBold">
-                    Secure payments
+                <div className=" mt-3 mb-c32 flex gap-c42 items-center">
+                  <div>
+                    <p className="font-MontserratNormal text-sm text-000000">
+                      Total
+                    </p>
+                    <p className="text-c10">
+                      Please refer to your final actual payment amount.
+                    </p>
+                  </div>
+                  <p className="font-MontserratSemiBold text-c32 ">
+                    N{totalPrice - discount + shippingFee}
                   </p>
                 </div>
-                <p className="text-c12 font-MontserratNormal leading-4 ">
-                  Every payment you make on MartAf is secured with strict SSL
-                  encryption and PCI DSS data protection protocols
-                </p>
-              </div>
+                <Button
+                  onClick={handleCheckout}
+                  disabled={loading || !selectedAddressId}
+                >
+                  {loading ? <LoadingSpinner /> : " Checkout"}({TotalItems})
+                </Button>
 
-              <div className="space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <Image src={padlock} alt="padlock" width={20} height={20} />
-                  <p className="text-c12 font-MontserratSemiBold">
-                    Secure privacy
-                  </p>
+                <div className="  w-full space-y-6 mt-c32 max-w-84">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src={ShildCheck}
+                        alt="shild check"
+                        width={20}
+                        height={20}
+                      />
+                      <p className="text-c12 font-MontserratSemiBold">
+                        Secure payments
+                      </p>
+                    </div>
+                    <p className="text-c12 font-MontserratNormal leading-4 ">
+                      Every payment you make on MartAf is secured with strict
+                      SSL encryption and PCI DSS data protection protocols
+                    </p>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src={padlock}
+                        alt="padlock"
+                        width={20}
+                        height={20}
+                      />
+                      <p className="text-c12 font-MontserratSemiBold">
+                        Secure privacy
+                      </p>
+                    </div>
+                    <p className="text-c12 font-MontserratNormal leading-4 ">
+                      Protecting your privacy is important to us! Please be
+                      assured that your information will be kept secured and
+                      uncompromised. We will only use your information in
+                      accordance with our privacy policy to provide and improve
+                      our services to you.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-c12 font-MontserratNormal leading-4 ">
-                  Protecting your privacy is important to us! Please be assured
-                  that your information will be kept secured and uncompromised.
-                  We will only use your information in accordance with our
-                  privacy policy to provide and improve our services to you.
-                </p>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

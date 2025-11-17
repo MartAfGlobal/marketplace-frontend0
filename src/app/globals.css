@@ -316,6 +316,18 @@ select option {
   .custom-scroll::-webkit-scrollbar {
     width: 8px;
   }
+  .custom-scrollrailes::-webkit-scrollbar {
+    width: 4px;
+    
+  }
+  .custom-scrollrailes::-webkit-scrollbar-track {
+    width: 4px; 
+     background: transparent;
+  }
+  .custom-scrollrailes::-webkit-scrollbar-thumb {
+  background-color: rgba(87, 83, 83, 0.3); /* or #ff715b etc. */
+  border-radius: 9999px;
+}
   .hcustom-scroll::-webkit-scrollbar {
     height: 8px;
   }

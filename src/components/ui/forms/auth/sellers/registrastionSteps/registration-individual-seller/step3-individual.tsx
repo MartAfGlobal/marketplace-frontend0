@@ -11,6 +11,7 @@ import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import Cookies from "js-cookie";
 
 
   export default function RegisteredIndividualStep3({
@@ -30,10 +31,11 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
+  const token = useSelector((state: RootState) => state.token.token);
 
   const sellerId = useSelector((state: any) => state.seller.data?.id);
   const sellerData = useSelector((state: RootState) => state.seller.data);
-  const token = useSelector((state: any) => state.token?.token);
+  // const token = useSelector((state: any) => state.token?.token);
  
 
   const { loading, sendHttpRequest: UserkycUdateReq } = useHttp();
@@ -46,6 +48,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
   const handleSubmit = async () => {
     const newFormData = new FormData();
+    if (!token){
+
+    }
 
     // Add seller base data (from previous steps)
     if (sellerData) {
@@ -67,6 +72,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
     newFormData.append("city", city);
 
     if (sellerId) {
+      if(!token){
+        return
+      }
       UserkycUdateReq({
         successRes: registerUserRes,
         requestConfig: {

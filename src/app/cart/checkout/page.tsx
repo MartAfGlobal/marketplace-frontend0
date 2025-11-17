@@ -7,12 +7,9 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 
-
 import ProductCard from "@/components/ui/cards/ProductCard";
 import NavBack from "@/assets/icons/navBacksmall.png";
-import { Button } from "@/components/ui/Button/Button";
 
-import { TrackOrders } from "@/types/global";
 
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
@@ -22,82 +19,79 @@ import MobileCheckoutItems from "@/components/ui/mobile/checkout-items";
 import { useHttp } from "@/hooks/use-http";
 import { setCheckoutItems, setCheckoutSummary } from "@/store/cart/cartSlice";
 
-
 export default function CheckoutPage() {
   const [visible, setVisible] = useState(10);
   const router = useRouter();
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
-   const token = useSelector((state: RootState) => state.token?.token);
+  // Prefer Redux token which is updated by login and axios refresh
+  const token = useSelector((state: RootState) => state.token.token);
 
   const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
   );
 
-  const showMore = () => setVisible((prev) => prev + 3);
 
   const { loading, sendHttpRequest } = useHttp();
-  
-useEffect(() => {
-  if (!token) return;
 
-  sendHttpRequest({
-    requestConfig: {
-      url: "/cart/summary/",
-      method: "GET",
-      token,
-      isAuth: true,
-      userType: "buyer",
-    },
-    successRes: (responseData: any) => {
-      const backendCart = responseData?.data;
-      console.log("summary datas:", backendCart);
+  useEffect(() => {
+    if (!token) return;
 
-      if (backendCart) {
-        // Map backend items to frontend format
-        const mappedItems = (backendCart.items || []).map((item: any) => ({
-          id: item.product_id,
-          product_id: item.product_id,
-          name: item.product_name,
-          product_image: item.product_image,
-          quantity: item.quantity,
-          subtotal: Number(item.total_price), // numeric subtotal
-          unit_price: Number(item.unit_price),
-          variation_name: item.variation_name,
-        }));
+    sendHttpRequest({
+      requestConfig: {
+        url: "/cart/summary/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (responseData: any) => {
+        const backendCart = responseData?.data;
+        console.log("summary datas:", backendCart);
 
-         console.log("summary datas444444:", mappedItems);
+        if (backendCart) {
+          const mappedItems = (backendCart.items || []).map((item: any) => ({
+            id: item.product_id,
+            product_id: item.product_id,
+            name: item.product_name,
+            product_image: item.product_image,
+            quantity: item.quantity,
+            subtotal: Number(item.total_price), // numeric subtotal
+            unit_price: Number(item.unit_price),
+            variation_name: item.variation_name,
+            variations: item.variations || [],
+          }));
 
-        // Store items for checkout
-        dispatch(setCheckoutItems(mappedItems));
+          console.log("summary datas444444:", mappedItems);
 
-        // Store full cart summary
-        dispatch(
-          setCheckoutSummary({
-            all_addresses: backendCart.all_addresses || [],
-            applied_coupon: backendCart.applied_coupon || null,
-            discount_amount: backendCart.discount_amount || "0.00",
-            shipping_address: backendCart.shipping_address || null,
-            shipping_cost: backendCart.shipping_cost || "0.00",
-            shipping_methods: backendCart.shipping_methods || [],
-            subtotal: backendCart.subtotal || "0.00",
-            total: backendCart.total || "0.00",
-          })
-        );
-      }
-    },
-  });
-}, [token, sendHttpRequest, dispatch]);
+          // Store items for checkout
+          dispatch(setCheckoutItems(mappedItems));
 
-  
+          // Store full cart summary
+          dispatch(
+            setCheckoutSummary({
+              all_addresses: backendCart.all_addresses || [],
+              applied_coupon: backendCart.applied_coupon || null,
+              discount_amount: backendCart.discount_amount || "0.00",
+              shipping_address: backendCart.shipping_address || null,
+              shipping_cost: backendCart.shipping_cost || "0.00",
+              shipping_methods: backendCart.shipping_methods || [],
+              subtotal: backendCart.subtotal || "0.00",
+              total: backendCart.total || "0.00",
+            })
+          );
+        }
+      },
+    });
+  }, [token, sendHttpRequest, dispatch]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}  // Start slightly down and transparent
-      animate={{ opacity: 1, y: 0 }}  // Animate to normal
-      exit={{ opacity: 0, y: -20 }}   // Optional exit animation
-      transition={{ duration: 0.5, ease: "easeOut" }}  // Smooth transition
+      initial={{ opacity: 0, y: 20 }} // Start slightly down and transparent
+      animate={{ opacity: 1, y: 0 }} // Animate to normal
+      exit={{ opacity: 0, y: -20 }} // Optional exit animation
+      transition={{ duration: 0.5, ease: "easeOut" }} // Smooth transition
       className="w-full"
     >
       <motion.div
@@ -135,15 +129,21 @@ useEffect(() => {
 
         <div className="flex justify-between mt-7 md:hidden ">
           <p className="text-c12 font-MontserratSemiBold ">Shipping address</p>
-          <button onClick={() => router.push("/dashboard/buyer/mobile/addresses/add-address")} className="rounded-full bg-ff715b text-ffffff w-c32 h-c32">
+          <button
+            onClick={() =>
+              router.push("/dashboard/buyer/mobile/addresses/add-address")
+            }
+            className="rounded-full bg-ff715b text-ffffff w-c32 h-c32"
+          >
             +
           </button>
         </div>
+        <div className="hidden md:flex">
+          <CheckoutItems loadingState={loading} />
+        </div>
 
-        <CheckoutItems />
-     
         <div className="md:hidden">
-          <MobileCheckoutItems />
+          <MobileCheckoutItems loadingState={loading} />
         </div>
 
         <div className="hidden md:flex w-full">

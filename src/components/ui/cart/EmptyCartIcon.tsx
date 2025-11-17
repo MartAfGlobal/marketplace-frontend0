@@ -1,9 +1,32 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "../Button/Button";
+interface EmptyCartProps {
+  className?: string;
+  title?: string;
+  description?: string;
+  ButtonText?: string;
+  onClick?: () => void;
+}
 
-export default function EmptyCartIcon({ className = "w-24 h-24 text-ff715b" }) {
+export default function EmptyCartIcon({
+  className = "w-24 h-24 text-ff715b",
+  title = "Your cart is empty",
+  description = "Looks like you haven’t added any items yet. Start exploring our products to fill your cart!",
+  ButtonText = "Continue Shopping",
+  onClick,
+}: EmptyCartProps) {
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      // default behavior
+      router.push("/#production-section");
+    }
+  };
+  const router = useRouter();
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       {/* Animated Cart SVG */}
@@ -65,22 +88,20 @@ export default function EmptyCartIcon({ className = "w-24 h-24 text-ff715b" }) {
         />
       </motion.svg>
 
-      {/* Empty Cart Text */}
       <h2 className="text-lg font-MontserratSemiBold mt-6 text-gray-800">
-        Your cart is empty
+        {title}
       </h2>
-      <p className="text-gray-500 text-sm mt-2 mb-6 max-w-sm">
-        Looks like you haven’t added any items yet.  
-        Start exploring our products to fill your cart!
-      </p>
+      <p className="text-gray-500 text-sm mt-2 mb-6 max-w-sm">{description}</p>
 
-      {/* Continue Shopping Button */}
-      <Link
-        href="/"
-        className="px-4 py-2 bg-ff715b text-sm text-white rounded-full hover:bg-ff715b/70 transition duration-200 font-MontserratSemiBold"
-      >
-        Continue Shopping
-      </Link>
+      <div className=" w-full max-w-44.75">
+        <Button
+          onClick={handleClick}
+          variant="primary"
+          className=" w-full max-w-44.75"
+        >
+          {ButtonText}
+        </Button>
+      </div>
     </div>
   );
 }
