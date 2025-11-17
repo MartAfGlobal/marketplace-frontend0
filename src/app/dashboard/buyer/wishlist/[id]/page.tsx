@@ -20,7 +20,7 @@ import { addToCart } from "@/store/cart/cartSlice";
 import Trash from "@/assets/icons/trash.svg";
 import AddItemtoLabelModal from "@/components/ui/Modals/addItemToLabelModal";
 import Adding from "@/assets/Icons2/PlusWhite.svg";
-import Add from "@/assets/icons/plusorange.svg";
+import Add from "@/assets/icons/plusorange.png";
 
 import { Button } from "@/components/ui/Button/Button";
 import GoodCheckOrange from "@/assets/Icons2/GoodCheckOrange.svg";
@@ -328,7 +328,7 @@ export default function CategoryPage() {
                 variant="secondary"
                 className="w-full max-w-[190.15px] flex gap-3"
               >
-                {/* <Image src={Add} alt="Delete" width={18.12} height={19.63} />{" "} */}
+                <Image src={Add} alt="Delete" width={18.12} height={19.63} />{" "}
                 Add items
               </Button>
             )}
@@ -595,8 +595,7 @@ export default function CategoryPage() {
                   variant="secondary"
                   className="w-full max-w-[190.15px] flex gap-3 border-0"
                 >
-                  {/* <Image src={Add} alt="Add" width={12} height={12} /> */}
-                  Add items 
+                  <Image src={Add} alt="Add" width={12} height={12} /> Add items
                 </Button>
               )}
             </div>
