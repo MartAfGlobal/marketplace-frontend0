@@ -251,7 +251,7 @@ export default function CheckoutSummary() {
               >
                 {checkoutItems.map((item, index) => (
                   <motion.div
-                    key={`${item.id}-${item.variations || "no-var"}`}
+                    key={`${item.id}-${item.variations}-${index} || "no-var"}`}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -277,7 +277,7 @@ export default function CheckoutSummary() {
                           </p>
                           <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                             <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                              {item.quantity}PC, white
+                              {item.quantity}PC, {item.variation_name}
                             </span>
                           </div>
                           <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">

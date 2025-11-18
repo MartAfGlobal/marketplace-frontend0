@@ -28,7 +28,7 @@ export default function UserCountryStateDropdown({ country, state, onChange }: P
   }, []);
 
   useEffect(() => {
-    const selected = Country.getAllCountries().find((c) => c.name === country);
+    const selected = Country.getAllCountries().find((c) => c.name === country || "Nigeria");
     if (selected) {
       setFlag(getFlagUrl(selected.isoCode));
       setStates(State.getStatesOfCountry(selected.isoCode));

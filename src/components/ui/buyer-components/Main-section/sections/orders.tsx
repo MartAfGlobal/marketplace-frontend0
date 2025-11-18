@@ -7,7 +7,7 @@ import Icon3 from "@/assets/icons/user-dashboard/orderHistory/icon3.png";
 import Icon4 from "@/assets/icons/user-dashboard/orderHistory/icon4.png";
 import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { OrderHistoryItem, OrderItem } from "@/types/global";
 import { TrackOrders } from "@/types/global";
 import { Button } from "@/components/ui/Button/Button";
@@ -15,12 +15,36 @@ import Link from "next/link";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
+import { RootState } from "@/store";
+import { useHttp } from "@/hooks/use-http";
+import { useFetchOrders } from "@/helpers/fetchOrders";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-order-modal";
 
 export default function Orders() {
   const { orders, loading } = useSelector((state: any) => state.orders);
   const oneItem = orders.filter((order: any) => order.items?.length === 1);
   console.log("Orders with only one item:", oneItem);
   const [open, setOpen] = useState(false);
+
+  const { fetchOrders } = useFetchOrders();
+
+  const [loadingIds, setLoadingIds] = useState<string | null>(null);
+
+  console.log("orders from redux store:", orders);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [addressOpen, setAddressOpen] = useState(false);
+
+  const token: string | undefined = useSelector(
+    (state: RootState) => state.token?.token ?? undefined
+  );
+
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+
+  // const token = useSelector((state: any) => state.token?.token);
+  const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
+  const { sendHttpRequest: cancelReq } = useHttp();
 
   const router = useRouter();
 
@@ -68,6 +92,89 @@ export default function Orders() {
       total: totalDelivered,
     },
   ];
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // adjust breakpoint as needed
+    };
+
+    handleResize(); // check on mount
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  const handleEditAddress = (id: string) => {
+    setSelectedId(id);
+
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      router.push(`/dashboard/buyer/orders/edit-address/${id}`);
+    } else {
+      setTimeout(() => setAddressOpen(true), 1);
+    }
+  };
+
+  const handleCancelOrder = (orderId: string) => {
+    setLoadingIds(orderId);
+    console.log("checking item to cancel", orderId);
+    if (!token) {
+      setLoadingIds(orderId);
+      return;
+    }
+
+    cancelReq({
+      requestConfig: {
+        url: `/orders/${orderId}/cancel/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res) => {
+        console.log("✅ User order cancel info:", res);
+        setLoadingIds("");
+        fetchOrders();
+      },
+    });
+  };
+
+  const handleClick = (id: string) => {
+    if (isMobile) {
+      router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`);
+    } else {
+      setOpen(true);
+    }
+  };
+
+  const handleRepay = (repay_order_id: any) => {
+    console.log("checking item to pay", repay_order_id);
+    repayReq({
+      requestConfig: {
+        url: "/orders/repay/",
+        method: "POST",
+        token,
+        body: { repay_order_id: repay_order_id },
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res) => {
+        console.log("✅ User tracking info:", res);
+
+        if (res.data?.paystack_payment_url) {
+          window.location.href = res.data.paystack_payment_url;
+        } else {
+          return;
+        }
+      },
+    });
+  };
+
+  // const handleTrackOrder = (orderId: string) => {
+  //   router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
+  // };
 
   return (
     <div className="space-y-c24">
@@ -157,7 +264,7 @@ export default function Orders() {
                     </p>
                   </div>
                 </div>
-                <div className="w-full max-w-70 space-y-4">
+                <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
                   {item.status === "Shipped" && (
                     <>
                       <Button
@@ -167,7 +274,8 @@ export default function Orders() {
                       >
                         Track order
                       </Button>
-                      <Button onClick={() => setOpen(true)}>
+
+                      <Button onClick={() => handleClick(item.id)}>
                         Confirm delivery
                       </Button>
                     </>
@@ -175,11 +283,23 @@ export default function Orders() {
 
                   {item.status === "To Ship" && (
                     <>
-                      <Button variant="secondary" className="">
+                      <Button
+                        onClick={() => handleEditAddress(item.id)}
+                        variant="secondary"
+                        className=""
+                      >
                         Edit address
                       </Button>
-                      <Button className="bg-red-500 text-white hover:bg-red-600">
-                        Cancel order
+                      <Button
+                        onClick={() => handleCancelOrder(item.id)}
+                        variant="primary"
+                      >
+                        {" "}
+                        {loadingIds === item.id ? (
+                          <LoadingSpinner />
+                        ) : (
+                          "Cancel order"
+                        )}
                       </Button>
                     </>
                   )}
@@ -193,14 +313,49 @@ export default function Orders() {
                     </>
                   )}
 
-                  {item.status === "Awaiting Confirmation" && (
+                  {(item.status === "Awaiting Confirmation" ||
+                    item.status === "Processing" ||
+                    item.status === "Awaiting Payment") && (
                     <>
-                      <Button variant="secondary" className="">
+                      <Button
+                        onClick={() => handleEditAddress(item.id)}
+                        variant="secondary"
+                        className=""
+                      >
                         Edit address
                       </Button>
-                      <Button className="">Confirm & pay</Button>
+                      <Button
+                        disabled={repaying}
+                        onClick={() => {
+                          handleRepay(item.id);
+                        }}
+                        className=""
+                      >
+                        {repaying ? <LoadingSpinner /> : "Confirm & pay"}
+                      </Button>
                     </>
                   )}
+
+                  {/* Default fallback (optional)
+                          {![
+                            "Shipped",
+                            "To Ship",
+                            "Delivered",
+                            "Awaiting Payment",
+                          ].includes(item.status) && (
+                            <Button variant="secondary" className="">
+                              View details
+                            </Button>
+                          )} */}
+
+                  <div className="w-full hidden md:flex justify-center">
+                    <Link
+                      href={`orders/${item.id}`}
+                      className="text-c14 font-MontserratSemiBold text-ff715b"
+                    >
+                      Order details
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -209,7 +364,7 @@ export default function Orders() {
       </div>
 
       <ConfirmModal
-        isOpen={isOpen}
+        isOpen={open}
         onClose={() => setIsOpen(false)}
         title="Did you receive this package?"
         description="Confirming helps us complete your order and improve service."
@@ -218,6 +373,11 @@ export default function Orders() {
         yesText="Delete"
         noText="Cancel"
         className="w-full max-w-106.5 text-center"
+      />
+      <OrderEditAddressModal
+        onClose={() => setAddressOpen(false)}
+        isOpen={addressOpen}
+        id={selectedId}
       />
     </div>
   );

@@ -109,14 +109,13 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
                                 {item.name}
                               </p>
 
-                              <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
-                                <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
+                              <div className="w-fit h-c32 px-2 justify-center rounded-c12 bg-black/3 flex items-center">
+                                <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
                                   {item.quantity}PC,{" "}
-                                  {item.product_name
-                                    ? item.product_name.length > 6
-                                      ? item.product_name.slice(0, 6) + "..."
-                                      : item.product_name
-                                    : item.name}
+                                  {String(item.name).trim().length > 6
+                                    ? String(item.name).trim().slice(0, 6) +
+                                      "..."
+                                    : String(item.name).trim()}
                                 </span>
                               </div>
                               <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">

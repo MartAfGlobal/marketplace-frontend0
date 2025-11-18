@@ -178,7 +178,7 @@ export default function AddressModal({
                       Full Name
                     </Label>
                     <Input
-                      id="full_namw"
+                      id="full_name"
                       name="full_name"
                       type="text"
                       value={formData.full_name}

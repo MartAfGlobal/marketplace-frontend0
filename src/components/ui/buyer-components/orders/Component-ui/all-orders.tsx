@@ -26,6 +26,7 @@ import { useFetchOrders } from "@/helpers/fetchOrders";
 export default function Orders() {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
+  const [addressOpen, setAddressOpen] = useState(false)
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [visible, setVisible] = useState(10); // Show 6 items by default
@@ -88,9 +89,9 @@ export default function Orders() {
     const isMobile = window.innerWidth <= 768;
 
     if (isMobile) {
-      router.push(`/edit-address/${id}`);
+      router.push(`/dashboard/buyer/orders/edit-address/${id}`);
     } else {
-      setTimeout(() => setIsOpen(true), 0);
+      setTimeout(() => setAddressOpen(true), 0);
     }
   };
 
@@ -212,7 +213,7 @@ export default function Orders() {
                     >
                       <div className="w-full   flex items-center justify-between md:gap-0 md:justify-between mb-3 md:mb-c32">
                         <div>
-                          <p>{item.status}</p>
+                          
                           <p className="text-sm font-MontserratSemiBold leading-c20 text-000000">
                             {item.status === "To Ship"
                               ? "Order is being processed"
@@ -629,9 +630,10 @@ export default function Orders() {
         }}
       />
       <OrderEditAddressModal
-        onClose={() => setIsOpen(false)}
-        isOpen={isOpen}
+        onClose={() => setAddressOpen(false)}
+        isOpen={addressOpen}
         id={selectedId}
+
       />
     </div>
   );

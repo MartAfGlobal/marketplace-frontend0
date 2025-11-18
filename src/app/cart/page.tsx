@@ -46,13 +46,13 @@ export default function CartPage() {
   const [visible, setVisible] = useState(10);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const initialHydratedRef = useRef(false);
-  const [deleting, setDeleting] = useState("")
+  const [deleting, setDeleting] = useState("");
 
   const token = useSelector((state: RootState) => state.token?.token);
   const cartItems = useSelector((state: RootState) => state.cart.items || []);
   const { loading, sendHttpRequest } = useHttp();
-  const {  sendHttpRequest:deleteReq } = useHttp();
-  const {  sendHttpRequest:toggleReq } = useHttp();
+  const { sendHttpRequest: deleteReq } = useHttp();
+  const { sendHttpRequest: toggleReq } = useHttp();
   const dispatch = useDispatch();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -345,13 +345,12 @@ export default function CartPage() {
   };
 
   const handleDeleteItem = async (id: string) => {
-    setDeleting(id)
+    setDeleting(id);
     if (!token) {
       dispatch(removeFromCart(id));
-        setDeleting("");
+      setDeleting("");
       return;
     }
-     
 
     setSelectedItems((p) => {
       const copy = { ...p };
@@ -374,12 +373,12 @@ export default function CartPage() {
         },
         successRes: (res) => {
           dispatch(removeFromCart(id));
-            setDeleting("");
+          setDeleting("");
         },
       });
     } catch {
       toast.error("Failed to delete item on server");
-        setDeleting("");
+      setDeleting("");
     }
   };
 
@@ -443,116 +442,121 @@ export default function CartPage() {
   );
 
   return (
-    <div className="relative md: md:h-full h-dvh">
-      <motion.div
-        initial={{ opacity: 0, y: -15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="pl-c56 pt-c20 z-40 hidden md:flex items-center w-full"
-        style={{ top: "4rem" }}
-      >
-        <nav
-          aria-label="breadcrumb"
-          className="flex h-c32 w-full items-center gap-2"
-        >
-          <Link href="/" className="opacity-30 font-MontserratMedium text-c12">
-            Home
-          </Link>
-          <Image src={WnavRight} alt=">" width={16} height={16} />
-          <span className="font-MontserratMedium text-c12">Cart</span>
-        </nav>
-      </motion.div>
-
-      <div className="w-full md:px-15 px-0 pb-3 md:pb-0">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-4 pl-6  mt-3 md:mt-c32"
-        >
-          <Image
-            src={NavBack}
-            alt="<"
-            width={9}
-            height={16.5}
-            className="brightness-20 w-2.25 h-[16.5px]"
-          />
-          <p className="font-MontserratSemiBold text-c16 text-161616">
-            My Cart ({cartItems.length})
-          </p>
-        </button>
-      </div>
+    <>
+      
+      {token && syncingCart ?
+       ( <div className="w-full flex justify-center h-screen items-center py-10">
+          <DotSpinner size={10} color="#ff715b" gap={8} />
+        </div>):(
      
-      {cartItems.length === 0 ? (
-        <EmptyCartIcon />
-      ) : (
-        <>
-          <div className="md:pt-c48 pb-c64">
-            <div className="md:flex gap-18 justify-center">
-              <div className="w-full max-w-207">
-                <div className="w-full h-c56 mb-4 md:mb-c32 flex px-6 justify-between items-center bg-947fff/10">
-                  <div className="flex items-center gap-4">
-                    {/* <input
+      <div className="relative md: md:h-full h-dvh">
+        <motion.div
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="pl-c56 pt-c20 z-40 hidden md:flex items-center w-full"
+          style={{ top: "4rem" }}
+        >
+          <nav
+            aria-label="breadcrumb"
+            className="flex h-c32 w-full items-center gap-2"
+          >
+            <Link
+              href="/"
+              className="opacity-30 font-MontserratMedium text-c12"
+            >
+              Home
+            </Link>
+            <Image src={WnavRight} alt=">" width={16} height={16} />
+            <span className="font-MontserratMedium text-c12">Cart</span>
+          </nav>
+        </motion.div>
+
+        <div className="w-full md:px-15 px-0 pb-3 md:pb-0">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-4 pl-6  mt-3 md:mt-c32"
+          >
+            <Image
+              src={NavBack}
+              alt="<"
+              width={9}
+              height={16.5}
+              className="brightness-20 w-2.25 h-[16.5px]"
+            />
+            <p className="font-MontserratSemiBold text-c16 text-161616">
+              My Cart ({cartItems.length})
+            </p>
+          </button>
+        </div>
+
+        {cartItems.length === 0 ? (
+          <EmptyCartIcon />
+        ) : (
+          <>
+            <div className="md:pt-c48 pb-c64">
+              <div className="md:flex gap-18 justify-center">
+                <div className="w-full max-w-207">
+                  <div className="w-full h-c56 mb-4 md:mb-c32 flex px-6 justify-between items-center bg-947fff/10">
+                    <div className="flex items-center gap-4">
+                      {/* <input
                       type="checkbox"
                       className="h-5 w-5 border border-black rounded  accent-black checked:bg-black checked:text-white"
                       checked={allSelected}
                       onChange={handleSelectAll}
                     /> */}
 
-                    <button
-                      onClick={handleSelectAll}
-                      className={`w-5 h-5 rounded-c4 border-1 border-000000/32 flex items-center justify-center transition-colors ${
-                        allSelected
-                          ? "bg-ff715b"
-                          : "border-000000/5 bg-transparent"
-                      }`}
-                    >
-                      {allSelected && (
+                      <button
+                        onClick={handleSelectAll}
+                        className={`w-5 h-5 rounded-c4 border-1 border-000000/32 flex items-center justify-center transition-colors ${
+                          allSelected
+                            ? "bg-ff715b"
+                            : "border-000000/5 bg-transparent"
+                        }`}
+                      >
+                        {allSelected && (
+                          <Image
+                            src={GoodMark}
+                            alt="checked"
+                            width={9.75}
+                            height={7.13}
+                          />
+                        )}
+                      </button>
+                      <span className="text-c12 font-MontserratSemiBold">
+                        Select All
+                      </span>
+                    </div>
+                    {Object.values(selectedItems).some(
+                      (isSelected) => isSelected
+                    ) && (
+                      <button onClick={handleDeleteSelected}>
                         <Image
-                          src={GoodMark}
-                          alt="checked"
-                          width={9.75}
-                          height={7.13}
+                          src={Trash}
+                          alt="delete"
+                          width={15}
+                          height={16.25}
                         />
-                      )}
-                    </button>
-                    <span className="text-c12 font-MontserratSemiBold">
-                      Select All
-                    </span>
+                      </button>
+                    )}
                   </div>
-                  {Object.values(selectedItems).some(
-                    (isSelected) => isSelected
-                  ) && (
-                    <button onClick={handleDeleteSelected}>
-                      <Image
-                        src={Trash}
-                        alt="delete"
-                        width={15}
-                        height={16.25}
-                      />
-                    </button>
-                  )}
-                </div>
 
-                <div className="flex px-6 w-full justify-between mb-15 md:mb-0">
-                  <motion.div
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    variants={{
-                      hidden: { opacity: 0, height: 0 },
-                      visible: {
-                        opacity: 1,
-                        height: "auto",
-                        transition: { staggerChildren: 0.1 },
-                      },
-                    }}
-                    className="space-y-c24 w-full "
-                  >
-                    {token && syncingCart ? (
-                      <div className="w-full flex justify-center py-10">
-                        <DotSpinner size={10} color="#ff715b" gap={8} />
-                      </div>
-                    ) : (
-                      cartItems.map((item) => (
+                  <div className="flex px-6 w-full justify-between mb-15 md:mb-0">
+                    <motion.div
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      variants={{
+                        hidden: { opacity: 0, height: 0 },
+                        visible: {
+                          opacity: 1,
+                          height: "auto",
+                          transition: { staggerChildren: 0.1 },
+                        },
+                      }}
+                      className="space-y-c24 w-full "
+                    >
+                      {cartItems.map((item) => (
                         <motion.div
                           key={item.id}
                           className="flex justify-between items-center md:border-b  border-gray-200 pb-4"
@@ -604,7 +608,7 @@ export default function CartPage() {
                           >
                             <motion.button
                               key="delete"
-                              disabled={deleting===item.id}
+                              disabled={deleting === item.id}
                               onClick={() => handleDeleteItem(item.id)}
                               className="ml-2 transition-opacity hover:opacity-70"
                               initial={{ opacity: 0, y: -10 }}
@@ -616,12 +620,16 @@ export default function CartPage() {
                                 damping: 22,
                               }}
                             >
-                              { deleting ===item.id ? <LoadingSpinner color="border-ff715b"/> :<Image
-                                src={Trash}
-                                alt="delete"
-                                width={15}
-                                height={16}
-                              />}
+                              {deleting === item.id ? (
+                                <LoadingSpinner color="border-ff715b" />
+                              ) : (
+                                <Image
+                                  src={Trash}
+                                  alt="delete"
+                                  width={15}
+                                  height={16}
+                                />
+                              )}
                             </motion.button>
 
                             <motion.div
@@ -648,21 +656,198 @@ export default function CartPage() {
                             </motion.div>
                           </motion.div>
                         </motion.div>
-                      ))
-                    )}
-                  </motion.div>
+                      ))}
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Order Summary (Desktop) */}
+                <div className="hidden md:flex w-full max-w-84.25">
+                  <div className="w-full">
+                    <h1 className="text-sm font-MontserratSemiBold mb-3">
+                      Order Summary
+                    </h1>
+                    <div className="space-y-2 text-sm font-MontserratNormal h-23 border-b border-b-000000/10">
+                      <div className="flex justify-between">
+                        <p>Total items:</p>
+                        <p>₦{totalPrice}</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p>Discount:</p>
+                        <p className="text-ca0202">0</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p>Subtotal:</p>
+                        <p>₦{totalPrice}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center mb-c32 border-b border-b-000000/10 pt-4">
+                      <div className="w-full max-w-60">
+                        <p>Total:</p>
+                        <p className="text-c10 font-MontserratNormal leading-4">
+                          Please refer to your final actual payment amount.
+                        </p>
+                      </div>
+                      <p className="text-c32 font-MontserratSemiBold">
+                        ₦{totalPrice}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleCheckout}
+                      disabled={selectedCount === 0}
+                      className="border-0"
+                    >
+                      {loading ? (
+                        <LoadingSpinner />
+                      ) : (
+                        <>Proceed ({selectedCount})</>
+                      )}
+                    </Button>
+                    <div className="space-y-2.5 mt-c32">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={ShildCheck}
+                          alt="shild check"
+                          width={20}
+                          height={20}
+                        />
+                        <p className="text-c12 font-MontserratSemiBold">
+                          Secure payments
+                        </p>
+                      </div>
+                      <p className="text-c12 font-MontserratNormal leading-4">
+                        Every payment you make on MartAf is secured with strict
+                        SSL encryption and PCI DSS data protection protocols
+                      </p>
+                    </div>
+                    <div className="space-y-2.5 mt-4">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={padlock}
+                          alt="shild check"
+                          width={20}
+                          height={20}
+                        />
+                        <p className="text-c12 font-MontserratSemiBold">
+                          Secure privacy
+                        </p>
+                      </div>
+                      <p className="text-c12 font-MontserratNormal leading-4">
+                        Protecting your privacy is important to us! We will only
+                        use your information in accordance with our privacy
+                        policy.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Order Summary (Desktop) */}
-              <div className="hidden md:flex w-full max-w-84.25">
-                <div className="w-full">
-                  <h1 className="text-sm font-MontserratSemiBold mb-3">
-                    Order Summary
-                  </h1>
-                  <div className="space-y-2 text-sm font-MontserratNormal h-23 border-b border-b-000000/10">
+            <div className="hidden w-full md:flex">
+              <div className="w-full">
+                <div className="py-c32">
+                  <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
+                    More to love
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
+                    {fashionProducts.slice(0, visible).map((item) => (
+                      <ProductCard key={item.id} product={item} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed bottom-0 md:hidden z-50 flex items-center gap-4 ">
+              <div className="flex items-center gap-2 w-11">
+                <button
+                  onClick={handleSelectAll}
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    allSelected
+                      ? "bg-ff715b border-ff715b"
+                      : "border-ff715b bg-transparent"
+                  }`}
+                >
+                  {allSelected && (
+                    <Image
+                      src={GoodMark}
+                      alt="checked"
+                      width={9.75}
+                      height={7.13}
+                    />
+                  )}
+                </button>
+                <p className="text-c12 font-semibold">All</p>
+              </div>
+
+              <div className="flex items-center gap-3 w-full">
+                <div>
+                  <p className="font-MontserratSemiBold text-c20">
+                    ₦{totalPrice}
+                  </p>
+                  <p className="text-c12 font-MontserratNormal text-ca0202 line-through">
+                    ₦1250.00
+                  </p>
+                </div>
+                <button
+                  className="w-full transition-transform"
+                  onClick={() => setOpenModal((prev) => !prev)}
+                >
+                  <motion.div animate={{ rotate: openModal ? 180 : 0 }}>
+                    <Image src={CaretDwn} alt="view" width={16} height={16} />
+                  </motion.div>
+                </button>
+              </div>
+
+              <Button
+                onClick={handleCheckout}
+                disabled={selectedCount === 0}
+                className="border-0 bg-black hover:bg-black/90 text-white rounded-xl"
+              >
+                Proceed ({selectedCount})
+              </Button>
+            </div>
+
+            <AnimatePresence>
+              {openModal && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 300, opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="fixed bottom-30 w-full bg-ffffff z-40 px-6 overflow-hidden circle-shadow"
+                >
+                  <div className="flex justify-between pt-6 ">
+                    <p className="text-base font-MontserratSemiBold">
+                      Checkout details
+                    </p>
+                    <button onClick={() => setOpenModal((prev) => !prev)}>
+                      <Image src={CloseX} alt="close" width={15} height={15} />
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 overflow-x-scroll py-4">
+                    {cartItems
+                      .filter((item) => selectedItems[item.id])
+                      .map((item) => (
+                        <Image
+                          key={item.id}
+                          src={item.product_image || "/placeholder.png"}
+                          alt={item.product_name || "product name"}
+                          width={56}
+                          height={56}
+                          className="flex-shrink-0 rounded w-14 h-14"
+                        />
+                      ))}
+                  </div>
+
+                  <div className="space-y-2 text-sm font-MontserratNormal">
                     <div className="flex justify-between">
                       <p>Total items:</p>
+                      <p>₦{totalPrice}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <p className="font-MontserratSemiBold">Subtotal:</p>
                       <p>₦{totalPrice}</p>
                     </div>
                     <div className="flex justify-between">
@@ -670,208 +855,31 @@ export default function CartPage() {
                       <p className="text-ca0202">0</p>
                     </div>
                     <div className="flex justify-between">
-                      <p>Subtotal:</p>
+                      <p>Shipping fee:</p>
+                      <p>Free</p>
+                    </div>
+                    <div className="flex justify-between text-base font-MontserratSemiBold">
+                      <p>Estimated total:</p>
                       <p>₦{totalPrice}</p>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center mb-c32 border-b border-b-000000/10 pt-4">
-                    <div className="w-full max-w-60">
-                      <p>Total:</p>
-                      <p className="text-c10 font-MontserratNormal leading-4">
-                        Please refer to your final actual payment amount.
-                      </p>
-                    </div>
-                    <p className="text-c32 font-MontserratSemiBold">
-                      ₦{totalPrice}
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleCheckout}
-                    disabled={selectedCount === 0}
-                    className="border-0"
-                  >
-                    {loading ? (
-                      <LoadingSpinner />
-                    ) : (
-                      <>Proceed ({selectedCount})</>
-                    )}
-                  </Button>
-                  <div className="space-y-2.5 mt-c32">
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src={ShildCheck}
-                        alt="shild check"
-                        width={20}
-                        height={20}
-                      />
-                      <p className="text-c12 font-MontserratSemiBold">
-                        Secure payments
-                      </p>
-                    </div>
-                    <p className="text-c12 font-MontserratNormal leading-4">
-                      Every payment you make on MartAf is secured with strict
-                      SSL encryption and PCI DSS data protection protocols
-                    </p>
-                  </div>
-                  <div className="space-y-2.5 mt-4">
-                    <div className="flex items-center gap-2">
-                      <Image
-                        src={padlock}
-                        alt="shild check"
-                        width={20}
-                        height={20}
-                      />
-                      <p className="text-c12 font-MontserratSemiBold">
-                        Secure privacy
-                      </p>
-                    </div>
-                    <p className="text-c12 font-MontserratNormal leading-4">
-                      Protecting your privacy is important to us! We will only
-                      use your information in accordance with our privacy
-                      policy.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="hidden w-full md:flex">
-            <div className="w-full">
-              <div className="py-c32">
-                <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
-                  More to love
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
-                  {fashionProducts.slice(0, visible).map((item) => (
-                    <ProductCard key={item.id} product={item} />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed bottom-0 md:hidden z-50 flex items-center gap-4 ">
-            <div className="flex items-center gap-2 w-11">
-              <button
-                onClick={handleSelectAll}
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  allSelected
-                    ? "bg-ff715b border-ff715b"
-                    : "border-ff715b bg-transparent"
-                }`}
-              >
-                {allSelected && (
-                  <Image
-                    src={GoodMark}
-                    alt="checked"
-                    width={9.75}
-                    height={7.13}
-                  />
-                )}
-              </button>
-              <p className="text-c12 font-semibold">All</p>
-            </div>
-
-            <div className="flex items-center gap-3 w-full">
-              <div>
-                <p className="font-MontserratSemiBold text-c20">
-                  ₦{totalPrice}
-                </p>
-                <p className="text-c12 font-MontserratNormal text-ca0202 line-through">
-                  ₦1250.00
-                </p>
-              </div>
-              <button
-                className="w-full transition-transform"
-                onClick={() => setOpenModal((prev) => !prev)}
-              >
-                <motion.div animate={{ rotate: openModal ? 180 : 0 }}>
-                  <Image src={CaretDwn} alt="view" width={16} height={16} />
                 </motion.div>
-              </button>
-            </div>
+              )}
+            </AnimatePresence>
 
-            <Button
-              onClick={handleCheckout}
-              disabled={selectedCount === 0}
-              className="border-0 bg-black hover:bg-black/90 text-white rounded-xl"
-            >
-              Proceed ({selectedCount})
-            </Button>
-          </div>
-
-          <AnimatePresence>
-            {openModal && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 300, opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed bottom-30 w-full bg-ffffff z-40 px-6 overflow-hidden circle-shadow"
-              >
-                <div className="flex justify-between pt-6 ">
-                  <p className="text-base font-MontserratSemiBold">
-                    Checkout details
-                  </p>
-                  <button onClick={() => setOpenModal((prev) => !prev)}>
-                    <Image src={CloseX} alt="close" width={15} height={15} />
-                  </button>
-                </div>
-
-                <div className="flex gap-2 overflow-x-scroll py-4">
-                  {cartItems
-                    .filter((item) => selectedItems[item.id])
-                    .map((item) => (
-                      <Image
-                        key={item.id}
-                        src={item.product_image || "/placeholder.png"}
-                        alt={item.product_name || "product name"}
-                        width={56}
-                        height={56}
-                        className="flex-shrink-0 rounded w-14 h-14"
-                      />
-                    ))}
-                </div>
-
-                <div className="space-y-2 text-sm font-MontserratNormal">
-                  <div className="flex justify-between">
-                    <p>Total items:</p>
-                    <p>₦{totalPrice}</p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p className="font-MontserratSemiBold">Subtotal:</p>
-                    <p>₦{totalPrice}</p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p>Discount:</p>
-                    <p className="text-ca0202">0</p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p>Shipping fee:</p>
-                    <p>Free</p>
-                  </div>
-                  <div className="flex justify-between text-base font-MontserratSemiBold">
-                    <p>Estimated total:</p>
-                    <p>₦{totalPrice}</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <CheckoutModal
-            isOpen={checkoutModalOpen}
-            onClose={() => setCheckoutModalOpen(false)}
-            onGuestCheckout={() => setOpen(true)}
-          />
-          <GuestCheckoutModal
-            isOpen={open}
-            onClose={() => setOpen(false)}
-            selectedItems={cartItems.filter((item) => selectedItems[item.id])}
-          />
-        </>
-      )}
-    </div>
+            <CheckoutModal
+              isOpen={checkoutModalOpen}
+              onClose={() => setCheckoutModalOpen(false)}
+              onGuestCheckout={() => setOpen(true)}
+            />
+            <GuestCheckoutModal
+              isOpen={open}
+              onClose={() => setOpen(false)}
+              selectedItems={cartItems.filter((item) => selectedItems[item.id])}
+            />
+          </>
+        )}
+      </div>)}
+    </>
   );
 }

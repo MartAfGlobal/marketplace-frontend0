@@ -17,12 +17,13 @@ import { RootState } from "@/store";
 import { fetchOrdersSuccess } from "@/store/orders/order-slice";
 
 import WireframeLoader from "@/components/ui/WireframeLoader";
+import DotSpinner from "@/components/reloadSpinner/DotSpinner";
 
 export default function BuyerDashBoardPage() {
   const { sendHttpRequest: userInforHttpRequest } = useHttp();
   const { sendHttpRequest: userAddressHttpRequest } = useHttp();
   const { sendHttpRequest: wishlistReq } = useHttp();
-  const { loading, sendHttpRequest:fetchUserReq } = useHttp();
+  const { loading, sendHttpRequest: fetchUserReq } = useHttp();
   const dispatch = useDispatch();
   const router = useRouter();
   const token = useSelector((state: RootState) => state.token.token);
@@ -73,6 +74,7 @@ export default function BuyerDashBoardPage() {
         method: "GET",
         token,
         isAuth: true,
+        userType: "buyer"
       },
       successRes: (res) => {
         const addresses =
@@ -164,7 +166,6 @@ export default function BuyerDashBoardPage() {
         method: "GET",
         token,
         isAuth: true,
-        successMessage: "User info fetched",
         userType: "buyer",
       },
       successRes: fetchUserSucRes,
@@ -172,13 +173,17 @@ export default function BuyerDashBoardPage() {
   }, [
     token,
     dispatch,
-    router,
     userInforHttpRequest,
     userAddressHttpRequest,
     wishlistReq,
   ]);
 
-  if (loading) return <WireframeLoader />;
+  if (loading)
+    return (
+      <div className="w-full flex justify-center h-screen items-center py-10">
+        <DotSpinner size={10} color="#ff715b" gap={8} />
+      </div>
+    );
 
   return (
     <>

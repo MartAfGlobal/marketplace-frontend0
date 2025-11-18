@@ -24,6 +24,25 @@ export default function OrderEditAddressModal({
   currentAddress,
   id,
 }: AddressModalProps) {
+  const buyerAddresses = useSelector(
+    (state: RootState) => state.buyer.BuyerAddresses
+  );
+  const { orders } = useSelector((state: any) => state.orders);
+const order = orders?.find((o: any) => o.id === id) || null;
+
+
+  console.log("oorder id", order);
+
+const addressId =
+  order?.shipping_address?.id ??
+  order?.shipping_address ??
+  null;
+
+// 3️⃣ Find the matching buyer saved address
+const address = buyerAddresses?.find((ad) => ad.id === addressId) || null;
+
+
+
   const [formData, setFormData] = useState<OrderAddress>({
     id: id || null,
     country: currentAddress?.country || "Nigeria",
@@ -36,14 +55,40 @@ export default function OrderEditAddressModal({
     is_default: false,
   });
 
-    const { fetchOrders } = useFetchOrders();
+  useEffect(() => {
+    if (!order || !address) return;
+
+    setFormData({
+      id: order.id || null,
+      country: address.country || "",
+      full_name: address.full_name || "",
+      phone: address.phone || "",
+      state: address.state || "",
+      city: address.city || "",
+      postal_code: address.postal_code || "",
+      address: address.address || "",
+      is_default: address.is_default || false,
+    });
+  }, [order, address]);
+
+  const { fetchOrders } = useFetchOrders();
   const token = useSelector((state: RootState) => state.token.token);
   const { loading, sendHttpRequest: saveRequest } = useHttp();
   const [streetError, setStreetError] = useState("");
-
+  // Set default country (Nigeria) when modal opens
   useEffect(() => {
-    if (id) setFormData((prev) => ({ ...prev, id }));
-  }, [id]);
+    if (!isOpen) return;
+
+    const nigeria = "Nigeria";
+
+    setFormData((prev) => ({
+      ...prev,
+      country:
+        address?.country && address.country.trim() !== ""
+          ? address.country
+          : nigeria,
+    }));
+  }, [isOpen, address]);
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
@@ -59,7 +104,7 @@ export default function OrderEditAddressModal({
 
   const SaveSuccess = (res: any) => {
     console.log("address INFO:", res);
-    fetchOrders()
+    fetchOrders();
     setStreetError("");
     onClose();
   };
@@ -88,8 +133,14 @@ export default function OrderEditAddressModal({
         <motion.div
           className="fixed inset-0 bg-black/60 flex h-dvh items-center justify-center z-50"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}
-          exit={{ opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
+          animate={{
+            opacity: 1,
+            transition: { duration: 0.3, ease: "easeOut" },
+          }}
+          exit={{
+            opacity: 0,
+            transition: { duration: 0.3, ease: "easeInOut" },
+          }}
           onClick={onClose}
           aria-modal="true"
           role="dialog"
@@ -97,8 +148,16 @@ export default function OrderEditAddressModal({
           <motion.div
             className="bg-white p-8 rounded-2xl max-w-157.25 w-full h-fit max-h-166 relative overflow-y-auto"
             initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1, transition: { duration: 0.3, ease: "easeOut" } }}
-            exit={{ scale: 0.8, opacity: 0, transition: { duration: 0.3, ease: "easeInOut" } }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              transition: { duration: 0.3, ease: "easeOut" },
+            }}
+            exit={{
+              scale: 0.8,
+              opacity: 0,
+              transition: { duration: 0.3, ease: "easeInOut" },
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -108,7 +167,9 @@ export default function OrderEditAddressModal({
               ✕
             </button>
 
-            <h2 className="font-MontserratSemiBold text-c16 mb-c24">Update Address</h2>
+            <h2 className="font-MontserratSemiBold text-c16 mb-c24">
+              Update Address
+            </h2>
 
             <div className="flex flex-col gap-3">
               {/* Custom Country/State Dropdown */}
@@ -125,21 +186,32 @@ export default function OrderEditAddressModal({
                 </p>
                 <div className="flex gap-c24 w-full">
                   <div className="flex flex-col gap-2 relative w-1/2">
-                    <Label className="text-c12 font-MontserratMedium">Full Name</Label>
+                    <Label className="text-c12 font-MontserratMedium">
+                      Full Name
+                    </Label>
                     <Input
                       type="text"
                       value={formData.full_name}
-                      onChange={(e) => handleChange("full_name", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("full_name", e.target.value)
+                      }
                       placeholder="John Doe"
                       className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                     />
                   </div>
 
                   <div className="flex flex-col gap-2 relative w-1/2">
-                    <Label className="text-c12 font-MontserratMedium">Mobile Number</Label>
+                    <Label className="text-c12 font-MontserratMedium">
+                      Mobile Number
+                    </Label>
                     <div className="relative w-full flex items-center">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                        <Image src={MobileIcon} alt="Mobile Number" width={15.62} height={15.62} />
+                        <Image
+                          src={MobileIcon}
+                          alt="Mobile Number"
+                          width={15.62}
+                          height={15.62}
+                        />
                       </div>
                       <Input
                         type="text"
@@ -162,7 +234,9 @@ export default function OrderEditAddressModal({
                   <div className="flex gap-c24 w-full">
                     {/* City */}
                     <div className="flex flex-col gap-2 relative w-1/2">
-                      <Label className="text-c12 font-MontserratMedium">City</Label>
+                      <Label className="text-c12 font-MontserratMedium">
+                        City
+                      </Label>
                       <Input
                         type="text"
                         value={formData.city}
@@ -174,11 +248,15 @@ export default function OrderEditAddressModal({
 
                     {/* Zip Code */}
                     <div className="flex flex-col gap-2 relative w-1/2">
-                      <Label className="text-c12 font-MontserratMedium">Zip Code</Label>
+                      <Label className="text-c12 font-MontserratMedium">
+                        Zip Code
+                      </Label>
                       <Input
                         type="text"
                         value={formData.postal_code}
-                        onChange={(e) => handleChange("postal_code", e.target.value)}
+                        onChange={(e) =>
+                          handleChange("postal_code", e.target.value)
+                        }
                         placeholder="100001"
                         className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                       />
@@ -194,14 +272,18 @@ export default function OrderEditAddressModal({
                       <Input
                         type="text"
                         value={formData.address}
-                        onChange={(e) => handleChange("address", e.target.value)}
+                        onChange={(e) =>
+                          handleChange("address", e.target.value)
+                        }
                         placeholder="12 Broad Street"
                         className={`border rounded-c8 p-4 pl-10 w-full text-c12 font-MontserratMedium ${
                           streetError ? "border-red-500" : "border-efefef"
                         }`}
                       />
                       {streetError && (
-                        <p className="text-red-500 text-xs mt-1">{streetError}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {streetError}
+                        </p>
                       )}
                     </div>
                   </div>

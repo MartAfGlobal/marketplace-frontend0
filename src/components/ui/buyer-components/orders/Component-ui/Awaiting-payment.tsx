@@ -57,7 +57,7 @@ const awaitingPayment = orders.filter(
 
   if (isMobile) {
  
-    router.push(`/edit-address/${id}`);
+    router.push(`/dashboard/buyer/orders/edit-address/${id}`);
   } else {
     
       setTimeout(()=>setIsOpen(true), 0);
