@@ -204,10 +204,22 @@ export interface AddCardModalProps {
 }
 
 interface NotificationItem {
-  id: number;
+  id:
+    | "email_enabled"
+    | "push_enabled"
+    | "order_updates_email"
+    | "security_email"
+    | "promotions_email"
+    | "support_email"
+    | "features_email"
+    | "order_updates_push"
+    | "security_push"
+    | "promotions_push"
+    | "support_push"
+    | "features_push";
   title: string;
   description: string;
-  type: "toggle" | "check" | "button";
+  type: "toggle";
 }
 
 type ProfileImageModalProps = {

@@ -15,22 +15,27 @@ export default function OrdersNav({ tabs, activeTab, onTabChange, className= "" 
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
-    const activeIndex = tabs.findIndex((t) => t === activeTab);
+  if (typeof window === "undefined") return;
 
-    // Only run scroll on mobile (below md: 768px)
-    if (
-      typeof window !== "undefined" &&
-      window.innerWidth < 768 &&
-      activeIndex !== -1 &&
-      tabRefs.current[activeIndex]
-    ) {
-      tabRefs.current[activeIndex]?.scrollIntoView({
+  const activeIndex = tabs.findIndex((t) => t === activeTab);
+  if (activeIndex === -1) return;
+
+  // Only run on mobile
+  if (window.innerWidth < 768) {
+    const activeTabEl = tabRefs.current[activeIndex];
+    const container = activeTabEl?.parentElement;
+
+    if (activeTabEl && container) {
+      const tabLeft = activeTabEl.offsetLeft;
+      const offset = tabLeft - 20; // extra padding so it aligns left
+
+      container.scrollTo({
+        left: offset,
         behavior: "smooth",
-        inline: "center",
-        block: "nearest",
       });
     }
-  }, [activeTab, tabs]);
+  }
+}, [activeTab, tabs]);
 
   return (
     <div className={clsx("relative  flex gap-2 justify-center md:justify-center bg-947fff/10 w-full md:max-w-152.25 overflow-x-auto  no-scrollbar text-nowrap scroll-smooth", className)}>

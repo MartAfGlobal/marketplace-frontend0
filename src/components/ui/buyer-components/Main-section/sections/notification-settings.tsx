@@ -26,64 +26,132 @@ export default function NotificationSettings() {
 
   const [loading, setLoading] = useState(true);
 
-  // UI STATE
-  const [settings, setSettings] = useState<Record<number, boolean>>({
-    1: false, // Email Alerts
-    2: false, // Desktop Alerts (push)
-    3: false, // Order Updates
-    4: false, // Security Alerts
-    5: false, // Promotions
-    6: false, // Order Updates (duplicate)
-    7: false, // Promotions (duplicate)
+  const [settings, setSettings] = useState({
+    email_enabled: false,
+    push_enabled: false,
+
+    order_updates_email: false,
+    security_email: false,
+    promotions_email: false,
+    support_email: false,
+    features_email: false,
+
+    order_updates_push: false,
+    security_push: false,
+    promotions_push: false,
+    support_push: false,
+    features_push: false,
   });
 
-  // LIST DEFINITIONS (unchanged)
-  const checkNotifications: NotificationItem[] = [
-    { id: 3, title: "New Message", description: "Notify when you receive a new message", type: "check" },
-    { id: 4, title: "Friend Request", description: "Notify when someone sends a friend request", type: "check" },
-    { id: 5, title: "Comments", description: "Notify when someone comments on your post", type: "check" },
-    { id: 6, title: "Mentions", description: "Notify when someone mentions you", type: "check" },
-    { id: 7, title: "Promotions", description: "Notify about promotions and offers", type: "check" },
+  const toggleEmailNotification: NotificationItem[] = [
+    {
+      id: "email_enabled",
+      title: "Email notifications",
+      description: "Confirmations, shipping, and refunds",
+      type: "toggle",
+    },
+    {
+      id: "security_email",
+      title: "Security Alerts",
+      description: "Login attempts, password changes, and suspicious activity.",
+      type: "toggle",
+    },
+    {
+      id: "promotions_email",
+      title: "Promotions",
+      description: "Discounts, new arrivals, and newsletters.",
+      type: "toggle",
+    },
+    {
+      id: "support_email",
+      title: "Support Updates",
+      description: "Responses to inquiries and feedback requests.",
+      type: "toggle",
+    },
+    {
+      id: "features_email",
+      title: "Feature Updates",
+      description: "New features, improvements, and important changes.",
+      type: "toggle",
+    },
   ];
 
   const toggleNotifications: NotificationItem[] = [
-    { id: 1, title: "Email Alerts", description: "Receive notifications via email", type: "toggle" },
-    { id: 2, title: "Desktop Alerts", description: "Receive desktop notifications", type: "toggle" },
+    {
+      id: "push_enabled",
+      title: "Push notifications",
+      description: "Enable desktop and mobile push alerts.",
+      type: "toggle",
+    },
+    {
+      id: "order_updates_push",
+      title: "Order Tracking",
+      description: "Live updates on shipping and delivery.",
+      type: "toggle",
+    },
+    {
+      id: "security_push",
+      title: "Security Alerts",
+      description: "Login attempts, password changes, and suspicious activity.",
+      type: "toggle",
+    },
+    {
+      id: "promotions_push",
+      title: "Promotions",
+      description: "Discounts, new arrivals, and newsletters.",
+      type: "toggle",
+    },
+    {
+      id: "support_push",
+      title: "Support Updates",
+      description: "Responses to inquiries and feedback requests.",
+      type: "toggle",
+    },
+    {
+      id: "features_push",
+      title: "Feature Updates",
+      description: "New features, improvements, and important changes.",
+      type: "toggle",
+    },
   ];
 
-  // MAP BACKEND RESPONSE → UI
-  const mapBackendToState = (data: BackendNotificationSettings) => {
-    return {
-      1: data.notification_method === "both" || data.notification_method === "email",
-      2: data.notification_method === "both" || data.notification_method === "push", // mapped (backend ignores)
-      3: data.order_tracking,
-      4: data.security_alerts,
-      5: data.promotions,
-      6: data.order_tracking,
-      7: data.promotions,
-    };
-  };
+  const mapBackendToState = (d: BackendNotificationSettings) => ({
+    email_enabled: d.notification_method === "both" || d.notification_method === "email",
+    push_enabled: d.notification_method === "both" || d.notification_method === "push",
 
-  // MAP UI STATE → BACKEND PAYLOAD
-  const buildBackendPayload = () => {
-    return {
-      notifications_enabled: settings[1] || settings[2], // if any delivery method enabled
-      security: settings[4],
-      promotion: settings[5],
-      order_updates: settings[3] || settings[6],
-      notification_method:
-        settings[1] && settings[2]
-          ? "both"
-          : settings[1]
-          ? "email"
-          : settings[2]
-          ? "push"
-          : "",
-    };
-  };
+    order_updates_email: d.order_tracking,
+    security_email: d.security_alerts,
+    promotions_email: d.promotions,
+    support_email: d.support_updates,
+    features_email: d.feature_updates,
 
-  // FETCH SETTINGS ON LOAD
-  useEffect(() => {
+    order_updates_push: d.order_tracking,
+    security_push: d.security_alerts,
+    promotions_push: d.promotions,
+    support_push: d.support_updates,
+    features_push: d.feature_updates,
+  });
+
+  const buildBackendPayload = () => ({
+    notifications_enabled: settings.email_enabled || settings.push_enabled,
+
+    order_tracking: settings.order_updates_email || settings.order_updates_push,
+    security_alerts: settings.security_email || settings.security_push,
+    promotions: settings.promotions_email || settings.promotions_push,
+    support_updates: settings.support_email || settings.support_push,
+    feature_updates: settings.features_email || settings.features_push,
+
+    notification_method:
+      settings.email_enabled && settings.push_enabled
+        ? "both"
+        : settings.email_enabled
+        ? "email"
+        : settings.push_enabled
+        ? "push"
+        : "",
+  });
+
+  const handleFetchNotification = () => {
     if (!token) {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       router.replace(isMobile ? "/?showLogin=true" : "/auth/login");
@@ -96,129 +164,141 @@ export default function NotificationSettings() {
         method: "GET",
         token,
         isAuth: true,
+        userType: "buyer",
       },
       successRes: (res) => {
-        const mapped = mapBackendToState(res.data);
-        setSettings(mapped);
+        setSettings(mapBackendToState(res.data));
         setLoading(false);
-
-        console.log("Mapped UI Settings →", mapped);
       },
     });
-  }, []);
+  };
 
-  // HANDLE TOGGLE UI → BACKEND
-  const toggleSetting = (id: number) => {
+  const toggleSetting = (id: keyof typeof settings) => {
     const newState = { ...settings, [id]: !settings[id] };
     setSettings(newState);
 
-    const payload = buildBackendPayload();
-    if (!token){
-      return
-    }
+    if (!token) return;
 
-    // Email toggle = special endpoint
-    if (id === 1) {
+    if (id === "email_enabled") {
       sendHttpRequest({
         requestConfig: {
-          url: "/notifications/toggle-email/",
+          url: "/notifications/settings/toggle-email",
           method: "POST",
           token,
           isAuth: true,
+          userType: "buyer",
         },
-        successRes: (res) => {
-          console.log("Email toggled:", res.data);
-        },
+        successRes: () => {},
       });
       return;
     }
 
-    // Everything else uses PUT settings
+    if (id === "push_enabled") {
+      sendHttpRequest({
+        requestConfig: {
+          url: "/notifications/settings/toggle-push/",
+          method: "POST",
+          token,
+          isAuth: true,
+          userType: "buyer",
+        },
+        successRes: () => {},
+      });
+      return;
+    }
+
     sendHttpRequest({
       requestConfig: {
         url: "/notifications/settings/",
         method: "PUT",
         token,
         isAuth: true,
-        body: payload,
+        body: buildBackendPayload(),
+        userType: "buyer",
       },
-      successRes: (res) => {
-        console.log("Updated settings:", res.data);
-      },
+      successRes: () => {},
     });
   };
 
-  // ANIMATION
   const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
   const itemVariants: { hidden: TargetAndTransition; visible: TargetAndTransition } = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 120, damping: 20 } },
   };
 
- 
+  useEffect(() => {
+    if (!token || !loading) return;
+    handleFetchNotification();
+  }, [token]);
 
   return (
     <motion.div className="w-full" variants={containerVariants} initial="hidden" animate="visible">
-      <h2 className="text-base leading-6 font-semibold text-black mb-6">Notification Settings</h2>
-      <p className="text-base font-normal leading-6 text-black/50 mb-4">Notify me about</p>
+      <h2 className="text-base leading-6 font-MontserratSemiBold text-black mb-6">Notification Settings</h2>
 
-     <div>
-   <motion.div className="space-y-4">
-        {checkNotifications.map((item) => (
-          <motion.div key={item.id} variants={itemVariants} className="flex items-start gap-4">
-            <motion.button
-              onClick={() => toggleSetting(item.id)}
-              className="w-5 h-5 rounded border flex items-center justify-center flex-shrink-0"
-              style={{
-                borderColor: "#FF715B",
-                backgroundColor: settings[item.id] ? "#FF715B" : "#FFFFFF",
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {settings[item.id] && (
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </motion.button>
+      <div className="flex gap-27 items-center">
+        
+        {/* EMAIL SECTION */}
+        <motion.div className="space-y-4">
+          <p className="text-sm font-MontserratNormal leading-6 text-black/50 mb-4">Email notifications</p>
 
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm leading-5 text-black/72 mb-1">{item.title}</h3>
-              <p className="text-sm leading-4 text-black/60">{item.description}</p>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
+          {toggleEmailNotification.map((item) => (
+            <motion.div key={item.id} variants={itemVariants} className="flex items-center gap-4">
+              <motion.button
+                onClick={() => toggleSetting(item.id)}
+                className="relative w-11.5 h-6 rounded-full flex-shrink-0"
+                style={{
+                  borderColor: settings[item.id] ? "#FF715B" : "#D1D5DB",
+                  backgroundColor: settings[item.id] ? "#FF715B" : "#E5E7EB",
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.span
+                  className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
+                  layout
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  style={{ x: settings[item.id] ? 24 : 0 }}
+                />
+              </motion.button>
 
-      <motion.div className="space-y-4 mt-c32">
-        {toggleNotifications.map((item) => (
-          <motion.div key={item.id} variants={itemVariants} className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-black/72">{item.title}</h3>
-              <p className="text-sm text-black/60">{item.description}</p>
-            </div>
+              <div>
+                <h3 className="font-MontserratSemiBold text-sm text-black/72">{item.title}</h3>
+                <p className="text-c12 font-MontserratNormal text-black/60">{item.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
 
-            <motion.button
-              onClick={() => toggleSetting(item.id)}
-              className="relative w-11.5 h-6 rounded-full flex-shrink-0"
-              style={{
-                borderColor: settings[item.id] ? "#FF715B" : "#D1D5DB",
-                backgroundColor: settings[item.id] ? "#FF715B" : "#E5E7EB",
-              }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.span
-                className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
-                layout
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                style={{ x: settings[item.id] ? 24 : 0 }}
-              />
-            </motion.button>
-          </motion.div>
-        ))}
-      </motion.div>
-     </div>
-   
+        {/* PUSH SECTION */}
+        <motion.div className="space-y-4 w-full">
+          <p className="text-sm font-MontserratNormal leading-6 text-black/50 mb-4">Push notifications</p>
+
+          {toggleNotifications.map((item) => (
+            <motion.div key={item.id} variants={itemVariants} className="flex items-center gap-4">
+              <motion.button
+                onClick={() => toggleSetting(item.id)}
+                className="relative w-11.5 h-6 rounded-full flex-shrink-0"
+                style={{
+                  borderColor: settings[item.id] ? "#FF715B" : "#D1D5DB",
+                  backgroundColor: settings[item.id] ? "#FF715B" : "#E5E7EB",
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.span
+                  className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md"
+                  layout
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  style={{ x: settings[item.id] ? 24 : 0 }}
+                />
+              </motion.button>
+
+              <div>
+                <h3 className="font-MontserratSemiBold text-sm text-black/72">{item.title}</h3>
+                <p className="text-c12 font-MontserratNormal text-black/60">{item.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
     </motion.div>
   );
 }

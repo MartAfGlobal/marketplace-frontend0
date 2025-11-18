@@ -14,7 +14,7 @@ export default function DeleteAccount() {
     6: false,
     7: true,
   });
-  const checkNotifications: NotificationItem[] = [
+  const checkNotifications= [
     {
       id: 3,
       title: "Permanently delete your account, including order history, saved payment methods, and preferences. This action cannot be undone.",

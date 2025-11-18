@@ -34,11 +34,12 @@ export default function OrdersPage() {
 
   return (
     <div className="w-full  justify-center  flex flex-col">
-      <div className="flex justify-between sticky top-16 z-10 bg-white pt-c32 border-b border-black/10">
+      <div className="flex justify-between sticky top-16 z-10 bg-white pt-c32 border-b border-black/10 w-full overflow-x-auto">
         <OrdersNav
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          className= "pl-60"
         />
         <SearchInput
           placeholder="Order ID, Store name, Product name"
