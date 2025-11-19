@@ -90,7 +90,7 @@ export default function CartPage() {
     persistLocalCart(updated);
 
     const updatedSelected: Record<string, boolean> = {};
-    updated.forEach((it) => {
+    updated.forEach((it:any) => {
       updatedSelected[it.id] = checked;
     });
     setSelectedItems(updatedSelected);

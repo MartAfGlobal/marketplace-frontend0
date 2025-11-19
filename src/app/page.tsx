@@ -22,39 +22,28 @@ export default function Home() {
 
 useEffect(() => {
  
-  const waitForElement = (id: string, timeout = 5000): Promise<HTMLElement | null> =>
-    new Promise((resolve) => {
-      const start = performance.now();
-      const check = () => {
-        const el = document.getElementById(id);
-        if (el) return resolve(el);
-        if (performance.now() - start > timeout) return resolve(null);
-        requestAnimationFrame(check);
-      };
-      check();
-    });
+  const scrollToHash = () => {
+    const id = window.location.hash.replace("#", "");
+    if (!id) return;
 
-
-  const doScrollToHash = async () => {
-    const hash = window.location.hash;
-    if (!hash) return;
-    const id = hash.slice(1);
-    const el = await waitForElement(id, 5000); 
+    const el = document.getElementById(id);
     if (el) {
-      
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      console.warn(`Element #${id} not found within timeout.`);
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   };
 
-  doScrollToHash();
+  // Scroll on first load
+  scrollToHash();
 
- 
-  window.addEventListener("hashchange", doScrollToHash);
+  // Scroll when hash changes
+  window.addEventListener("hashchange", scrollToHash);
 
-  return () => window.removeEventListener("hashchange", doScrollToHash);
+  return () => window.removeEventListener("hashchange", scrollToHash);
 }, []);
+
 
 
 

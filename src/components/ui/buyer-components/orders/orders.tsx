@@ -39,7 +39,7 @@ export default function OrdersPage() {
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          className= "pl-60"
+          className= "pl-60 md:pl-0"
         />
         <SearchInput
           placeholder="Order ID, Store name, Product name"

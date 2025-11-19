@@ -5,11 +5,10 @@ import Icon1 from "@/assets/icons/user-dashboard/orderHistory/icon1.svg";
 import Icon2 from "@/assets/icons/user-dashboard/orderHistory/icon2.png";
 import Icon3 from "@/assets/icons/user-dashboard/orderHistory/icon3.png";
 import Icon4 from "@/assets/icons/user-dashboard/orderHistory/icon4.png";
-import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 
 import { useEffect, useState } from "react";
 import { OrderHistoryItem, OrderItem } from "@/types/global";
-import { TrackOrders } from "@/types/global";
+
 import { Button } from "@/components/ui/Button/Button";
 import Link from "next/link";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
@@ -348,14 +347,7 @@ export default function Orders() {
                             </Button>
                           )} */}
 
-                  <div className="w-full hidden md:flex justify-center">
-                    <Link
-                      href={`orders/${item.id}`}
-                      className="text-c14 font-MontserratSemiBold text-ff715b"
-                    >
-                      Order details
-                    </Link>
-                  </div>
+                 
                 </div>
               </div>
             </div>
