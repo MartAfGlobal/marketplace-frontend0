@@ -5,15 +5,40 @@ import { RootState } from "@/store";
 import ProductSection from "./shoppingItemComponent/ProductSection";
 import { LoadingSpinner } from "../../loading-spinner";
 
-export default function ProductListPage() {
-  const products = useSelector((state: RootState) => state.products.items);
-
+export default function ProductListPage(
  
-  if (!products || products.length === 0) { return <div className="w-full h-30 flex flex-col items-center justify-center gap-8 font-MontserratSemiBold text-base ">Loading products.. <LoadingSpinner color="border-ff715b " size={50}/></div>} else if (products.length === 0) {
-    (
-      <div>No product found</div>
-    )
-  };
+) {
+  const products = useSelector((state: RootState) => state.products.items);
+  console.log("Products from Redux Store:", products);
+
+
+ if (products.length === 0) {
+  return (
+    <div className="w-full flex flex-col items-center justify-center py-10">
+      <svg
+        width="140"
+        height="140"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#ff715b"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="mb-4"
+      >
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        <line x1="8" y1="11" x2="14" y2="11"></line>
+      </svg>
+
+      <p className="font-MontserratBold text-base text-center text-161616">
+        No product found
+      </p>
+    </div>
+  );
+}
+
+  
 
   const grouped = products.reduce((acc: Record<string, typeof products>, product) => {
     const section = product.section|| "Today";

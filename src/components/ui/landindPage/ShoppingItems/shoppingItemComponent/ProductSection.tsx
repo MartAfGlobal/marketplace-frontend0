@@ -14,6 +14,11 @@ export default function ProductSection({ title, products }: ProductSectionProps)
 
   const showMore = () => setVisible(prev => prev + 6);
 
+if (products.length === 0) return (
+  <p className="font-MontserratBold text-base text">No product found</p>
+);
+
+
   return (
     <section className="mb-c64">
       {/* Header */}
