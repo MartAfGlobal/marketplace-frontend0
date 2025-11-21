@@ -8,7 +8,8 @@ import { LoadingSpinner } from "../../loading-spinner";
 export default function ProductListPage() {
   const products = useSelector((state: RootState) => state.products.items);
 
-  if (!products) {<p>Loading products <LoadingSpinner color="border-ff715b"/></p>} else if (products.length === 0) {
+ 
+  if (!products || products.length === 0) { return <div className="w-full h-30 flex flex-col items-center justify-center gap-8 font-MontserratSemiBold text-base ">Loading products.. <LoadingSpinner color="border-ff715b " size={50}/></div>} else if (products.length === 0) {
     (
       <div>No product found</div>
     )
@@ -24,7 +25,7 @@ export default function ProductListPage() {
   const sectionOrder = ["Today", "Trending", "Popular Search", "Discount"];
 
   return (
-    <div className="w-full px-4.75 mx-auto pt-12">
+    <div className="w-full px-4.75 pt-12 ">
       {sectionOrder.map((title) =>
         grouped[title] ? <ProductSection key={title} title={title} products={grouped[title]} /> : null
       )}

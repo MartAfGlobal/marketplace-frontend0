@@ -1,8 +1,9 @@
 "use client";
 
 import ProfileImage from "@/components/ui/buyer-components/profile-picture";
-import profilePicture from "@/assets/icons/user-dashboard/profile-picture.png";
+import profilePicture from "@/assets/icons/profile-averter.svg";
 import { StaticImageData } from "next/image";
+import profileImage from "@/assets/icons/profile-averter.svg";
 
 
 import ProfileImageModal from "@/components/ui/Modals/ProfileImageModal";
@@ -55,7 +56,7 @@ export default function OverView() {
 
 
         <ProfileImage
-          src={buyer?.profile?.profile_picture || "Add +"
+          src={buyer?.profile?.profile_picture || profileImage
           }
           onEditClick={() => setProfileModalOpen(true)}
         />
@@ -78,7 +79,7 @@ export default function OverView() {
                 Full name
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                {`${buyer.first_name ? buyer.first_name.charAt(0).toUpperCase() + buyer.first_name.slice(1) : "Not set"} ${buyer.last_name ? buyer.last_name.charAt(0).toUpperCase() + buyer.last_name.slice(1) : ""}`}
+                {`${buyer.first_name ? buyer.first_name.charAt(0).toUpperCase() + buyer.first_name.slice(1) : "No name added"} ${buyer.last_name ? buyer.last_name.charAt(0).toUpperCase() + buyer.last_name.slice(1) : ""}`}
 
               </span>
             </div>
@@ -95,7 +96,7 @@ export default function OverView() {
                 Mobile number
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                 {buyer?.profile?.phone || "N/A"}
+                 {buyer?.profile?.phone || "No number added"}
               </span>
             </div>
             <div className="flex gap-c32">
@@ -103,7 +104,7 @@ export default function OverView() {
                 Home number
               </p>
               <span className="text-sm leading-c20 font-MontserratNormal text-000000">
-                 {buyer?.profile?.phone2 || "N/A"}
+                 {buyer?.profile?.phone2 || "No number added"}
               </span>
             </div>
           </div>

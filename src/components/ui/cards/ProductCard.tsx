@@ -84,12 +84,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         console.log("Cart API success:", res.data);
       },
     }).catch((err: any) => {
-      // ✅ Called only if the hook itself throws (rare)
       console.error("Cart API failed:", err);
       dispatch(
         addToCart({
           ...product,
-          product_id: product.id, // ✅ Fix here
+          product_id: product.id,
           quantity: 1,
           variation_display: selectedVariation
             ? `${selectedVariation.size} / ${selectedVariation.color}`
@@ -110,7 +109,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       if (isMobile) {
         router.replace("/?showLogin=true");
       } else {
-        // Desktop → go to dedicated login page
         router.replace("/auth/login");
       }
       return;
@@ -131,8 +129,8 @@ export default function ProductCard({ product }: ProductCardProps) {
       successRes: () => {
         dispatch(
           addToWishlist({
-            id: product.id, // wishlist id (can be same as product)
-            product: product, // full product
+            id: product.id,
+            product: product,
             quantity: 1,
             variation: selectedVariation || null,
             variation_display: selectedVariation
@@ -151,7 +149,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     dispatch(
       addToCart({
         ...product,
-        product_id: product.id, // ✅ Fix here
+        product_id: product.id,
         variation_display: selectedVariation
           ? `${selectedVariation.size} / ${selectedVariation.color}`
           : undefined,
@@ -171,7 +169,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="rounded-lg shadow-custom w-full h-[264.69px] pb-4 flex-shrink-0 md:max-w-49 bg-white shadow overflow-hidden"
+        // ⭐ Add animation on hover
+        whileHover={{ scale: 1.03, boxShadow: "0 8px 20px rgba(0,0,0,0.15)" }}
+        whileTap={{ scale: 0.98 }}
+        className="rounded-lg shadow-custom w-full h-[264.69px] pb-4 flex-shrink-0 md:max-w-49 bg-white overflow-hidden cursor-pointer"
       >
         {/* Product Image */}
         <div className="relative h-40 w-full">

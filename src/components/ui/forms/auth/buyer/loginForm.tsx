@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button/Button";
 import { Input } from "@/components/ui/forms/Input";
@@ -21,6 +21,10 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
+  const searchParams = useSearchParams();
+
+  // Get the previous page if passed
+  const fromPage = searchParams.get("from");
 
   const [formData, setFormData] = useState<LoginParams>({
     email: "",
@@ -30,7 +34,7 @@ export default function LoginForm() {
 
   const { loading, sendHttpRequest: loginRequest } = useHttp();
 
-  // ✅ Load saved credentials on mount
+  // Load saved credentials
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberEmail");
     const savedPassword = localStorage.getItem("rememberPassword");
@@ -55,7 +59,7 @@ export default function LoginForm() {
       return;
     }
 
-    // ✅ Save email & password if "Remember me" is checked
+    // Save email & password if "Remember me" is checked
     if (formData.rememberMe) {
       localStorage.setItem("rememberEmail", formData.email);
       localStorage.setItem("rememberPassword", formData.password);
@@ -65,7 +69,21 @@ export default function LoginForm() {
     }
 
     dispatch(tokenActions.setToken(accessToken));
-    router.back();
+
+    // ⭐ If user comes from sign-up → go to home
+    if (fromPage === "/auth/register") {
+      router.push("/");
+      return;
+    }
+
+    // ⭐ If a previous page exists and isn't login
+    if (fromPage && fromPage !== "/auth/login") {
+      router.push(fromPage);
+      return;
+    }
+
+    // ⭐ Default fallback
+    router.push("/");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -87,7 +105,7 @@ export default function LoginForm() {
         body: {
           email: formData.email,
           password: formData.password,
-          check: formData.rememberMe
+          check: formData.rememberMe,
         },
         userType: "buyer",
         successMessage: "Login successful!",
@@ -125,9 +143,8 @@ export default function LoginForm() {
                 <button type="button" onClick={toggleVisibility}>
                   {showPassword ? (
                     <EyeIcon className="w-5 h-5" />
-                   
                   ) : (
-                     <EyeOffIcon className="w-5 h-5" />
+                    <EyeOffIcon className="w-5 h-5" />
                   )}
                 </button>
               }
@@ -168,16 +185,19 @@ export default function LoginForm() {
             </Link>
           </div>
         </fieldset>
+
         {/* Submit */}
         <Button type="submit" disabled={loading || !isFormValid}>
           {loading ? <LoadingSpinner /> : "Sign in"}
         </Button>
       </form>
+
       <div className="flex justify-between items-center gap-c24 mt-c8 mb-c8 h-c24">
         <p className="h-c1 w-full bg-efefef"></p>
         <p className="text-base font-MontserratNormal">or</p>
         <p className="h-c1 w-full bg-efefef"></p>
       </div>
+
       <div>
         <button className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8">
           <Image
@@ -190,6 +210,7 @@ export default function LoginForm() {
           Sign in with Google
         </button>
       </div>
+
       <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
         <p className="text-161616"> have an account?</p>
         <Link href="/auth/register" className="text-ff715b">

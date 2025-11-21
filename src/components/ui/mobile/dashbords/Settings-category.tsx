@@ -80,10 +80,10 @@ export default function Settings() {
   }) => {
     const open = openSections.includes(id);
     return (
-      <div className="w-full">
+      <div className="w-full ">
         <button
           onClick={() => toggleSection(id)}
-          className={`w-full flex items-center px-6 justify-between  h-13 border-b border-b-000000/5 ${
+          className={`w-full flex items-center px-6  justify-between  h-13 border-b border-b-000000/5 ${
             open ? "border-b-0" : "border-b"
           }`}
         >
@@ -155,7 +155,7 @@ export default function Settings() {
   }, []);
 
   return (
-    <div className="max-w-md mx-auto mt-6">
+    <div className="w-full px-6 mx-auto mt-6">
       {/* 1) Notification Settings */}
       <Section title="Notification Settings" id="notifications">
         <div className="flex items-center justify-between py-3 border-b  border-b-000000/5 text-sm font-MontserratNormal">

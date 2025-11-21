@@ -59,6 +59,7 @@ export default function RegisterForm() {
         body: {
           ...formData,
         },
+        userType: "buyer",
         successMessage: "Registration Complete, Please login.",
       },
     });

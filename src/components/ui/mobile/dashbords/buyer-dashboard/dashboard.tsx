@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, Variants } from "framer-motion";
 
-import profilePicture from "@/assets/icons/user-dashboard/profile-picture.png";
+import profilePicture from "@/assets/icons/profile-averter.svg";
 import NavBack from "@/assets/icons/navBacksmall.png";
 import editPen from "@/assets/mobile/cards/editPen.png";
 import Heart from "@/assets/mobile/cards/Heart.png";
@@ -88,7 +88,7 @@ export default function BuyerDashboard() {
                 alt="Profile Image"
                 width={64}
                 height={64}
-                className="rounded-full object-cover"
+                className="rounded-full object-contain "
               />
             </div>
             <div className="space-y-1">
@@ -126,7 +126,7 @@ export default function BuyerDashboard() {
                         whileInView="visible"
                         viewport={{ once: false, amount: 0.2 }}
                         variants={imageVariants}
-                        className="w-full max-w-24 h-20  flex gap-2 flex-col rounded-c4 border  border-ff715b justify-center pl-3 pr-1"
+                        className="w-full max-w-24 h-20  sm:h-30 sm:max-w-full flex gap-2 flex-col rounded-c4 border  border-ff715b justify-center pl-3 pr-1"
                       >
                         <Image
                           src={item.icon}
@@ -146,7 +146,7 @@ export default function BuyerDashboard() {
         </div>
       </div>
 
-      <div>
+      <div className="w-full ">
         <SettingsCategories />
       </div>
     </div>

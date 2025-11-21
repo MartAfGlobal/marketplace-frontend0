@@ -12,7 +12,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 
 import NavBack from "@/assets/icons/navBacksmall.png";
-import profilePicture from "@/assets/icons/user-dashboard/profile-picture.png";
+import profilePicture from "@/assets/icons/profile-averter.svg";
 import User from "@/assets/mobile/User.png";
 import Phone from "@/assets/mobile/Phone.png";
 import Mobile from "@/assets/mobile/mobile.png";

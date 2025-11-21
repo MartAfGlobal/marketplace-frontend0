@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/Button/Button";
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
-
 import profileImage from "@/assets/icons/profile-averter.svg"; 
+
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
-// token read from Redux store instead of cookies
+
 
 interface ProfileImageModalProps {
   isOpen: boolean;
@@ -39,8 +39,7 @@ export default function ProfileImageModal({
 
 
 
-  // const tokenSlice = useSelector((state: any) => state.token);
-  // const { token } = tokenSlice;
+
   const router = useRouter();
 
   const { loading, sendHttpRequest: editRegisterUserReq } = useHttp();
@@ -86,7 +85,7 @@ export default function ProfileImageModal({
       requestConfig: {
         url: "/accounts/UserDetails/",
         method: "PATCH",
-        body: form, // ✅ send FormData directly
+        body: form, 
         token: token ?? undefined,
         isAuth: true,
         userType: "buyer",
@@ -94,7 +93,6 @@ export default function ProfileImageModal({
     });
   };
 
-  // Prevent background scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -110,7 +108,7 @@ function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
   const file = e.target.files?.[0];
   if (file) {
     setSelectedFile(file);
-    // ❌ remove onUpload(file) here
+    
   }
 }
 
@@ -202,7 +200,7 @@ function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
               <Button
                 onClick={handleEditSubmit}
                 disabled={loading}
-                className="bg-green-600 text-white rounded"
+                className=""
               >
                 {loading ? <LoadingSpinner/> : "Save"}
               </Button>

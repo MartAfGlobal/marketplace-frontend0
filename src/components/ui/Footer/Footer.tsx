@@ -16,11 +16,11 @@ export default function FooterPage() {
   const isSearch = pathname?.startsWith("/others");
 
   return (
-    <div className="bg-212121 w-full h-fit pt-6 px-6 md:pt-c67 md:px-c60">
+    <div className="bg-212121 w-full h-fit pt-6 px-6 md:pt-c67 md:px-c60  ">
       <FooterTCard />
       <p className="w-full bg-b1b1b1 h-c1 mb-c48"></p>
-      <div className="md:flex hidden gap-c56 justify-center">
-        <FooterCard title="Company Info">
+      <div className="xl:flex hidden md:grid grid-cols-2 xl:flex-row gap-c56 justify-center">
+        <FooterCard title="Company Info ">
           <>
             <Link href="/others/about-us">About Us</Link>
             <Link href="/others/contact-us">Contact Us</Link>

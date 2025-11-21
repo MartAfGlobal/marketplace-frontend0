@@ -16,6 +16,12 @@ const showMore = ()=> router.push("/dashboard/buyer/wishlist")
     const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
    const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+  const wishlistProducts = wishlistItems
+  .map(item => item.product)   // extract only the product object
+  .filter(Boolean);            // remove null/undefined products
+
+   console.log("lets check wishlist:", wishlistProducts)
+  
 
   const fashionProducts = cartItems.filter(
     (product) => product.category === "Fashion and Apparel"
@@ -36,9 +42,9 @@ const showMore = ()=> router.push("/dashboard/buyer/wishlist")
           </button>
        
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 ">
-        {wishlistItems.slice(0, visible).map((item) => (
-          <ProductCard key={item.id} product={item.product} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 ">
+        {wishlistProducts.slice(0, visible).map((item) => (
+          <ProductCard key={item.id} product={item} />
         ))}
       </div>
     </div>

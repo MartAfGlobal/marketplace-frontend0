@@ -33,7 +33,7 @@ export default function CategoriesGrid() {
       <AnimatePresence>
         {selectedCategory && (
           <motion.div
-            className="fixed top-0 inset-0 bg-black/50 flex items-center justify-center z-50"
+            className="fixed top-0 inset-0 bg-black/50 flex items-center justify-start z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

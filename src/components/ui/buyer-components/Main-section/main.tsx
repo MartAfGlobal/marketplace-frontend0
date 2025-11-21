@@ -112,7 +112,7 @@ export default function UserMain() {
 
   return (
     <div
-      className="hidden md:flex px-35 justify-center  gap-8 -full "
+      className="hidden md:flex xl:px-35 lg:pl-35 lg:pr-10 justify-center  gap-8 -full "
       style={{ paddingTop: "2rem" }}
     >
       {/* Sidebar with slide-in */}
@@ -145,7 +145,7 @@ export default function UserMain() {
 
       {/* Main content with per-section animations */}
       <main
-        className="space-y-c48 overflow-y-auto overflow-x-hidden w-full  mb-c32 box-border no-scrollbar"
+        className="space-y-c48 px-10 overflow-y-auto overflow-x-hidden w-full  mb-c32 box-border no-scrollbar"
         style={{ height: "calc(100vh - 6rem)" }}
         ref={containerRef}
       >
@@ -162,7 +162,7 @@ export default function UserMain() {
 
         <motion.section
           id="orders"
-          className="section-offset scroll-mt-28"
+          className="section-offset scroll-mt-28 w-full"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: false }}

@@ -188,7 +188,7 @@ export default function Orders() {
           view all
         </Link>
       </div>
-      <div className="flex gap-c48">
+      <div className="flex gap-8 w-full overflow-x-auto py-4   xl:gap-c32">
         {Orderahistory.map((item) => (
           <div key={item.title} className="h-fit w-fit relative  ">
             <div className="w-37.5 h-31.25 flex flex-col items-center justify-center gap-4 border border-ff715b rounded-c4 opacity-60">
@@ -263,7 +263,7 @@ export default function Orders() {
                     </p>
                   </div>
                 </div>
-                <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
+                <div className="w-full gap-4 pl hidden  md:flex md:flex-col md:max-w-50 xl:max-w-70 space-y-4">
                   {item.status === "Shipped" && (
                     <>
                       <Button

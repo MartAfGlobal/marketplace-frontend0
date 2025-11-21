@@ -48,6 +48,7 @@ const productPage = ["/product", "/cart", "/dashboard"].some(path => pathname?.s
           </div>
         ) : (
           <FooterPage />
+          
         ))}
     </>
   );

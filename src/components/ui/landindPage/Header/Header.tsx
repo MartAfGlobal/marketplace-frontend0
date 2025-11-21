@@ -72,13 +72,13 @@ export default function Header() {
   console.log("lets check coundydy", cartCount);
 
   return (
-    <div className="pb-20 h-fit">
-      <div className="w-full  fixed z-50">
+   <div className="pb-20 h-fit">
+       <div className="w-full fixed z-50 top-0 left-0 right-0">
         <motion.header
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full bg-[#6A0DAD] hidden h-[80px] px-[56px] md:flex items-center justify-between"
+          className="w-full bg-6a0dad hidden h-20 px-8 justify-center lg:px-14 md:flex gap-4 items-center md:justify-between"
         >
           <Link href="/" className="flex items-center gap-3">
             <Image src={Logo} alt="Logo" width={40} height={33} />
@@ -116,7 +116,7 @@ export default function Header() {
               <Image src={User} alt="User" width={30} height={30} />
 
               {token && (
-                <span className="text-base font-MontserratSemiBold text-ffffff">
+                <span className="lg:text-base md:text-sm font-MontserratSemiBold hidden text-nowrap lg:flex  text-ffffff">
                   Hi, {`${buyer.first_name ? buyer.first_name.charAt(0).toUpperCase() + buyer.first_name.slice(1) : "Not set"}`}
                 </span>
               )}

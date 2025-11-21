@@ -31,7 +31,7 @@ export default function RecoveryEmailSent() {
         url: "/accounts/resend-verification-email/",
         method: "POST",
         body: { email },
-
+        userType: "buyer",
         successMessage: "verification link resent.",
       },
     });

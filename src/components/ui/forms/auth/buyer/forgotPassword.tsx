@@ -41,6 +41,7 @@ export default function ForgotPassword() {
         body: {
           email,
         },
+        userType: "buyer",
         successMessage: "verification link sent.",
       },
     });

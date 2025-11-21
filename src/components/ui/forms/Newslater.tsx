@@ -32,7 +32,7 @@ export default function NewsLater() {
             className="h-4 w-4  border-ffffff  rounded-c4 cursor-pointer"
           />
           <label htmlFor="agree" className="text-c14 text-white">
-           i agree with privacy terms and policy
+           I agree with privacy terms and policy
           </label> 
         </div>
 

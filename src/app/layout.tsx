@@ -3,7 +3,7 @@ import ClientProvider from "@/components/store/client-provider";
 import "./globals.css";
 import LayoutWrapper from "@/components/ui/LayoutWrappers/LayoutWrapper";
 import { Toaster } from "sonner";
-import InstallButton from "@/components/ui/InstallButton"; // <- import it
+import InstallButton from "@/components/ui/InstallButton"; 
 
 export const metadata: Metadata = {
   title: "market Africa",

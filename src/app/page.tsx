@@ -82,7 +82,7 @@ useEffect(() => {
     <main>
       <div className="md:px-15 pt-6">
         <HeroPage />
-        <div className="md:hidden">
+      <div className="md:hidden">
           <MobileCategory />
         </div>
         <div className="md:hidden">
@@ -90,11 +90,11 @@ useEffect(() => {
         </div>
         <section className="w-full" id="production-section">
           <ProductListPage />
-        </section>
+        </section> 
 
-        <AboutPage />
+        <AboutPage /> 
       </div>
-      <JoinUsPage />
+       <JoinUsPage /> 
     </main>
   );
 }
