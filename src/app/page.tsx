@@ -21,27 +21,16 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
 useEffect(() => {
- 
-  const scrollToHash = () => {
-    const id = window.location.hash.replace("#", "");
-    if (!id) return;
 
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  };
+  const id = window.location.hash.replace("#", "");
+  if (!id) return;
 
-  // Scroll on first load
-  scrollToHash();
-
-  // Scroll when hash changes
-  window.addEventListener("hashchange", scrollToHash);
-
-  return () => window.removeEventListener("hashchange", scrollToHash);
+  const el = document.getElementById(id);
+  if (el) {
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300); 
+  }
 }, []);
 
 

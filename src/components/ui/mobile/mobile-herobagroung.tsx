@@ -31,7 +31,11 @@ const backgrounds = [
             >
               Become a seller
             </Link>
-            <button className="w-full h-c48 rounded-c8 bg-ff715b text-ffffff text-c12 flex items-center justify-center gap-3">
+            <button    onClick={() => {
+              document.getElementById("production-section")?.scrollIntoView({
+                behavior: "smooth",
+              });
+            }} className="w-full h-c48 rounded-c8 bg-ff715b text-ffffff text-c12 flex items-center justify-center gap-3">
               Shop now
             </button>
           </div>
