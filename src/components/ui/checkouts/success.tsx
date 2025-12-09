@@ -31,7 +31,7 @@ export default function PaymentSuccess() {
         </h2>
 
         <p className="font-MontserratNormal text-center text-sm">
-          Your order is on its way, it will arrive between May 10th - Jun 19th.
+          Your order is being processed, you will receive a confirmation email shortly.
         </p>
       </div>
     </div>

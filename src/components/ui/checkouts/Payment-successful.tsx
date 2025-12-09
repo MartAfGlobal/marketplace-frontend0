@@ -26,6 +26,7 @@ import { useHttp } from "@/hooks/use-http";
 export default function PaymentSuccessful() {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
+   const orderData = useSelector((state: RootState) => state.orderSlice.orderData);
 
     const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
@@ -76,9 +77,9 @@ export default function PaymentSuccessful() {
 
   const showMore = () => setVisible((prev) => prev + 10);
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+  // const fashionProducts = cartItems.filter(
+  //   (product) => product.=== "Fashion and Apparel"
+  // );
 
   const trackOrders: TrackOrders[] = [
     // Uncomment to test non-empty state
@@ -140,7 +141,7 @@ export default function PaymentSuccessful() {
                  
                   <div className="flex gap-2 mt-2">
                     <p className="text-sm mb-3 font-MontserratSemiBold">
-                      Order ID: {orderId}
+                      Order ID: {orderData?.checkout_id}
                     </p>
                     <button onClick={handleCopy}>
                       <Image src={Copy} alt="copy" width={16} height={16} />
@@ -159,13 +160,13 @@ export default function PaymentSuccessful() {
                 </div>
                 <div className=" flex flex-col gap-c32 w-full max-w-84">
                   <Button onClick={() => setOpen(true)}>
-                    Confirm delivery
+                    Edit Address
                   </Button>
-                  <Button
+                  <Button variant="secondary"
                     onClick={handleTrackOrder}
-                    className="bg-transparent border text-ff715b hover:text-ffffff border-ff715b"
+                  
                   >
-                    Track order
+                    Cancel order
                   </Button>
                 </div>
               </div>
@@ -185,7 +186,7 @@ export default function PaymentSuccessful() {
                     </p>
                   </div>
                 </div>
-                <div className=" flex flex-col gap-3 w-full max-w-84">
+                {/* <div className=" flex flex-col gap-3 w-full max-w-84">
                   <p className="text-sm font-MontserratSemiBold">
                     Payment method
                   </p>
@@ -212,7 +213,7 @@ export default function PaymentSuccessful() {
                     Every payment you make on MartAf is secured with strict SSL
                     encryption and PCI DSS data protection protocols
                   </p>
-                </div>
+                </div> */}
               </div>
               <div className="flex justify-between mt-c64">
                 <div className=" max-w-74">
@@ -311,11 +312,11 @@ export default function PaymentSuccessful() {
             <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
               More to love
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
+            {/* <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
               {fashionProducts.slice(0, visible).map((item) => (
                 <ProductCard key={item.id} product={item} />
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

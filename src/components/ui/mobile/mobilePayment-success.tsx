@@ -77,7 +77,7 @@ export default function MobilePaymentSuccessfulPage() {
                   >
                     {cartItems.map((item) => (
                       <motion.div
-                        key={item.id}
+                        key={item.variation_id}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -87,8 +87,8 @@ export default function MobilePaymentSuccessfulPage() {
                           <div className="flex gap-4 w-full  items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
                               <Image
-                                src={item.image || "profile image"}
-                                alt={item.name || "name"}
+                                src={item.product_image || "profile image"}
+                                alt={item.product_name || "name"}
                                 width={100}
                                 height={100}
                                 className="w-16 h-16 md:w-25 md:h-25"
@@ -96,7 +96,7 @@ export default function MobilePaymentSuccessfulPage() {
                             </div>
                             <div className="w-full md:max-w-143.75">
                               <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                                {item.name}
+                                {item.product_name}
                               </p>
                               <p className="font-MontserratNormal text-c12 pb-3">
                                 Two piece shop

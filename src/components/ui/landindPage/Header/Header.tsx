@@ -56,24 +56,18 @@ export default function Header() {
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const [mounted, setMounted] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (mounted) {
-      const count = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-      setCartCount(count);
-    }
-  }, [mounted, cartItems]);
-
   console.log("lets check coundydy", cartCount);
 
   return (
-   <div className="pb-20 h-fit">
-       <div className="w-full fixed z-50 top-0 left-0 right-0">
+    <div className="pb-20 h-fit">
+      <div className="w-full fixed z-50 top-0 left-0 right-0">
         <motion.header
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -105,9 +99,8 @@ export default function Header() {
 
             <div className="flex gap-4 items-center">
               <NotificationButton />
-                 <CartButton />
+              <CartButton />
             </div>
-         
 
             <button
               onClick={() => setUserOpen((prev) => !prev)}
@@ -117,7 +110,13 @@ export default function Header() {
 
               {token && (
                 <span className="lg:text-base md:text-sm font-MontserratSemiBold hidden text-nowrap lg:flex  text-ffffff">
-                  Hi, {`${buyer.first_name ? buyer.first_name.charAt(0).toUpperCase() + buyer.first_name.slice(1) : "Not set"}`}
+                  Hi,{" "}
+                  {`${
+                    buyer.first_name
+                      ? buyer.first_name.charAt(0).toUpperCase() +
+                        buyer.first_name.slice(1)
+                      : "Not set"
+                  }`}
                 </span>
               )}
               <Image

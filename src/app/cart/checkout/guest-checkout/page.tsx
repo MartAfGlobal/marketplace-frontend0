@@ -40,8 +40,7 @@ const getFlagUrl = (isoCode: string) =>
 
 export default function AddNewAddreess() {
   const router = useRouter();
-   const currentAddress = null;
- 
+  const currentAddress = null;
 
   const selectedItems = useSelector(selectCheckedItems);
 
@@ -49,6 +48,8 @@ export default function AddNewAddreess() {
     console.log("Selected Items in Guest:", selectedItems);
   }, [selectedItems]);
   const [formData, setFormData] = useState<GuestCheckoutAddress>({
+    first_name: "",
+    last_name: "",
     guest_email: "",
     guest_phone: "",
     guest_address_line1: "",
@@ -56,7 +57,7 @@ export default function AddNewAddreess() {
     guest_city: "",
     guest_state: "",
     guest_postal_code: "",
-    guest_country:   "Nigeria",
+    guest_country: "Nigeria",
     shipping_cost: 0,
     discount_amount: 0,
   });
@@ -246,6 +247,8 @@ export default function AddNewAddreess() {
   };
 
   const invalidForm =
+    !formData.first_name?.trim() ||
+    !formData.last_name?.trim() ||
     !formData.guest_country?.trim() ||
     !formData.guest_address_line1?.trim() ||
     !formData.guest_city?.trim() ||
@@ -332,6 +335,30 @@ export default function AddNewAddreess() {
                 </AnimatePresence>
               </div>
             </div>
+            <div>
+              <div className="pb-3">
+                <Label className="text-sm font-MontserratSemiBold">
+                  First Name
+                </Label>
+                <input
+                  type="text"
+                  className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                  value={formData.first_name}
+                  onChange={(e) => handleChange("first_name", e.target.value)}
+                />
+              </div>
+              <div className="pb-3">
+                <Label className="text-sm font-MontserratSemiBold">
+                  Last Name
+                </Label>
+                <input
+                  type="text"
+                  className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                  value={formData.last_name}
+                  onChange={(e) => handleChange("last_name", e.target.value)}
+                />
+              </div>
+            </div>
 
             {/* Contact info */}
             <div>
@@ -343,7 +370,7 @@ export default function AddNewAddreess() {
                   email address
                 </Label>
                 <input
-                  type="text"
+                  type="email"
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
                   value={formData.guest_email}
                   onChange={(e) => handleChange("guest_email", e.target.value)}
@@ -374,7 +401,6 @@ export default function AddNewAddreess() {
               </div>
             </div>
 
-            {/* Address info */}
             <div>
               <p className="text-sm font-MontserratSemiBold pb-4">
                 Address information
@@ -408,7 +434,6 @@ export default function AddNewAddreess() {
                 />
               </div>
 
-              {/* State dropdown */}
               <div className="space-y-4">
                 <Label className="text-sm font-MontserratSemiBold">
                   State/province
@@ -454,7 +479,6 @@ export default function AddNewAddreess() {
                 </div>
               </div>
 
-              {/* City dropdown */}
               <div className="space-y-4 pt-3">
                 <Label className="text-sm font-MontserratSemiBold">City</Label>
                 <div className="relative pt-2 w-full" ref={cityRef}>
@@ -512,7 +536,7 @@ export default function AddNewAddreess() {
             </div>
 
             <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
-              <Button type="submit" className="border-0">
+              <Button disabled={invalidForm || loading} type="submit" className="border-0">
                 {loading ? <LoadingSpinner /> : "continue to payment"}
               </Button>
             </div>

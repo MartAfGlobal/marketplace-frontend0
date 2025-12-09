@@ -29,7 +29,7 @@ export default function CheckoutPage() {
   const token = useSelector((state: RootState) => state.token.token);
 
   const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
+    (product) => product.product_id === "Fashion and Apparel"
   );
 
   const { loading, sendHttpRequest } = useHttp();
@@ -51,15 +51,16 @@ export default function CheckoutPage() {
 
         if (backendCart) {
           const mappedItems = (backendCart.items || []).map((item: any) => ({
-            id: item.product_id,
             product_id: item.product_id,
-            name: item.product_name,
+            produt_name: item.product_name,
             product_image: item.product_image,
             quantity: item.quantity,
             subtotal: Number(item.total_price), // numeric subtotal
             unit_price: Number(item.unit_price),
+
+            total_price: Number(item.total_price),
             variation_name: item.variation_name,
-            variations: item.variations || [],
+            variation_id: item.variation_id,
           }));
 
           console.log("summary datas444444:", mappedItems);
@@ -166,7 +167,10 @@ export default function CheckoutPage() {
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
                   {fashionProducts.slice(0, visible).map((item) => (
-                    <ProductCard key={item.id} product={item} />
+                    <ProductCard
+                      key={item.product_id || item.variation_id}
+                      product={product}
+                    />
                   ))}
                 </div>
               </div>

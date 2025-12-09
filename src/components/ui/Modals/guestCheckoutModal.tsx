@@ -42,6 +42,8 @@ export default function GuestCheckoutModal({
   currentAddress,
 }: CheckOutModalProps) {
   const [formData, setFormData] = useState<GuestCheckoutAddress>({
+    first_name: "",
+    last_name: "",
     guest_email: "",
     guest_phone: "",
     guest_address_line1: "",
@@ -104,6 +106,8 @@ export default function GuestCheckoutModal({
     return;
   };
   const invalidForm =
+    !formData.first_name?.trim() ||
+    !formData.last_name?.trim() ||
     !formData.guest_country?.trim() ||
     !formData.guest_address_line1?.trim() ||
     !formData.guest_city?.trim() ||
@@ -123,21 +127,21 @@ export default function GuestCheckoutModal({
 
     formData;
 
-    const items = selectedItems?.map((item) => ({
-      product_id: item.product_id,
-      variation_id: item.variations?.[0]?.id || null, // optional, if your backend supports it
-      quantity: item.quantity || 1, // fallback to 1
-    }));
+    const cleanedItems = (selectedItems ?? []).map((item) => {
+      const { product_id, ...rest } = item;
+      return rest;
+    });
 
-    console.log("Items on Checkout:", items);
+    console.log("Items on Checkoutggggg:", selectedItems);
 
     console.log("Form Data on Checkout:", formData);
+
     // Login request
     saveRequest({
       requestConfig: {
         url: "/checkout/",
         method: "POST",
-        body: { ...formData, items },
+        body: { ...formData, items: cleanedItems },
         successMessage: "Redirecting to payment gateway...",
       },
       successRes: (res) => {
@@ -196,7 +200,7 @@ export default function GuestCheckoutModal({
             </button>
 
             <h2 className="font-MontserratSemiBold text-c16 mb-c24">
-              Update Address
+              Enter Shipping Address
             </h2>
 
             <div className="flex flex-col gap-3">
@@ -208,6 +212,41 @@ export default function GuestCheckoutModal({
               />
 
               <div>
+                <div className="flex gap-c24 w-full mb-c24">
+                  <div className="flex flex-col gap-2 relative w-1/2">
+                    <Label className="text-c12 font-MontserratMedium">
+                      First Name
+                    </Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      type="firstName"
+                      value={formData.first_name}
+                      onChange={(e) =>
+                        handleChange("first_name", e.target.value)
+                      }
+                      placeholder="truthokoye@gamil.com"
+                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2 relative w-1/2">
+                    <Label className="text-c12 font-MontserratMedium">
+                      Last Name
+                    </Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(e) =>
+                        handleChange("last_name", e.target.value)
+                      }
+                      placeholder="john Doe"
+                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                    />
+                  </div>
+                </div>
                 <p className="font-MontserratSemiBold text-c12 mb-3  text-000000">
                   Contact information
                 </p>

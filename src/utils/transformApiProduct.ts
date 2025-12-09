@@ -21,16 +21,7 @@ export const transformApiProduct = (apiProduct: any): Product => {
     thumbnail: img.image_urls?.thumbnail ?? null,
   })) || [];
 
-  const variations: Variations[] = apiProduct.variations_data?.map((v: any): Variations => ({
-    id: v.id,
-    sku: v.sku,
-    size: v.size ?? null,
-    color: v.color ?? null,
-    stock: v.stock ?? 0,
-    low_stock_threshold: v.low_stock_threshold ?? null,
-    low_stock_notified: v.low_stock_notified ?? false,
-    product: v.product ?? null,
-  })) || [];
+;
 
   // Best-effort review mapping (keeps original raw object on each review)
   const reviews = apiProduct.reviews_data?.map((r: any) => ({
@@ -66,7 +57,7 @@ export const transformApiProduct = (apiProduct: any): Product => {
     onSale: (apiProduct.discount_percent ?? 0) > 0,
     image,      // simple array of medium urls (backwards compatible)
     images,     // richer image metadata
-    variations: apiProduct.variations_data,
+ 
     whatsInBox: apiProduct.whatsinbox ?? null,
     rating_average: apiProduct.rating_average ?? 0,
     origin: apiProduct.origin ?? null,

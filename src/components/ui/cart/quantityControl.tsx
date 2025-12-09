@@ -1,24 +1,46 @@
 "use client";
-import { QuantitySelectorProps } from "@/types/global";
-import { useState } from "react";
+import { QuantitySelectorProps, Sizes } from "@/types/global";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { updateQuantity } from "@/store/cart/cartSlice";
+import {
+  addGuestItemToCart,
+  addToCart,
+  updateQuantity,
+} from "@/store/cart/cartSlice";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
+import { toast } from "sonner";
+type ColorItem = {
+  main_value: string;
+  main_image: string;
+  sizes: Array<{
+    variation_id: string;
+    size: string;
+    stock: number;
+    sku: string;
+    price: string;
+  }>;
+};
 
-type QuantitySelectorPropsWithBackend = Omit<QuantitySelectorProps, "productId"> & {
-  productId?: string | number;
+type QuantitySelectorPropsWithBackend = Omit<
+  QuantitySelectorProps,
+  "productId"
+> & {
+  productId: string;
+  group_variation?: ColorItem;
   token?: string;
   buttonWidth?: string;
   buttonHeight?: string;
   quantityFont?: string;
+  variation_id?: string;
 };
 
 export default function QuantitySelector({
   productId,
-  quantity = 1,
+  variation_id,
+  group_variation,
+  quantity = 0,
   onChange,
-  token,
   increaseBg = "bg-ff715b",
   increaseText = "text-ffffff",
   decreaseBorder = "border-ff715b",
@@ -29,64 +51,178 @@ export default function QuantitySelector({
   buttonHeight = "h-6 md:h-7.5",
   quantityFont = "text-sm",
 }: QuantitySelectorPropsWithBackend) {
-  const [safeQty, setSafeQty] = useState(Number(quantity) || 1);
   const dispatch = useDispatch();
   const { sendHttpRequest } = useHttp();
   const cartItems = useSelector((state: RootState) => state.cart.items);
+  const products = useSelector((state: RootState) => state.products.items);
 
-  const itemExistsInCart = productId && cartItems.some((i) => i.product_id === productId);
+  const item = cartItems.find((i) => i.variation_id === variation_id);
+  const initialQty = item?.quantity ?? Number(quantity) ?? 0;
 
-  const updateBackendQuantity = async (newQty: number) => {
+  const [safeQty, setSafeQty] = useState(initialQty);
+
+  useEffect(() => {
+  const item = cartItems.find((i) => i.variation_id === variation_id);
+  const qtyFromCart = item?.quantity ?? Number(quantity) ?? 0;
+  setSafeQty(qtyFromCart);
+}, [cartItems, variation_id, quantity]);
+
+  const itemExistsInCart = Boolean(item);
+  const token = useSelector((state: RootState) => state.token.token);
+  const selectedSize = group_variation?.sizes.find(
+    (s) => s.variation_id === variation_id
+  );
+
+
+
+const productContainingVariation = products.find((product) =>
+  product.grouped_variations?.some((variationGroup) =>
+    variationGroup.sizes?.some((size: Sizes) => size.variation_id === variation_id)
+  )
+);
+ const variationDisplay = `${group_variation?.main_value ?? ""}${
+   selectedSize?.size ? ` / ${selectedSize?.size}` : ""
+  }`;
+
+
+const product_slug = productContainingVariation?.slug;
+
+
+  const addItemToCartBackend = async () => {
     if (!token || !productId) return;
 
-   await sendHttpRequest({
-  requestConfig: {
-    url: `/cart/item/${productId}/update_quantity/`,
-    method: "PATCH",
-    body: { quantity: newQty },
-    token,
-    isAuth: true,
-    userType: "buyer",
-    successMessage: "Quantity updated successfully!",
-  },
-  successRes: () => {}, // ✅ Added empty callback
-});
+    return sendHttpRequest({
+      requestConfig: {
+        url: `/cart/add`,
+        method: "POST",
+        body: {
+          variation_id,
+          quantity: 1,
+        },
+        token,
+        isAuth: true,
+        userType: "buyer",
+        successMessage: "Item added to cart!",
+      },
+      successRes: (res) => {
+        console.log("Add to cart response:", res);  
+        const price =
+          selectedSize?.price ||
+          products.find((p) => p.id === productId)?.price ||
+          0;
 
+        dispatch(
+          addToCart({
+             product_slug: product_slug || "",
+            variation_display: variationDisplay,
+            product_id: productId,
+            variation_id: variation_id || "",
+            quantity: res.data.quantity , // first add is always 1
+            product_image: group_variation?.main_image || "",
+            price,
+            price_at_purchase: price,
+            product_name: products.find((p) => p.id === productId)?.name || "",
+            checked: true,
+            size: selectedSize?.size || "",
+          })
+        );
+      },
+    });
+  };
+
+ 
+  const updateBackendQuantity = async (newQty: number) => {
+    if (!token || !variation_id) return;
+
+    console.log("Updating backend quantity to:", newQty, variation_id);
+
+    return sendHttpRequest({
+      requestConfig: {
+        url: `/cart/item/${variation_id}/update_quantity/`,
+        method: "PATCH",
+        body: { quantity: newQty },
+        token,
+        isAuth: true,
+        userType: "buyer",
+        successMessage: "Quantity updated successfully!",
+      },
+      successRes: () => {},
+    });
   };
 
   const handleQuantityChange = async (newQty: number) => {
-    if (newQty < 1) return;
-    setSafeQty(newQty);
-    onChange?.(newQty, productId);
+    if (newQty < 0) return;
+    if (safeQty === 0 && newQty === 1) {
+      setSafeQty(1);
+      onChange?.(1, productId);
 
-    // ✅ Only update Redux if item already exists in cart
-    if (itemExistsInCart) {
-      dispatch(updateQuantity({ id: productId, quantity: newQty }));
+      if (token) {
+        await addItemToCartBackend();
+      } else {
+        dispatch(
+          addGuestItemToCart({
+            product_slug: product_slug || "",
+            variation_display: variationDisplay,
+            product_id: productId,
+            variation_id: variation_id || "",
+            quantity: newQty,
+            product_image: group_variation?.main_image || "",
+            price:
+              selectedSize?.price ||
+              products.find((p) => p.id === productId)?.price ||
+              "",
+            product_name: products.find((p) => p.id === productId)?.name || "",
+            checked: true,
+            size: selectedSize?.size || "",
+          })
+        );
+        toast.success("Item added to cart (offline mode)");
+      }
+
+      return;
     }
 
-    // ✅ Sync backend only if logged in and in cart
-    if (token && itemExistsInCart) {
-      await updateBackendQuantity(newQty);
+    if (newQty >= 1) {
+      setSafeQty(newQty);
+      onChange?.(newQty, productId);
+
+      if (itemExistsInCart) {
+        dispatch(updateQuantity({ variation_id, quantity: newQty }));
+      }
+
+      if (token && itemExistsInCart) {
+        await updateBackendQuantity(newQty);
+      }
     }
   };
 
   return (
     <div className="flex md:items-center gap-2 md:gap-3">
       <button
+        disabled={safeQty <= 0}
         onClick={() => handleQuantityChange(safeQty - 1)}
-        className={`md:w-6 md:h-6 ${buttonWidth} ${buttonHeight} rounded-full flex items-center justify-center border ${decreaseBorder} ${decreaseText} ${hoverDecreaseBg} ${hoverDecreaseText} hover:border-0 transition
-          md:border-ff715b md:text-ff715b md:hover:bg-transparent md:hover:text-ff715b`}
+        className={`md:w-6 md:h-6 ${buttonWidth} ${buttonHeight} rounded-full flex items-center disabled:opacity-40 disabled:cursor-not-allowed justify-center border ${decreaseBorder} ${decreaseText} ${hoverDecreaseBg} ${hoverDecreaseText} hover:border-0 transition md:border-ff715b md:text-ff715b md:hover:bg-transparent md:hover:text-ff715b`}
       >
         -
       </button>
 
-      <span className={`text-center font-MontserratSemiBold text-sm ${quantityFont} md:text-c18`}>
+      <span
+        className={`text-center font-MontserratSemiBold text-sm ${quantityFont} md:text-c18`}
+      >
         {safeQty}
       </span>
 
       <button
+        disabled={
+          group_variation
+            ? safeQty >=
+              (group_variation.sizes.find(
+                (s) => s.variation_id === variation_id
+              )?.stock || Infinity)
+            : false
+        }
         onClick={() => handleQuantityChange(safeQty + 1)}
-        className={`md:w-6 md:h-6 ${buttonWidth} ${buttonHeight} rounded-full flex items-center justify-center ${increaseBg} ${increaseText} md:bg-ff715b md:text-ffffff`}
+        className={`md:w-6 md:h-6 ${buttonWidth} ${buttonHeight} rounded-full flex items-center disabled:opacity-40 disabled:cursor-not-allowed justify-center ${increaseBg} ${increaseText} md:bg-ff715b md:text-ffffff`}
       >
         +
       </button>

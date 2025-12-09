@@ -90,7 +90,10 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
         }
       },
     });
+  
   };
+  console.log("checkout items:", checkoutItems);
+  console.log("checkout summary:", checkoutSummary);
 
   const uniqueCheckoutItems = [
     ...new Map(

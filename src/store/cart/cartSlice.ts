@@ -1,22 +1,43 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Product, Variations } from "@/types/global";
 import { StaticImageData } from "next/image";
 
-// Extend Product with cart-specific fields
-export interface CartItem extends Product {
-  quantity: number;
-  image: string | StaticImageData | null;
+// --------------------------------------
+// Types
+// --------------------------------------
+
+export interface CartItem {
+  product_slug: string;
   product_id: string;
-  checked?: boolean;
-  subtotal?: number; 
-  formatted_subtotal?: string; 
-  price_at_purchase?: number;
-  variation_display?: string; 
-  product_image?: string;
-  selectedVariation?: Variations;
-  variation_name?: string;
+  quantity: number;
+  size?: string;
+  product_name: string;
+  product_image: string | StaticImageData | null;
+  price: string | number;
+  price_at_purchase: string | number;
+  subtotal?: number;
+  formatted_subtotal?: string;
+  variation_id?: string | null;
+  variation_display?: string;
+
+  checked: boolean;
 }
 
+export interface GuestCartItem {
+  product_slug: string;
+  product_id: string;
+  variation_id?: string;
+  quantity: number;
+  variation_display?: string;
+  checked: boolean;
+  price: string | number; // must be string
+  product_name: string;
+  product_image?: string;
+  size?: string;
+  variation?: string;
+  price_at_purchase?: number;
+  subtotal?: number;
+  formatted_subtotal?: string;
+}
 
 const loadCartFromLocalStorage = (): CartItem[] => {
   if (typeof window !== "undefined") {
@@ -42,6 +63,10 @@ const saveCartToLocalStorage = (items: CartItem[]) => {
   }
 };
 
+// --------------------------------------
+// State
+// --------------------------------------
+
 interface CartState {
   items: CartItem[];
   checkoutItems: CartItem[];
@@ -63,52 +88,125 @@ const initialState: CartState = {
   checkoutSummary: null,
 };
 
+// --------------------------------------
+// Slice
+// --------------------------------------
 
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
+    // ---------------------------------------------------------
+    // LOGGED-IN ADD
+    // Backend returns full CartItem; we simply insert or update
+    // ---------------------------------------------------------
     addToCart: (state, action: PayloadAction<CartItem>) => {
+      const incoming = action.payload;
+
       const existing = state.items.find(
-        (item) =>
-          item.id === action.payload.id &&
-          item.variation_display === action.payload.variation_display // optional: treat variation as unique
+        (i) =>
+          i.product_id === incoming.product_id &&
+          i.variation_id === incoming.variation_id
       );
 
       if (existing) {
-        existing.quantity += action.payload.quantity; // add quantity
+        existing.quantity += incoming.quantity;
+        existing.subtotal =
+          Number(existing.quantity) * Number(existing.price_at_purchase);
+        existing.formatted_subtotal = `₦${existing.subtotal.toFixed(2)}`;
       } else {
-        state.items.push({ ...action.payload, checked: true });
+        state.items.push({ ...incoming, checked: true });
       }
 
       saveCartToLocalStorage(state.items);
     },
 
-    removeFromCart: (state, action: PayloadAction<string | number>) => {
-      state.items = state.items.filter((item) => item.id !== action.payload);
+    addGuestItemToCart: (state, action: PayloadAction<GuestCartItem>) => {
+      const data = action.payload;
+
+      const existing = state.items.find(
+        (i) =>
+          i.product_id === data.product_id &&
+          i.variation_id === data.variation_id
+      );
+
+      if (existing) {
+        existing.quantity += data.quantity;
+        existing.subtotal =
+          Number(existing.quantity) * Number(existing.price_at_purchase);
+        existing.formatted_subtotal = `₦${existing.subtotal.toFixed(2)}`;
+      } else {
+        state.items.push({
+          product_slug:data.product_slug,
+          product_id: data.product_id,
+          variation_id: data.variation_id,
+          quantity: data.quantity,
+          size: data.size,
+          product_name: data.product_name,
+          product_image: data.product_image || null,
+
+          price: Number(data.price),
+          price_at_purchase: Number(data.price),
+
+          subtotal: data.subtotal ?? Number(data.price) * data.quantity,
+          formatted_subtotal:
+            data.formatted_subtotal ??
+            `₦${(Number(data.price) * data.quantity).toFixed(2)}`,
+
+          variation_display: data.variation_display || "",
+
+          checked: true,
+        });
+      }
+
+      saveCartToLocalStorage(state.items);
+    },
+
+    // ---------------------------------------------------------
+    removeFromCart: (
+      state,
+      action: PayloadAction<{ variation_id?: string }>
+    ) => {
+      const { variation_id } = action.payload;
+
+      state.items = state.items.filter(
+        (item) => item.variation_id !== variation_id
+      );
+
       saveCartToLocalStorage(state.items);
     },
 
     updateQuantity: (
       state,
-      action: PayloadAction<{ id: string | number; quantity: number }>
+      action: PayloadAction<{ variation_id?: string; quantity: number }>
     ) => {
-      const item = state.items.find((i) => i.id === action.payload.id);
+      const item = state.items.find(
+        (i) => i.variation_id === action.payload.variation_id
+      );
+
       if (item) {
-        item.quantity = action.payload.quantity;
+        item.quantity = Number(action.payload.quantity);
+        item.subtotal = Number(item.quantity) * Number(item.price_at_purchase);
+        item.formatted_subtotal = `₦${item.subtotal.toFixed(2)}`;
       }
+
       saveCartToLocalStorage(state.items);
     },
 
+    // ---------------------------------------------------------
     updateCheckedState: (
       state,
-      action: PayloadAction<{ id: string; checked: boolean }>
+      action: PayloadAction<{
+        variation_id?: string;
+        checked: boolean;
+      }>
     ) => {
-      const { id, checked } = action.payload;
-      const item = state.items.find((i) => i.id === id);
-      if (item) {
-        item.checked = checked;
-      }
+      const { variation_id, checked } = action.payload;
+
+      const item = state.items.find((i) => i.variation_id === variation_id);
+
+      if (item) item.checked = checked;
+
       saveCartToLocalStorage(state.items);
     },
 
@@ -117,33 +215,19 @@ const cartSlice = createSlice({
       saveCartToLocalStorage(state.items);
     },
 
+    // ---------------------------------------------------------
+    // Backend "sync my cart" response
+    // ---------------------------------------------------------
     setCartItems: (state, action: PayloadAction<CartItem[]>) => {
-      state.items = action.payload.map((item) => {
-        const price = item.price_at_purchase ?? (item as any).price ?? 0;
-        const subtotal = price * item.quantity;
-        return {
-          ...item,
-          checked: item.checked ?? true,
-          subtotal,
-          formatted_subtotal: `₦${subtotal.toFixed(2)}`,
-        };
-      });
+      state.items = action.payload;
       saveCartToLocalStorage(state.items);
     },
 
+    // ---------------------------------------------------------
     setCheckoutItems: (state, action: PayloadAction<CartItem[]>) => {
-      state.checkoutItems = action.payload.map((item) => {
-        const subtotal =
-          item.subtotal ?? (item.price_at_purchase ?? 0) * item.quantity;
-        return {
-          ...item,
-          subtotal,
-          formatted_subtotal: `₦${subtotal.toLocaleString()}`,
-        };
-      });
+      state.checkoutItems = action.payload;
     },
 
-    // ✅ New reducer: store full cart summary from backend
     setCheckoutSummary: (
       state,
       action: PayloadAction<CartState["checkoutSummary"]>
@@ -151,13 +235,10 @@ const cartSlice = createSlice({
       state.checkoutSummary = action.payload;
     },
 
-    setOrderDetails: (state, action: PayloadAction<any>) => {
-      
-    },
-    removeCheckedOutItems: (state) => {
-     
-      state.items = state.items.filter((item) => !item.checked);
+    setOrderDetails: (state, action: PayloadAction<any>) => {},
 
+    removeCheckedOutItems: (state) => {
+      state.items = state.items.filter((item) => !item.checked);
       state.checkoutItems = [];
       state.checkoutSummary = null;
 
@@ -166,8 +247,13 @@ const cartSlice = createSlice({
   },
 });
 
+// --------------------------------------
+// Exports
+// --------------------------------------
+
 export const {
   addToCart,
+  addGuestItemToCart,
   removeFromCart,
   updateQuantity,
   clearCart,
@@ -175,11 +261,12 @@ export const {
   setCheckoutItems,
   updateCheckedState,
   setCheckoutSummary,
-    removeCheckedOutItems,
+  removeCheckedOutItems,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;
-import { RootState } from "@/store"; 
+
+import { RootState } from "@/store";
 
 export const selectCheckedItems = (state: RootState) =>
   state.cart.items.filter((item) => item.checked);

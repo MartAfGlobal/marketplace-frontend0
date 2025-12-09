@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Product, Variations } from "@/types/global";
+import { Product, Sizes, Variations } from "@/types/global";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/store/cart/cartSlice";
-import { addToWishlist } from "@/store/cart/wishlist-slice";
+import { addToWishlist, removeFromWishlist } from "@/store/cart/wishlist-slice";
 import { setSelectedProduct } from "@/store/user-data/products/selectedProduct-slice";
 import { RootState } from "@/store";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,9 @@ import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "../loading-spinner";
 import { useState } from "react";
 import { toast } from "sonner";
-import Cookies from "js-cookie";
+
+import AddCartModal from "../Modals/addToCart/addTocart-modal";
+import { setSelectedVariation } from "@/store/slices/variationSelectorSlice";
 
 interface ProductCardProps {
   product: Product;
@@ -27,85 +29,92 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { loading, sendHttpRequest } = useHttp();
   const { loading: loadingWishlist, sendHttpRequest: addWishlistReq } =
     useHttp();
-  const token = useSelector((state: RootState) => state.token.token);
 
-  const [selectedVariation, setSelectedVariation] = useState<Variations | null>(
-    product.variations?.[0] || null
+  const token = useSelector((state: RootState) => state.token.token);
+  const [openAddToCart, setOpenAddToCart] = useState(false);
+  const selectedVariation = useSelector(
+    (state: RootState) => state.selectedVariation
   );
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  // const [selectedVariation, setSelectedVariation] = useState<Variations | null>(
+  //   product.grouped_variations?.[0] || null
+  // );
+  const [selectedId, setSelectedId] = useState<string>("");
+  // const handleAddToCart = async (e: React.MouseEvent) => {
+  //   e.stopPropagation();
 
-    if (!token) {
-      dispatch(
-        addToCart({
-          ...product,
-          product_id: product.id, // ✅ Fix here
-          quantity: 1,
-          variation_display: selectedVariation
-            ? `${selectedVariation.size} / ${selectedVariation.color}`
-            : undefined,
-          price_at_purchase: product.price,
-        })
-      );
-      toast.success("Item added to cart (offline mode)");
-      return;
-    }
+  //   if (!token) {
+  //     dispatch(
+  //       addToCart({
+  //         ...product,
+  //         product_id: product.id, // ✅ Fix here
+  //         quantity: 1,
+  //         variation_display: selectedVariation
+  //           ? `${selectedVariation.sizes} / ${selectedVariation.color}`
+  //           : undefined,
+  //         price_at_purchase: product.price,
+  //       })
+  //     );
+  //     toast.success("Item added to cart (offline mode)");
+  //     return;
+  //   }
 
-    sendHttpRequest({
-      requestConfig: {
-        url: "/cart/add",
-        method: "POST",
-        token,
-        isAuth: true,
-        userType: "buyer",
-        body: {
-          product_id: product.id,
-          variation_id: selectedVariation?.id,
-          quantity: 1,
-          check: true,
-        },
-        successMessage: "Item added to cart successfully",
-      },
+  //   sendHttpRequest({
+  //     requestConfig: {
+  //       url: "/cart/add",
+  //       method: "POST",
+  //       token,
+  //       isAuth: true,
+  //       userType: "buyer",
+  //       body: {
+  //         product_id: product.id,
+  //         variation_id: selectedVariation?.id,
+  //         quantity: 1,
+  //         check: true,
+  //       },
+  //       successMessage: "Item added to cart successfully",
+  //     },
 
-      successRes: (res: any) => {
-        dispatch(
-          addToCart({
-            ...product,
-            product_id: product.id,
-            quantity: 1,
-            variation_display: selectedVariation
-              ? `${selectedVariation.size} / ${selectedVariation.color}`
-              : undefined,
-            price_at_purchase: product.price,
-          })
-        );
+  //     successRes: (res: any) => {
+  //       dispatch(
+  //         addToCart({
+  //           ...product,
+  //           product_id: product.id,
+  //           quantity: 1,
+  //           variation_display: selectedVariation
+  //             ? `${selectedVariation.size} / ${selectedVariation.color}`
+  //             : undefined,
+  //           price_at_purchase: product.price,
+  //         })
+  //       );
 
-        console.log("Cart API success:", res.data);
-      },
-    }).catch((err: any) => {
-      console.error("Cart API failed:", err);
-      dispatch(
-        addToCart({
-          ...product,
-          product_id: product.id,
-          quantity: 1,
-          variation_display: selectedVariation
-            ? `${selectedVariation.size} / ${selectedVariation.color}`
-            : undefined,
-          price_at_purchase: product.price,
-        })
-      );
+  //       console.log("Cart API success:", res.data);
+  //     },
+  //   }).catch((err: any) => {
+  //     console.error("Cart API failed:", err);
+  //     dispatch(
+  //       addToCart({
+  //         ...product,
+  //         product_id: product.id,
+  //         quantity: 1,
+  //         variation_display: selectedVariation
+  //           ? `${selectedVariation.size} / ${selectedVariation.color}`
+  //           : undefined,
+  //         price_at_purchase: product.price,
+  //       })
+  //     );
 
-      toast.error("Network error — added to local cart");
-    });
-  };
+  //     toast.error("Network error — added to local cart");
+  //   });
+  // };
 
-  const handleAddToWishlist = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+
+  const handleToggleWishlist = (id: string) => {
+    console.log ("checking id", id)
     if (!token) {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      toast.info("Please log in to add items to your wishlist");
+      toast.info("Please log in to manage your wishlist");
       if (isMobile) {
         router.replace("/?showLogin=true");
       } else {
@@ -113,15 +122,42 @@ export default function ProductCard({ product }: ProductCardProps) {
       }
       return;
     }
+    
+
+    const isInWishlist = wishlistItems.some(
+      (item: any) => item.id === product.id
+    );
+
+    // ------------------------------------
+    // REMOVE FROM WISHLIST
+    // ------------------------------------
+    if (isInWishlist) {
+      addWishlistReq({
+        requestConfig: {
+          url: `/wishlist/remove/${id}/`,
+          method: "DELETE",
+          token,
+          isAuth: true,
+          userType: "buyer",
+          successMessage: "Removed from wishlist",
+        },
+        successRes: () => {
+          dispatch(removeFromWishlist(product.id));
+          toast.success("Removed from wishlist");
+        },
+      });
+
+      return;
+    }
+
+    // ------------------------------------
+    // ADD TO WISHLIST
+    // ------------------------------------
     addWishlistReq({
       requestConfig: {
-        url: "wishlist/items/",
+        url: `/wishlist/add/${id}/`,
         method: "POST",
         token,
-        body: {
-          product_id: product.id,
-          variation_id: selectedVariation?.id,
-        },
         isAuth: true,
         userType: "buyer",
         successMessage: "Added to wishlist",
@@ -132,38 +168,46 @@ export default function ProductCard({ product }: ProductCardProps) {
             id: product.id,
             product: product,
             quantity: 1,
-            variation: selectedVariation || null,
-            variation_display: selectedVariation
-              ? `${selectedVariation.size} / ${selectedVariation.color}`
-              : undefined,
-            price_at_purchase: product.price,
           })
         );
-
         toast.success("Added to wishlist");
       },
     });
   };
 
   const handleClick = () => {
-    dispatch(
-      addToCart({
-        ...product,
-        product_id: product.id,
-        variation_display: selectedVariation
-          ? `${selectedVariation.size} / ${selectedVariation.color}`
-          : undefined,
-        price_at_purchase: product.price,
-      })
-    );
+    // 1️⃣ Get default variation → grouped_variations[0]
+    const defaultVariation = product.grouped_variations?.[0];
+
+    // 2️⃣ Get default size id inside that variation (optional)
+    const defaultSizeId = defaultVariation.sizes[0];
+
+    // 3️⃣ Dispatch into redux
+    if (defaultVariation) {
+      dispatch(
+        setSelectedVariation({
+          slug: product.slug ?? "",
+          variation_id: defaultSizeId.variation_id,
+          variationData: defaultVariation,
+        })
+      );
+    }
+
+    // 4️⃣ Navigate to product page
     router.push(`/product/${product.slug}`);
   };
 
-  const productImage = product.image || "/placeholder.png";
-  console.log("imageeeeeeeeeeeeeeeeeee", productImage);
+  console.log("rffvvrrrrrr", selectedVariation);
+  const handleAddToCart = (productId: string) => {
+    setSelectedId(productId);
+    setTimeout(() => {
+      setOpenAddToCart(true);
+    }, 0);
+  };
+  const productImage = product.first_image || "/placeholder.png";
 
   return (
-    <div onClick={handleClick} className="cursor-pointer">
+    <div className="cursor-pointer">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -175,10 +219,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         className="rounded-lg shadow-custom w-full h-[264.69px] pb-4 flex-shrink-0 md:max-w-49 bg-white overflow-hidden cursor-pointer"
       >
         {/* Product Image */}
-        <div className="relative h-40 w-full">
+        <div onClick={handleClick} className="relative h-40 w-full">
           <Image
             src={productImage}
-            alt={product.category || "Product"}
+            alt={product.category_name || "Product"}
             fill
             className="object-cover"
           />
@@ -189,11 +233,13 @@ export default function ProductCard({ product }: ProductCardProps) {
             </span>
           )}
 
-          {/* Love Button */}
           <button
-            onClick={handleAddToWishlist}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleWishlist(product.id);
+            }}
             disabled={loadingWishlist}
-            className="absolute top-4 right-4 w-[32px] h-[32px]  bg-white rounded-full shadow flex items-center justify-center"
+            className="absolute top-4 right-4 w-[32px] h-[32px] bg-white rounded-full shadow flex items-center justify-center"
           >
             {loadingWishlist ? (
               <LoadingSpinner color="ff715b" />
@@ -203,14 +249,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
 
-        {/* Product Info */}
         <div className="flex items-end justify-between p-4 h-[104px]">
           <div className="text-sm">
             <p className="font-MontserratMedium text-[12px] text-[#161616]">
               Free shipping
             </p>
 
-            {/* Rating */}
             <div className="flex items-center">
               {Array.from({ length: 5 }, (_, i) => (
                 <span
@@ -233,7 +277,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <button
-            onClick={handleAddToCart}
+            onClick={() => handleAddToCart(product.id)}
             disabled={loading || product.inventory === 0}
             className={`w-c44 hidden flex-shrink-0 md:flex h-[41.97px] items-center justify-center gap-2 py-1 rounded-[8px] transition
     ${
@@ -250,6 +294,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
       </motion.div>
+      <AddCartModal
+        isOpen={openAddToCart}
+        onClose={() => setOpenAddToCart(false)}
+        productId={selectedId}
+      />
     </div>
   );
 }

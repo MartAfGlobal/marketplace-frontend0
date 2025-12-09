@@ -27,10 +27,8 @@ export default function AuthModal({
   open: boolean;
   onClose: () => void;
   defaultStep?: AuthStep;
-})  {
-  const [step, setStep] = useState<
-    AuthStep
-  >(defaultStep);
+}) {
+  const [step, setStep] = useState<AuthStep>(defaultStep);
   const [email, setEmail] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
@@ -50,9 +48,7 @@ export default function AuthModal({
     }
   }, [defaultStep, open]);
 
- 
-
-  // ✅ Handle input changes
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -112,7 +108,7 @@ export default function AuthModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 w-full "
             onClick={onClose}
           />
 
@@ -179,7 +175,7 @@ export default function AuthModal({
                     </button>
                   </div>
 
-                  {/* Confirm Password */}
+                  
                   <div className="relative w-full">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
@@ -241,35 +237,29 @@ export default function AuthModal({
               </div>
             )}
 
-
-            {/* ---------- SIGN IN ---------- */}
             {step === "signin" && (
               <MobileLogin
-                onClose={onClose} // ✅ pass down close handler
+                onClose={onClose} 
                 setStep={setStep}
               />
             )}
 
-
-
-
             {/* ---------- FORGOT PASSWORD ---------- */}
-            {step === "forgot" && 
+            {step === "forgot" && (
               <ForgotPasswordModal
-              onClose={onClose}
-              setStep={setStep}
-               setEmail={setEmail} 
-          
+                onClose={onClose}
+                setStep={setStep}
+                setEmail={setEmail}
               />
-            }
+            )}
 
             {/* ---------- RESET VERIFY (FORGOT PASSWORD) ---------- */}
             {step === "resetVerify" && (
-             < ResetVerify onClose={onClose} setStep={setStep} email={email}/>
+              <ResetVerify onClose={onClose} setStep={setStep} email={email} />
             )}
 
-            {step ==="resetPassword" && (
-               <ResetPasswordModal onClose={onClose} setStep={setStep}/>
+            {step === "resetPassword" && (
+              <ResetPasswordModal onClose={onClose} setStep={setStep} />
             )}
           </motion.div>
         </>

@@ -7,37 +7,38 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import WnavRight from "@/assets/icons/user-dashboard/CaretRight.svg";
 
-import ProductCard from "@/components/ui/cards/ProductCard";
-import NavBack from "@/assets/icons/navBacksmall.png";
-import { Button } from "@/components/ui/Button/Button";
 
-import { TrackOrders } from "@/types/global";
+import NavBack from "@/assets/icons/navBacksmall.png";
+
 
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 
 import PaymentSuccessful from "@/components/ui/checkouts/Payment-successful";
 
+
 import { useHttp } from "@/hooks/use-http";
 import MobilePaymentSuccessfulPage from "@/components/ui/mobile/mobilePayment-success";
 import { removeCheckedOutItems } from "@/store/cart/cartSlice";
+import { setOrderData } from "@/store/orders/payment-success-slice";
 
 export default function CartPage() {
-  const [visible, setVisible] = useState(10);
+  // const [visible, setVisible] = useState(10);
   const router = useRouter();
   const dispatch = useDispatch();
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   
-    const { loading, sendHttpRequest: getOrderRequest } = useHttp();
+    const {sendHttpRequest: getOrderRequest } = useHttp();
+    const orderData = useSelector((state: RootState) => state.orderSlice.orderData);
 
   useEffect(() => {
     dispatch(removeCheckedOutItems());
   }, [dispatch]);
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+  // const fashionProducts = cartItems.filter(
+  //   (product) => product.product_name === "Fashion and Apparel"
+  // );
   // Example React useEffect
 useEffect(() => {
   const queryParams = new URLSearchParams(window.location.search);
@@ -54,15 +55,19 @@ useEffect(() => {
         method: "GET",
        
         userType: "buyer",
-        successMessage: "Login successful!",
+        
       },
       successRes: (orderData) => {
-        console.log("Order Data:", orderData);
+        console.log("Order Data:", orderData.data);
+       dispatch(setOrderData(orderData.data));
+
         
       }
     });
   }
 }, []);
+
+console.log("Order Datassss from Store:", orderData);
 
   return (
     <motion.div
@@ -120,11 +125,11 @@ useEffect(() => {
             <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
               More to love
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
+            {/* <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
               {fashionProducts.slice(0, visible).map((item) => (
-                <ProductCard key={item.id} product={item} />
+                <ProductCard key={item.product_id} product={item.prduct} />
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

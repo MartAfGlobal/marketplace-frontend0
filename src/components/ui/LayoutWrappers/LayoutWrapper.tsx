@@ -24,9 +24,6 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   
     if (loading) return <WireframeLoader/>;
 
-  // Hide layout for auth pages
- 
- // Hide layout for auth pages and seller dashboard
   const hideLayout = ["/auth", "/dashboard/seller"].some((path) =>
     pathname?.startsWith(path)
   );
@@ -40,7 +37,6 @@ const productPage = ["/product", "/cart", "/dashboard"].some(path => pathname?.s
      
        {children}
      
-      {/* Hide footer on auth pages and on mobile product pages */}
       {!hideLayout &&
         (productPage ? (
           <div className="hidden md:block">

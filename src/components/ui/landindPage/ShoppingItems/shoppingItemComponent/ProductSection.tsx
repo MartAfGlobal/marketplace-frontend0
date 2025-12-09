@@ -9,15 +9,18 @@ interface ProductSectionProps {
   products: Product[];
 }
 
-export default function ProductSection({ title, products }: ProductSectionProps) {
+export default function ProductSection({
+  title,
+  products,
+}: ProductSectionProps) {
   const [visible, setVisible] = useState(6);
 
-  const showMore = () => setVisible(prev => prev + 6);
+  const showMore = () => setVisible((prev) => prev + 6);
 
-if (products.length === 0) return (
-  <p className="font-MontserratBold text-base text">No product found</p>
-);
-
+  if (products.length === 0)
+    return (
+      <p className="font-MontserratBold text-base text">No product found</p>
+    );
 
   return (
     <section className="mb-c64">
@@ -37,10 +40,10 @@ if (products.length === 0) return (
       {/* Product Grid */}
       <div className=" w-full flex justify-center items-center">
         <div className="grid grid-cols-2 sm:grid-cols-3  md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-c28 w-full md:mx-auto">
-        {products.slice(0, visible).map(product => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+          {products.slice(0, visible).map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -13,15 +13,20 @@ import tokenReducer from "@/store/token/token-slice";
 import buyerReducer from "@/store/user-data/buyer/buyer-slice";
 import sellerReducer from "@/store/user-data/seller/seller-slice";
 import orderReducer from "@/store/orders/order-slice";
-import trackingReducer from "@/store/orders/tracking-slice"
-import wishlistLabelReducer from "./wishlistLabel/wishlistLabelSlice"
-
+import trackingReducer from "@/store/orders/tracking-slice";
+import wishlistLabelReducer from "./wishlistLabel/wishlistLabelSlice";
+import orderSliceReducer from "@/store/orders/payment-success-slice";
+import selectedVariationReducer from "@/store/slices/variationSelectorSlice";
 
 const tokenPersistConfig = {
   key: "token",
   storage,
 };
 
+const variationIdPersistConfig = {
+  key: "selectedVariation",
+  storage,
+};
 const buyerPersistConfig = {
   key: "buyer",
   storage,
@@ -34,6 +39,11 @@ const sellerPersistConfig = {
 
 const cartPersistConfig = {
   key: "cart",
+  storage,
+};
+
+const orderSlicePersistConfig = {
+  key: "orderSlice",
   storage,
 };
 
@@ -51,18 +61,18 @@ const ordersPersistConfig = {
   key: "orders",
   storage,
 };
-const trackingPersistCobfig ={
+const trackingPersistCobfig = {
   key: "tracking",
   storage,
-}
-const wishlistLabelPersistCobfig ={
+};
+const wishlistLabelPersistCobfig = {
   key: "labels",
   storage,
-}
+};
 
 const rootReducer = combineReducers({
-  tracking: persistReducer (trackingPersistCobfig, trackingReducer),
-  token: persistReducer(tokenPersistConfig,  tokenReducer),
+  tracking: persistReducer(trackingPersistCobfig, trackingReducer),
+  token: persistReducer(tokenPersistConfig, tokenReducer),
   buyer: persistReducer(buyerPersistConfig, buyerReducer),
   seller: persistReducer(sellerPersistConfig, sellerReducer),
   cart: persistReducer(cartPersistConfig, cartReducer),
@@ -70,10 +80,17 @@ const rootReducer = combineReducers({
   products: persistReducer(productsPersistConfig, productReducer),
   counter: counterReducer,
   selectedProduct: selectedProductReducer,
-  wishlistLabel:persistReducer(wishlistLabelPersistCobfig, wishlistLabelReducer),
+  wishlistLabel: persistReducer(
+    wishlistLabelPersistCobfig,
+    wishlistLabelReducer
+  ),
   orders: persistReducer(ordersPersistConfig, orderReducer),
+  orderSlice: persistReducer(orderSlicePersistConfig, orderSliceReducer),
+  selectedVariation: persistReducer(
+    variationIdPersistConfig,
+    selectedVariationReducer
+  ),
 });
-
 
 const store = configureStore({
   reducer: rootReducer,

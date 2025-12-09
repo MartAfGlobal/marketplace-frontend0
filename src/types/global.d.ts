@@ -170,7 +170,7 @@ export interface ProfileImageProps {
 }
 
 export interface AddressModalProps {
-  id?: string | null
+  id?: string | null;
   isOpen: boolean;
   onClose: () => void;
   onSave?: (address: Address) => void;
@@ -280,16 +280,16 @@ export interface Review {
   verified?: boolean; // optional
 }
 
-export interface ImageData {
-  id: string;
-  image_urls: {
-    original: string;
-    medium: string;
-    thumbnail: string;
-  };
-  alt_text?: string;
-  product: string; // product id
-}
+// export interface ImageData {
+//   id: string;
+//   image_urls: {
+//     original: string;
+//     medium: string;
+//     thumbnail: string;
+//   };
+//   alt_text?: string;
+//   product: string; // product id
+// }
 
 export interface SpecificationData {
   id: string;
@@ -297,16 +297,25 @@ export interface SpecificationData {
   value?: string;
   product: string;
 }
+export interface Sizes {
+  is_default: boolean;
+  price?: number;
+  size: string;
+  stock?: number;
+  sku?: string;
+  id: string;
+  variation_id;
+}
 
 export interface Variations {
   id: string;
-  sku: string;
-  size?: string;
-  color?: string;
-  stock?: number;
+  sizes?: Sizes[];
+  main_value?: string;
+  main_image?: string | StaticImageData | null;
   low_stock_threshold?: number;
   low_stock_notified?: boolean;
   product: string; // product id
+    variation_id?: string;
 }
 
 export interface Product {
@@ -319,15 +328,16 @@ export interface Product {
   discount_price?: number;
   discount_percent?: number;
   sku?: string;
-  category?: string; // e.g., gender or type
+
+  category_name?: string; // e.g., gender or type
   inventory?: number;
   sold?: number;
-  onSale?: boolean; 
+  onSale?: boolean;
   rating_average?: number;
   gender?: string;
   age_group?: string;
-  variations_data?: Variation[]; // matches backend field
-  images_data?: ImageData[]; // matches backend field
+  grouped_variations?: Variation[]; // matches backend field
+  all_images?: [];
   specifications_data?: SpecificationData[]; // matches backend field
   whatsinbox?: string | null;
   origin?: string;
@@ -336,16 +346,15 @@ export interface Product {
   is_published?: boolean;
   created_at?: string;
   updated_at?: string;
-  manufacturer?: Manufacturer[] | string | null;
+  manufacturer_name?: Manufacturer[] | string | null;
   warehouse?: number | null;
   reviews_data?: Review[];
- image: string | StaticImageData | null;
-  variations?: Variation[];
+  first_image: string | StaticImageData | null;
   quantity: number;
-  section?: string;  
-product_name?: string
-
+  section?: string;
+  name?: string;
 }
+
 
 
 export interface Manufacturer {
@@ -374,7 +383,7 @@ export interface Manufacturer {
 export interface OrderProduct {
   discription: string;
   id: string;
-  images: ImageData[];
+  images: [];
 }
 export interface OrderItem {
   id: string;
@@ -561,6 +570,7 @@ export interface OrderDetailsPageProps {
 export interface QuantitySelectorProps {
   productId?: string | number;
   quantity: number;
+  main_value?: string;
   onChange: (newQty: number, id?: string | number) => void;
 
   // optional styling props
@@ -652,7 +662,7 @@ export type Address = {
   is_default: boolean;
 };
 export type OrderAddress = {
-  id: string|null;
+  id: string | null;
   country: string;
   full_name: string;
   phone: string;
@@ -663,6 +673,8 @@ export type OrderAddress = {
   is_default: boolean;
 };
 export type GuestCheckoutAddress = {
+  first_name: string;
+  last_name: string;
   guest_email: string;
   guest_phone: string;
   guest_address_line1: string;
@@ -848,3 +860,44 @@ export type AuthStep =
   | "forgot"
   | "resetVerify"
   | "resetPassword";
+
+export interface ShippingInfo {
+  city: string | null;
+  country: string | null;
+  line1: string | null;
+  line2: string | null;
+  postal_code: string | null;
+  state: string | null;
+}
+
+export interface OrderItem {
+  image: string;
+  manufacturer: string;
+  name: string;
+  product_id: string;
+  quantity: number;
+  total_price: number;
+  unit_price: number;
+}
+
+export interface SingleOrder {
+  created_at: string;
+  items: OrderItem[];
+  order_id: string;
+  payment_status: string;
+  shipping: number;
+  shipping_info: ShippingInfo;
+  status: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+}
+
+export interface OrderData {
+  checkout_id: string;
+  orders: SingleOrder[];
+}
+
+export interface OrderState {
+  orderData: OrderData | null;
+}

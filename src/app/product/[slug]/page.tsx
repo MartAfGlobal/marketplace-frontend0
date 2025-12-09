@@ -4,29 +4,33 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/index";
 import { useParams } from "next/navigation";
-
 import Image from "next/image";
 import DetailPageNavbar from "@/components/ui/navigation/detail-page-nav";
 import truck from "@/assets/icons/truck.png";
 import Security from "@/assets/icons/security-check.svg";
 import refund from "@/assets/icons/refund.svg";
-
 import Location from "@/assets/mobile/MapPinArea.png";
 import phone from "@/assets/mobile/Phone.png";
 import Heart from "@/assets/icons/heart.svg";
 import Share from "@/assets/icons/share.svg";
 import SizeColorSelector from "@/components/ui/Button/SizeColorSelector";
-import ItemAddToCart from "@/components/ui/ItemAddToCart";
+import ItemAddToCart, {
+  SelectedVariationSize,
+} from "@/components/ui/ItemAddToCart";
 import ProductNav from "@/components/ui/navigation/ProductNavView";
 import MoreDetailedPage from "@/components/ui/DetailPage/MoreDetailedPage";
 import ProductCard from "@/components/ui/cards/ProductCard";
-import QuantitySelector from "@/components/ui/cart/quantityControl";
+
 import ProductDetailCategory from "@/components/ui/mobile/product-detail.categories";
 import CartButton from "@/components/ui/cart/cartButton";
 import { Button } from "@/components/ui/Button/Button";
-import { addToCart, updateQuantity } from "@/store/cart/cartSlice";
+
 import CartBtn from "@/assets/mobile/cart.png";
-import { Variations } from "@/types/global";
+
+import {
+  updateSelectedVariation,
+  clearSelectedVariation,
+} from "@/store/slices/variationSelectorSlice";
 
 export default function ProductPage() {
   const dispatch = useDispatch();
@@ -40,10 +44,52 @@ export default function ProductPage() {
     state.products.items.find((p) => p.slug === slug)
   );
 
-  const [selectedVariation, setSelectedVariation] = useState<Variations | null>(
-    product?.variations?.[0] || null
+  const variationSelector = useSelector(
+    (state: RootState) => state.selectedVariation
   );
-  // if product not found, return fallback
+
+  console.log("variatonsSElector:", variationSelector);
+
+  const [selectedVariation, setSelectedVariation] =
+    useState<SelectedVariationSize | null>(null);
+
+  useEffect(() => {
+    if (
+      product &&
+      variationSelector.variation_id &&
+      variationSelector.slug === product.slug &&
+      product.grouped_variations
+    ) {
+      const match = product.grouped_variations.find(
+        (v) => v.id === variationSelector.variation_id
+      );
+
+      if (match) {
+        const mappedVariation: SelectedVariationSize = {
+          variation_id: match.id,
+          main_value: match.main_value,
+          size: match.size ?? "",
+          price: match.price ?? product.price,
+          main_image:
+            typeof match.main_image === "string"
+              ? match.main_image
+              : match.main_image?.src,
+          sku: match.sku,
+          stock: match.stock,
+          is_default: match.is_default,
+        };
+
+        setSelectedVariation(mappedVariation);
+      }
+    }
+  }, [variationSelector, product]);
+
+  // useEffect(() => {
+  //   return () => {
+  //     dispatch(clearSelectedVariation());
+  //   };
+  // }, [dispatch]);
+
   if (!product) {
     return (
       <main className="p-6">
@@ -52,19 +98,23 @@ export default function ProductPage() {
     );
   }
 
-  const cartItem = useSelector((state: RootState) =>
-    state.cart.items.find((item) => item.id === product.id)
-  );
-  const quantity = cartItem?.quantity ?? 1;
-
   const relatedProducts = useSelector((state: RootState) =>
     state.products.items.filter(
-      (p) => p.category === product.category && p.id !== product.id
+      (p) => p.category_name === product.category_name && p.id !== product.id
     )
   );
 
-  const images = Array.isArray(product.image) ? product.image : [product.image];
-  const [selectedImage, setSelectedImage] = useState(images[0] || "");
+  const rawImages = (
+    Array.isArray(product.all_images)
+      ? product.all_images
+      : [product.all_images]
+  ) as (string | undefined | null)[];
+
+  const images: string[] = rawImages.filter(
+    (img): img is string => typeof img === "string" && img.trim().length > 0
+  );
+
+  const [selectedImage, setSelectedImage] = useState<string>(images[0] ?? "");
   const [activeSlide, setActiveSlide] = useState(0);
 
   return (
@@ -77,11 +127,11 @@ export default function ProductPage() {
       <div className="flex flex-col md:flex-row md:gap-c67 justify-center">
         <div className="flex flex-col gap-c32 w-full ">
           <div className="flex flex-col md:flex-row items-start gap-4 md:gap-12 px-5.5 md:px-0 mt-6 md:border-b md:border-gray-200 h-fit pb-1.5 ">
-            <div className="w-full ">
+            <div className="w-full  md:max-w-99.5 overflow-hidden">
               <div className="w-full md:min-w-c397 h-fit md:h-c386-58 mb-1 md:mb-4 flex-shrink-0">
                 <Image
                   src={selectedImage}
-                  alt={product.category || product.name || "name"}
+                  alt={product.name || "Product"}
                   width={397}
                   height={387}
                   className="object-cover w-full md:max-w-c397 md:h-c386-58 h-85 rounded-lg border"
@@ -106,7 +156,7 @@ export default function ProductPage() {
               </div>
 
               {images.length > 1 && (
-                <div className="flex gap-3 mb-4 h-c66-81">
+                <div className="flex gap-3 mb-4 h-c66-81 w-full flex-shrink-0 overflow-x-auto overflow-y-hidden hcustom-scroll">
                   {images.map((thumb, index) => (
                     <button
                       key={index}
@@ -114,7 +164,7 @@ export default function ProductPage() {
                         setSelectedImage(thumb);
                         setActiveSlide(index);
                       }}
-                      className={`w-c66-81 h-c66-81 overflow-hidden border-2 ${
+                      className={`w-c66-81 h-c66-81 flex-shrink-0  border-2 ${
                         activeSlide === index
                           ? "my-gradient-border"
                           : "border-transparent"
@@ -135,15 +185,15 @@ export default function ProductPage() {
 
             {/* Product details */}
             <div className="w-full md:max-w-c376">
-              <div className="flex items-start justify-between">
+              <div className="">
                 <div>
                   <h1 className="text-161616 font-MontserratMedium text-base md:text-c18 mb-3">
-                    {product.category}
+                    {product.name || "Category Name"}
                   </h1>
                   <p className="md:text-c32 text-c20 font-MontserratSemiBold md:mb-2">
                     N{product.price}
                   </p>
-                  {product.onSale && (
+                  {product.inventory !== undefined && product.inventory > 0 && (
                     <span className="md:text-base text-sm font-MontserratSemiBold mt-1 md:mt-2 text-2d7565">
                       In stock
                     </span>
@@ -168,18 +218,6 @@ export default function ProductPage() {
                     <p className="font-MontserratMedium text-sm text-161616">
                       4.5/5
                     </p>
-                  </div>
-
-                  <div className="md:hidden mt-3">
-                    <QuantitySelector
-                      productId={product.id}
-                      quantity={quantity}
-                      onChange={(newQty, id) => {
-                        dispatch(
-                          updateQuantity({ id: product.id, quantity: newQty })
-                        );
-                      }}
-                    />
                   </div>
                 </div>
 
@@ -206,8 +244,18 @@ export default function ProductPage() {
               </h1>
               <SizeColorSelector
                 product={product}
-                selectedVariation={selectedVariation}
-                setSelectedVariation={setSelectedVariation}
+                setSelectedVariation={(v) => {
+                  if (v) {
+                    setSelectedVariation(v);
+                    dispatch(
+                      updateSelectedVariation({
+                        variation_id: v.variation_id,
+                        variationData: v,
+                        slug: product.slug ?? "",
+                      })
+                    );
+                  }
+                }}
               />
             </div>
           </div>
@@ -338,7 +386,7 @@ export default function ProductPage() {
       </div>
 
       <div className="md:hidden">
-        <ProductDetailCategory slug={product.category || "new"} />
+        <ProductDetailCategory slug={product.category_name || "new"} />
       </div>
 
       {/* Similar products */}

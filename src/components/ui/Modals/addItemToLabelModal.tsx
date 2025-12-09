@@ -128,8 +128,6 @@ export default function AddItemtoLabelModal({
       successRes: (res) => {
         console.log("Cart API success:", res.data.items);
         if (Array.isArray(res.data.items)) {
-         
-
           res.data.items.forEach((item: WishlistItem) => {
             dispatch(
               addItemToWishlistLabel({
@@ -220,7 +218,7 @@ export default function AddItemtoLabelModal({
                       </button>
                       <div className="flex gap-3 items-center">
                         <Image
-                          src={item.product.image || "/placeholder.png"}
+                          src={item.product.first_image|| "/placeholder.png"}
                           alt={item.product.name || "Wishlist item image"}
                           width={64}
                           height={64}
@@ -230,7 +228,7 @@ export default function AddItemtoLabelModal({
                         <div className="flex flex-col gap-4">
                           <div>
                             <p className="text-c12 font-MontserratSemiBold mb-1">
-                              {item.product.product_name}
+                              {item.product.name}
                             </p>
                           </div>
                           <span className="text-base font-MontserratSemiBold">
@@ -248,7 +246,7 @@ export default function AddItemtoLabelModal({
                       viewBox="0 0 64 64"
                       stroke="currentColor"
                       strokeWidth="2"
-                     className="w-16 h-16 text-ff715b"
+                      className="w-16 h-16 text-ff715b"
                       animate={{
                         rotate: [0, -5, 5, -5, 5, 0],
                       }}
@@ -325,7 +323,7 @@ export default function AddItemtoLabelModal({
                     </motion.svg>
 
                     <p className="text-sm font-MontserratRegular text-center">
-                      All items are already added to{" "} <br />
+                      All items are already added to <br />
                       <span className="font-MontserratSemiBold text-ff715b">
                         {labelName}
                       </span>
@@ -339,14 +337,16 @@ export default function AddItemtoLabelModal({
               <Button onClick={onClose} variant="secondary">
                 Cancel
               </Button>
-              {itemsNotInLabel.length > 0 && <Button
-                className="flex  gap-2"
-                onClick={handleAddItemToLIst}
-                disabled={creating}
-              >
-                <Image src={Plus} alt="add" width={13} height={13} />
-                {addingItem ? <LoadingSpinner /> : "Add Item"}
-              </Button>}
+              {itemsNotInLabel.length > 0 && (
+                <Button
+                  className="flex  gap-2"
+                  onClick={handleAddItemToLIst}
+                  disabled={creating}
+                >
+                  <Image src={Plus} alt="add" width={13} height={13} />
+                  {addingItem ? <LoadingSpinner /> : "Add Item"}
+                </Button>
+              )}
             </div>
           </motion.div>
         </>
