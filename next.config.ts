@@ -2,44 +2,50 @@ import type { NextConfig } from "next";
 import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
-    domains: ["res.cloudinary.com", "flagcdn.com"],
     remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "http", // 👈 ADD THIS
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "flagcdn.com",
+      },
       {
         protocol: "http",
         hostname: "localhost",
-        port: "3000", // 👈 allow localhost images in dev
+        port: "3000",
       },
     ],
   },
+
   webpack(config) {
-    // 👇 SVG as React Component
     config.module.rules.push({
       test: /\.svg$/i,
-      resourceQuery: /component/, // usage: import Icon from 'file.svg?component'
+      resourceQuery: /component/,
       use: ["@svgr/webpack"],
     });
 
-    // 👇 SVG as file URL (for <Image src="..." />)
     config.module.rules.push({
       test: /\.svg$/i,
       type: "asset/resource",
-      resourceQuery: { not: [/component/] }, // default when ?component is not used
+      resourceQuery: { not: [/component/] },
     });
 
     return config;
   },
+
+  turbopack: {},
 };
 
-// ✅ Wrap config with PWA support
-const withPWAWrapped = withPWA({
+export default withPWA({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === "development", // disable during dev mode
+  disable: process.env.NODE_ENV === "development",
 })(nextConfig);
-
-export default withPWAWrapped;
