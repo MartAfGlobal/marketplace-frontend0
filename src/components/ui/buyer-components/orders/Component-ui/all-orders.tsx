@@ -131,10 +131,6 @@ export default function Orders() {
     orders.filter((order: any) => order.id)
   );
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
-
   const handleCopy = (orderNo: string) => {
     navigator.clipboard
       .writeText(orderNo)
@@ -178,9 +174,7 @@ export default function Orders() {
                 <Button className="w-51">Start shopping</Button>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 ">
-                  {fashionProducts.slice(0, visible).map((item) => (
-                    <ProductCard key={item.id} product={item} />
-                  ))}
+                
                 </div>
               </motion.div>
             ) : (
@@ -267,7 +261,7 @@ export default function Orders() {
                               >
                                 <Image
                                   src={
-                                    prod.product?.image || "/placeholder.png"
+                                    prod.product?.main_image.medium || "/placeholder.png"
                                   }
                                   alt={prod.product?.name || "Product Image"}
                                   width={96}
@@ -330,7 +324,7 @@ export default function Orders() {
                                     <div className="w-24 h-24 relative">
                                       <Image
                                         src={
-                                          prod.product?.image ||
+                                          prod.product?.main_image.medium ||
                                           "/placeholder.png"
                                         }
                                         alt={
@@ -393,7 +387,7 @@ export default function Orders() {
                               {item.items?.[0] && (
                                 <Image
                                   src={
-                                    item.items[0].product?.image ||
+                                    item.items[0].product?.main_image.medium ||
                                     "/placeholder.png"
                                   }
                                   alt={

@@ -4,8 +4,8 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import Caretleft from "@/assets/mobile/CaretLeft.png";
 import MoreDetailedPage from "@/components/ui/DetailPage/MoreDetailedPage";
- // <-- adjust path
-import { Product } from "@/types/global";
+
+
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 
@@ -14,13 +14,10 @@ export default function ReviewsPage() {
   const params = useParams();
   const slug = params?.slug as string;
 
-    const cartItems = useSelector((state: RootState) => state.cart.items);
-  // Find product from your data using slug
-  const product: Product | undefined = cartItems.find(
-    (p) => p.slug === slug
-  );
 
-  if (!product) {
+
+
+  if (!slug) {
     return (
       <div className="py-5 px-6">
         <button onClick={() => router.back()}>
@@ -39,8 +36,8 @@ export default function ReviewsPage() {
         </button>
         <h1 className="font-MontserratSemiBold text-base">Ratings & Reviews</h1>
       </div>
-
-      <MoreDetailedPage product={product} />
+{/* 
+      <MoreDetailedPage product={product} /> */}
     </div>
   );
 }

@@ -48,9 +48,7 @@ export default function OrderOnTheWayPage() {
       setIsBottomSheetOpen(false);
     }
   };
-    const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+
 
   const handleTakePhoto = () => {
     if (fileInputRef.current) {
@@ -364,16 +362,7 @@ export default function OrderOnTheWayPage() {
           }}
           className="grid grid-cols-2 sm:grid-cols-4 justify-center lg:grid-cols-6 gap-2.5"
         >
-          {fashionProducts.map((item) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <ProductCard product={item} />
-            </motion.div>
-          ))}
+       
         </motion.div>
       </div>
     </div>

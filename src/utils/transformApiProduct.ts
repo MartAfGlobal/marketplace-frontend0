@@ -1,4 +1,4 @@
-import { Product, Variations } from "@/types/global";
+import { Product } from "@/types/global";
 
 /**
  * Map API product shape -> your Product type.

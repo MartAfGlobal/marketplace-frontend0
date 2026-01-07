@@ -88,9 +88,9 @@ const handleDeleteLabel = () => {
   }, [token, sendHttpRequest, dispatch]);
 
   return (
-    <div className="w-full flex flex-col flex-1 min-h-screen bg-white">
-      <div className="sticky top-20 z-40 bg-white shadow-sm  md:px-0">
-        <div className="flex justify-between items-center mt-c32 pb-3 md:w-full">
+    <div className="w-full flex flex-col flex-1 md:mt-20">
+      <div className="sticky top-20 z-80     md:px-0 ">
+        <div className="flex  justify-between items-center  bg-white pb-3 md:w-full">
           <OrdersNav
             tabs={tabs}
             activeTab={activeTab}
@@ -138,7 +138,7 @@ const handleDeleteLabel = () => {
       </div>
 
     
-      <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
+      <div className="flex-1 overflow-y-auto no-scrollbar ">
         <div className="md:pt-c32 md:pb-c60">
           {activeTab === "All" && (
             <AllWishlist

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 const tabs = [
   { id: "details", label: "Product Details" },
-  { id: "specs", label: "Product Specification" },
+  { id: "specifications", label: "Product Specification" },
   { id: "reviews", label: "Reviews" },
   { id: "similar", label: "Similar Items" },
 ];
@@ -59,7 +59,7 @@ export default function ProductNav() {
   }, [activeTab]);
 
   return (
-    <div className="sticky top-0 z-50 bg-[rgba(148,127,255,0.15)]   bg-opacity-40 w-full">
+    <div className=" z-50 bg-[rgba(148,127,255,0.15)]   bg-opacity-40 w-full">
       <div className="relative flex border-b border-gray-200">
         {tabs.map((tab, index) => (
           <button

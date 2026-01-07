@@ -1,11 +1,11 @@
 // store/cart/wishlist-slice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Product, Variations } from "@/types/global";
+import { Product,  } from "@/types/global";
 
 export interface WishlistItem {
   id: number | string;            
   product: Product;               
-  variation?: Variations | null;  
+ 
   image?: string;                
   label?: string | null;
   price?: number;
@@ -15,7 +15,7 @@ export interface WishlistItem {
   formatted_subtotal?: string;
   price_at_purchase?: number;
   variation_display?: string;
-  selectedVariation?: Variations;
+ 
   
 }
 

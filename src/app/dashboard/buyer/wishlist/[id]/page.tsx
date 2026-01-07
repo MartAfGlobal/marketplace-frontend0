@@ -9,7 +9,7 @@ import Link from "next/link";
 import NavBack from "@/assets/icons/navBacksmall.png";
 import { useHttp } from "@/hooks/use-http";
 import { useEffect, useState } from "react";
-import { Product, Variations } from "@/types/global";
+import { Product} from "@/types/global";
 import { removeFromWishlist, WishlistItem } from "@/store/cart/wishlist-slice";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
@@ -29,6 +29,7 @@ import {
   removeItemsFromWishlistLabel,
 } from "@/store/wishlistLabel/wishlistLabelSlice";
 import EmptyCartIcon from "@/components/ui/cart/EmptyCartIcon";
+import AddCartModal from "@/components/ui/Modals/addToCart/addTocart-modal";
 
 export default function CategoryPage() {
   const { id } = useParams();
@@ -65,9 +66,7 @@ export default function CategoryPage() {
 
   const [CreateModal, setCreateModal] = useState(false);
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
-  const [selectedVariations, setSelectedVariations] = useState<{
-    [key: string]: Variations | null;
-  }>({});
+
   const { loading: rmoving, sendHttpRequest: removeReq } = useHttp();
   const { loading: itemRemove, sendHttpRequest: itemRemoveReq } = useHttp();
   const [loadingRem, setLoadRem] = useState<Record<string, boolean>>({});
@@ -77,7 +76,7 @@ export default function CategoryPage() {
       const productId = String(item.product?.id ?? item.id);
       return selectedItems[productId];
     });
-
+const [selectedSlug, setSelectedSlug] = useState<string>("");
   const handleToggleSelectAll = () => {
     if (allSelected) {
       setSelectedItems({});
@@ -90,6 +89,7 @@ export default function CategoryPage() {
       setSelectedItems(newSelections);
     }
   };
+    const [openAddToCart, setOpenAddToCart] = useState(false);
   const handleWishListRemoveItem = (itemId: string | number) => {
     setLoadRem((s) => ({ ...s, [itemId]: true }));
 
@@ -169,82 +169,13 @@ export default function CategoryPage() {
   };
 
   const handleAddToCart =
-    (wishlistItem: WishlistItem) => async (e: React.MouseEvent) => {
+    (productSlug: string) => async (e: React.MouseEvent) => {
       e.stopPropagation();
 
-      const product: Product = wishlistItem.product ?? (wishlistItem as any);
-      const productId = String(product.id);
-      console.log("whanyfftftf:", wishlistItem);
-
-      setLoadingIds((s) => ({ ...s, [productId]: true }));
-
-      const selectedVariation: Variations | null =
-        selectedVariations[productId] ??
-        (Array.isArray(product?.variations) ? product.variations[0] : null);
-
-      try {
-        if (!token) {
-          dispatch(
-            addToCart({
-              ...product,
-              product_id: productId,
-              quantity: 1,
-              variation_display: selectedVariation
-                ? `${selectedVariation.size} / ${selectedVariation.color}`
-                : undefined,
-              price_at_purchase: product.price,
-            })
-          );
-          toast.success("Item added to cart (offline mode)");
-          return;
-        }
-
-        await sendHttpRequest({
-          requestConfig: {
-            url: "/cart/add",
-            method: "POST",
-            token,
-            isAuth: true,
-            userType: "buyer",
-            body: {
-              product_id: productId,
-              variation_id: selectedVariation?.id,
-              quantity: 1,
-              check: true,
-            },
-            successMessage: "Item added to cart successfully",
-          },
-          successRes: (res: any) => {
-            dispatch(
-              addToCart({
-                ...product,
-                product_id: productId,
-                quantity: 1,
-                variation_display: selectedVariation
-                  ? `${selectedVariation.size} / ${selectedVariation.color}`
-                  : undefined,
-                price_at_purchase: product.price,
-              })
-            );
-          },
-        });
-      } catch (err: any) {
-        console.error("label API failed:", err);
-        dispatch(
-          addToCart({
-            ...product,
-            product_id: productId,
-            quantity: 1,
-            variation_display: selectedVariation
-              ? `${selectedVariation.size} / ${selectedVariation.color}`
-              : undefined,
-            price_at_purchase: product.price,
-          })
-        );
-        toast.error("Network error — added to local cart");
-      } finally {
-        setLoadingIds((s) => ({ ...s, [productId]: false }));
-      }
+      setSelectedSlug(productSlug);
+      setTimeout(() => {
+        setOpenAddToCart(true);
+      }, 0);
     };
 
 
@@ -492,9 +423,9 @@ export default function CategoryPage() {
                                 )}
                               </button>
                               <Image
-                                src={product.image || "/placeholder.png"}
+                                src={product.main_image.medium || "/placeholder.png"}
                                 alt={
-                                  product.product_name || "Wishlist item image"
+                                  product.name || "Wishlist item image"
                                 }
                                 width={100}
                                 height={100}
@@ -503,16 +434,16 @@ export default function CategoryPage() {
                             </div>
                             <div className="w-full md:max-w-143.75">
                               <p className="font-MontserratSemiBold text-c12 md:text-sm pb-1 text-000000">
-                                {product.product_name}
+                                {product.name}
                               </p>
                               <p className="font-MontserratSemiBold  text-base md:text-c18 pt-3 leading-6.5">
-                                ₦{product.price}
+                                ₦{product.base_price}
                               </p>
                             </div>
                           </div>
 
                           <button
-                            onClick={handleAddToCart(item)}
+                            onClick={handleAddToCart(product.slug)}
                             className={`w-10 h-10 flex justify-center md:hidden items-center rounded-full border flex-shrink-0 border-ff715b $}`}
                           >
                             {loadingIds[productId] ? (
@@ -528,7 +459,7 @@ export default function CategoryPage() {
                           </button>
 
                           <div className="hidden md:flex flex-col w-full max-w-52.5 space-y-4">
-                            <Button onClick={handleAddToCart(item)}>
+                            <Button onClick={handleAddToCart(product.slug)}>
                               {loadingIds[productId] ? (
                                 <LoadingSpinner />
                               ) : (
@@ -602,6 +533,11 @@ export default function CategoryPage() {
           </motion.div>
         </div>
       </AnimatePresence>
+        <AddCartModal
+              isOpen={openAddToCart}
+              onClose={() => setOpenAddToCart(false)}
+              productSlug={selectedSlug}
+            />
     </div>
   );
 }

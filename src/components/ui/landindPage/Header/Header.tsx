@@ -106,7 +106,18 @@ export default function Header() {
               onClick={() => setUserOpen((prev) => !prev)}
               className="flex items-center gap-2"
             >
-              <Image src={User} alt="User" width={30} height={30} />
+              {token ? (
+                <div className="h-7.5 w-7.5 border-1 border-fffff rounded-full flex justify-center items-center overflow-hidden">
+                  <Image
+                    src={buyer.profile.profile_picture}
+                    alt="User"
+                    width={30}
+                    height={30}
+                  />
+                </div>
+              ) : (
+                <Image src={User} alt="User" width={30} height={30} />
+              )}
 
               {token && (
                 <span className="lg:text-base md:text-sm font-MontserratSemiBold hidden text-nowrap lg:flex  text-ffffff">
@@ -179,9 +190,20 @@ export default function Header() {
               <CartButton />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Image src={User} alt="User" width={19.52} height={18.77} />
-            </div>
+            {token ? (
+              <div className="h-5 w-5 border-1 border-ffffff rounded-full flex justify-center items-center overflow-hidden">
+                <Image
+                  src={buyer.profile.profile_picture}
+                  alt="User"
+                  width={20}
+                  height={20}
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Image src={User} alt="User" width={19.52} height={18.77} />
+              </div>
+            )}
 
             <div className="flex items-center gap-2">
               <h1 className="text-ffffff font-MontserratMedium text-c14">EN</h1>

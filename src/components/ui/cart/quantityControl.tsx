@@ -1,5 +1,5 @@
 "use client";
-import { QuantitySelectorProps, Sizes } from "@/types/global";
+import { QuantitySelectorProps } from "@/types/global";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -75,17 +75,13 @@ export default function QuantitySelector({
 
 
 
-const productContainingVariation = products.find((product) =>
-  product.grouped_variations?.some((variationGroup) =>
-    variationGroup.sizes?.some((size: Sizes) => size.variation_id === variation_id)
-  )
-);
+
  const variationDisplay = `${group_variation?.main_value ?? ""}${
    selectedSize?.size ? ` / ${selectedSize?.size}` : ""
   }`;
 
 
-const product_slug = productContainingVariation?.slug;
+
 
 
   const addItemToCartBackend = async () => {
@@ -108,12 +104,12 @@ const product_slug = productContainingVariation?.slug;
         console.log("Add to cart response:", res);  
         const price =
           selectedSize?.price ||
-          products.find((p) => p.id === productId)?.price ||
+          products.find((p) => p.id === productId)?.base_price ||
           0;
 
         dispatch(
           addToCart({
-             product_slug: product_slug || "",
+             product_slug: products.find((p)=>p.id ===productId)?.slug || "",
             variation_display: variationDisplay,
             product_id: productId,
             variation_id: variation_id || "",
@@ -161,7 +157,7 @@ const product_slug = productContainingVariation?.slug;
       } else {
         dispatch(
           addGuestItemToCart({
-            product_slug: product_slug || "",
+            product_slug: products.find((p)=>p.id ===productId)?.slug || "",
             variation_display: variationDisplay,
             product_id: productId,
             variation_id: variation_id || "",
@@ -169,7 +165,7 @@ const product_slug = productContainingVariation?.slug;
             product_image: group_variation?.main_image || "",
             price:
               selectedSize?.price ||
-              products.find((p) => p.id === productId)?.price ||
+              products.find((p) => p.id === productId)?.base_price ||
               "",
             product_name: products.find((p) => p.id === productId)?.name || "",
             checked: true,

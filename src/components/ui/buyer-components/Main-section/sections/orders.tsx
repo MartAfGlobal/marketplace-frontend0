@@ -39,7 +39,6 @@ export default function Orders() {
     (state: RootState) => state.token?.token ?? undefined
   );
 
-  const cartItems = useSelector((state: RootState) => state.cart.items);
 
   // const token = useSelector((state: any) => state.token?.token);
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
@@ -181,12 +180,12 @@ export default function Orders() {
         <p className="font-MontserratSemiBold text-base leading-c24 text-000000">
           Orders
         </p>
-        <Link
+       { orders.length > 0 && <Link
           href="/dashboard/buyer/orders"
           className="font-MontserratSemiBold text-ff715b text-sm leading-c20"
         >
           view all
-        </Link>
+        </Link>}
       </div>
       <div className="flex gap-8 w-full overflow-x-auto py-4   xl:gap-c32">
         {Orderahistory.map((item) => (
@@ -211,12 +210,12 @@ export default function Orders() {
           </div>
         ))}
       </div>
-      <div className="w-full">
+      {orders.length > 0 ?(<div className="w-full">
         <h1 className="text-sm font-MontserratSemiBold leading-6.5 text-000000 opacity-32">
           Last orders
         </h1>
         <div className="w-full space-y-c24 mt-c32">
-          {orders.slice(-2).map((item: OrderItem) => (
+          {orders.slice(-2).map((item: any) => (
             <div key={item.id}>
               <div className="w-full flex justify-between mb-c32">
                 <p className="text-sm font-MontserratNormal leading-c20 text-000000">
@@ -239,7 +238,7 @@ export default function Orders() {
               <div className="w-full justify-between flex">
                 <div className="flex gap-4 items-start">
                   <Image
-                    src={item.items?.[0]?.product?.image || "/placeholder.png"}
+                    src={item.items?.[0]?.product?.image|| "/placeholder.png"}
                     alt={item.items?.[0]?.product?.name || "Product Image"}
                     width={96}
                     height={96}
@@ -353,7 +352,14 @@ export default function Orders() {
             </div>
           ))}
         </div>
-      </div>
+      </div>): (<div className="w-full h-40 flex justify-center items-center flex-col gap-4">
+
+           <h1 className="text-sm font-MontserratSemiBold leading-6.5 text-000000 opacity-32">
+          No orders yet
+        </h1>
+        
+          <p className="text-sm font-MontserratNormal text-000000 opacity-20">When you place an order, it will appear here.</p>
+      </div>)}
 
       <ConfirmModal
         isOpen={open}

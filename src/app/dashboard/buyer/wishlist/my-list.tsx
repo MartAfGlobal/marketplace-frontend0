@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Filter from "@/assets/icons/filter.png";
 import { addToCart } from "@/store/cart/cartSlice";
 import { toast } from "sonner";
-import { Product, Variations } from "@/types/global";
+import { Product} from "@/types/global";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Cookies from "js-cookie";
@@ -168,6 +168,7 @@ export default function Mylist({
       setSelectedItems(newSelections);
     }
   };
+  console.log("local itemsssssss:", localLabelItems)
   return (
     <div className="px-6 md:px-0">
       <div className="w-full h-c56 mb-4 md:mb-c32 flex justify-between items-center md:hidden">
@@ -274,25 +275,25 @@ export default function Mylist({
                   >
                     <div className="w-full h-35.75 flex-shrink-0 ">
                       <Image
-                        src={item.product.image}
-                        alt={item.product.product_name}
+                        src={item.product.main_image.medium || "product image"}
+                        alt={item.product.name}
                         width={100}
                         height={100}
                         className="w-full h-full hidden md:flex"
                       />
                       <Image
-                        src={item.product.image}
-                        alt={item.product.product_name}
+                        src={item.product.main_image.medium }
+                        alt={item.product.name}
                         width={96}
                         height={96}
                         className="w-full h-full md:hidden"
                       />
                     </div>
                     <p className="text-base hidden md:flex font-MontserratSemiBold text-000000/60">
-                      {item.product.product_name}
+                      {item.product.name}
                     </p>
                     <p className="text-c18 mt-2.5  md:mt-0 font-MontserratSemiBold flex-shrink-0">
-                      ₦{item.product.price}
+                      ₦{item.product.base_price}
                     </p>
                   </div>
                 ))}

@@ -42,7 +42,8 @@ export default function AddressModal({
   const [formData, setFormData] = useState<Address>({
     id: 0,
     country: currentAddress?.country || "Nigeria",
-    full_name: "",
+    first_name: "",
+    last_name: "",
     phone: "",
     state: "",
     city: "",
@@ -88,7 +89,7 @@ export default function AddressModal({
 
   const SaveSuccess = (res: any) => {
     console.log("address INFO:", res);
-     dispatch(buyerActions.addBuyerAddress(res.data))
+    dispatch(buyerActions.addBuyerAddress(res.data));
 
     setStreetError("");
     onSave?.(formData);
@@ -110,6 +111,7 @@ export default function AddressModal({
         body: bodyWithoutId,
         token: token ?? undefined,
         isAuth: true,
+        userType: "buyer",
         successMessage: "address added successful!",
       },
       successRes: SaveSuccess,
@@ -175,44 +177,59 @@ export default function AddressModal({
                 <div className="flex gap-c24 w-full">
                   <div className="flex flex-col gap-2 relative w-1/2">
                     <Label className="text-c12 font-MontserratMedium">
-                      Full Name
+                      First Name
                     </Label>
                     <Input
                       id="full_name"
                       name="full_name"
                       type="text"
-                      value={formData.full_name}
+                      value={formData.first_name}
                       onChange={(e) =>
-                        handleChange("full_name", e.target.value)
+                        handleChange("first_name", e.target.value)
                       }
                       placeholder="John Doe"
                       className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
                     />
                   </div>
-
                   <div className="flex flex-col gap-2 relative w-1/2">
                     <Label className="text-c12 font-MontserratMedium">
-                      Mobile Number
+                      Last Name
                     </Label>
-                    <div className="relative w-full flex items-center">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                        <Image
-                          src={MobileIcon}
-                          alt="Mobile Number"
-                          width={15.62}
-                          height={15.62}
-                        />
-                      </div>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="text"
-                        value={formData.phone}
-                        onChange={(e) => handleChange("phone", e.target.value)}
-                        placeholder="+2347058675432"
-                        className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(e) =>
+                        handleChange("last_name", e.target.value)
+                      }
+                      placeholder="John Doe"
+                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 relative w-1/2">
+                  <Label className="text-c12 font-MontserratMedium">
+                    Mobile Number
+                  </Label>
+                  <div className="relative w-full flex items-center">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                      <Image
+                        src={MobileIcon}
+                        alt="Mobile Number"
+                        width={15.62}
+                        height={15.62}
                       />
                     </div>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="text"
+                      value={formData.phone}
+                      onChange={(e) => handleChange("phone", e.target.value)}
+                      placeholder="+2347058675432"
+                      className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
+                    />
                   </div>
                 </div>
               </div>
@@ -223,7 +240,6 @@ export default function AddressModal({
                 </p>
                 <div className="flex flex-col gap-c24">
                   <div className="flex gap-c24 w-full">
-                  
                     <div className="hidden"></div>
 
                     <div className="flex flex-col gap-2 relative w-1/2">
@@ -263,7 +279,9 @@ export default function AddressModal({
                       <Input
                         type="text"
                         value={formData.address}
-                        onChange={(e) => handleChange("address", e.target.value)}
+                        onChange={(e) =>
+                          handleChange("address", e.target.value)
+                        }
                         placeholder="12 Broad Street"
                         className={`border rounded-c8 p-4 pl-10 w-full text-c12 font-MontserratMedium ${
                           streetError ? "border-red-500" : "border-efefef"

@@ -127,7 +127,7 @@ export default function UserAddress({
             >
               <div className="flex justify-between items-center">
                 <p className="font-MontserratSemiBold text-c12 leading-c16">
-                  {item.full_name}
+                  {item.first_name}  {item.last_name}
                 </p>
                 <motion.div
                   layout

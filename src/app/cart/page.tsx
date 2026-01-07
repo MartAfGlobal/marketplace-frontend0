@@ -39,7 +39,7 @@ import EmptyCartIcon from "@/components/ui/cart/EmptyCartIcon";
 import DotSpinner from "@/components/reloadSpinner/DotSpinner";
 import { g, i } from "framer-motion/client";
 import { Size } from "recharts/types/util/types";
-import { Sizes } from "@/types/global";
+
 import { setSelectedVariation } from "@/store/slices/variationSelectorSlice";
 
 export default function CartPage() {
@@ -67,6 +67,7 @@ export default function CartPage() {
     if (newQty < 1) return;
     setLocalQty(newQty);
   };
+  const hasSyncedGuestCart = useRef(false);
 
   const persistLocalCart = (items: any[]) => {
     try {
@@ -89,16 +90,24 @@ export default function CartPage() {
   const products = useSelector((state: RootState) => state.products.items);
 
   useEffect(() => {
-    // Only run when user is NOT logged in
-    if (!token) {
+    try {
       const stored = JSON.parse(localStorage.getItem("cart") || "[]");
       setGuestCart(stored);
+    } catch {
+      setGuestCart([]);
     }
-  }, [token]);
+  }, []);
 
   console.log("Guest cart items:", guestCart);
 
-  console.log("Guest cart items:", guestCart);
+  const mapGuestCartForSync = (items: any[]) =>
+    items
+      .filter((item) => item.variation_id && item.product_id) // only valid
+      .map((item) => ({
+        variation_id: item.variation_id,
+        product_id: item.product_id,
+        quantity: item.quantity || 1,
+      }));
 
   console.log("products items in Redux:", products);
 
@@ -245,17 +254,6 @@ export default function CartPage() {
           });
           setSelectedItems(newSelected);
 
-          await sendHttpRequest({
-            requestConfig: {
-              url: "/cart/sync/",
-              method: "POST",
-              token,
-              isAuth: true,
-              userType: "buyer",
-              body: { items: merged.map(({ variation_id, ...r }) => r) },
-            },
-            successRes: () => {},
-          });
           setSyncingCart(false);
         },
       });
@@ -265,6 +263,41 @@ export default function CartPage() {
       setSyncingCart(false);
     }
   };
+
+  useEffect(() => {
+    if (!token) return;
+    if (!guestCart || guestCart.length === 0) return;
+    if (hasSyncedGuestCart.current) return;
+
+    const syncGuestCart = async () => {
+      try {
+        const payload = mapGuestCartForSync(guestCart);
+        if (payload.length === 0) return; // nothing valid to send
+
+        await sendHttpRequest({
+          requestConfig: {
+            url: "/cart/bulk_add/",
+            method: "POST",
+            token,
+            isAuth: true,
+            userType: "buyer",
+            body: { items: payload },
+          },
+          successRes: () => {
+            localStorage.removeItem("cart");
+            setGuestCart([]);
+            hasSyncedGuestCart.current = true; // ✅ move here
+          },
+        });
+      } catch (err) {
+        console.error("Guest cart sync failed", err);
+        toast.error("Failed to sync cart. Retrying...");
+        hasSyncedGuestCart.current = false; // allow retry
+      }
+    };
+
+    syncGuestCart();
+  }, [token, guestCart]);
 
   const handleToggleItem = async (item: any) => {
     const id = item.variation_id || item.product_id;
@@ -483,9 +516,7 @@ export default function CartPage() {
   );
 
   const selectedCount = Object.values(selectedItems).filter(Boolean).length;
-  const fashionProducts = cartItems.filter(
-    (p) => (p as any).category === "Fashion and Apparel"
-  );
+
 
   const handleClick = (items: CartItem) => {
     const defaultVariation = items;
@@ -503,10 +534,9 @@ export default function CartPage() {
       );
     }
 
-   router.push(`/product/${defaultVariation.product_slug}`);
+    router.push(`/product/${defaultVariation.product_slug}`);
     console.log("itemssssss", defaultVariation, variationSelector);
   };
-
 
   return (
     <>
@@ -824,11 +854,7 @@ export default function CartPage() {
                     <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
                       More to love
                     </p>
-                    {/* <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
-                    {fashionProducts.slice(0, visible).map((item) => (
-                      <ProductCard key={item.id} product={item} />
-                    ))}
-                  </div> */}
+                   
                   </div>
                 </div>
               </div>

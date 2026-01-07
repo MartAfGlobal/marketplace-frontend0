@@ -64,9 +64,6 @@ export default function OrderOnTheWayPage() {
       });
   };
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
 
   return (
     <div className="px-6">
@@ -130,7 +127,7 @@ export default function OrderOnTheWayPage() {
                 </p>
               </div>
               <div className="font-MontserratNormal text-c12 space-y-1 pt-3 pb-4  border-b border-black/5">
-                <p>{selectedAddress?.full_name}</p>
+                <p>{selectedAddress?.first_name}  {selectedAddress?.last_name}</p>
                 <p>{selectedAddress?.phone} </p>
                 <p>{selectedAddress?.address}</p>
               </div>
@@ -269,9 +266,7 @@ export default function OrderOnTheWayPage() {
             More to love
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
-            {fashionProducts.map((item) => (
-              <ProductCard key={item.id} product={item} />
-            ))}
+         
           </div>
         </div>
       </div>

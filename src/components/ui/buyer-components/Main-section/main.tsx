@@ -168,7 +168,7 @@ export default function UserMain() {
           viewport={{ once: false }}
           variants={ordersVariants}
         >
-          <Orders />
+       <Orders /> 
         </motion.section>
 
         <motion.section

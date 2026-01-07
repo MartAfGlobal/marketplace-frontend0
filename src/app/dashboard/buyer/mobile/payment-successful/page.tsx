@@ -29,9 +29,6 @@ export default function PaymentSuccessfulPage() {
 
 
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
 
   const totalPrice = cartItems.reduce((acc, item) => {
     const price = Number(String(item.price).replace(/[, ]/g, ""));  // removes commas & spaces
@@ -83,7 +80,7 @@ export default function PaymentSuccessfulPage() {
                   >
                     {cartItems.map((item) => (
                       <motion.div
-                        key={item.id}
+                        key={item.product_id}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -93,9 +90,9 @@ export default function PaymentSuccessfulPage() {
                           <div className="flex gap-4 w-full j items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
                               {(() => {
-                                const imageSrc = Array.isArray(item.image)
-                                  ? item.image[0]
-                                  : item.image ?? "";
+                                const imageSrc = Array.isArray(item.product_image)
+                                  ? item.product_image[0]
+                                  : item.product_image ?? "";
 
                                 // If no image, render a simple placeholder div to avoid Next/Image errors
                                 if (!imageSrc) {
@@ -119,7 +116,7 @@ export default function PaymentSuccessfulPage() {
                             </div>
                             <div className="w-full md:max-w-143.75">
                               <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                                {item.name}
+                                {item.product_name}
                               </p>
                               <p className="font-MontserratNormal text-c12 pb-3">
                                 Two piece shop
@@ -146,9 +143,7 @@ export default function PaymentSuccessfulPage() {
           More to love
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-          {fashionProducts.map((item) => (
-            <ProductCard key={item.id} product={item} />
-          ))}
+       
         </div>
       </div>
     </div>

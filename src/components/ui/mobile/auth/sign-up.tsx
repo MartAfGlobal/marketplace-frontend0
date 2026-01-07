@@ -112,13 +112,13 @@ export default function AuthModal({
             onClick={onClose}
           />
 
-          {/* Bottom Modal */}
+         <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999]">
           <motion.div
             initial={{ y: 100 }}
             animate={{ y: 0 }}
             exit={{ y: 100 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-0 left-3.5 right-3.5 bg-white rounded-t-2xl shadow-lg p-8 z-50"
+            className="w-full bg-white rounded-t-2xl shadow-lg p-8 z-50"
           >
             {/* ---------- SIGN UP ---------- */}
             {step === "signup" && (
@@ -262,6 +262,7 @@ export default function AuthModal({
               <ResetPasswordModal onClose={onClose} setStep={setStep} />
             )}
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

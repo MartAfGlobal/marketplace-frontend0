@@ -61,7 +61,7 @@ export default function HeroBackground() {
   }, []);
 
   return (
-    <div className="relative xl:max-w-[970px] w-full md:h-125 xl:h-145.5 overflow-hidden rounded-2xl">
+    <div className="relative xl:max-w-[970px] w-full md:h-125 xl:h-134 overflow-hidden rounded-2xl">
       <AnimatePresence mode="sync">
         {" "}
         {/* sync keeps both present until animation ends */}

@@ -48,23 +48,11 @@ export default function BuyerDashBoardPage() {
         userType: "buyer",
       },
       successRes: (res) => {
-        const wishlistItems =
-          res?.data?.results?.map((item: any) => ({
-            id: item.id,
-            product_id: item.product_id,
-            variation_id: item.variation_id,
-            quantity: item.quantity,
-            product: item.product,
-            variation: item.variation,
-            label: item.label,
-            image: item.product.image,
-            name: item.product.name,
-            price: item.product.price,
-            manufacturer: item.manufacturer,
-          })) || [];
+        const wishlistItems = res.data.results
+         
 
         console.log("Wishlist items fetched:", res);
-        dispatch(setWishlist(wishlistItems));
+         dispatch(setWishlist(wishlistItems));
       },
     });
 

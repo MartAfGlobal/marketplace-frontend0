@@ -19,15 +19,15 @@ export default function WishlistCard({ product }: { product: Product }) {
         <div className="relative h-[168px] w-full">
           <Image
             src={
-              Array.isArray(product.image) ? product.image[0] : product.image
+              Array.isArray(product.main_image.medium) ? product.main_image.medium[0] : product.main_image.medium
             }
-            alt={product.category || "Product image"}
+            alt={product.name || "Product image"}
             fill
             className="object-cover"
           />
 
           {/* On Sale Badge */}
-          {product.onSale && (
+          {product.is_active && (
             <span className="absolute top-4 left-4 font-MontserratSemiBold bg-[#FFAC06] text-[12px] text-white w-[71px] h-[32px] flex items-center justify-center rounded-[8px]">
               On sale
             </span>
@@ -58,7 +58,7 @@ export default function WishlistCard({ product }: { product: Product }) {
             </p>
             <p className="text-yellow-500 text-base">★★★★★</p>
             <p className="font-MontserratSemiBold text-base">
-              N{product.price}
+              N{product.base_price}
             </p>
           </div>
 

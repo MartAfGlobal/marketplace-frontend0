@@ -10,10 +10,9 @@ import CartButton from "@/assets/mobile/coloureCart.png";
 import Filter from "@/assets/icons/filter.png";
 import { addToCart } from "@/store/cart/cartSlice";
 import { toast } from "sonner";
-import { Product, Variations } from "@/types/global";
+import { Product } from "@/types/global";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-
 import { Button } from "@/components/ui/Button/Button";
 import GoodCheckOrange from "@/assets/Icons2/GoodCheckOrange.svg";
 import close from "@/assets/Icons2/cancel.svg";
@@ -24,6 +23,7 @@ import {
   WishlistItem,
 } from "@/store/cart/wishlist-slice";
 import { addItemToWishlistLabel } from "@/store/wishlistLabel/wishlistLabelSlice";
+import AddCartModal from "@/components/ui/Modals/addToCart/addTocart-modal";
 
 interface AllWishlistProps {
   onSelectionChange?: (hasSelected: boolean) => void;
@@ -51,9 +51,7 @@ export default function AllWishlist({
     onSelectionChange?.(hasAnySelected);
   }, [selectedItems, onSelectionChange]);
 
-  const [selectedVariations, setSelectedVariations] = useState<{
-    [key: string]: Variations | null;
-  }>({});
+  const [openAddToCart, setOpenAddToCart] = useState(false);
 
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
   const labels = useSelector((state: RootState) => state.wishlistLabel.labels);
@@ -65,6 +63,7 @@ export default function AllWishlist({
   const [CreateModal, setCreateModal] = useState(false);
   const [loadingIds, setLoadingIds] = useState<Record<string, boolean>>({});
   const [loadingRem, setLoadRem] = useState<Record<string, boolean>>({});
+  const [selectedSlug, setSelectedSlug] = useState<string>("");
 
   // allSelected now based on product ids
   const allSelected =
@@ -88,81 +87,13 @@ export default function AllWishlist({
   };
 
   const handleAddToCart =
-    (wishlistItem: WishlistItem) => async (e: React.MouseEvent) => {
+    (productSlug: string) => async (e: React.MouseEvent) => {
       e.stopPropagation();
 
-      const product: Product = wishlistItem.product ?? (wishlistItem as any);
-      const productId = String(product.id);
-
-      setLoadingIds((s) => ({ ...s, [productId]: true }));
-
-      const selectedVariation: Variations | null =
-        selectedVariations[productId] ??
-        (Array.isArray(product?.variations) ? product.variations[0] : null);
-
-      try {
-        if (!token) {
-          dispatch(
-            addToCart({
-              ...product,
-              product_id: productId,
-              quantity: 1,
-              variation_display: selectedVariation
-                ? `${selectedVariation.size} / ${selectedVariation.color}`
-                : undefined,
-              price_at_purchase: product.price,
-            })
-          );
-          toast.success("Item added to cart (offline mode)");
-          return;
-        }
-
-        await sendHttpRequest({
-          requestConfig: {
-            url: "/cart/add",
-            method: "POST",
-            token,
-            isAuth: true,
-            userType: "buyer",
-            body: {
-              product_id: productId,
-              variation_id: selectedVariation?.id,
-              quantity: 1,
-              check: true,
-            },
-            successMessage: "Item added to cart successfully",
-          },
-          successRes: (res: any) => {
-            dispatch(
-              addToCart({
-                ...product,
-                product_id: productId,
-                quantity: 1,
-                variation_display: selectedVariation
-                  ? `${selectedVariation.size} / ${selectedVariation.color}`
-                  : undefined,
-                price_at_purchase: product.price,
-              })
-            );
-          },
-        });
-      } catch (err: any) {
-        console.error("label API failed:", err);
-        dispatch(
-          addToCart({
-            ...product,
-            product_id: productId,
-            quantity: 1,
-            variation_display: selectedVariation
-              ? `${selectedVariation.size} / ${selectedVariation.color}`
-              : undefined,
-            price_at_purchase: product.price,
-          })
-        );
-        toast.error("Network error — added to local cart");
-      } finally {
-        setLoadingIds((s) => ({ ...s, [productId]: false }));
-      }
+      setSelectedSlug(productSlug);
+      setTimeout(() => {
+        setOpenAddToCart(true);
+      }, 0);
     };
   const handleCreateFirstList = () => {
     setCreateModal(true);
@@ -249,6 +180,8 @@ export default function AllWishlist({
       toast.error("Network error — added to local cart");
     });
   };
+
+  console.log("new labelssss", labels);
 
   return (
     <div>
@@ -337,10 +270,10 @@ export default function AllWishlist({
                               )}
                             </button>
                             <Image
-                              src={product.image || "/placeholder.png"}
-                              alt={
-                                product.product_name || "Wishlist item image"
+                              src={
+                                product.main_image.medium || "/placeholder.png"
                               }
+                              alt={product.name || "Wishlist item image"}
                               width={100}
                               height={100}
                               className="w-16 h-16 md:w-25 md:h-25"
@@ -348,16 +281,16 @@ export default function AllWishlist({
                           </div>
                           <div className="w-full md:max-w-143.75">
                             <p className="font-MontserratSemiBold text-c12 md:text-sm pb-1 text-000000">
-                              {product.product_name}
+                              {product.name}
                             </p>
                             <p className="font-MontserratSemiBold  text-base md:text-c18 pt-3 leading-6.5">
-                              ₦{product.price}
+                              ₦{product.base_price}
                             </p>
                           </div>
                         </div>
 
                         <button
-                          onClick={handleAddToCart(item)}
+                          onClick={handleAddToCart(product.slug)}
                           className={`w-10 h-10 flex justify-center md:hidden items-center rounded-full border flex-shrink-0 border-ff715b $}`}
                         >
                           {loadingIds[productId] ? (
@@ -373,7 +306,7 @@ export default function AllWishlist({
                         </button>
 
                         <div className="hidden md:flex flex-col w-full max-w-52.5 space-y-4">
-                          <Button onClick={handleAddToCart(item)}>
+                          <Button onClick={handleAddToCart(product.slug)}>
                             {loadingIds[productId] ? (
                               <LoadingSpinner />
                             ) : (
@@ -426,90 +359,88 @@ export default function AllWishlist({
               transition={{ duration: 0.3 }}
               onClick={onClose}
             />
-            <motion.div
-              initial={{ y: "100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-              className="fixed z-[9999] bg-white h-fit shadow-xl flex flex-col items-center gap-8
-                bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-30px)] rounded-t-2xl p-6 
-                max-h-[90vh] overflow-y-auto
-                md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 
-                md:rounded-c16 md:p-8 md:max-w-102.25"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between w-full">
-                <h2 className="text-base font-MontserratSemiBold text-gray-800">
-                  Select list
-                </h2>
-                <button onClick={onClose}>
-                  <Image src={close} alt="close" width={15} height={15} />
-                </button>
-              </div>
+            <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999]">
+              <motion.div
+                initial={{ y: "100%", opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: "100%", opacity: 0 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                className=" bg-white shadow-xl flex flex-col items-center gap-8 w-full max-w-101.5 rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-120 overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between w-full ">
+                  <h2 className="text-base font-MontserratSemiBold text-gray-800">
+                    Select list
+                  </h2>
+                  <button onClick={onClose}>
+                    <Image src={close} alt="close" width={15} height={15} />
+                  </button>
+                </div>
 
-              <div className="flex flex-col gap-6 w-full max-h-70 custom-scrollrailes">
-                {labels.length === 0 && (
-                  <div className="w-full flex flex-col justify-center items-center gap-6">
-                    <p className="w-full max-w-34.75 text-center text-sm font-MontserratNormal text-000000/50 leading-c20">
-                      You haven’t created any lists yet
-                    </p>
-                    <Button onClick={handleCreateFirstList}>
-                      Create your first list
-                    </Button>
-                  </div>
-                )}
+                <div className="flex flex-col gap-6 w-full  max-h-70 custom-scrollrailes">
+                  {labels.length === 0 && (
+                    <div className="w-full flex flex-col justify-center items-center gap-6">
+                      <p className="w-full max-w-34.75 text-center text-sm font-MontserratNormal text-000000/50 leading-c20">
+                        You haven’t created any lists yet
+                      </p>
+                      <Button onClick={handleCreateFirstList}>
+                        Create your first list
+                      </Button>
+                    </div>
+                  )}
 
-                {labels.map((item: any) => (
-                  <div key={item.id} className="gap-6 w-full">
-                    <button
-                      onClick={() => setSelectedLabel(item.id)}
-                      className={`w-full flex justify-between items-center ${
-                        selectedLabel === item.id
-                          ? "text-primary font-semibold"
-                          : ""
-                      }`}
+                  {labels.map((item: any) => (
+                    <div key={item.id} className="gap-6 w-full">
+                      <button
+                        onClick={() => setSelectedLabel(item.id)}
+                        className={`w-full flex justify-between items-center ${
+                          selectedLabel === item.id
+                            ? "text-primary font-semibold"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex flex-col ">
+                          <span className="font-MontserratSemiBold text-c12">
+                            {item.name}
+                          </span>
+                          <span className="font-MontserratNormal text-c12 text-left">
+                            {item.items.length} items
+                          </span>
+                        </div>
+                        {selectedLabel === item.id && (
+                          <Image
+                            src={GoodCheckOrange}
+                            alt="checked"
+                            width={18.75}
+                            height={13.5}
+                          />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-2 justify-center w-full">
+                  {labels.length > 0 && (
+                    <Button
+                      disabled={addingItem || !selectedLabel}
+                      onClick={() => handleAddItemToLIst(selectedLabel)}
                     >
-                      <div className="flex flex-col ">
-                        <span className="font-MontserratSemiBold text-c12">
-                          {item.name}
-                        </span>
-                        <span className="font-MontserratNormal text-c12 text-left">
-                          {item.items.length} items
-                        </span>
-                      </div>
-                      {selectedLabel === item.id && (
-                        <Image
-                          src={GoodCheckOrange}
-                          alt="checked"
-                          width={18.75}
-                          height={13.5}
-                        />
-                      )}
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col md:flex-row gap-2 justify-center w-full">
-                {labels.length > 0 && (
-                  <Button
-                    disabled={addingItem || !selectedLabel}
-                    onClick={() => handleAddItemToLIst(selectedLabel)}
-                  >
-                    {addingItem ? <LoadingSpinner /> : "Add to selected list"}
-                  </Button>
-                )}
-                {labels.length === 0 && (
-                  <Button
-                    variant="secondary"
-                    onClick={handleCreateFirstList}
-                    className="w-full "
-                  >
-                    Create List
-                  </Button>
-                )}
-              </div>
-            </motion.div>
+                      {addingItem ? <LoadingSpinner /> : "Add to selected list"}
+                    </Button>
+                  )}
+                  {labels.length === 0 && (
+                    <Button
+                      variant="secondary"
+                      onClick={handleCreateFirstList}
+                      className="w-full "
+                    >
+                      Create List
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
@@ -517,6 +448,11 @@ export default function AllWishlist({
       <CreateListModal
         isOpen={CreateModal}
         onClose={() => setCreateModal(false)}
+      />
+      <AddCartModal
+        isOpen={openAddToCart}
+        onClose={() => setOpenAddToCart(false)}
+        productSlug={selectedSlug}
       />
     </div>
   );

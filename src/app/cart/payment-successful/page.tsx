@@ -36,10 +36,7 @@ export default function CartPage() {
     dispatch(removeCheckedOutItems());
   }, [dispatch]);
 
-  // const fashionProducts = cartItems.filter(
-  //   (product) => product.product_name === "Fashion and Apparel"
-  // );
-  // Example React useEffect
+
 useEffect(() => {
   const queryParams = new URLSearchParams(window.location.search);
   const reference = queryParams.get("ref");
@@ -58,7 +55,9 @@ useEffect(() => {
         
       },
       successRes: (orderData) => {
-        console.log("Order Data:", orderData.data);
+        console.log("Order Datasss:", orderData.data.orders);
+
+        console.log("orderfffff", orderData)
        dispatch(setOrderData(orderData.data));
 
         
@@ -67,7 +66,6 @@ useEffect(() => {
   }
 }, []);
 
-console.log("Order Datassss from Store:", orderData);
 
   return (
     <motion.div
@@ -125,11 +123,7 @@ console.log("Order Datassss from Store:", orderData);
             <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
               More to love
             </p>
-            {/* <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-              {fashionProducts.slice(0, visible).map((item) => (
-                <ProductCard key={item.product_id} product={item.prduct} />
-              ))}
-            </div> */}
+         
           </div>
         </div>
       </div>

@@ -83,7 +83,7 @@ export default function LoginForm() {
     }
 
     // ⭐ Default fallback
-    router.push("/");
+    router.back();
   };
 
   const handleSubmit = (e: React.FormEvent) => {

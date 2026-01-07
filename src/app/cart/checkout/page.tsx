@@ -28,9 +28,7 @@ export default function CheckoutPage() {
   // Prefer Redux token which is updated by login and axios refresh
   const token = useSelector((state: RootState) => state.token.token);
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.product_id === "Fashion and Apparel"
-  );
+
 
   const { loading, sendHttpRequest } = useHttp();
 
@@ -166,12 +164,7 @@ export default function CheckoutPage() {
                   More to love
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-                  {fashionProducts.slice(0, visible).map((item) => (
-                    <ProductCard
-                      key={item.product_id || item.variation_id}
-                      product={product}
-                    />
-                  ))}
+                 
                 </div>
               </div>
             </div>

@@ -53,7 +53,7 @@ useEffect(() => {
     console.log("Sending HTTP request...");
     sendHttpRequest({
       requestConfig: {
-        url: "/products/list/",
+        url: "/products/public/products/",
         method: "GET",
       },
       successRes: handleProducts,

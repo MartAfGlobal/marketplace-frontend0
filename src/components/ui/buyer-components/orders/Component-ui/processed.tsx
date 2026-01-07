@@ -150,7 +150,7 @@ export default function Proccessed() {
                               >
                                 <Image
                                   src={
-                                    prod.product?.image || "/placeholder.png"
+                                    prod.product?.main_image.medium || "/placeholder.png"
                                   }
                                   alt={prod.product?.name || "Product Image"}
                                   width={96}
@@ -202,7 +202,7 @@ export default function Proccessed() {
                                     <div className="w-24 h-24 relative">
                                       <Image
                                         src={
-                                          prod.product?.image ||
+                                          prod.product?.main_image.medium ||
                                           "/placeholder.png"
                                         }
                                         alt={
@@ -262,7 +262,7 @@ export default function Proccessed() {
                               {item.items?.[0] && (
                                 <Image
                                   src={
-                                    item.items[0].product?.image ||
+                                    item.items[0].product?.main_image.medium ||
                                     "/placeholder.png"
                                   }
                                   alt={

@@ -1,31 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import { DropdownModalProps } from "@/types/global";
+import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import Car from "@/assets/Icons2/Car.png";
+import { DropdownModalProps, Category } from "@/types/global";
+import { RootState } from "@/store";
+import { useLogout } from "@/utils/logout";
+import { useHttp } from "@/hooks/use-http";
+
+import CategorySkeleton from "@/components/reloadSpinner/CategorySkeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Button } from "../../Button/Button";
 
 import Logo from "@/assets/Logos/authLogo.svg";
 import CloseModal from "@/assets/headerIcon/closeModal.png";
 import CaretDown from "@/assets/headerIcon/caretD.png";
-import CartIcon from "@/assets/headerIcon/cateIcon.png";
 import Currency from "@/assets/headerIcon/CurrencyCircleDollar.png";
 import speak from "@/assets/headerIcon/speakIcon.png";
 import shipto from "@/assets/headerIcon/shipto.png";
-import { Category } from "@/types/global";
 import English from "@/assets/headerIcon/englishicon.png";
 import French from "@/assets/headerIcon/FrienchIcon.png";
 import Spanish from "@/assets/headerIcon/spanish.png";
 import Portegual from "@/assets/headerIcon/Portugal.png";
-import { Button } from "../../Button/Button";
-import AuthModal from "../auth/sign-up";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/store";
-import { useLogout } from "@/utils/logout";
-import { useRouter } from "next/navigation";
-import { categories } from "@/utils/data/categories";
-import { title } from "process";
+
 const settings = [
   {
     icon: Currency,
@@ -57,21 +58,103 @@ const settings = [
   },
 ];
 
-export default function DropdownModal({  open,
+export default function DropdownModal({
+  open,
   onClose,
   onOpenAuth,
 }: DropdownModalProps & { onOpenAuth: (step: any) => void }) {
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<
-    null | (typeof categories)[0]
-  >(null);
-
   const router = useRouter();
- const token = useSelector((state: RootState) => state.token.token);
-  const buyer = useSelector((state: any) => state.buyer.BuyerData);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
-  // Close on ESC
+
+  const token = useSelector((state: RootState) => state.token.token);
+
+  const { sendHttpRequest, loading } = useHttp();
+  const isFetchingRef = useRef(false);
+
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+
+  /* ------------------ Animations ------------------ */
+  const modalVariants: Variants = {
+    hidden: { opacity: 0, y: -20, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.3, ease: "easeInOut" },
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      scale: 0.95,
+      transition: { duration: 0.2, ease: "easeInOut" },
+    },
+  };
+
+  const expandVariants: Variants = {
+    collapsed: { opacity: 0, height: 0 },
+    expanded: {
+      opacity: 1,
+      height: "auto",
+      transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
+
+  /* ------------------ Fetch Categories ------------------ */
+  const fetchCategories = () => {
+    if (isFetchingRef.current || !hasMore) return;
+    isFetchingRef.current = true;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/public/categories/main/?page=${page}&page_size=20`,
+        method: "GET",
+      },
+      successRes: (res: any) => {
+        const newCategories: Category[] = res?.data?.results || [];
+        const count = res?.data?.count || 0;
+
+        setTotalCount(count);
+
+        setCategories((prev) => {
+          const merged = [...prev, ...newCategories];
+          const unique = Array.from(
+            new Map(merged.map((c) => [c.id, c])).values()
+          );
+          setHasMore(unique.length < count);
+          return unique;
+        });
+
+        setPage((prev) => prev + 1);
+        isFetchingRef.current = false;
+      },
+    });
+  };
+
+  /* ------------------ Initial Load ------------------ */
+  useEffect(() => {
+    if (!open) return;
+    setCategories([]);
+    setPage(1);
+    setHasMore(true);
+    setTotalCount(0);
+    isFetchingRef.current = false;
+    fetchCategories();
+  }, [open]);
+
+  /* ------------------ Scroll Pagination ------------------ */
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollTop + target.clientHeight >= target.scrollHeight - 50) {
+      fetchCategories();
+    }
+  };
+
+  /* ------------------ ESC Close ------------------ */
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -79,60 +162,24 @@ export default function DropdownModal({  open,
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  const modalVariants: Variants = {
-    hidden: {
-      opacity: 0,
-      y: -20,
-      scale: 0.95,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut", // ✅ valid easing
-      },
-    },
-    exit: {
-      opacity: 0,
-      y: -20,
-      scale: 0.95,
-      transition: {
-        duration: 0.2,
-        ease: "easeInOut", // ✅ valid easing
-      },
-    },
-  };
-
-  // Subcategory expand/collapse
-  const expandVariants: Variants = {
-    collapsed: { opacity: 0, height: 0 },
-    expanded: {
-      opacity: 1,
-      height: "auto" as any, // 👈 bypass TypeScript check
-      transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
-    },
-  };
-
   return (
     <AnimatePresence>
       {open && (
         <>
-          {/* Optional backdrop (click to close) */}
+          {/* Backdrop */}
           <motion.div
-            className="fixed top-0 inset-0 z-50  w-full "
+            className="fixed inset-0 z-50 bg-black/10"
             onClick={onClose}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.08 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
 
-          {/* The dropdown itself */}
+          {/* Modal */}
           <motion.div
             role="dialog"
             aria-modal="true"
-            className="absolute top-0  z-50 w-full "
+            className="absolute top-0 z-50 w-full"
             variants={modalVariants}
             initial="hidden"
             animate="visible"
@@ -140,197 +187,147 @@ export default function DropdownModal({  open,
           >
             <div
               className="bg-white w-full h-screen overflow-y-scroll pb-20"
-              onClick={(e) => e.stopPropagation()} // prevent backdrop close
+              onScroll={handleScroll}
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center py-6 px-6 w-full gap-2 mb-c32 h-c42 bg-ffffff fixed">
+              {/* Header */}
+              <div className="flex justify-between items-center py-6 px-6 fixed w-full bg-white z-10">
                 <Link href="/">
-                  <Image src={Logo} alt="Logo" width={39.27} height={32} />
+                  <Image src={Logo} alt="Logo" width={39} height={32} />
                 </Link>
                 <button onClick={onClose}>
-                  <Image
-                    src={CloseModal}
-                    alt="close"
-                    width={21.01}
-                    height={21.01}
-                  />
+                  <Image src={CloseModal} alt="close" width={21} height={21} />
                 </button>
               </div>
+
               {/* Categories */}
-              <div className=" px-6 pt-20" >
-                <h4 className="font-MontserratSemiBold text-c20  mb-6">
+              <div className="px-6 pt-24">
+                <h4 className="font-MontserratSemiBold text-c20 mb-6">
                   Categories
                 </h4>
-                <ul className="space-y-2">
-                  {categories.map((cat) => {
-                    const isOpen = openCategory === cat.label;
-                    return (
-                      <li key={cat.label} className="">
-                        <button
-                          onClick={() => {
-                            setOpenCategory(isOpen ? null : cat.label),
-                              setSelectedCategory(cat);
-                          }}
-                          className="flex items-center justify-between w-full   h-c48  "
-                        >
-                          <span className="flex items-center gap-3">
-                            <Image
-                              src={cat.iconSrc}
-                              alt={cat.label}
-                              width={24}
-                              height={24}
-                            />
-                            <span className="font-MontserratSemiBold text-c12">
-                              {cat.label}
+
+                {loading && categories.length === 0 ? (
+                  <CategorySkeleton count={8} />
+                ) : categories.length === 0 ? (
+                  <p className="text-gray-500 text-c12">
+                    No categories available
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {categories.map((cat) => {
+                      const isOpen = openCategory === cat.name;
+                      const subcategories = cat.children || [];
+
+                      return (
+                        <li key={cat.id}>
+                          <button
+                            onClick={() =>
+                              setOpenCategory(isOpen ? null : cat.name)
+                            }
+                            className="flex  items-center justify-between w-full h-c48"
+                          >
+                            <span className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded full justify-center flex items-center overflow-hidden">
+                                <Image
+                                  src={cat.image ||Car }
+                                  alt={cat.name}
+                                  width={32}
+                                  height={32}
+                                  className="h-8 w-8 rounded-full"
+                                />
+                              </div>
+
+                              <span className="font-MontserratSemiBold text-c12">
+                                {cat.name}
+                              </span>
                             </span>
-                          </span>
 
-                          <Image
-                            src={CaretDown}
-                            alt="open"
-                            className={`${isOpen ? "rotate-180" : ""}`}
-                            width={11}
-                            height={6}
-                          />
-                        </button>
-
-                        <AnimatePresence initial={false}>
-                          {isOpen && (
-                            <motion.ul
-                              key="sub"
-                              className="overflow-hidden"
-                              variants={expandVariants}
-                              initial="collapsed"
-                              animate="expanded"
-                              exit="collapsed"
-                            >
-                              {/* Subcategories */}
-                              {cat.subcategories.map((sub) => (
-                                <button
-                                  key={`${cat.label}-${sub.title}`}
-                                  onClick={() => {
-                                    router.push(
-                                      `/categories/${encodeURIComponent(
-                                        cat.label
-                                      )}/${encodeURIComponent(sub.title)}`
-                                    );
-                                    onClose(); // ✅ close modal after navigation
-                                  }}
-                                  className="text-c12 font-MontserratNormal h-c32 flex items-center pl-c48"
-                                >
-                                  {sub.title}
-                                </button>
-                              ))}
-                            </motion.ul>
-                          )}
-                        </AnimatePresence>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-              {/* Settings */}
-              <div className="mt-c24 px-6">
-                <h4 className="font-MontserratSemiBold text-c20  mb-6">
-                  Settings
-                </h4>
-                <ul className="space-y-2">
-                  {settings.map((cat) => {
-                    const isOpen = openCategory === cat.name;
-                    return (
-                      <li key={cat.name} className="">
-                        <button
-                          onClick={() =>
-                            setOpenCategory(isOpen ? null : cat.name)
-                          }
-                          className="flex items-center justify-between w-full   h-c48  "
-                        >
-                          <span className="flex items-center gap-3">
                             <Image
-                              src={cat.icon}
-                              alt={cat.name}
-                              width={24}
-                              height={24}
+                              src={CaretDown}
+                              alt="open"
+                              width={11}
+                              height={6}
+                              className={isOpen ? "rotate-180" : ""}
                             />
-                            <span className="font-MontserratSemiBold text-c12">
-                              {cat.name}
-                            </span>
-                          </span>
+                          </button>
 
-                          <Image
-                            src={CaretDown}
-                            alt="open"
-                            className={`${isOpen ? "rotate-180" : ""}`}
-                            width={11}
-                            height={6}
-                          />
-                        </button>
+                          <AnimatePresence>
+                            {isOpen && subcategories.length > 0 && (
+                              <motion.ul
+                                variants={expandVariants}
+                                initial="collapsed"
+                                animate="expanded"
+                                exit="collapsed"
+                                className="overflow-hidden"
+                              >
+                                {subcategories.map((sub) => (
+                                  <button
+                                    key={sub.id}
+                                    onClick={() => {
+                                      router.push(
+                                        `/categories/${encodeURIComponent(
+                                          cat.slug
+                                        )}/${encodeURIComponent(sub.slug)}`
+                                      );
+                                      onClose();
+                                    }}
+                                    className="pl-c48 h-c32 flex items-center text-c12"
+                                  >
+                                    {sub.name}
+                                  </button>
+                                ))}
+                              </motion.ul>
+                            )}
+                          </AnimatePresence>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
 
-                        <AnimatePresence initial={false}>
-                          {isOpen && (
-                            <motion.ul
-                              key="sub"
-                              className="overflow-hidden"
-                              variants={expandVariants}
-                              initial="collapsed"
-                              animate="expanded"
-                              exit="collapsed"
-                            >
-                              {cat.options.map((opt) => (
-                                <li
-                                  key={opt.name}
-                                  className="text-c12 font-MontserratNormal  flex items-center h-c40 gap-3 pl-c48"
-                                >
-                                  <Image
-                                    src={opt.icon}
-                                    alt={opt.name}
-                                    width={24}
-                                    height={24}
-                                  />
-                                  <span>{opt.name}</span>
-                                </li>
-                              ))}
-                            </motion.ul>
-                          )}
-                        </AnimatePresence>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {hasMore && (
+                  <div className="flex justify-center py-4">
+                    <LoadingSpinner color="border-ff715b" size={20} />
+                  </div>
+                )}
               </div>
-              {/* Logins */}
-              <div className="flex gap-3 text-c12 font-MontserratSemiBold mt-c24 mb-c48 px-6">
-            {token ? (
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  router.push("/dashboard/buyer");
-                  onClose();
-                }}
-              >
-                Settings
-              </Button>
-            ) : (
-              <Button
-                variant="secondary"
-                onClick={() => onOpenAuth("signin")} // ✅ use callback
-              >
-                Sign in
-              </Button>
-            )}
 
-            {token ? (
-              <Button variant="primary" onClick={logout}>
-                Log out
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                onClick={() => onOpenAuth("signup")} // ✅ use callback
-              >
-                Sign up
-              </Button>
-            )}
-          </div>
+              {/* Auth Buttons */}
+              <div className="w-full fixed bottom-0 bg-ffffff">
+                <div className="flex gap-3 px-6 mt-c24 mb-c48">
+                  {token ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          router.push("/dashboard/buyer");
+                          onClose();
+                        }}
+                      >
+                        Settings
+                      </Button>
+                      <Button variant="primary" onClick={logout}>
+                        Log out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="secondary"
+                        onClick={() => onOpenAuth("signin")}
+                      >
+                        Sign in
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={() => onOpenAuth("signup")}
+                      >
+                        Sign up
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
         </>

@@ -21,7 +21,7 @@ export default function UserWishlist() {
               initial={{ opacity: 0, y: -15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className=" hidden z-40 md:flex items-center md w-full mt-20"
+              className=" hidden z-40 md:flex items-center md w-full mt-48"
               style={{ top: "4rem" }}
             >
               <nav
@@ -50,7 +50,7 @@ export default function UserWishlist() {
           </div>
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-4  md:my-c32"
+            className="flex items-center gap-4  md:mt-c32 mb-30"
           >
             <Image
               src={NavBack}
@@ -59,7 +59,7 @@ export default function UserWishlist() {
               height={16.5}
               className="brightness-20 w-2.25 h-[16.5px]"
             />
-            <p className="font-MontserratSemiBold text-c16 text-161616">
+            <p className="font-MontserratSemiBold  text-c16 text-161616">
               Wishlist
             </p>
           </button>
@@ -68,7 +68,7 @@ export default function UserWishlist() {
           <Image src={SearchBtn} alt="Search" width={19.52} height={19.52} />
         </button>
       </div>
-      <div>
+      <div >
         <WishList />
       </div>
     </div>

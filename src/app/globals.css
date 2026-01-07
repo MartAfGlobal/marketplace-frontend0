@@ -126,6 +126,7 @@
   --spacing-c188: 188px;
   --spacing-c192: 192px;
   --spacing-c243: 243px;
+  --spacing-c262-74: 262.74px;
   --spacing-c281: 281px;
   --spacing-c303: 303px;
   --spacing-c336: 336px;
@@ -138,6 +139,7 @@
   --spacing-c397: 397px;
   --spacing-c400: 400px;
   --spacing-c400-15: 400.15px;
+  --spacing-c410-58: 410.58px;
   --spacing-c422: 422px;
   --spacing-c460-69: 460.69px;
   --spacing-c464: 464px;
@@ -146,6 +148,7 @@
   --spacing-c500: 500px;
   --spacing-c506: 506px;
   --spacing-c519-28: 519.28px;
+  --spacing-c557-39: 557.39px;
   --spacing-c556: 556px;
   --spacing-c589: 589px;
   --spacing-c601: 601px;
@@ -206,7 +209,7 @@
     transform: rotate(360deg);
   }
 }
-.animate-fast-spin{
+.animate-fast-spin {
   animation: spin 0.3s linear infinite;
 }
 
@@ -318,16 +321,15 @@ select option {
   }
   .custom-scrollrailes::-webkit-scrollbar {
     width: 4px;
-    
   }
   .custom-scrollrailes::-webkit-scrollbar-track {
-    width: 4px; 
-     background: transparent;
+    width: 4px;
+    background: transparent;
   }
   .custom-scrollrailes::-webkit-scrollbar-thumb {
-  background-color: rgba(87, 83, 83, 0.3); /* or #ff715b etc. */
-  border-radius: 9999px;
-}
+    background-color: rgba(87, 83, 83, 0.3); /* or #ff715b etc. */
+    border-radius: 9999px;
+  }
   .hcustom-scroll::-webkit-scrollbar {
     height: 8px;
   }
@@ -379,7 +381,6 @@ select option {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    
   }
 
   .mobilebg-hero {
@@ -406,8 +407,8 @@ select option {
     border-radius: 12px; /* rounding */
     background: linear-gradient(
         90deg,
-        rgba(106, 13, 173, 0.15),
-        /* Purple with lighter opacity */ rgba(255, 0, 255, 0.15)
+        rgba(83, 4, 139, 0.15),
+        /* Purple with lighter opacity */ rgba(255, 0, 255, 0.548)
           /* Pink with lighter opacity */
       )
       border-box; /* applies gradient to the border area */
@@ -433,42 +434,42 @@ select option {
   }
 
   .shadow-customW {
-    box-shadow: 0px 3px 8px 0px #6A0DAD14;
+    box-shadow: 0px 3px 8px 0px #6a0dad14;
   }
   /* Base checkbox */
-.custom-checkbox {
-  width: 1.25rem; /* 20px */
-  height: 1.25rem; /* 20px */
-  border: 2px solid #ff715b;
-  border-radius: 9999px; /* fully round */
-  background-color: #ffffff;
-  appearance: none;
-  cursor: pointer;
-  position: relative;
-  transition: all 0.2s ease-in-out;
-}
+  .custom-checkbox {
+    width: 1.25rem; /* 20px */
+    height: 1.25rem; /* 20px */
+    border: 2px solid #ff715b;
+    border-radius: 9999px; /* fully round */
+    background-color: #ffffff;
+    appearance: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease-in-out;
+  }
 
-/* Checked state */
-.custom-checkbox:checked {
-  background-color: #ff715b;
-  border-color: #ff715b;
-}
+  /* Checked state */
+  .custom-checkbox:checked {
+    background-color: #ff715b;
+    border-color: #ff715b;
+  }
 
-/* White checkmark */
-.custom-checkbox:checked::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 6px;
-  width: 5px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  /* White checkmark */
+  .custom-checkbox:checked::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
 }
-
-}
-header, .fixed {
+header,
+.fixed {
   max-width: 100%;
   width: 100%;
 }
@@ -481,25 +482,20 @@ header, .fixed {
 }
 
 @media (min-width: 1300px) {
-
-
- .ad-hero{
-     background-image: url("/assets/images/AdBanner.svg");
+  .ad-hero {
+    background-image: url("/assets/images/AdBanner.svg");
     background-size: contain;
     background-position: center;
     width: 100%;
     flex-shrink: 0;
     background-repeat: no-repeat;
-    
- }
+  }
 }
 @media (min-width: 945px) {
-
-  .hide-text{
+  .hide-text {
     display: none !important;
   }
 }
-
 
 @media (min-width: 340px) {
   .mobilLogo {

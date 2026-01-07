@@ -77,9 +77,6 @@ export default function PaymentSuccessful() {
 
   const showMore = () => setVisible((prev) => prev + 10);
 
-  // const fashionProducts = cartItems.filter(
-  //   (product) => product.=== "Fashion and Apparel"
-  // );
 
   const trackOrders: TrackOrders[] = [
     // Uncomment to test non-empty state
@@ -312,11 +309,7 @@ export default function PaymentSuccessful() {
             <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
               More to love
             </p>
-            {/* <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-              {fashionProducts.slice(0, visible).map((item) => (
-                <ProductCard key={item.id} product={item} />
-              ))}
-            </div> */}
+           
           </div>
         </div>
       </div>

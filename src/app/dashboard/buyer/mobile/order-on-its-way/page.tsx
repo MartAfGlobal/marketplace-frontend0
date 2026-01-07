@@ -72,9 +72,7 @@ export default function OrderOnTheWayPage() {
       });
   };
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+
 
   return (
     <div className="px-6">
@@ -277,9 +275,7 @@ export default function OrderOnTheWayPage() {
             More to love
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
-            {fashionProducts.map((item) => (
-              <ProductCard key={item.id} product={item} />
-            ))}
+          
           </div>
         </div>
       </div>

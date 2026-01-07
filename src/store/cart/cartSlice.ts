@@ -27,7 +27,7 @@ export interface GuestCartItem {
   product_id: string;
   variation_id?: string;
   quantity: number;
-  variation_display?: string;
+  variation_display?: string | object;
   checked: boolean;
   price: string | number; // must be string
   product_name: string;
@@ -107,6 +107,7 @@ const cartSlice = createSlice({
         (i) =>
           i.product_id === incoming.product_id &&
           i.variation_id === incoming.variation_id
+
       );
 
       if (existing) {
@@ -153,7 +154,7 @@ const cartSlice = createSlice({
             data.formatted_subtotal ??
             `₦${(Number(data.price) * data.quantity).toFixed(2)}`,
 
-          variation_display: data.variation_display || "",
+          
 
           checked: true,
         });
@@ -267,6 +268,7 @@ export const {
 export default cartSlice.reducer;
 
 import { RootState } from "@/store";
+import { object } from "framer-motion/client";
 
 export const selectCheckedItems = (state: RootState) =>
   state.cart.items.filter((item) => item.checked);

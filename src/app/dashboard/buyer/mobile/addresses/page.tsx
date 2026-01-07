@@ -128,7 +128,7 @@ export default function AllAddressesPage() {
 
                 <div className="flex-1">
                   <p className="font-MontserratSemiBold text-c12">
-                    {item.full_name}
+                    {item.first_name}  {item.last_name}
                   </p>
                   <p className="text-c12 font-MontserratNormal">{item.phone}</p>
                   <p className="text-c12 font-MontserratNormal">

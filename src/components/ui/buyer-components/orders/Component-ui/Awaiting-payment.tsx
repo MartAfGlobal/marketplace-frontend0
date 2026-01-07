@@ -153,7 +153,7 @@ const awaitingPayment = orders.filter(
                               >
                                 <Image
                                   src={
-                                    prod.product?.image || "/placeholder.png"
+                                    prod.product?.main_image.medium || "/placeholder.png"
                                   }
                                   alt={prod.product?.name || "Product Image"}
                                   width={96}
@@ -211,7 +211,7 @@ const awaitingPayment = orders.filter(
                                     <div className="w-24 h-24 relative">
                                       <Image
                                         src={
-                                          prod.product?.image ||
+                                          prod.product?.main_image.medium ||
                                           "/placeholder.png"
                                         }
                                         alt={
@@ -271,7 +271,7 @@ const awaitingPayment = orders.filter(
                               {item.items?.[0] && (
                                 <Image
                                   src={
-                                    item.items[0].product?.image ||
+                                    item.items[0].product?.main_image.medium ||
                                     "/placeholder.png"
                                   }
                                   alt={

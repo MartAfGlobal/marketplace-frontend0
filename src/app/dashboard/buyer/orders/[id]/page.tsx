@@ -52,6 +52,8 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
 const [isMobile, setIsMobile] = useState(false);
 
   const orderItems = order.items;
+
+  console.log("order item", orderItems)
  
 
   const handleTrackOrder = () => {
@@ -62,9 +64,7 @@ const [isMobile, setIsMobile] = useState(false);
 
   const showMore = () => setVisible((prev) => prev + 10);
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+
   const token = useSelector((state: RootState) => state.token.token);
 
   // const token = useSelector((state: any) => state.token?.token);
@@ -268,7 +268,7 @@ const [isMobile, setIsMobile] = useState(false);
                     </p>
                   </div>
                   <div className="font-MontserratNormal text-sm text-000000 space-y-2">
-                    <p>{selectedAddress?.full_name}</p>
+                    <p>{selectedAddress?.first_name}  {selectedAddress?.last_name}</p>
                     <p>{selectedAddress?.phone}</p>
                     <p>{selectedAddress?.address}</p>
                   </div>
@@ -340,7 +340,7 @@ const [isMobile, setIsMobile] = useState(false);
                                 alt={item.product.name}
                                 width={100}
                                 height={100}
-                                className="hidden md-flex"
+                                className="hidden md:flex"
                               />
                               <Image
                                 src={item.product.image}
@@ -416,11 +416,7 @@ const [isMobile, setIsMobile] = useState(false);
             <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
               More to love
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-              {fashionProducts.slice(0, visible).map((item) => (
-                <ProductCard key={item.id} product={item} />
-              ))}
-            </div>
+          
           </div>
         </div>
         <div className="w-full  h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">

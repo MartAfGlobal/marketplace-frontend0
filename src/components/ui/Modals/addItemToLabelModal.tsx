@@ -162,16 +162,14 @@ export default function AddItemtoLabelModal({
             transition={{ duration: 0.3 }}
             onClick={onClose}
           />
-          <motion.div
+           <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999]">
+           <motion.div
             initial={{ y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ duration: 0.35, ease: "easeInOut" }}
-            className="fixed z-[9999] bg-white shadow-xl flex flex-col items-center gap-8 
-             w-[calc(100%-30px)] max-md:bottom-0 max-md:left-[15px] max-md:right-[15px]
-             max-md:rounded-t-2xl max-md:p-6 max-md:max-h-[90vh] max-md:overflow-y-auto 
-             md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 
-             md:rounded-xl md:p-8 md:max-w-102.25"
+            className=" bg-white shadow-xl flex flex-col items-center gap-8 w-full max-w-101.5 rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-120 overflow-y-auto"
+                
             onClick={(e) => e.stopPropagation()}
           >
             <motion.div
@@ -218,7 +216,7 @@ export default function AddItemtoLabelModal({
                       </button>
                       <div className="flex gap-3 items-center">
                         <Image
-                          src={item.product.first_image|| "/placeholder.png"}
+                          src={item.product.main_image.medium|| "/placeholder.png"}
                           alt={item.product.name || "Wishlist item image"}
                           width={64}
                           height={64}
@@ -232,7 +230,7 @@ export default function AddItemtoLabelModal({
                             </p>
                           </div>
                           <span className="text-base font-MontserratSemiBold">
-                            ₦{item.product.price}
+                            ₦{item.product.base_price}
                           </span>
                         </div>
                       </div>
@@ -349,6 +347,7 @@ export default function AddItemtoLabelModal({
               )}
             </div>
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

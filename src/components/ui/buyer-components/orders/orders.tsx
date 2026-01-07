@@ -28,9 +28,7 @@ export default function OrdersPage() {
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+  
 
   return (
     <div className="w-full  justify-center  flex flex-col">
@@ -77,16 +75,7 @@ export default function OrdersPage() {
           }}
           className="grid grid-cols-2 sm:grid-cols-4 justify-center lg:grid-cols-6 gap-2.5"
         >
-          {fashionProducts.map((item) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <ProductCard product={item} />
-            </motion.div>
-          ))}
+      
         </motion.div>
       </div>
     </div>

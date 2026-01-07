@@ -15,11 +15,6 @@ export type LoadingSpinnerProps = {
   color?: string;
 };
 
-type Category = {
-  name: string;
-  icon: string | StaticImageData;
-  subcategories: string[];
-};
 type CategoryD = {
   name: string;
   subcategories: string | ReactNode;
@@ -269,27 +264,132 @@ interface AboutHeroProps {
   description: string;
   paddingX?: string; // optional padding-x class, default px-c60
 }
-
-export interface Review {
+export interface Category {
   id: string;
-  rating: number;
-  comment: string;
-  country?: string; // optional
-  user?: string; // optional, if you want user name
-  date?: string; // optional
-  verified?: boolean; // optional
+  image: string | null;
+  name: string;
+  slug: string;
+  parent_name: string;
+  subcategory: subcategory;
+  children: subcategory[];
 }
 
-// export interface ImageData {
-//   id: string;
-//   image_urls: {
-//     original: string;
-//     medium: string;
-//     thumbnail: string;
-//   };
-//   alt_text?: string;
-//   product: string; // product id
-// }
+export interface subcategory {
+  id: string;
+  image: string | null;
+  name: string;
+  slug: string;
+  parent_name: string;
+}
+
+export interface PriceRange {
+  min: string;
+  max: string;
+  currency: string;
+}
+export interface ProductImage {
+  id: string;
+  alt_text: string;
+  thumbnail: string;
+  medium: string;
+  large: string;
+}
+export interface AvailableAttribute {
+  id: string;
+  name: string;
+  slug: string;
+  display_order: number;
+}
+export interface VariationOption {
+  attribute_id: string;
+  attribute_name: string;
+  display_order: number;
+
+  extra_fields: ExtraField[];
+  values: VariationValue[];
+}
+export interface ExtraField {
+  name: string;
+  label: string;
+  default?: string;
+}
+export interface VariationValue {
+  id: string;
+  value: string;
+  slug: string;
+
+  extra_data: Record<string, string>;
+
+  display_order: number;
+
+  min_price: string;
+  max_price: string;
+
+  available_variations_count: number;
+  has_stock: boolean;
+}
+export interface ProductVariation {
+  id: string;
+  sku: string;
+  name: string;
+
+  attribute_summary: Record<string, string>;
+  // Example: { Size: "Large", Weight: "25kg" }
+
+  base_price: number;
+  final_price: string;
+
+  has_discount: boolean;
+  stock: number;
+  is_default: boolean;
+
+  main_image_url: string;
+}
+export interface Feature {
+  id: string;
+  name: string;
+  value: string;
+}
+export interface Specification {
+  id: string;
+  title: string;
+  text: string;
+  image: string | null;
+}
+
+export interface ProductDetail {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  whatsinbox: string;
+  brand: string;
+  category: Category;
+  manufacturer_name: string;
+  created_at: string;
+  is_active: boolean;
+  is_published: boolean;
+  is_draft: boolean;
+
+  inventory: number;
+  sold: number;
+
+  base_price: number;
+  price_range: PriceRange;
+  rating_average: number;
+  main_image: string;
+  images: ProductImage[];
+
+  has_variations: boolean;
+  variation_count: number;
+
+  available_attributes: AvailableAttribute[];
+  variation_options: Record<string, VariationOption>;
+  variations: ProductVariation[];
+
+  features: Feature[];
+  specifications: Specification[];
+}
 
 export interface SpecificationData {
   id: string;
@@ -297,66 +397,35 @@ export interface SpecificationData {
   value?: string;
   product: string;
 }
-export interface Sizes {
-  is_default: boolean;
-  price?: number;
-  size: string;
-  stock?: number;
-  sku?: string;
-  id: string;
-  variation_id;
-}
 
-export interface Variations {
+export interface ColorPreview {
+  hex_code: string;
   id: string;
-  sizes?: Sizes[];
-  main_value?: string;
-  main_image?: string | StaticImageData | null;
-  low_stock_threshold?: number;
-  low_stock_notified?: boolean;
-  product: string; // product id
-    variation_id?: string;
+  value: gray;
 }
 
 export interface Product {
+  base_price: string;
+  brand: string;
+  category: Category;
+  color_preview: ColorPreview[];
+  has_variations: boolean;
   id: string;
-  product_id: string;
-  name?: string;
-  slug?: string;
-  description: string;
-  price: number;
-  discount_price?: number;
-  discount_percent?: number;
-  sku?: string;
-
-  category_name?: string; // e.g., gender or type
-  inventory?: number;
-  sold?: number;
-  onSale?: boolean;
-  rating_average?: number;
-  gender?: string;
-  age_group?: string;
-  grouped_variations?: Variation[]; // matches backend field
-  all_images?: [];
-  specifications_data?: SpecificationData[]; // matches backend field
-  whatsinbox?: string | null;
-  origin?: string;
-  is_active?: boolean;
-  is_draft?: boolean;
-  is_published?: boolean;
-  created_at?: string;
-  updated_at?: string;
-  manufacturer_name?: Manufacturer[] | string | null;
-  warehouse?: number | null;
-  reviews_data?: Review[];
-  first_image: string | StaticImageData | null;
-  quantity: number;
-  section?: string;
-  name?: string;
+  inventory: number;
+  is_active: boolean;
+  main_image: {
+    medium: string;
+    thumbnail: string;
+  };
+  created_at: string;
+  manufacturer_name: string;
+  name: string;
+  price_range: PriceRange;
+  rating_average: number;
+  slug: string;
+  sold: number;
+  variation_count: number;
 }
-
-
-
 export interface Manufacturer {
   id: number;
   company_name: string;
@@ -653,7 +722,8 @@ export type BuyerItem = {
 export type Address = {
   id: number;
   country: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   phone: string;
   state: string;
   city: string;
@@ -664,7 +734,8 @@ export type Address = {
 export type OrderAddress = {
   id: string | null;
   country: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   phone: string;
   state: string;
   city: string;

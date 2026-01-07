@@ -50,7 +50,8 @@ export default function AddNewAddreess() {
   const [formData, setFormData] = useState<Address>({
     id: 0,
     country: "",
-    full_name: "",
+    first_name: "",
+    last_name: "",
     phone: "",
     state: "",
     city: "",
@@ -329,13 +330,24 @@ export default function AddNewAddreess() {
             </p>
             <div className="pb-3">
               <Label className="text-sm font-MontserratSemiBold">
-                Full name
+                First name
               </Label>
               <input
                 type="text"
                 className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
-                value={formData.full_name}
-                onChange={(e) => handleChange("full_name", e.target.value)}
+                value={formData.first_name}
+                onChange={(e) => handleChange("first_name", e.target.value)}
+              />
+            </div>
+            <div className="pb-3">
+              <Label className="text-sm font-MontserratSemiBold">
+                Last name
+              </Label>
+              <input
+                type="text"
+                className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                value={formData.last_name}
+                onChange={(e) => handleChange("last_name", e.target.value)}
               />
             </div>
 

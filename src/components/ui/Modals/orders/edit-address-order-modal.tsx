@@ -28,25 +28,21 @@ export default function OrderEditAddressModal({
     (state: RootState) => state.buyer.BuyerAddresses
   );
   const { orders } = useSelector((state: any) => state.orders);
-const order = orders?.find((o: any) => o.id === id) || null;
-
+  const order = orders?.find((o: any) => o.id === id) || null;
 
   console.log("oorder id", order);
 
-const addressId =
-  order?.shipping_address?.id ??
-  order?.shipping_address ??
-  null;
+  const addressId =
+    order?.shipping_address?.id ?? order?.shipping_address ?? null;
 
-// 3️⃣ Find the matching buyer saved address
-const address = buyerAddresses?.find((ad) => ad.id === addressId) || null;
-
-
+  // 3️⃣ Find the matching buyer saved address
+  const address = buyerAddresses?.find((ad) => ad.id === addressId) || null;
 
   const [formData, setFormData] = useState<OrderAddress>({
     id: id || null,
     country: currentAddress?.country || "Nigeria",
-    full_name: "",
+    first_name: "",
+    last_name: "",
     phone: "",
     state: "",
     city: "",
@@ -61,7 +57,8 @@ const address = buyerAddresses?.find((ad) => ad.id === addressId) || null;
     setFormData({
       id: order.id || null,
       country: address.country || "",
-      full_name: address.full_name || "",
+      first_name: address.first_name || "",
+      last_name: address.last_name || "",
       phone: address.phone || "",
       state: address.state || "",
       city: address.city || "",
@@ -187,44 +184,56 @@ const address = buyerAddresses?.find((ad) => ad.id === addressId) || null;
                 <div className="flex gap-c24 w-full">
                   <div className="flex flex-col gap-2 relative w-1/2">
                     <Label className="text-c12 font-MontserratMedium">
-                      Full Name
+                      First Name
                     </Label>
                     <Input
                       type="text"
-                      value={formData.full_name}
+                      value={formData.first_name}
                       onChange={(e) =>
-                        handleChange("full_name", e.target.value)
+                        handleChange("first_name", e.target.value)
                       }
                       placeholder="John Doe"
                       className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                     />
                   </div>
-
                   <div className="flex flex-col gap-2 relative w-1/2">
                     <Label className="text-c12 font-MontserratMedium">
-                      Mobile Number
+                      last Name
                     </Label>
-                    <div className="relative w-full flex items-center">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                        <Image
-                          src={MobileIcon}
-                          alt="Mobile Number"
-                          width={15.62}
-                          height={15.62}
-                        />
-                      </div>
-                      <Input
-                        type="text"
-                        value={formData.phone}
-                        onChange={(e) => handleChange("phone", e.target.value)}
-                        placeholder="+2347058675432"
-                        className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
-                      />
-                    </div>
+                    <Input
+                      type="text"
+                      value={formData.last_name}
+                      onChange={(e) =>
+                        handleChange("last_name", e.target.value)
+                      }
+                      placeholder="John Doe"
+                      className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
+                    />
                   </div>
                 </div>
               </div>
-
+              <div className="flex flex-col gap-2 relative w-1/2">
+                <Label className="text-c12 font-MontserratMedium">
+                  Mobile Number
+                </Label>
+                <div className="relative w-full flex items-center">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <Image
+                      src={MobileIcon}
+                      alt="Mobile Number"
+                      width={15.62}
+                      height={15.62}
+                    />
+                  </div>
+                  <Input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    placeholder="+2347058675432"
+                    className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
+                  />
+                </div>
+              </div>
               {/* Address Information */}
               <div>
                 <p className="font-MontserratSemiBold text-c12 mb-3 text-000000">

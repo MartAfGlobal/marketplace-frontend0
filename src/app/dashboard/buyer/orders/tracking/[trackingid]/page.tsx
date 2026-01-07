@@ -124,9 +124,7 @@ console.log(formattedDate);
 // 👉 "15 May 2025, 3:09 pm"
 
 
-  const fashionProducts = cartItems.filter(
-    (product) => product.category === "Fashion and Apparel"
-  );
+
 
   const handleCopy = (trackingid: string) => {
     navigator.clipboard
@@ -325,7 +323,7 @@ console.log(formattedDate);
                       Address for delivery
                     </p>
                     <div className="space-y-2">
-                      <p>{selectedAddress?.full_name}</p>
+                      <p>{selectedAddress?.first_name}  {selectedAddress?.last_name}</p>
                       <p>{selectedAddress?.phone}</p>
                       <p>{selectedAddress?.address}</p>
                     </div>
@@ -503,9 +501,7 @@ console.log(formattedDate);
             More to love
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-            {fashionProducts.slice(0, visible).map((item) => (
-              <ProductCard key={item.id} product={item} />
-            ))}
+        
           </div>
         </div>
       </div>

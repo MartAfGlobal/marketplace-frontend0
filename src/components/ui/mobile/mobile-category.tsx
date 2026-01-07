@@ -6,6 +6,11 @@ import Clothing from "@/assets/mobile/clothing.png";
 import Food from "@/assets/mobile/freshFood.jpg";
 import Jewelry from "@/assets/mobile/jeweries.jpg";
 import ArrowRight from "@/assets/mobile/arrow-pointer.png";
+import { useEffect, useRef, useState } from "react";
+import { useHttp } from "@/hooks/use-http";
+import { useRouter } from "next/navigation";
+import { Category, subcategory } from "@/types/global";
+import CategorySkeleton from "@/components/reloadSpinner/CategorySkeleton";
 
 export default function MobileCategory() {
   const category = [
@@ -15,6 +20,67 @@ export default function MobileCategory() {
     { icon: Jewelry, name: "Jewelries" },
   ];
 
+  const router = useRouter();
+  const { sendHttpRequest, loading } = useHttp();
+  const isFetchingRef = useRef(false);
+const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+   const [totalCount, setTotalCount] = useState(0);
+  const [categories, setCategories] = useState<Category[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+      null
+    );
+  
+    // Fetch categories with pagination
+    const fetchCategories = () => {
+      if (isFetchingRef.current || !hasMore) return;
+      isFetchingRef.current = true;
+  
+      sendHttpRequest({
+        requestConfig: {
+          url: `/products/public/categories/main/?page=${page}&page_size=20`,
+          method: "GET",
+        },
+        successRes: (res: any) => {
+          const newCategories: Category[] = res?.data?.results || [];
+          const count = res?.data?.count || 0;
+  
+          console.log("cat", res);
+  
+          setTotalCount(count);
+  
+          setCategories((prev) => {
+            const merged = [...prev, ...newCategories];
+            const unique = Array.from(
+              new Map(merged.map((c) => [c.id, c])).values()
+            );
+            setHasMore(unique.length < count);
+            return unique;
+          });
+  
+          setPage((prev) => prev + 1);
+          isFetchingRef.current = false;
+        },
+      });
+    };
+  
+    // Initial fetch
+    useEffect(() => {
+      setCategories([]);
+      setPage(1);
+      setHasMore(true);
+      setTotalCount(0);
+      isFetchingRef.current = false;
+      fetchCategories();
+    }, [sendHttpRequest]);
+  
+    // Extract subcategories for selected category
+    const subcategories: subcategory[] = selectedCategory
+      ? categories
+          .filter((c) => c.id === selectedCategory.id)
+          .flatMap((c) => (c.children ? c.children : []))
+      : [];
+  
   // Always return a proper Variants object
   const getVariants = (index: number): Variants => {
     switch (index % 4) {
@@ -63,6 +129,8 @@ export default function MobileCategory() {
           needs.
         </p>
       </motion.div>
+
+      
 
       <div className="w-full grid grid-cols-2 gap-x-4 gap-y-c32 mt-c32 justify-center items-center">
         {category.map((cat, index) => (

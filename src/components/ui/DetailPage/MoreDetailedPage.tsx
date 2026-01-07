@@ -14,7 +14,7 @@ import CartButton from "../cart/cartButton";
 import { Button } from "../Button/Button";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/cart/cartSlice";
-import { Product } from "@/types/global";
+import { Product, ProductDetail } from "@/types/global";
 import CartBtn from "@/assets/mobile/cart.png";
 
 type RatingKey = 1 | 2 | 3 | 4 | 5;
@@ -26,57 +26,67 @@ interface ReviewOverview {
   text: string;
   country?: string;
 }
+interface ProductProps {
+  ProductDetail: ProductDetail | null;
+}
 
-export default function MoreDetailedPage({ product }: { product: Product }) {
+export default function MoreDetailedPage({ProductDetail}:ProductProps) {
   const dispatch = useDispatch();
 
-  // Reviews from backend
-  const reviews = product.reviews_data || [];
+ 
 
   const [activeRating, setActiveRating] = useState<RatingKey | null>(null);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
 
   // Group reviews by rating
-  const ratingsCount = useMemo(() => {
-    const counts: Record<RatingKey, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    reviews.forEach((r: any) => {
-      const rating = Math.round(r.rating || 0) as RatingKey;
-      if (rating >= 1 && rating <= 5) counts[rating]++;
-    });
-    return counts;
-  }, [reviews]);
+  // const ratingsCount = useMemo(() => {
+  //   const counts: Record<RatingKey, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  //   reviews.forEach((r: any) => {
+  //     const rating = Math.round(r.rating || 0) as RatingKey;
+  //     if (rating >= 1 && rating <= 5) counts[rating]++;
+  //   });
+  //   return counts;
+  // // }, [reviews]);
 
-  const totalVotes = Object.values(ratingsCount).reduce((a, b) => a + b, 0);
+  // const totalVotes = Object.values(ratingsCount).reduce((a, b) => a + b, 0);
 
-  const average =
-    totalVotes > 0
-      ? (
-          Object.entries(ratingsCount).reduce(
-            (sum, [stars, count]) => sum + Number(stars) * count,
-            0
-          ) / totalVotes
-        ).toFixed(1)
-      : "0.0";
+  // const average =
+  //   totalVotes > 0
+  //     ? (
+  //         Object.entries(ratingsCount).reduce(
+  //           (sum, [stars, count]) => sum + Number(stars) * count,
+  //           0
+  //         ) / totalVotes
+  //       ).toFixed(1)
+  //     : "0.0";
 
   // Filter reviews dynamically
-  const filteredReviews = useMemo(() => {
-    return reviews.filter((r: any) => {
-      const ratingMatch =
-        activeRating === null || Math.round(r.rating) === activeRating;
-      const countryMatch =
-        activeCountry === null || r.country === activeCountry;
-      return ratingMatch && countryMatch;
-    });
-  }, [reviews, activeRating, activeCountry]);
+  // const filteredReviews = useMemo(() => {
+  //   return reviews.filter((r: any) => {
+  //     const ratingMatch =
+  //       activeRating === null || Math.round(r.rating) === activeRating;
+  //     const countryMatch =
+  //       activeCountry === null || r.country === activeCountry;
+  //     return ratingMatch && countryMatch;
+  //   });
+  // }, [reviews, activeRating, activeCountry]);
 
   // Map filtered reviews to Overview component type
-  const overviewReviews: ReviewOverview[] = filteredReviews.map((r: any) => ({
-    name: r.name || r.user || "Anonymous",
-    date: r.date || "N/A",
-    rating: r.rating || 0,
-    text: r.comment || "",
-    country: r.country || "",
-  }));
+  // const overviewReviews: ReviewOverview[] = filteredReviews.map((r: any) => ({
+  //   name: r.name || r.user || "Anonymous",
+  //   date: r.date || "N/A",
+  //   rating: r.rating || 0,
+  //   text: r.comment || "",
+  //   country: r.country || "",
+  // }));
+    if (!ProductDetail) {
+    return (
+      <div className="py-10 text-center text-gray-500">
+        Loading product details...
+      </div>
+    );
+  }
+
 
   return (
     <div className="w-full md:pt-8 md:max-w-4xl md:mx-auto relative">
@@ -87,7 +97,7 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
             Product details
           </h2>
           <p className="text-base font-MontserratNormal text-[#1a1a1a] leading-relaxed">
-            {product.description ||
+            {ProductDetail.description ||
               "New range of formal shirts are designed keeping you in mind. With fits and styling that will make you stand apart."}
           </p>
 
@@ -104,15 +114,15 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
 
       {/* ================= PRODUCT SPECIFICATIONS ================= */}
       <section id="specifications" className="mb-8">
-        <h3 className="font-MontserratSemiBold text-base mb-2">
-          Specifications
+        <h3 className="font-MontserratSemiBold text-base mb-6">
+          Product specifications
         </h3>
-        {product.specifications_data &&
-        product.specifications_data.length > 0 ? (
-          <ul className="list-disc pl-5">
-            {product.specifications_data.map((spec: any) => (
+        {ProductDetail.specifications &&
+        ProductDetail.specifications.length > 0 ? (
+          <ul className="list-disc pl-5 space-y-3">
+            {ProductDetail.specifications.map((spec: any) => (
               <li key={spec.id} className="text-sm text-gray-700">
-                {spec.name}: {spec.value}
+                {spec.title}: {spec.value}
               </li>
             ))}
           </ul>
@@ -137,13 +147,13 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
         <div className="flex md:flex-wrap items-center gap-c32 md:gap-x-20 gap-y-6 mb-8">
           <div className="w-32">
             <p className="font-MontserratSemiBold text-c24 md:text-5xl mb-2">
-              {average}/5
+              {ProductDetail.rating_average}/5
             </p>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Image
                   key={i}
-                  src={i <= Math.floor(Number(average)) ? YellowStar : Star}
+                  src={i <= Math.floor(Number(ProductDetail.rating_average)) ? YellowStar : Star}
                   alt="star rate"
                   width={32}
                   height={30.32}
@@ -154,7 +164,7 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
           </div>
 
           {/* Progress bars */}
-          <div>
+          {/* <div>
             {[5, 4, 3, 2, 1].map((stars) => {
               const value = ratingsCount[stars as RatingKey];
               const max = totalVotes || 1;
@@ -190,7 +200,7 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
                 </div>
               );
             })}
-          </div>
+          </div> */}
         </div>
 
         {/* Filter buttons */}
@@ -247,7 +257,7 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
         </div>
 
         {/* Filtered reviews */}
-        <div className="mt-6 space-y-4">
+        {/* <div className="mt-6 space-y-4">
           {filteredReviews.length === 0 ? (
             <p className="text-sm text-gray-500">No reviews yet.</p>
           ) : (
@@ -276,11 +286,11 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
 
         <div className="pb-20 md:pb-1">
           <Overview reviews={overviewReviews} />
-        </div>
+        </div> */}
       </section>
 
       {/* ================= MOBILE CART BAR ================= */}
-      <div className="flex gap-9.75 items-center left-0 px-6 bg-ffffff fixed bottom-0 h-20 w-full md:hidden">
+      {/* <div className="flex gap-9.75 items-center left-0 px-6 bg-ffffff fixed bottom-0 h-20 w-full md:hidden">
         <CartButton image={CartBtn} size={32} />
         <div className="flex gap-2 w-full text-c12">
           <Button
@@ -303,7 +313,13 @@ export default function MoreDetailedPage({ product }: { product: Product }) {
           </Button>
           <Button>Buy now</Button>
         </div>
-      </div>
+      </div> */}
+
+      
+
+      <section className="similar">
+
+      </section>
     </div>
   );
 }

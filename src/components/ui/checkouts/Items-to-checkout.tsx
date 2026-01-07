@@ -98,7 +98,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
   const uniqueCheckoutItems = [
     ...new Map(
       checkoutItems.map((item) => [
-        `${item.product_id}-${item.variation_name || "no-var"}`,
+        `${item.product_id}-${item.variation_id || "no-var"}`,
         item,
       ])
     ).values(),
@@ -196,14 +196,14 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                         .map((item) => {
                           // Create a reliable unique key
                           const uniqueKey = `${item.product_id}-${
-                            item.variation_name || "no-var"
+                            item.variation_id || "no-var"
                           }`;
 
                           return (
                             <div key={uniqueKey} className="w-fit h-fit">
                               <Image
                                 src={item.product_image || "/placeholder.png"}
-                                alt={item.name || "Product image"}
+                                alt={item.product_name || "Product image"}
                                 width={96}
                                 height={96}
                                 className="rounded h-24 w-24"
@@ -211,9 +211,9 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                               <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
                                 ₦{Number(item.subtotal).toLocaleString()}
                               </p>
-                              {item.variation_name && (
+                              {item.product_name && (
                                 <p className="text-c12 text-000000/70">
-                                  {item.variation_name}
+                                  {item.product_name}
                                 </p>
                               )}
                             </div>

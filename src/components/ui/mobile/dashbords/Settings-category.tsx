@@ -12,6 +12,7 @@ import Flag from "@/assets/icons/flag.svg";
 import { logout } from "@/utils/logout";
 import { useLogout } from "@/utils/logout";
 import { useDispatch } from "react-redux";
+import NotificationSettings from "../../buyer-components/Main-section/sections/notification-settings";
 
 // Minimal African sample (add more as needed)
 const countrySettings: Record<
@@ -159,26 +160,9 @@ export default function Settings() {
       {/* 1) Notification Settings */}
       <Section title="Notification Settings" id="notifications">
         <div className="flex items-center justify-between py-3 border-b  border-b-000000/5 text-sm font-MontserratNormal">
-          <span>Order notifications</span>
-          <Toggle
-            value={toggles.orderNotifications}
-            onChange={() => toggleSwitch("orderNotifications")}
-          />
+         <NotificationSettings />
         </div>
-        <div className="flex items-center justify-between py-3 border-b border-b-000000/5 text-sm font-MontserratNormal">
-          <span>Promotions</span>
-          <Toggle
-            value={toggles.promotions}
-            onChange={() => toggleSwitch("promotions")}
-          />
-        </div>
-        <div className="flex items-center justify-between py-3 border-b-000000/5 text-sm font-MontserratNormal">
-          <span>Messages</span>
-          <Toggle
-            value={toggles.messages}
-            onChange={() => toggleSwitch("messages")}
-          />
-        </div>
+       
       </Section>
 
       {/* 2) Language & Region */}

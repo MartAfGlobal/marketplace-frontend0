@@ -6,6 +6,11 @@ import wishlistReducer from "@/store/cart/wishlist-slice";
 import { persistReducer, persistStore } from "redux-persist";
 import counterReducer from "./slices/counterSlice";
 import storage from "redux-persist/lib/storage";
+import productDetailReducer from "@/store/productDetails/productDetailsSlice";
+import categoryProductsReducer from "@/store/user-data/products/categoryProductsSlice";
+import subCategoryProductsReducer from "@/store/user-data/products/subCategoryProductsSlice";
+import topDealsReducer from "@/store/user-data/products/topDealsSlice";
+
 
 import productReducer from "./user-data/products/product-slice";
 import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice";
@@ -22,6 +27,11 @@ const tokenPersistConfig = {
   key: "token",
   storage,
 };
+
+const productDetailsPersistConfig = {
+  key : "productDetails",
+  storage,
+}
 
 const variationIdPersistConfig = {
   key: "selectedVariation",
@@ -55,6 +65,7 @@ const wishlistPersistConfig = {
 const productsPersistConfig = {
   key: "products",
   storage,
+  
 };
 
 const ordersPersistConfig = {
@@ -71,6 +82,7 @@ const wishlistLabelPersistCobfig = {
 };
 
 const rootReducer = combineReducers({
+  productDetails: persistReducer (productDetailsPersistConfig, productDetailReducer),
   tracking: persistReducer(trackingPersistCobfig, trackingReducer),
   token: persistReducer(tokenPersistConfig, tokenReducer),
   buyer: persistReducer(buyerPersistConfig, buyerReducer),
@@ -90,6 +102,9 @@ const rootReducer = combineReducers({
     variationIdPersistConfig,
     selectedVariationReducer
   ),
+  categoryProducts: categoryProductsReducer,
+  subCategoryProducts: subCategoryProductsReducer,
+  topDeals: topDealsReducer,
 });
 
 const store = configureStore({

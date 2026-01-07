@@ -101,18 +101,14 @@ export default function CreateListModal({
             transition={{ duration: 0.3 }}
             onClick={onClose}
           />
-
-         
-          <motion.div
+          <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999]">
+           <motion.div
             initial={{ y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ duration: 0.35, ease: "easeInOut" }}
-            className="fixed z-[9999] bg-white shadow-xl flex flex-col items-center gap-8 
-             w-[calc(100%-30px)] max-md:bottom-0 max-md:left-[15px] max-md:right-[15px]
-             max-md:rounded-t-2xl max-md:p-6 max-md:max-h-[90vh] max-md:overflow-y-auto 
-             md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 
-             md:rounded-xl md:p-8 md:max-w-102.25"
+            className=" bg-white shadow-xl flex flex-col items-center gap-8 w-full max-w-101.5 rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-120 overflow-y-auto"
+                
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between w-full">
@@ -166,7 +162,7 @@ export default function CreateListModal({
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.4, ease: "easeInOut" }}
-                  className="overflow-hidden w-full"
+                  className="overflow-x-hidden w-full custom-scrollrailes"
                 >
                   <div className="flex w-full flex-col gap-6 h-66 overflow-y-auto custom-scrollrailes">
                     {wishlistItems.map((item) => (
@@ -195,7 +191,7 @@ export default function CreateListModal({
                         </button>
                         <div className="flex gap-3 items-center">
                           <Image
-                            src={item.product.image || "/placeholder.png"}
+                            src={item.product.main_image.thumbnail || "/placeholder.png"}
                             alt={item.product.name || "Wishlist item image"}
                             width={64}
                             height={64}
@@ -205,11 +201,11 @@ export default function CreateListModal({
                           <div className="flex flex-col gap-4">
                             <div>
                               <p className="text-c12 font-MontserratSemiBold mb-1">
-                                {item.product.product_name}
+                                {item.product.name}
                               </p>
                             </div>
                             <span className="text-base font-MontserratSemiBold">
-                              ₦{item.product.price}
+                              ₦{item.product.base_price}
                             </span>
                           </div>
                         </div>
@@ -229,6 +225,9 @@ export default function CreateListModal({
               </Button>
             </div>
           </motion.div>
+
+         </div>
+          
         </>
       )}
     </AnimatePresence>

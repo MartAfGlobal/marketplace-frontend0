@@ -33,6 +33,8 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
     (state: RootState) => state.cart.checkoutItems
   );
 
+
+  
   const checkoutSummary = useSelector(
     (state: RootState) => state.cart.checkoutSummary
   );
@@ -85,7 +87,7 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
                   ) : (
                     checkoutItems.slice(0, visibleItems).map((item, index) => (
                       <motion.div
-                        key={`${item.id || item.product_id || "item"}-${
+                        key={`${item.variation_id || item.product_id || "item"}-${
                           item.variation_display || index
                         }`}
                         initial={{ opacity: 0, y: -10 }}
@@ -96,26 +98,27 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
                         <div className="w-full justify-between   items-end  pb-8 flex">
                           <div className="flex gap-4 w-full j items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
-                              <Image
+
+                              {item.product_image && <Image
                                 src={item.product_image || "/placeholder.png"}
-                                alt={item.name || "Product image"}
+                                alt={item.product_name|| "product image"}
                                 width={96}
                                 height={96}
                                 className="rounded h-24 w-24"
-                              />
+                              />}
                             </div>
                             <div className="w-full md:max-w-143.75">
                               <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                                {item.name}
+                                {item.product_name}
                               </p>
 
                               <div className="w-fit h-c32 px-2 justify-center rounded-c12 bg-black/3 flex items-center">
                                 <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
                                   {item.quantity}PC,{" "}
-                                  {String(item.name).trim().length > 6
-                                    ? String(item.name).trim().slice(0, 6) +
+                                  {String(item.product_name).trim().length > 6
+                                    ? String(item.product_name).trim().slice(0, 6) +
                                       "..."
-                                    : String(item.name).trim()}
+                                    : String(item.product_name).trim()}
                                 </span>
                               </div>
                               <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">
@@ -158,11 +161,7 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
               <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
                 More to love
               </p>
-              {/* <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
-                {fashionProducts.slice(0, visible).map((item) => (
-                  <ProductCard key={item.id} product={item} />
-                ))}
-              </div> */}
+            
             </div>
           </div>
         </div>

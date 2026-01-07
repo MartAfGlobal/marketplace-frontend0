@@ -60,7 +60,8 @@ export default function Editaddreess() {
   const [formData, setFormData] = useState<OrderAddress>({
      id:  order.id || null,
     country: address?.country || "",
-    full_name: address?.full_name || "",
+    last_name: address?.last_name || "",
+    first_name: address?.first_name || "",
     phone: address?.phone || "",
     state: address?.state || "",
     city: address?.city || "",
@@ -283,13 +284,24 @@ useEffect(() => {
 
             <div className="pb-3">
               <Label className="text-sm font-MontserratSemiBold">
-                Full name
+                First name
               </Label>
               <input
                 type="text"
                 className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
-                value={formData.full_name}
-                onChange={(e) => handleChange("full_name", e.target.value)}
+                value={formData.first_name}
+                onChange={(e) => handleChange("first_name", e.target.value)}
+              />
+            </div>
+            <div className="pb-3">
+              <Label className="text-sm font-MontserratSemiBold">
+                Last name
+              </Label>
+              <input
+                type="text"
+                className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                value={formData.last_name}
+                onChange={(e) => handleChange("last_name", e.target.value)}
               />
             </div>
 
