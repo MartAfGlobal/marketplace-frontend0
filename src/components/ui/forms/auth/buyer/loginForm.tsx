@@ -67,6 +67,8 @@ export default function LoginForm() {
       localStorage.removeItem("rememberEmail");
       localStorage.removeItem("rememberPassword");
     }
+    
+    localStorage.setItem("accessToken", accessToken);
 
     dispatch(tokenActions.setToken(accessToken));
 
