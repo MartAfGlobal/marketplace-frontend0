@@ -11,12 +11,15 @@ import DetailPageNavbar from "@/components/ui/navigation/detail-page-nav";
 import { useHttp } from "@/hooks/use-http";
 import { setProduct } from "@/store/productDetails/productDetailsSlice";
 import ProductVariation from "@/components/ui/DetailPage/productVariation";
+import { useSearchParams } from "next/navigation";
 
 export default function ProductPage() {
   const dispatch = useDispatch();
   const params = useParams(); // ✅ get slug from URL
   const slug = params?.slug as string;
-  console.log("lets see slug", slug);
+ const searchParams = useSearchParams();
+const variationId = searchParams.get("variationId") || undefined;
+ 
   const { loading: loadingDetails, sendHttpRequest: fetchDetailsReq } =
     useHttp();
 
@@ -33,7 +36,7 @@ export default function ProductPage() {
         userType: "buyer",
       },
       successRes: (res) => {
-        console.log("product details:", res.data);
+       
 
         // Store in Redux
         dispatch(setProduct(res.data));
@@ -54,9 +57,7 @@ export default function ProductPage() {
   );
 
   console.log("redux product details", productDetails);
-  const variationSelector = useSelector(
-    (state: RootState) => state.selectedVariation
-  );
+
 
   return (
     <main className="md:px-c60 pb-c32 ">
@@ -200,7 +201,7 @@ export default function ProductPage() {
               />
             </div> */}
 
-            <ProductVariation isModal={false} />
+            <ProductVariation isModal={false} selectedVariaton={variationId}/>
           </div>
 
           {/* More details section */}

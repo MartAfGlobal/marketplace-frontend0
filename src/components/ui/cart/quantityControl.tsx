@@ -33,6 +33,7 @@ type QuantitySelectorPropsWithBackend = Omit<
   buttonHeight?: string;
   quantityFont?: string;
   variation_id?: string;
+
 };
 
 export default function QuantitySelector({
@@ -55,7 +56,9 @@ export default function QuantitySelector({
   const { sendHttpRequest } = useHttp();
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const products = useSelector((state: RootState) => state.products.items);
-
+const productDetails = useSelector(
+    (state: RootState) => state.productDetails.product
+  );
   const item = cartItems.find((i) => i.variation_id === variation_id);
   const initialQty = item?.quantity ?? Number(quantity) ?? 0;
 
@@ -76,10 +79,9 @@ export default function QuantitySelector({
 
 
 
- const variationDisplay = `${group_variation?.main_value ?? ""}${
-   selectedSize?.size ? ` / ${selectedSize?.size}` : ""
-  }`;
+ const variationDisplay = productDetails?.variations.find((p)=>p.id === variation_id)
 
+ console.log ("yruryrururur", variationDisplay)
 
 
 
@@ -110,7 +112,7 @@ export default function QuantitySelector({
         dispatch(
           addToCart({
              product_slug: products.find((p)=>p.id ===productId)?.slug || "",
-            variation_display: variationDisplay,
+            variation_display: variationDisplay?.name,
             product_id: productId,
             variation_id: variation_id || "",
             quantity: res.data.quantity , // first add is always 1
@@ -158,7 +160,7 @@ export default function QuantitySelector({
         dispatch(
           addGuestItemToCart({
             product_slug: products.find((p)=>p.id ===productId)?.slug || "",
-            variation_display: variationDisplay,
+            variation_display: variationDisplay?.name,
             product_id: productId,
             variation_id: variation_id || "",
             quantity: newQty,

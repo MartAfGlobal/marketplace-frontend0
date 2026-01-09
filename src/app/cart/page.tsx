@@ -41,6 +41,7 @@ import { g, i } from "framer-motion/client";
 import { Size } from "recharts/types/util/types";
 
 import { setSelectedVariation } from "@/store/slices/variationSelectorSlice";
+import CartSkeleton from "@/components/reloadSpinner/CartSkeleton";
 
 export default function CartPage() {
   const [selectedItems, setSelectedItems] = useState<{
@@ -62,6 +63,10 @@ export default function CartPage() {
   const [open, setOpen] = useState(false);
   const [syncingCart, setSyncingCart] = useState(false);
   const [localQty, setLocalQty] = useState<number>(0);
+  const [hydratingCart, setHydratingCart] = useState(true);
+
+
+  console.log ("cart------")
 
   const handleQtyChange = (newQty: number) => {
     if (newQty < 1) return;
@@ -138,22 +143,24 @@ export default function CartPage() {
 
   useEffect(() => {
     const init = async () => {
-      if (!token) {
-        try {
-          const local = JSON.parse(localStorage.getItem("cart") || "[]");
+      setHydratingCart(true);
 
+      try {
+        if (!token) {
+          // Guest
+          const local = JSON.parse(localStorage.getItem("cart") || "[]");
           dispatch(setCartItems(local));
-          const sel = hydrateSelectionFromItems(local);
-          setSelectedItems(sel);
-        } catch (e) {
-          console.error("Failed to read local cart", e);
-          dispatch(setCartItems([]));
-          setSelectedItems({});
+          setSelectedItems(hydrateSelectionFromItems(local));
+        } else {
+          // Logged in
+          await syncGuestCartAndFetch();
         }
-      } else {
-        await fetchBackendCart();
+      } catch (err) {
+        console.error("Cart hydration failed", err);
+      } finally {
+        initialHydratedRef.current = true;
+        setHydratingCart(false);
       }
-      initialHydratedRef.current = true;
     };
 
     init();
@@ -196,7 +203,7 @@ export default function CartPage() {
 
   const fetchBackendCart = async () => {
     if (!token) return;
-    setSyncingCart(true);
+
     try {
       await sendHttpRequest({
         requestConfig: {
@@ -264,40 +271,36 @@ export default function CartPage() {
     }
   };
 
-  useEffect(() => {
+  const syncGuestCartAndFetch = async () => {
     if (!token) return;
-    if (!guestCart || guestCart.length === 0) return;
-    if (hasSyncedGuestCart.current) return;
 
-    const syncGuestCart = async () => {
-      try {
-        const payload = mapGuestCartForSync(guestCart);
-        if (payload.length === 0) return; // nothing valid to send
+    // 1️⃣ Sync guest cart if any
+    const stored = JSON.parse(localStorage.getItem("cart") || "[]");
+    const payload = mapGuestCartForSync(stored);
 
-        await sendHttpRequest({
-          requestConfig: {
-            url: "/cart/bulk_add/",
-            method: "POST",
-            token,
-            isAuth: true,
-            userType: "buyer",
-            body: { items: payload },
-          },
-          successRes: () => {
-            localStorage.removeItem("cart");
-            setGuestCart([]);
-            hasSyncedGuestCart.current = true; // ✅ move here
-          },
-        });
-      } catch (err) {
-        console.error("Guest cart sync failed", err);
-        toast.error("Failed to sync cart. Retrying...");
-        hasSyncedGuestCart.current = false; // allow retry
-      }
-    };
+   if (payload.length > 0) {
+  await sendHttpRequest({
+    requestConfig: {
+      url: "/cart/bulk_add/",
+      method: "POST",
+      token,
+      isAuth: true,
+      userType: "buyer",
+      body: { items: payload },
+    },
+    successRes: () => {
+      // ✅ only clear local cart AFTER backend confirms success
+      localStorage.removeItem("cart");
+      setGuestCart([]);
+      hasSyncedGuestCart.current = true;
+    },
+  });
+}
 
-    syncGuestCart();
-  }, [token, guestCart]);
+
+    // 2️⃣ Fetch final backend cart
+    await fetchBackendCart();
+  };
 
   const handleToggleItem = async (item: any) => {
     const id = item.variation_id || item.product_id;
@@ -517,33 +520,22 @@ export default function CartPage() {
 
   const selectedCount = Object.values(selectedItems).filter(Boolean).length;
 
+const handleClick = (item: CartItem) => {
+  const variationId = item.variation_id; // or whatever your field is
 
-  const handleClick = (items: CartItem) => {
-    const defaultVariation = items;
+  // Build the URL string manually
+  const url = `/product/${item.product_slug}${variationId ? `?variationId=${variationId}` : ""}`;
 
-    // const defaultSizeId = defaultVariation.size;
+  router.push(url);
 
-    // 3️⃣ Dispatch into redux
-    if (defaultVariation) {
-      dispatch(
-        setSelectedVariation({
-          slug: defaultVariation.product_slug ?? "",
-          variation_id: defaultVariation.variation_id || "",
-          variationData: defaultVariation,
-        })
-      );
-    }
+  console.log("item clicked", item, variationId);
+};
 
-    router.push(`/product/${defaultVariation.product_slug}`);
-    console.log("itemssssss", defaultVariation, variationSelector);
-  };
 
   return (
     <>
-      {token && syncingCart ? (
-        <div className="w-full flex justify-center h-screen items-center py-10">
-          <DotSpinner size={10} color="#ff715b" gap={8} />
-        </div>
+      {hydratingCart ? (
+        <CartSkeleton />
       ) : (
         <div className="relative md: md:h-full h-dvh">
           <motion.div
@@ -668,7 +660,7 @@ export default function CartPage() {
                                 onChange={() => handleToggleItem(item)}
                                 className="custom-checkbox flex-shrink-0"
                               />
-                              <button onClick={() => handleClick(item)}>
+                              <button onClick={() => handleClick(item)} className="flex gap-4 items-center">
                                 {item.product_image && (
                                   <Image
                                     src={
@@ -680,7 +672,7 @@ export default function CartPage() {
                                     className="rounded md:h-24 md:w-24 w-c56 h-c56"
                                   />
                                 )}
-                              </button>
+                             
 
                               <div>
                                 <p className="font-MontserratSemiBold  text-c12 md:text-base mb-1">
@@ -698,10 +690,11 @@ export default function CartPage() {
                                   </p>
                                 )}
 
-                                <p className="font-MontserratNormal text-base md:text-c12 text-gray-600">
+                                <p className="font-MontserratNormal text-base md:text-c12 text-gray-600 text-left">
                                   ₦{item.price}
                                 </p>
                               </div>
+                               </button>
                             </div>
 
                             <motion.div
@@ -854,12 +847,11 @@ export default function CartPage() {
                     <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
                       More to love
                     </p>
-                   
                   </div>
                 </div>
               </div>
 
-              <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed bottom-0 md:hidden z-50 flex items-center gap-4 ">
+              <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed bottom-0 md:hidden z-30 flex items-center gap-4 ">
                 <div className="flex items-center gap-2 w-11">
                   <button
                     onClick={handleSelectAll}

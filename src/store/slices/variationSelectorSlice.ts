@@ -1,75 +1,41 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// -------------------------------------------
-// TYPES
-// -------------------------------------------
-
-export interface SelectedVariationPayload {
-  slug: string;
-  variation_id: string;
-  variationData?: any; // full variation object (optional)
-}
-
-export interface SelectedVariationState {
-  slug: string | null;
-  variation_id: string | null;
-  variationData : any
-
-}
-
-// -------------------------------------------
-// INITIAL STATE
-// -------------------------------------------
-
-const initialState: SelectedVariationState = {
-  slug: null,
-  variation_id: null,
-  variationData: null
-
+type VariationState = {
+  [productSlug: string]: {
+    variationId: number | null;
+    attributes: Record<string, string>;
+  };
 };
 
-// -------------------------------------------
-// SLICE
-// -------------------------------------------
+const initialState: VariationState = {};
 
-export const variationSelectorSlice = createSlice({
-  name: "variationSelector",
+const productVariationSlice = createSlice({
+  name: "productVariation",
   initialState,
   reducers: {
-    // Set a variation when navigating FROM cart, search, category, etc.
-    setSelectedVariation: (state, action: PayloadAction<SelectedVariationPayload>) => {
-      state.slug = action.payload.slug;
-      state.variation_id = action.payload.variation_id;
-       state.variationData = action.payload.variationData
-   
-    },
-
-    // Update variation data (useful inside ProductPage when user selects manually)
-    updateSelectedVariation: (
+    setSelectedVariation(
       state,
-      action: PayloadAction<{ variation_id: string; variationData?: any; slug:string }>
-    ) => {
-      state.variation_id = action.payload.variation_id;
-  
+      action: PayloadAction<{
+        productSlug: string;
+        variationId: number | null;
+        attributes: Record<string, string>;
+      }>
+    ) {
+      state[action.payload.productSlug] = {
+        variationId: action.payload.variationId,
+        attributes: action.payload.attributes,
+      };
     },
 
-    // Clear variation on leaving product page
-    clearSelectedVariation: (state) => {
-      state.slug = null;
-      state.variation_id = null;
-      state.variationData = null
-      
+    clearSelectedVariation(state, action: PayloadAction<string>) {
+      delete state[action.payload];
     },
   },
 });
 
-
-
 export const {
   setSelectedVariation,
-  updateSelectedVariation,
   clearSelectedVariation,
-} = variationSelectorSlice.actions;
+} = productVariationSlice.actions;
 
-
-export default variationSelectorSlice.reducer;
+export default productVariationSlice.reducer;

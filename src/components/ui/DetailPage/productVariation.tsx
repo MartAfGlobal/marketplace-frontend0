@@ -1,6 +1,6 @@
 "use client";
 
-import { RootState } from "@/store";
+import { AppDispatch, RootState } from "@/store";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,18 +23,22 @@ import CartBtn from "@/assets/mobile/cart.png";
 import CartButton from "../cart/cartButton";
 import AdSlider from "@/components/Ads";
 import { useHttp } from "@/hooks/use-http";
-import { setCategoryProducts } from "@/store/user-data/products/categoryProductsSlice";
+
 import { setsubCategoryProducts } from "@/store/user-data/products/subCategoryProductsSlice";
 import ProductSection from "../landindPage/ShoppingItems/shoppingItemComponent/ProductSection";
 import ProductDetailCategory from "../mobile/product-detail.categories";
-import { div } from "framer-motion/client";
+import { setSelectedVariation as setSelectedVariationAction } from "@/store/slices/variationSelectorSlice";
+
+
 
 type ProductVariationProp = {
   isModal: boolean;
+  selectedVariaton?:string
 };
 
 export default function ProductVariation({
   isModal = true,
+  selectedVariaton
 }: ProductVariationProp) {
   const productDetails = useSelector(
     (state: RootState) => state.productDetails.product
@@ -51,11 +55,14 @@ const variationSectionRef = useRef<HTMLDivElement | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const [error, setError] = useState("");
+ 
 
   const [openAttribute, setOpenAttribute] = useState<string | null>(null);
   const [selectedAttributes, setSelectedAttributes] = useState<
     Record<string, string>
   >({});
+
+
   const [missingAttribute, setMissingAttribute] = useState<string | null>(null);
   const [hasTriedAddToCart, setHasTriedAddToCart] = useState(false);
   const hasSelectedAttributes = Object.values(selectedAttributes).some(
@@ -64,13 +71,36 @@ const variationSectionRef = useRef<HTMLDivElement | null>(null);
   const subCategory = useSelector(
     (state: RootState) => state.subCategoryProducts.items
   );
-  const dispatch = useDispatch();
+  
+const dispatch = useDispatch() as AppDispatch;
+
 
   const [pendingRequests, setPendingRequests] = useState(2); // 2 API calls
   const { sendHttpRequest } = useHttp();
 
   const subCategorySlug = productDetails?.category.subcategory.slug;
-  /* ---------------- FETCH CATEGORY PRODUCTS ---------------- */
+
+useEffect(() => {
+  if (!selectedVariaton || !productDetails?.variations) return;
+
+  // Find the variation that matches the given ID
+  const match = productDetails.variations.find(
+    (v) => v.id === selectedVariaton // IDs in your data are strings
+  );
+
+  if (!match) return;
+
+  // Set the selected attributes
+  setSelectedAttributes({ ...match.attribute_summary });
+
+  // Set the selected variation
+  setSelectedVariation(match);
+
+  // Scroll to variation section if needed
+  scrollToVariations();
+}, [selectedVariaton, productDetails]);
+
+  
   useEffect(() => {
     if (!subCategorySlug) return;
 
@@ -183,6 +213,8 @@ const variationSectionRef = useRef<HTMLDivElement | null>(null);
     const attributes = Object.keys(productDetails.variation_options || {});
     const firstMissing = attributes.find((attr) => !selectedAttributes[attr]);
 
+ 
+
     if (!firstMissing) return;
 
     setMissingAttribute(firstMissing);
@@ -207,6 +239,18 @@ const scrollToVariations = () => {
     behavior: "smooth",
   });
 };
+
+useEffect(() => {
+  if (!productDetails?.slug) return;
+
+  dispatch(
+    setSelectedVariationAction({
+      productSlug: productDetails.slug,
+      variationId: selectedVariation?.id ?? null,
+      attributes: selectedAttributes,
+    })
+  );
+}, [selectedVariation, selectedAttributes, productDetails?.slug, dispatch]);
 
 
 

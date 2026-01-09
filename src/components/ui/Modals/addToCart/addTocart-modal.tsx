@@ -61,7 +61,7 @@ export default function AddCartModal({
     [key: string]: boolean;
   }>({});
   const dispatch = useDispatch();
-  console.log("lets see slug", productSlug);
+ 
   const { loading: loadingDetails, sendHttpRequest: fetchDetailsReq } =
     useHttp();
 

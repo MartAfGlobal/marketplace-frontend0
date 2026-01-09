@@ -27,7 +27,7 @@ export interface GuestCartItem {
   product_id: string;
   variation_id?: string;
   quantity: number;
-  variation_display?: string | object;
+  variation_display?: string;
   checked: boolean;
   price: string | number; // must be string
   product_name: string;
@@ -145,6 +145,7 @@ const cartSlice = createSlice({
           size: data.size,
           product_name: data.product_name,
           product_image: data.product_image || null,
+          variation_display: data.variation_display || "",
 
           price: Number(data.price),
           price_at_purchase: Number(data.price),
