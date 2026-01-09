@@ -37,35 +37,35 @@ useEffect(() => {
 
 
 
-  useEffect(() => {
-    const handleProducts = (res: any) => {
-      console.log("Raw API Response:", res);
+  // useEffect(() => {
+  //   const handleProducts = (res: any) => {
+  //     console.log("Raw API Response:", res);
 
-      const products = res?.data?.results; // drill into .data
-      console.log("API Results:", products);
+  //     const products = res?.data?.results; // drill into .data
+  //     console.log("API Results:", products);
 
-      // const products = apiResults.map(transformApiProduct);
-      console.log("Mapped products:", products);
+  //     // const products = apiResults.map(transformApiProduct);
+  //     console.log("Mapped products:", products);
 
-      dispatch(setProducts(products));
-    };
+  //     dispatch(setProducts(products));
+  //   };
 
-    console.log("Sending HTTP request...");
-    sendHttpRequest({
-      requestConfig: {
-        url: "/products/public/products/",
-        method: "GET",
-      },
-      successRes: handleProducts,
-    });
-  }, [dispatch, sendHttpRequest]);
+  //   console.log("Sending HTTP request...");
+  //   sendHttpRequest({
+  //     requestConfig: {
+  //       url: "/products/public/products/",
+  //       method: "GET",
+  //     },
+  //     successRes: handleProducts,
+  //   });
+  // }, [dispatch, sendHttpRequest]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => setLoading(false), 2000);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
-  if (loading) return <WireframeLoader />;
+  // if (loading) return <WireframeLoader />;
 
   return (
     <main>

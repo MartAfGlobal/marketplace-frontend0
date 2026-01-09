@@ -101,6 +101,22 @@ const buyerSlice = createSlice({
     addBuyerAddress(state, action: PayloadAction<Address>) {
       state.BuyerAddresses.push(action.payload);
     },
+    updateBuyerAddress(state, action: PayloadAction<Address>) {
+      state.BuyerAddresses = state.BuyerAddresses.map((addr) =>
+        addr.id === action.payload.id ? action.payload : addr
+      );
+    },
+    removeBuyerAddress(state, action: PayloadAction<number>) {
+      state.BuyerAddresses = state.BuyerAddresses.filter(
+        (addr) => addr.id !== action.payload
+      );
+
+      // Optional: clear selected address if it was deleted
+      if (state.selectedAddressId === action.payload) {
+        state.selectedAddressId = null;
+      }
+    },
+
     clearBuyer() {
       return buyerInitialState;
     },

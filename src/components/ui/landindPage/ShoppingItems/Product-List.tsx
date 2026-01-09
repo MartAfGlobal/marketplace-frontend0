@@ -1,5 +1,9 @@
 "use client";
 
+const CACHE_KEY = "home_products_cache";
+const CACHE_TTL = 30 * 60 * 1000; // ✅ 30 minutes in milliseconds
+
+
 import { useEffect, useState } from "react";
 import ProductSection from "./shoppingItemComponent/ProductSection";
 import ProductSectionSkeleton from "@/components/reloadSpinner/ProductSectionSkeleton";
@@ -18,58 +22,89 @@ export default function ProductListPage() {
   const [allProduct, setAllProduct] = useState<Product[]>([]);
 
   const fetchWithPromise = (url: string) => {
-    return new Promise<any>(resolve => {
+    return new Promise<any>((resolve) => {
       sendHttpRequest({
         requestConfig: {
           url,
           method: "GET",
         },
         successRes: (res) => resolve(res),
-      
       });
     });
   };
 
-  useEffect(() => {
+  const fetchProducts = async (updateCache = true) => {
     setIsLoading(true);
 
-    Promise.all([
-      fetchWithPromise(
-        "/products/public/products/?created_today=true&page=1&page_size=20"
-      ),
-      fetchWithPromise(
-        "/products/public/products/?filter=trending&days=30&page=1&page_size=20"
-      ),
-      fetchWithPromise(
-        "/products/public/products/?filter=top-selling&page=1&page_size=10"
-      ),
-      fetchWithPromise(
-        "/products/public/products/?filter=discounted&page=1&page_size=20"
-      ),
-      fetchWithPromise("/products/public/products/?page=1&page_size=20"),
-    ])
-      .then(
-        ([
-          todayRes,
-          trendingRes,
-          topSellingRes,
-          discountRes,
-          allRes,
-        ]) => {
-          setTodayProduct(todayRes?.data?.results ?? []);
-          setTrending(trendingRes?.data?.results ?? []);
-          setTopSelling(topSellingRes?.data?.results ?? []);
-          setDiscount(discountRes?.data?.results ?? []);
-          setAllProduct(allRes?.data?.results ?? []);
-        }
-      )
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [sendHttpRequest]);
+    try {
+      const [todayRes, trendingRes, topSellingRes, discountRes, allRes] =
+        await Promise.all([
+          fetchWithPromise(
+            "/products/public/products/?created_today=true&page=1&page_size=20"
+          ),
+          fetchWithPromise(
+            "/products/public/products/?filter=trending&days=30&page=1&page_size=20"
+          ),
+          fetchWithPromise(
+            "/products/public/products/?filter=top-selling&page=1&page_size=10"
+          ),
+          fetchWithPromise(
+            "/products/public/products/?filter=discounted&page=1&page_size=20"
+          ),
+          fetchWithPromise("/products/public/products/?page=1&page_size=20"),
+        ]);
+
+      const payload = {
+        timestamp: Date.now(),
+        todayProduct: todayRes?.data?.results ?? [],
+        trending: trendingRes?.data?.results ?? [],
+        topSelling: topSellingRes?.data?.results ?? [],
+        discount: discountRes?.data?.results ?? [],
+        allProduct: allRes?.data?.results ?? [],
+      };
+
+      setTodayProduct(payload.todayProduct);
+      setTrending(payload.trending);
+      setTopSelling(payload.topSelling);
+      setDiscount(payload.discount);
+      setAllProduct(payload.allProduct);
+
+      if (updateCache) {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+
+    if (cached) {
+      const data = JSON.parse(cached);
+      const isExpired = Date.now() - data.timestamp > CACHE_TTL;
+
+      // ✅ Always show cached data immediately
+      setTodayProduct(data.todayProduct);
+      setTrending(data.trending);
+      setTopSelling(data.topSelling);
+      setDiscount(data.discount);
+      setAllProduct(data.allProduct);
+      setIsLoading(false);
+
+      // 🔄 If expired, refresh silently in background
+      if (isExpired) {
+        fetchProducts(true);
+      }
+
+      return;
+    }
+
+    // ❌ No cache → fetch normally
+    fetchProducts(true);
+  }, []);
 
   const isEmpty =
     !isLoading &&

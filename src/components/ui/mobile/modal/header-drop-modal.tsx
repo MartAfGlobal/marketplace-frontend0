@@ -57,7 +57,8 @@ const settings = [
     ],
   },
 ];
-
+const CATEGORIES_CACHE_KEY = "dropdown_modal_categories";
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 export default function DropdownModal({
   open,
   onClose,
@@ -105,35 +106,50 @@ export default function DropdownModal({
   };
 
   /* ------------------ Fetch Categories ------------------ */
-  const fetchCategories = () => {
-    if (isFetchingRef.current || !hasMore) return;
-    isFetchingRef.current = true;
+ const fetchCategories = (saveToCache = true) => {
+  if (isFetchingRef.current || !hasMore) return;
+  isFetchingRef.current = true;
 
-    sendHttpRequest({
-      requestConfig: {
-        url: `/products/public/categories/main/?page=${page}&page_size=20`,
-        method: "GET",
-      },
-      successRes: (res: any) => {
-        const newCategories: Category[] = res?.data?.results || [];
-        const count = res?.data?.count || 0;
+  sendHttpRequest({
+    requestConfig: {
+      url: `/products/public/categories/main/?page=${page}&page_size=20`,
+      method: "GET",
+    },
+    successRes: (res: any) => {
+      const newCategories: Category[] = res?.data?.results || [];
+      const count = res?.data?.count || 0;
 
-        setTotalCount(count);
+      setTotalCount(count);
 
-        setCategories((prev) => {
-          const merged = [...prev, ...newCategories];
-          const unique = Array.from(
-            new Map(merged.map((c) => [c.id, c])).values()
+      setCategories((prev) => {
+        const merged = [...prev, ...newCategories];
+        const unique = Array.from(
+          new Map(merged.map((c) => [c.id, c])).values()
+        );
+        setHasMore(unique.length < count);
+
+        if (saveToCache) {
+          sessionStorage.setItem(
+            CATEGORIES_CACHE_KEY,
+            JSON.stringify({
+              timestamp: Date.now(),
+              categories: unique,
+              totalCount: count,
+              hasMore: unique.length < count,
+              page: page + 1,
+            })
           );
-          setHasMore(unique.length < count);
-          return unique;
-        });
+        }
 
-        setPage((prev) => prev + 1);
-        isFetchingRef.current = false;
-      },
-    });
-  };
+        return unique;
+      });
+
+      setPage((prev) => prev + 1);
+      isFetchingRef.current = false;
+    },
+  });
+};
+
 
   /* ------------------ Initial Load ------------------ */
   useEffect(() => {
@@ -155,12 +171,36 @@ export default function DropdownModal({
   };
 
   /* ------------------ ESC Close ------------------ */
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+useEffect(() => {
+  if (!open) return;
+
+  const cached = sessionStorage.getItem(CATEGORIES_CACHE_KEY);
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    const isExpired = Date.now() - parsed.timestamp > CACHE_TTL;
+
+    if (!isExpired) {
+      setCategories(parsed.categories);
+      setTotalCount(parsed.totalCount);
+      setHasMore(parsed.hasMore);
+      setPage(parsed.page);
+
+      // optional: fetch new in background
+      fetchCategories(false); // false = don't reset cache yet
+      return;
+    } else {
+      sessionStorage.removeItem(CATEGORIES_CACHE_KEY);
+    }
+  }
+
+  // no cache or expired → reset state and fetch fresh
+  setCategories([]);
+  setPage(1);
+  setHasMore(true);
+  setTotalCount(0);
+  isFetchingRef.current = false;
+  fetchCategories(true); // true = save to cache
+}, [open]);
 
   return (
     <AnimatePresence>

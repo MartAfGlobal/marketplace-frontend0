@@ -1,11 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import Flag from "@/assets/icons/flag.svg";
 import NavBack from "@/assets/icons/navBacksmall.png";
 import Phone from "@/assets/mobile/Phone.png";
 import CaretDown from "@/assets/mobile/carent-down.png";
@@ -22,28 +21,33 @@ import { RootState } from "@/store";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-// Helper to close dropdowns on outside click
+/* ---------------- helpers ---------------- */
+
 function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   const ref = useRef<T | null>(null);
   useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) onOutside();
-    }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    const handler = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) onOutside();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [onOutside]);
   return ref;
 }
 
-// Helper: map ISO code to flag URL
-const getFlagUrl = (isoCode: string) =>
-  `https://flagcdn.com/w20/${isoCode.toLowerCase()}.png`;
+const getFlagUrl = (iso: string) =>
+  `https://flagcdn.com/w20/${iso.toLowerCase()}.png`;
 
-export default function AddNewAddreess() {
+/* ---------------- component ---------------- */
+
+export default function EditAddressPage() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const params = useParams();
+  const addressId = Number(params.id);
+
   const token = useSelector((state: RootState) => state.token.token);
+  const { loading, sendHttpRequest } = useHttp();
 
   const [formData, setFormData] = useState<Address>({
     id: 0,
@@ -58,19 +62,22 @@ export default function AddNewAddreess() {
     is_default: false,
   });
 
-  const [countries, setCountries] = useState(
-    Country.getAllCountries()
-  );
-  const [selectedCountry, setSelectedCountry] =
-    useState<(typeof countries)[number] | null>(null);
+  const [countries, setCountries] = useState(Country.getAllCountries());
+  const [states, setStates] = useState<any[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<any>(null);
+  const [selectedState, setSelectedState] = useState<any>(null);
+  const [flag, setFlag] = useState(NigerianFlag.src);
+  const [isDefault, setIsDefault] = useState(false);
 
-  const [states, setStates] = useState(
-    State.getStatesOfCountry("NG")
-  );
-  const [selectedState, setSelectedState] =
-    useState<(typeof states)[number] | null>(null);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [stateOpen, setStateOpen] = useState(false);
 
-  const [flag, setFlag] = useState<string>(NigerianFlag.src);
+  const countryRef = useClickOutside<HTMLDivElement>(() =>
+    setCountryOpen(false)
+  );
+  const stateRef = useClickOutside<HTMLDivElement>(() =>
+    setStateOpen(false)
+  );
   const menuVariants = {
   hidden: { opacity: 0, y: -10 },
   show: {
@@ -84,189 +91,168 @@ export default function AddNewAddreess() {
     transition: { duration: 0.15 },
   },
 };
-
-
-  const [countryOpen, setCountryOpen] = useState(false);
-  const [stateOpen, setStateOpen] = useState(false);
-
-  const [isDefault, setIsDefault] = useState<boolean>(false);
-
-  const countryRef = useClickOutside<HTMLDivElement>(() =>
-    setCountryOpen(false)
-  );
-  const stateRef = useClickOutside<HTMLDivElement>(() => setStateOpen(false));
-
-  const { loading, sendHttpRequest } = useHttp();
-
- useEffect(() => {
-  const allCountries = Country.getAllCountries();
-
-  // Find Nigeria
-  const nigeria = allCountries.find(
-    (c) => c.isoCode === "NG"
-  );
-
-  // Put Nigeria first, then the rest
-  const sortedCountries = nigeria
-    ? [nigeria, ...allCountries.filter((c) => c.isoCode !== "NG")]
-    : allCountries;
-
-  setCountries(sortedCountries);
-  setSelectedCountry(nigeria || sortedCountries[0]);
-  setFlag(getFlagUrl((nigeria || sortedCountries[0]).isoCode));
-
-  setFormData((prev) => ({
-    ...prev,
-    country: (nigeria || sortedCountries[0]).name,
-    phone: "+" + (nigeria || sortedCountries[0]).phonecode + " ",
-  }));
-}, []);
-
-  useEffect(() => {
-    if (!selectedCountry) return;
-    const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
-    setStates(countryStates);
-    setSelectedState(null);
-  }, [selectedCountry]);
-
-  const handleChange = (field: keyof Address, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleCountrySelect = (c: typeof selectedCountry) => {
-    if (!c) return;
-    setSelectedCountry(c);
-    setFlag(getFlagUrl(c.isoCode));
-    setSelectedState(null);
-    setCountryOpen(false);
-
-    setFormData((prev) => ({
-      ...prev,
-      country: c.name,
-      phone: "+" + c.phonecode + " ",
-      state: "",
-      city: "",
-      postal_code: "",
-    }));
-  };
-
-  const handleStateSelect = (s: typeof selectedState) => {
-    if (!s) return;
-    setSelectedState(s);
-    setStateOpen(false);
-
-    setFormData((prev) => ({
-      ...prev,
-      state: s.name,
-    }));
-  };
+  /* ---------------- auth guard ---------------- */
 
   useEffect(() => {
     if (!token) {
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      router.replace(isMobile ? "/?showLogin=true" : "/auth/login");
+      router.replace("/auth/login");
     }
   }, [token, router]);
 
-  const handleSave = (e?: React.FormEvent) => {
-    e?.preventDefault();
+  /* ---------------- fetch address ---------------- */
+
+  useEffect(() => {
+    if (!token || !addressId) return;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `/shipping/shipping-addresses/${addressId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (!res.ok) throw new Error("Fetch failed");
+        const data: Address = await res.json();
+
+        setFormData(data);
+        setIsDefault(data.is_default);
+
+        const country = Country.getAllCountries().find(
+          (c) => c.name === data.country
+        );
+
+        if (country) {
+          setSelectedCountry(country);
+          setFlag(getFlagUrl(country.isoCode));
+
+          const st = State.getStatesOfCountry(country.isoCode);
+          setStates(st);
+
+          const matchedState = st.find(
+            (s) => s.name === data.state
+          );
+          setSelectedState(matchedState || null);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  }, [token, addressId]);
+
+  /* ---------------- handlers ---------------- */
+
+  const handleChange = (
+    field: keyof Address,
+    value: string | boolean
+  ) => {
+    setFormData((p) => ({ ...p, [field]: value }));
+  };
+
+  const handleCountrySelect = (c: any) => {
+    setSelectedCountry(c);
+    setFlag(getFlagUrl(c.isoCode));
+    setCountryOpen(false);
+
+    const st = State.getStatesOfCountry(c.isoCode);
+    setStates(st);
+    setSelectedState(null);
+
+    setFormData((p) => ({
+      ...p,
+      country: c.name,
+      state: "",
+      city: "",
+      postal_code: "",
+      phone: "+" + c.phonecode + " ",
+    }));
+  };
+
+  const handleStateSelect = (s: any) => {
+    setSelectedState(s);
+    setStateOpen(false);
+    setFormData((p) => ({ ...p, state: s.name }));
+  };
+
+  /* ---------------- submit ---------------- */
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!token) return;
 
-    const { id, ...bodyWithoutId } = {
-  ...formData,
-  phone: formData.phone.replace(/\s+/g, " ").trim(),
-};
-
+    const payload = {
+      ...formData,
+      is_default: isDefault,
+      phone: formData.phone.trim(),
+    };
 
     sendHttpRequest({
       requestConfig: {
-        url: "shipping/shipping-addresses/",
-        method: "POST",
-        body: bodyWithoutId,
+        url: `/shipping/shipping-addresses/${addressId}`,
+        method: "PATCH",
+        body: payload,
         token,
         isAuth: true,
-        successMessage: "Address added successfully!",
+        successMessage: "Address updated successfully",
         userType: "buyer",
       },
       successRes: (res) => {
-        dispatch(buyerActions.addBuyerAddress(res.data));
+        dispatch(buyerActions.updateBuyerAddress(res.data));
         router.back();
       },
     });
   };
 
+  /* ---------------- UI ---------------- */
 
   return (
     <div>
       <div className="px-6">
         <button
-          type="button"
           onClick={() => router.back()}
-          className="flex items-center gap-4 mt-3 md:mt-c32"
+          className="flex items-center gap-4 mt-3"
         >
-          <Image
-            src={NavBack}
-            alt="<"
-            width={9}
-            height={16.5}
-            className="brightness-20 w-2.25 h-[16.5px]"
-          />
-          <p className="font-MontserratSemiBold text-c16 text-161616">
-            Add new address
+          <Image src={NavBack} alt="<" width={9} height={16} />
+          <p className="font-MontserratSemiBold text-c16">
+            Edit address
           </p>
         </button>
       </div>
 
       <div className="px-6 pt-7 pb-30">
         <form onSubmit={handleSave} className="space-y-6">
-          {/* Country dropdown */}
-          <div className="space-y-4">
-            <Label className="text-sm pb-4 font-MontserratSemiBold">
-              Country/region
-            </Label>
-            <div className="relative pt-4 w-full" ref={countryRef}>
+          {/* COUNTRY */}
+          <div>
+            <Label>Country/region</Label>
+            <div ref={countryRef} className="relative mt-2">
               <button
                 type="button"
                 onClick={() => setCountryOpen((p) => !p)}
-                className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
+                className="w-full border h-10 rounded-lg flex items-center justify-between px-3"
               >
                 <div className="flex items-center gap-2">
-                  <Image src={flag} alt="flag" width={16} height={12} />
-                  <span>{selectedCountry?.name || "Select country"}</span>
+                  <Image src={flag} alt="" width={16} height={12} />
+                  {selectedCountry?.name}
                 </div>
-                <Image
-                  src={CaretDown}
-                  alt="select country"
-                  width={11}
-                  height={6}
-                />
+                <Image src={CaretDown} alt="" width={11} height={6} />
               </button>
 
               <AnimatePresence>
                 {countryOpen && (
                   <motion.div
-                    variants={menuVariants}
-                    initial="hidden"
-                    animate="show"
-                    exit="exit"
-                    className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute bg-white w-full shadow-lg mt-2 z-20 max-h-60 overflow-auto"
                   >
                     {countries.map((c) => (
                       <div
                         key={c.isoCode}
                         onClick={() => handleCountrySelect(c)}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
                       >
-                        <Image
-                          src={getFlagUrl(c.isoCode)}
-                          alt={c.name}
-                          width={16}
-                          height={12}
-                        />
-                        <span>{c.name}</span>
-                        <span className="ml-auto text-xs opacity-60">
-                          +{c.phonecode}
-                        </span>
+                        {c.name}
                       </div>
                     ))}
                   </motion.div>
@@ -274,7 +260,6 @@ export default function AddNewAddreess() {
               </AnimatePresence>
             </div>
           </div>
-
           {/* Contact info */}
           <div>
             <p className="text-sm font-MontserratSemiBold pb-4">
@@ -442,7 +427,7 @@ export default function AddNewAddreess() {
           {/* Submit button */}
           <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
             <Button type="submit" className="border-0">
-              {loading ? <LoadingSpinner/> : "Save address"}
+              {loading ? <LoadingSpinner/> : "Update address"}
             </Button>
           </div>
         </form>

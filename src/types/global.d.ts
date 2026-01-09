@@ -721,6 +721,7 @@ export type BuyerItem = {
 
 export type Address = {
   id: number;
+  full_name?: string
   country: string;
   first_name: string;
   last_name: string;
@@ -732,6 +733,7 @@ export type Address = {
   is_default: boolean;
 };
 export type OrderAddress = {
+  full_name?: string
   id: string | null;
   country: string;
   first_name: string;

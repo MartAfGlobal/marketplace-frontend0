@@ -15,6 +15,7 @@ import Cookies from "js-cookie";
 // icons
 
 import NavBack from "@/assets/icons/navBacksmall.png";
+import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 
 export default function AllAddressesPage() {
   const router = useRouter();
@@ -25,9 +26,13 @@ export default function AllAddressesPage() {
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses
   );
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  console.log("bbbbbbb", buyerAddresses);
 
   const [selectedCardId, setSelectedCardId] = useState<number>(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [editingAddress, setEditingAddress] = useState<Partial<Address>>();
 
   useEffect(() => {
@@ -35,8 +40,24 @@ export default function AllAddressesPage() {
     setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0]?.id ?? 0);
   }, [buyerAddresses]);
 
-  const handleDelete = (id: number) => {
-    return;
+  const handleDelete = async (id: number) => {
+    if (!token) return;
+
+    try {
+      const res = await fetch(`/shipping/shipping-addresses/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+
+      dispatch(buyerActions.removeBuyerAddress(id));
+      setIsModalOpen(false);
+      setSelectedId(null);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSelectDefaultAddress = async (addressId: number) => {
@@ -47,7 +68,7 @@ export default function AllAddressesPage() {
 
     try {
       const response = await fetch(
-        `/shipping/shipping-addresses/${addressId}/`,
+        `/shipping/shipping-addresses/${addressId}`,
         {
           method: "PATCH",
           headers: {
@@ -128,7 +149,7 @@ export default function AllAddressesPage() {
 
                 <div className="flex-1">
                   <p className="font-MontserratSemiBold text-c12">
-                    {item.first_name}  {item.last_name}
+                    {item.full_name}
                   </p>
                   <p className="text-c12 font-MontserratNormal">{item.phone}</p>
                   <p className="text-c12 font-MontserratNormal">
@@ -142,7 +163,9 @@ export default function AllAddressesPage() {
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/addresses/edit/${item.id}`);
+                        router.push(
+                          `/dashboard/buyer/mobile/addresses/edit-address/${item.id}`
+                        );
                       }}
                     >
                       Edit
@@ -153,7 +176,8 @@ export default function AllAddressesPage() {
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(item.id);
+                        setSelectedId(item.id);
+                        setIsModalOpen(true);
                       }}
                     >
                       Delete
@@ -176,6 +200,21 @@ export default function AllAddressesPage() {
           + Add new address
         </Button>
       </div>
+      
+      <ConfirmModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Delete Address"
+        description="are you sure you want to delete address?"
+        onNo={() => setIsModalOpen(false)}
+        onYes={() => {
+          if (selectedId !== null) {
+            handleDelete(selectedId);
+          }
+        }}
+        yesText="Confirm Delete"
+        noText="Cancel"
+      />
     </div>
   );
 }

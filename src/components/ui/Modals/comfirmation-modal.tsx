@@ -1,7 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 
-import React from "react";
 import { ConfirmModalProps } from "@/types/global";
 import { Button } from "../Button/Button";
 
@@ -25,12 +24,13 @@ export default function ConfirmModal({
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
         >
+           <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999]">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.25 }}
-            className={`bg-white rounded-2xl h-fit max-h-49 shadow-lg w-full  max-w-106.5 p-8 relative ${className}`}
+            className={`bg-white shadow-xl flex flex-col items-center gap-8 w-full max-w-101.5 rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-120 overflow-y-auto ${className}`}
           >
           
             <button
@@ -69,6 +69,7 @@ export default function ConfirmModal({
               </Button>
             </div>
           </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

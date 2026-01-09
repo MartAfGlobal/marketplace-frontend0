@@ -1,5 +1,8 @@
 "use client";
 
+const CATEGORIES_CACHE_KEY = "categories";
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,25 +53,52 @@ export default function CategoriesGrid() {
           const unique = Array.from(
             new Map(merged.map((c) => [c.id, c])).values()
           );
-          setHasMore(unique.length < count);
+
+          const nextPage = page + 1;
+          const hasMoreData = unique.length < count;
+
+          sessionStorage.setItem(
+            CATEGORIES_CACHE_KEY,
+            JSON.stringify({
+              timestamp: Date.now(),
+              categories: unique,
+              totalCount: count,
+              hasMore: hasMoreData,
+              page: nextPage,
+            })
+          );
+
+          setHasMore(hasMoreData);
           return unique;
         });
 
         setPage((prev) => prev + 1);
+
         isFetchingRef.current = false;
       },
     });
   };
 
-  // Initial fetch
   useEffect(() => {
-    setCategories([]);
-    setPage(1);
-    setHasMore(true);
-    setTotalCount(0);
-    isFetchingRef.current = false;
-    fetchCategories();
-  }, [sendHttpRequest]);
+    const cached = sessionStorage.getItem(CATEGORIES_CACHE_KEY);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      const isExpired = Date.now() - parsed.timestamp > CACHE_TTL;
+
+      if (!isExpired) {
+        setCategories(parsed.categories);
+        setTotalCount(parsed.totalCount);
+        setHasMore(parsed.hasMore);
+        setPage(parsed.page);
+        return; // ✅ use cache
+      } else {
+        sessionStorage.removeItem(CATEGORIES_CACHE_KEY); // ❌ expired
+      }
+    }
+
+    fetchCategories(); // 🔄 fetch fresh
+  }, []);
 
   // Extract subcategories for selected category
   const subcategories: subcategory[] = selectedCategory
