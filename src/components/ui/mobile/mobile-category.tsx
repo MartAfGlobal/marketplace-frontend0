@@ -45,7 +45,6 @@ const [hasMore, setHasMore] = useState(true);
           const newCategories: Category[] = res?.data?.results || [];
           const count = res?.data?.count || 0;
   
-          console.log("cat", res);
   
           setTotalCount(count);
   

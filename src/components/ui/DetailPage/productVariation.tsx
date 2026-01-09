@@ -39,6 +39,7 @@ export default function ProductVariation({
   const productDetails = useSelector(
     (state: RootState) => state.productDetails.product
   );
+const variationSectionRef = useRef<HTMLDivElement | null>(null);
 
   const detailsContainerRef = useRef<HTMLDivElement | null>(null);
   const attributePanelRef = useRef<HTMLDivElement | null>(null);
@@ -186,12 +187,35 @@ export default function ProductVariation({
 
     setMissingAttribute(firstMissing);
     setOpenAttribute(firstMissing);
+
+      scrollToVariations();
   };
 
   const selectedImage = images.find((img) => img.id === selectedImageId);
 
+const scrollToVariations = () => {
+  if (!variationSectionRef.current) return;
+
+  const yOffset = 120; // 🔧 adjust this value (px)
+  const y =
+    variationSectionRef.current.getBoundingClientRect().top +
+    window.pageYOffset -
+    yOffset;
+
+  window.scrollTo({
+    top: y,
+    behavior: "smooth",
+  });
+};
+
+
+
   return (
-    <div className={`flex w-full md:gap-23 flex-col md:flex-row justify-center  ${!isModal ? "mt-c32" : "mt-0"}`}>
+    <div
+      className={`flex w-full md:gap-23 flex-col md:flex-row justify-center  ${
+        !isModal ? "mt-c32" : "mt-0"
+      }`}
+    >
       <div className="max-w-205.5 w-full ">
         <div className="w-full flex md:flex-row gap-c32   flex-col  h-fit max-w-205.5 md:gap-c48 relative">
           {/* IMAGES */}
@@ -335,7 +359,8 @@ export default function ProductVariation({
               />{" "}
             </div>
             {productDetails?.has_variations && (
-              <div className="flex flex-col gap-6 mt-6">
+
+              <div ref={variationSectionRef} className="flex flex-col gap-6 mt-6">
                 <h2 className="font-MontserratSemiBold">
                   Variations available
                 </h2>
@@ -421,7 +446,6 @@ export default function ProductVariation({
           </div>
 
           {isModal && (
-          
             <ItemAddToCart
               selectedVariation={selectedVariation}
               productId={productDetails?.id || ""}
@@ -452,16 +476,126 @@ export default function ProductVariation({
       </div>
       {!isModal && (
         <>
-          <div className="w-full max-w-110.5 hidden md:flex  h-fit sticky top-24">
-          <ItemAddToCart
-            selectedVariation={selectedVariation}
-            productId={productDetails?.id || ""}
-            isModal={isModal}
-            product_slug={productDetails?.slug || ""}
-            product_name={productDetails?.name || ""}
-            onIncompleteVariation={handleIncompleteVariation}
-          />
-        </div>
+          <div className="w-full max-w-110.5 hidden md:block  h-screen sticky top-24 ">
+            <div className="">
+              <div className=" flex flex-col mt-c32 m  gap-c24 pb-4 md:border-b md:border-gray-100">
+                <div className="w-full flex justify-between items-start">
+                  <div className="flex gap-4">
+                    <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center">
+                      <p className="font-MontserratBold text-c12 text-000000">
+                        COMPANY LOGO
+                      </p>
+                    </div>
+                    <div>
+                      <h1 className="font-MontserratSemiBold text-161616 text-c18">
+                        {productDetails?.manufacturer_name}
+                      </h1>
+                      <div className="flex gap-2 items-center">
+                        <div className="w-5 h-5">
+                          <Image
+                            src={Location}
+                            alt="location"
+                            width={20}
+                            height={20}
+                          />
+                        </div>
+                        <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
+                          Suppliers Location
+                        </p>
+                      </div>
+                      <div className="md:hidden flex gap-2 items-center">
+                        <div className="w-5 h-5">
+                          <Image
+                            src={phone}
+                            alt="phone"
+                            width={20}
+                            height={20}
+                          />
+                        </div>
+                        <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
+                          +234 80312345678
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Shipping Info */}
+                <div className="md:flex gap-4 items-start hidden">
+                  {/* <div>
+                    <Image
+                      src={truck}
+                      alt="truck"
+                      width={22.5}
+                      height={15.76}
+                    />
+                  </div> */}
+                  {/* <div className="md:flex flex-col gap-2">
+                    <p className="font-MontserratSemiBold text-base text-161616">
+                      Shipping fee
+                    </p>
+                    <p className="text-c12 font-MontserratMedium text-gray-500">
+                      Delivery:{" "}
+                      <span className="font-MontserratSemiBold text-c12 text-161616">
+                        May 25, 2020
+                      </span>
+                    </p>
+                    <p className="text-c12 font-MontserratMedium text-gray-500">
+                      Courier company:{" "}
+                      <span className="font-MontserratSemiBold text-c12 text-161616">
+                        SpeedAf
+                      </span>
+                    </p>
+                  </div> */}
+                </div>
+                {/* Security & Refund */}
+                <div className="space-y-6">
+                  <div className="flex gap-4 items-start">
+                    <Image
+                      src={Security}
+                      alt="security check"
+                      width={22.5}
+                      height={15.76}
+                    />
+                    <div className="flex flex-col gap-2">
+                      <p className="font-MontserratSemiBold text-sm text-161616">
+                        Secure payments
+                      </p>
+                      <p className="text-sm font-MontserratNormal text-gray-500">
+                        Every payment you make on MartAf is secured with strict
+                        SSL encryption and PCI DSS data protection protocols
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 items-start">
+                    <Image
+                      src={refund}
+                      alt="refund"
+                      width={26}
+                      height={24.76}
+                    />
+                    <div className="flex flex-col gap-2">
+                      <p className="font-MontserratSemiBold text-sm text-161616">
+                        Standard refund policy
+                      </p>
+                      <p className="text-sm font-MontserratNormal text-gray-500">
+                        Claim a refund if your order doesn&apos;t ship, is
+                        missing, or arrives with product issues
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <ItemAddToCart
+                selectedVariation={selectedVariation}
+                productId={productDetails?.id || ""}
+                isModal={isModal}
+                product_slug={productDetails?.slug || ""}
+                product_name={productDetails?.name || ""}
+                onIncompleteVariation={handleIncompleteVariation}
+              />
+            </div>
+          </div>
           <div className="md:hidden flex flex-col-reverse mt-c32 m  gap-c24 pb-4 md:border-b md:border-gray-100">
             <div className="w-full flex justify-between items-start">
               <div className="flex gap-4">

@@ -7,7 +7,12 @@ import { useSelector, useDispatch } from "react-redux";
 import store, { RootState } from "@/store";
 import QuantitySelector from "./cart/quantityControl";
 
-import { addToCart, addGuestItemToCart, setCartItems, CartItem } from "@/store/cart/cartSlice";
+import {
+  addToCart,
+  addGuestItemToCart,
+  setCartItems,
+  CartItem,
+} from "@/store/cart/cartSlice";
 import { toast } from "sonner";
 import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
@@ -54,7 +59,7 @@ export default function ItemAddToCart({
   const router = useRouter();
   const { loading, sendHttpRequest } = useHttp();
   const token = useSelector((state: RootState) => state.token.token);
- 
+
   // const variationId = selectedVariation?.variation_id;
 
   const selectedVariationId = selectedVariation?.id;
@@ -132,9 +137,7 @@ export default function ItemAddToCart({
         },
         successRes: (res) => {
           console.log("Add to cart response:", res);
-          fetchBackendCart()
-
-          
+          fetchBackendCart();
         },
       });
 
@@ -146,52 +149,50 @@ export default function ItemAddToCart({
     }
   };
 
-    const fetchBackendCart = async () => {
-      if (!token) return;
-   
-      try {
-        await sendHttpRequest({
-          requestConfig: {
-            url: "/cart/",
-            method: "GET",
-            token,
-            isAuth: true,
-            userType: "buyer",
-          },
-          successRes: async (res: any) => {
-            const backendItems = res?.data?.items || [];
-            console.log("🟩 Backend cart items:", backendItems);
-  
-            const mappedBackend: CartItem[] = backendItems.map(
-              (item: CartItem) => {
-                return {
-                  variation_id: item.variation_id,
-                  product_id: item.product_id || "",
-                  name: item.product_name || "",
-                  price: item.price || 0,
-                  quantity: item.quantity ?? 1,
-                  product_slug: item.product_slug,
-                  variation_display: (
-                    item.variation_display || "default"
-                  ).toLowerCase(),
-  
-                  product_image: item.product_image || "/placeholder.png",
-                  checked:
-                    typeof item.checked === "boolean" ? item.checked : true,
-                };
-              }
-            );
-  
-            dispatch(setCartItems(mappedBackend));
-          },
-        });
-      } catch (err) {
-        console.error("fetchBackendCart failed", err);
-        toast.error("Failed to sync cart with server");
-        
-      }
-    };
-  
+  const fetchBackendCart = async () => {
+    if (!token) return;
+
+    try {
+      await sendHttpRequest({
+        requestConfig: {
+          url: "/cart/",
+          method: "GET",
+          token,
+          isAuth: true,
+          userType: "buyer",
+        },
+        successRes: async (res: any) => {
+          const backendItems = res?.data?.items || [];
+          console.log("🟩 Backend cart items:", backendItems);
+
+          const mappedBackend: CartItem[] = backendItems.map(
+            (item: CartItem) => {
+              return {
+                variation_id: item.variation_id,
+                product_id: item.product_id || "",
+                name: item.product_name || "",
+                price: item.price || 0,
+                quantity: item.quantity ?? 1,
+                product_slug: item.product_slug,
+                variation_display: (
+                  item.variation_display || "default"
+                ).toLowerCase(),
+
+                product_image: item.product_image || "/placeholder.png",
+                checked:
+                  typeof item.checked === "boolean" ? item.checked : true,
+              };
+            }
+          );
+
+          dispatch(setCartItems(mappedBackend));
+        },
+      });
+    } catch (err) {
+      console.error("fetchBackendCart failed", err);
+      toast.error("Failed to sync cart with server");
+    }
+  };
 
   return (
     <>
@@ -210,16 +211,19 @@ export default function ItemAddToCart({
             </Button>
           )}
 
-          <Button onClick={()=>router.push(`/product/${product_slug}`)} variant="secondary">View Product</Button>
+          <Button
+            onClick={() => router.push(`/product/${product_slug}`)}
+            variant="secondary"
+          >
+            View Product
+          </Button>
         </div>
       )}
       {!isModal && (
         <div className="flex flex-col gap-6">
           {existingCartItem && (
-            <div className="md:flex hidden gap-4 flex-col">
-              <p className="font-MontserratSemiBold text-c12">
-                Quantity
-              </p>
+            <div className="md:flex hidden gap-4 flex-col mt-6">
+              <p className="font-MontserratSemiBold text-c12">Quantity</p>
               <QuantitySelector
                 quantity={localQty}
                 onChange={handleQtyChange}
@@ -233,16 +237,43 @@ export default function ItemAddToCart({
               </span>
             </div>
           )}
-          <div className=" flex w-full items-center gap-3 md:flex-col ">
+          <div className="  w-full items-center gap-3 hidden md:flex">
             {existingCartItem ? (
-             <QuantitySelector
+              <Button
+                className="w-full"
+                variant="secondary"
+                onClick={() => router.push("/car")}
+              >
+                View to cart
+              </Button>
+            ) : (
+              <Button
+                className="w-full"
+                variant="secondary"
+                onClick={handleAddToCart}
+                disabled={loading}
+              >
+                {loading ? <LoadingSpinner /> : "Add to cart"}
+              </Button>
+            )}
+
+            <Button>Buy now</Button>
+          </div>
+          <div className=" flex w-full md:hidden items-center gap-3 ">
+            {existingCartItem ? (
+              <QuantitySelector
                 quantity={localQty}
                 onChange={handleQtyChange}
                 variation_id={selectedVariationId}
-                productId={productId} 
+                productId={productId}
               />
             ) : (
-              <Button className="w-full" variant="secondary" onClick={handleAddToCart} disabled={loading}>
+              <Button
+                className="w-full"
+                variant="secondary"
+                onClick={handleAddToCart}
+                disabled={loading}
+              >
                 {loading ? <LoadingSpinner /> : "Add to cart"}
               </Button>
             )}

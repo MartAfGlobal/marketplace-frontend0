@@ -7,16 +7,24 @@ import Link from "next/link";
 import navright from "@/assets/icons/CaretRight.svg";
 import ProductSection from "@/components/ui/landindPage/ShoppingItems/shoppingItemComponent/ProductSection";
 import SubCategoryPageSkeleton from "@/components/reloadSpinner/SubcategoryPageSkeleton";
-import adBanner1 from "@/assets/images/adbanner1.svg";
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { setsubCategoryProducts } from "@/store/user-data/products/subCategoryProductsSlice";
 import { setTopDeals } from "@/store/user-data/products/topDealsSlice";
 import { setCategoryProducts } from "@/store/user-data/products/categoryProductsSlice";
-import { AnimatePresence, motion } from "framer-motion";
 import AdSlider from "@/components/Ads";
 
+interface SubCategory {
+  name: string;
+  slug: string;
+  image?: string;
+  category?: {
+    name: string;
+    slug: string;
+    image?: string;
+  };
+}
 
 export default function SubCategoryPage() {
   const { categorySlug, subCategorySlug } = useParams<{
@@ -24,42 +32,56 @@ export default function SubCategoryPage() {
     subCategorySlug: string;
   }>();
 
-
   const dispatch = useDispatch();
   const { sendHttpRequest } = useHttp();
 
-  const [pendingRequests, setPendingRequests] = useState(3); // 👈 3 API calls
+  const [pendingRequests, setPendingRequests] = useState(3);
   const [error, setError] = useState("");
-
-
+  const [subCategory, setSubCategory] = useState<SubCategory | null>(null);
 
   const subCatproducts = useSelector(
     (state: RootState) => state.subCategoryProducts.items
   );
-  const topDeals = useSelector((state: RootState) => state.topDeals.items);
-
-  const isLoading = pendingRequests > 0;
-
-  /* ---------------- DATA DERIVATIONS ---------------- */
-  const subCategoryTopDeals = topDeals.filter(
-    (product) => product.category?.subcategory?.slug === subCategorySlug
+ const categoryProducts = useSelector(
+    (state: RootState) => state.categoryProducts.items
   );
-
-  const subCategory = subCatproducts.find(
-    (p) => p.category?.subcategory?.slug === subCategorySlug
-  )?.category?.subcategory;
-
-  const category = subCatproducts.find(
+    const category = categoryProducts.find(
     (p) => p.category?.slug === categorySlug
   )?.category;
 
+ const subcat = categoryProducts.find(
+  (p) => p.category?.subcategory?.slug === subCategorySlug
+)?.category?.subcategory
+  const topDeals = useSelector((state: RootState) => state.topDeals.items);
 
+  console.log("gggg",  subcat)
+  const isLoading = pendingRequests > 0;
 
+  /* ---------------- FETCH SUBCATEGORY DETAILS ---------------- */
+  useEffect(() => {
+    if (!subCategorySlug) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/categories/public/subcategory/${subCategorySlug}`,
+        method: "GET",
+        userType: "buyer",
+      },
+      successRes: (res: any) => {
+        try {
+          setSubCategory(res?.data ?? null);
+        } catch (err) {
+          console.error("Failed to fetch subcategory details:", err);
+        } finally {
+          setPendingRequests((prev) => prev - 1);
+        }
+      },
+    });
+  }, [subCategorySlug, sendHttpRequest]);
 
   /* ---------------- FETCH SUBCATEGORY PRODUCTS ---------------- */
   useEffect(() => {
     if (!subCategorySlug) return;
-
     setError("");
 
     sendHttpRequest({
@@ -72,8 +94,9 @@ export default function SubCategoryPage() {
         try {
           const products = res?.data?.results ?? [];
           dispatch(setsubCategoryProducts(products));
+          console.log("resss sub", res)
         } catch (err) {
-          console.error(err);
+          console.error("Failed to fetch subcategory products:", err);
           setError("Failed to fetch subcategory products.");
         } finally {
           setPendingRequests((prev) => prev - 1);
@@ -84,8 +107,6 @@ export default function SubCategoryPage() {
 
   /* ---------------- FETCH TOP DEALS ---------------- */
   useEffect(() => {
-    if (!subCategorySlug) return;
-
     sendHttpRequest({
       requestConfig: {
         url: `/products/public/products/?filter=top-selling&page=1&page_size=20`,
@@ -97,14 +118,13 @@ export default function SubCategoryPage() {
           const products = res?.data?.results ?? [];
           dispatch(setTopDeals(products));
         } catch (err) {
-          console.error(err);
-          setError("Failed to fetch top deals.");
+          console.error("Failed to fetch top deals:", err);
         } finally {
           setPendingRequests((prev) => prev - 1);
         }
       },
     });
-  }, [subCategorySlug, dispatch, sendHttpRequest]);
+  }, [dispatch, sendHttpRequest]);
 
   /* ---------------- FETCH CATEGORY PRODUCTS ---------------- */
   useEffect(() => {
@@ -119,16 +139,24 @@ export default function SubCategoryPage() {
       successRes: (res: any) => {
         try {
           const products = res?.data?.results ?? [];
+          console.log("resss", res)
           dispatch(setCategoryProducts(products));
         } catch (err) {
-          console.error(err);
-          setError("Failed to fetch category data.");
+          console.error("Failed to fetch category data:", err);
         } finally {
+          
           setPendingRequests((prev) => prev - 1);
         }
       },
     });
   }, [categorySlug, dispatch, sendHttpRequest]);
+
+  /* ---------------- DERIVE TOP DEALS FOR SUBCATEGORY ---------------- */
+  const subCategoryTopDeals = topDeals.filter(
+    (product) => product.category?.subcategory?.slug === subCategorySlug
+  );
+
+  const categoryOpt = subCategory?.category ?? { name: categorySlug, slug: categorySlug };
 
   /* ---------------- SKELETON LOADING ---------------- */
   if (isLoading) {
@@ -139,37 +167,40 @@ export default function SubCategoryPage() {
   return (
     <div className="md:px-15 px-6 pb-15">
       {/* Breadcrumb */}
-      <div className="py-8 flex items-center gap-1 text-sm font-semibold">
+      <div className="py-8 flex items-center gap-1 text-nowrap text-sm font-semibold">
         <Link href="/" className="opacity-40">
           Home
         </Link>
         <Image src={navright} alt="nav" width={16} height={16} />
         <Link
-          href={`/categories/${categorySlug}`}
+          href={`/categories/${category?.slug || categorySlug}`}
           className="capitalize text-161616 hover:underline"
         >
-          {category?.name}
+          {category?.name || categoryOpt.name || categorySlug }
         </Link>
         <Image src={navright} alt="nav" width={16} height={16} />
-        <span className="capitalize">{subCategory?.name}</span>
+        <span className="capitalize">{subCategory?.name  || subCategorySlug}</span>
       </div>
 
       {/* Hero */}
       <div
         className="h-70 flex items-center justify-center text-white text-3xl font-bold rounded-c30 bg-center bg-cover relative"
         style={{
-          backgroundImage: `url(${
-            subCategory?.image || category?.image || ""
-          })`,
+          backgroundImage: `url(${subCategory?.image || category?.image || categoryOpt.image})`,
         }}
       >
         <div className="absolute inset-0 bg-black/40 rounded-c30" />
-        <h1 className="relative z-10">{subCategory?.name}</h1>
+        <h1 className="relative z-10">{subCategory?.name || subcat?.name || subCategorySlug}</h1>
       </div>
 
       {/* Products */}
       <div className="pt-c64 flex flex-col gap-12">
         {error && <p className="text-red-500">{error}</p>}
+
+         {!isLoading && subCatproducts.length === 0 && !error && (
+          <p>No products found in this Subcategory.</p>
+        )}
+
 
         {subCatproducts.length > 0 && (
           <ProductSection
@@ -178,7 +209,7 @@ export default function SubCategoryPage() {
           />
         )}
 
-          <AdSlider />
+        <AdSlider />
 
         {subCategoryTopDeals.length > 0 && (
           <ProductSection

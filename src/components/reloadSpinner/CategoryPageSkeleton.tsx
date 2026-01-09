@@ -6,7 +6,7 @@ export default function CategoryPageSkeleton() {
   const skeletonCount = 12;
 
   return (
-    <div className="px-16">
+    <div className="md:px-16 px-6">
       {/* Breadcrumb Skeleton */}
       <div className="py-8 flex items-center gap-1 text-sm font-semibold">
         <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
