@@ -226,7 +226,7 @@ useEffect(() => {
             exit="exit"
           >
             <div
-              className="bg-white w-full h-screen overflow-y-scroll pb-20"
+              className="bg-white w-full h-screen overflow-y-scroll touch-pan-y pb-20"
               onScroll={handleScroll}
               onClick={(e) => e.stopPropagation()}
             >

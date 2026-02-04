@@ -40,7 +40,6 @@ function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   return ref;
 }
 
-
 // Helper: map ISO code to flag URL
 const getFlagUrl = (isoCode: string) =>
   `https://flagcdn.com/w20/${isoCode.toLowerCase()}.png`;
@@ -58,10 +57,10 @@ export default function AddNewAddreess() {
   );
 
   const currentAddress = checkoutSummary?.guest_address;
-  
-const checkoutItems = useSelector(
-  (state: RootState) => state.cart.checkoutItems,
-);
+
+  const checkoutItems = useSelector(
+    (state: RootState) => state.cart.checkoutItems,
+  );
 
   useEffect(() => {
     console.log("Selected Items in Guest:", selectedItems);
@@ -322,7 +321,9 @@ const checkoutItems = useSelector(
                   type="text"
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
                   value={formData.guest_first_name}
-                  onChange={(e) => handleChange("first_name", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("guest_first_name", e.target.value)
+                  }
                 />
               </div>
               <div className="pb-3">
@@ -333,7 +334,7 @@ const checkoutItems = useSelector(
                   type="text"
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
                   value={formData.guest_last_name}
-                  onChange={(e) => handleChange("last_name", e.target.value)}
+                  onChange={(e) => handleChange("guest_last_name", e.target.value)}
                 />
               </div>
             </div>
@@ -427,7 +428,7 @@ const checkoutItems = useSelector(
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
                   value={formData.guest_shipping_address.postal_code}
                   onChange={(e) =>
-                    handleChange("guest_postal_code", e.target.value)
+                    handleChange("postal_code", e.target.value)
                   }
                 />
               </div>
