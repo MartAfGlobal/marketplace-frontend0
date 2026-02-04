@@ -39,6 +39,7 @@ export default function CheckoutSummary() {
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses,
   );
+  
   const selectedAddressId = useSelector(
     (state: RootState) => state.buyer.selectedAddressId,
   );
@@ -115,7 +116,7 @@ export default function CheckoutSummary() {
   return <p className="text-c12">Loading addresses...</p>;
 }
 
-  if (!selectedAddress) {
+  if (token && !selectedAddress) {
     return <p className="text-c12">No address selected</p>;
   }
 
@@ -125,7 +126,7 @@ export default function CheckoutSummary() {
     const formData = checkoutSummary?.guest_address;
     console.log("checking formdata", formData);
 
-    const items = checkoutItems.map((item) => ({
+    const items = checkoutItems.map((item:any) => ({
       product_id: item.id,
       variation_id: item.variation_id || null,
       quantity: item.quantity,
@@ -218,13 +219,13 @@ export default function CheckoutSummary() {
             {token ? (
               <div className="flex-1">
                 <p className="font-MontserratSemiBold text-c12 pb-2">
-                  {selectedAddress.first_name} {selectedAddress.last_name}
+                  {selectedAddress?.first_name} {selectedAddress?.last_name}
                 </p>
                 <p className="text-c12 font-MontserratNormal">
-                  {selectedAddress.phone}
+                  {selectedAddress?.phone}
                 </p>
                 <p className="text-c12 font-MontserratNormal">
-                  {selectedAddress.address}
+                  {selectedAddress?.address}
                 </p>
               </div>
             ) : (
