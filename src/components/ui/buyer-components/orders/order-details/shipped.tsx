@@ -388,11 +388,11 @@ export default function ShippedOrderDetails({ id }: { id: string }) {
           </div>
         </div>
 
-        <CancelOrderModal
+        {/* <CancelOrderModal
           isOpen={openCancelModal}
           orderId={selectedOrderId}
           onClose={() => setOpenCancelModal(false)}
-        />
+        /> */}
       </div>
     </>
   );

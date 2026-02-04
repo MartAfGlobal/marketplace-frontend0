@@ -10,6 +10,7 @@ import productDetailReducer from "@/store/productDetails/productDetailsSlice";
 import categoryProductsReducer from "@/store/user-data/products/categoryProductsSlice";
 import subCategoryProductsReducer from "@/store/user-data/products/subCategoryProductsSlice";
 import topDealsReducer from "@/store/user-data/products/topDealsSlice";
+import uiSliceReducer from "@/store/uiSlice"
 
 import productReducer from "./user-data/products/product-slice";
 import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice";
@@ -109,6 +110,7 @@ const rootReducer = combineReducers({
   wishlist: persistReducer(wishlistPersistConfig, wishlistReducer),
   products: persistReducer(productsPersistConfig, productReducer),
   counter: counterReducer,
+
   selectedProduct: selectedProductReducer,
   wishlistLabel: persistReducer(
     wishlistLabelPersistCobfig,
@@ -127,6 +129,8 @@ const rootReducer = combineReducers({
   categoryProducts: categoryProductsReducer,
   subCategoryProducts: subCategoryProductsReducer,
   topDeals: topDealsReducer,
+
+  ui: uiSliceReducer
 });
 
 const store = configureStore({

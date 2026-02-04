@@ -686,6 +686,7 @@ export interface OrderLineItem {
   product_slug: string;
   category_name: string;
   category_slug: string;
+  can_raise_dispute: boolean
 
   quantity: number;
   fulfilled_quantity: number;

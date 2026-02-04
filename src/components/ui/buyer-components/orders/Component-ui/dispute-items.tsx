@@ -12,16 +12,19 @@ import { useSelector } from "react-redux";
 import Link from "next/link";
 import { RootState } from "@/store";
 import { useRouter } from "next/navigation";
+import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
 interface OrdersProps {
   searchTerm: string;
 }
 
 export default function Disputes({ searchTerm }: OrdersProps) {
   const [copied, setCopied] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   const allDisputes = useSelector((state: RootState) => state.orders.disputes);
   const disputes = allDisputes.filter((item) => item.status === "REQUESTED");
+  const [openCancelModal, setOpenCancelModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const filteredOrders = disputes.filter((order: BuyerDispute) => {
     if (!searchTerm) return true;
@@ -40,7 +43,6 @@ export default function Disputes({ searchTerm }: OrdersProps) {
   const viewDisputeDetails = (disputeid: string) => {
     router.push(`/dashboard/buyer/orders/dispute-details/${disputeid}`);
   };
-
 
   const handleCopy = (orderId: string) => {
     navigator.clipboard
@@ -160,12 +162,12 @@ export default function Disputes({ searchTerm }: OrdersProps) {
                               className="flex gap-4 items-start  w-full"
                             >
                               <Image
-                                  src={prod?.product_image}
-                                  alt={prod.product_name || "Product Image"}
-                                  width={96}
-                                  height={96}
-                                  className="h-24 w-24 "
-                                />
+                                src={prod?.product_image}
+                                alt={prod.product_name || "Product Image"}
+                                width={96}
+                                height={96}
+                                className="h-24 w-24 "
+                              />
                               <div className="w-full">
                                 <p className="font-MontserratSemiBold text-base mb-1">
                                   {prod.product_name}
@@ -189,7 +191,15 @@ export default function Disputes({ searchTerm }: OrdersProps) {
                           <Button onClick={() => viewDisputeDetails(item.id)}>
                             Dispute details
                           </Button>
-                          <Button variant="secondary">Cancel dispute</Button>
+                          <Button
+                            onClick={() => {
+                              setSelectedOrderId(item.id);
+                              setOpenCancelModal(true);
+                            }}
+                            variant="secondary"
+                          >
+                            Cancel dispute
+                          </Button>
                         </div>
                       </div>
                     </motion.div>
@@ -200,6 +210,12 @@ export default function Disputes({ searchTerm }: OrdersProps) {
           </AnimatePresence>
         </div>
       </div>
+      <CancelOrderModal
+        isDispute={true}
+        isOpen={openCancelModal}
+        orderId={selectedOrderId}
+        onClose={() => setOpenCancelModal(false)}
+      />
     </div>
   );
 }

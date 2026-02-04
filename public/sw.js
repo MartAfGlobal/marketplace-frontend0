@@ -306,7 +306,10 @@ define(["./workbox-4754cb34"], function (e) {
           url: "/_next/static/chunks/app/dashboard/seller/products/page-76a10c1424cf4366.js",
           revision: "76a10c1424cf4366",
         },
-      
+        {
+          url: "/_next/static/chunks/app/dashboard/seller/registration-progress/page-7a6a724744a0adfe.js",
+          revision: "7a6a724744a0adfe",
+        },
         {
           url: "/_next/static/chunks/app/layout-89dfcf9b1c8637cd.js",
           revision: "89dfcf9b1c8637cd",

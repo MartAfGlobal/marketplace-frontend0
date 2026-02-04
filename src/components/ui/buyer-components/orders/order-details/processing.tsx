@@ -393,6 +393,7 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
         </div>
 
         <CancelOrderModal
+        isDispute ={false}
           isOpen={openCancelModal}
           orderId={selectedOrderId}
           onClose={() => setOpenCancelModal(false)}

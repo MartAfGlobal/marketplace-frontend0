@@ -405,11 +405,12 @@ export default function AwaitingPaymentOrderDetails({ id }: { id: string }) {
           </div>
         </div>
 
-        <CancelOrderModal
+        {/* <CancelOrderModal
+
           isOpen={openCancelModal}
           orderId={selectedOrderId}
           onClose={() => setOpenCancelModal(false)}
-        />
+        /> */}
       </div>
     </>
   );

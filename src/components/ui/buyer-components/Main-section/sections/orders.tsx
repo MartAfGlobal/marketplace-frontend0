@@ -305,7 +305,7 @@ export default function Orders() {
                         >
                           Edit address
                         </Button> */}
-                        
+
                         <Button
                           variant="secondary"
                           key={item.id}
@@ -411,6 +411,7 @@ export default function Orders() {
         id={selectedId}
       /> */}
       <CancelOrderModal
+        isDispute={false}
         isOpen={cancelOrderOpen}
         orderId={selectedId}
         onClose={() => setCancelOrderOpen(false)}

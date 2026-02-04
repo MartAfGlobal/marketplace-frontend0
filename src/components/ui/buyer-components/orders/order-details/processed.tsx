@@ -362,7 +362,7 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
                               </Button> */}
                               <p className="text-ff715b text-sm font-MontserratSemiBold ">In dispute</p>
                             </div>
-                          ) : (
+                          ) :item.can_raise_dispute?(
                             <Button
                               onClick={() => handleReturnAndRefund(item.id)}
                               variant="secondary"
@@ -370,7 +370,7 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
                             >
                               Return/Refund
                             </Button>
-                          )}
+                          ):""}
                         </motion.div>
                       ))}
                     </motion.div>

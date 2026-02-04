@@ -86,7 +86,7 @@ export default function ProductListPage() {
       const data = JSON.parse(cached);
       const isExpired = Date.now() - data.timestamp > CACHE_TTL;
 
-      // ✅ Always show cached data immediately
+     
       setTodayProduct(data.todayProduct);
       setTrending(data.trending);
       setTopSelling(data.topSelling);
@@ -94,7 +94,7 @@ export default function ProductListPage() {
       setAllProduct(data.allProduct);
       setIsLoading(false);
 
-      // 🔄 If expired, refresh silently in background
+      
       if (isExpired) {
         fetchProducts(true);
       }
@@ -102,7 +102,6 @@ export default function ProductListPage() {
       return;
     }
 
-    // ❌ No cache → fetch normally
     fetchProducts(true);
   }, []);
 

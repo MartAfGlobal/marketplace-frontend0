@@ -136,7 +136,9 @@ export default function ProcessingOrders({ searchTerm }: OrdersProps) {
 
                       <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
                         {isSingleItemOrder ? (
-                          <Link href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}>
+                          <Link
+                            href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                          >
                             <div className="flex flex-col md:flex-row gap-4 items-start  ">
                               {item.order_items?.map((prod) => (
                                 <div
@@ -360,6 +362,7 @@ export default function ProcessingOrders({ searchTerm }: OrdersProps) {
       />
       <OrderEditAddressModal onClose={()=>setIsOpen(false)} isOpen={isOpen} id={selectedId}/> */}
       <CancelOrderModal
+        isDispute={false}
         isOpen={openCancelModal}
         orderId={selectedOrderId}
         onClose={() => setOpenCancelModal(false)}

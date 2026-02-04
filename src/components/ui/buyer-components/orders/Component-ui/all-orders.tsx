@@ -653,6 +653,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
         id={selectedId}
       /> */}
       <CancelOrderModal
+        isDispute={false}
         isOpen={openCancelModal}
         orderId={selectedOrderId}
         onClose={() => setOpenCancelModal(false)}

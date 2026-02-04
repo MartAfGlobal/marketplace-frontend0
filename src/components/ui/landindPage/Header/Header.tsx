@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import CartButton from "../../cart/cartButton";
 import Gear from "@/assets/icons/Gear.svg";
 import LogOut from "@/assets/icons/ArrowBendDownRight.svg";
+import { closeMobileMenu, openMobileMenu } from "@/store/uiSlice";
 
 import { useSearchParams } from "next/navigation";
 import { useLogout } from "@/utils/logout";
@@ -38,7 +39,11 @@ export default function Header() {
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
-  const [openDropdown, setOpenDropdown] = useState(false);
+  // const [openDropdown, setOpenDropdown] = useState(false);
+
+  const openDropdown = useSelector(
+    (state: RootState) => state.ui.mobileMenuOpen,
+  );
   const [authOpen, setAuthOpen] = useState(false);
   const [authStep, setAuthStep] = useState<AuthStep>();
 
@@ -145,13 +150,14 @@ export default function Header() {
         <div className="w-full md:hidden">
           <DropdownModal
             open={openDropdown}
-            onClose={() => setOpenDropdown(false)}
+            onClose={() => dispatch(closeMobileMenu())}
             onOpenAuth={(step) => {
               setAuthStep(step);
               setAuthOpen(true);
-              setOpenDropdown(false);
+              dispatch(closeMobileMenu());
             }}
           />
+
           <AuthModal
             open={authOpen || showModal}
             onClose={() => {
@@ -171,8 +177,8 @@ export default function Header() {
         >
           <div className="flex gap-3 items-center">
             <button
-              onClick={() => setOpenDropdown(true)}
-              className=" px-1 py-1.75"
+              onClick={() => dispatch(openMobileMenu())}
+              className="px-1 py-1.75"
             >
               <Image src={handburger} alt="categories" width={24} height={18} />
             </button>
@@ -197,7 +203,7 @@ export default function Header() {
                   alt="User"
                   width={20}
                   height={20}
-                /> 
+                />
               </div>
             ) : (
               <div className="flex items-center gap-2">
