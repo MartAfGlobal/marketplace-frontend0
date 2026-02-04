@@ -353,7 +353,7 @@ export default function CheckoutSummary() {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="pt-3 pb-40"
       >
-        <div>
+        {token && <div>
           <p className="text-base font-MontserratSemiBold">Summary</p>
           <div className="space-y-2 pt-4">
             <Input placeholder="Enter coupon code" />
@@ -361,7 +361,7 @@ export default function CheckoutSummary() {
               Apply coupon
             </button>
           </div>
-        </div>
+        </div>}
 
         <div className="space-y-2 text-sm font-MontserratNormal mt-4">
           <div className="flex justify-between">
