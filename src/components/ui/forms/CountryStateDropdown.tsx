@@ -197,7 +197,7 @@ export function CityDropdown({ city, onChange }: DropdownProps) {
 
 
   return (
-    <div className="relative w-full md:w-1/2">
+    <div className="relative w-full md:w-1/2 mt-2">
       <label className="block text-c12 font-MontserratMedium mb-2">
         City
       </label>

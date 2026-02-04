@@ -152,7 +152,10 @@ export default function MobileCategory() {
       </motion.div>
 
       {loading && categories.length === 0 ? (
-        <MobileCategorySkeleton count={4} />
+        <div className="w-full mb-c40">
+          <MobileCategorySkeleton count={4} />
+        </div>
+        
       ) : (
         <>
           {token ? (

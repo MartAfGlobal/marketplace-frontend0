@@ -142,7 +142,7 @@ export default function AddNewAddreess() {
         url: "/checkout/summary/guest/",
         method: "POST",
         body: { ...formData, items },
-        successMessage: "Redirecting to payment gateway...",
+        successMessage: "Redirecting to summary page...",
       },
       successRes: (res) => {
         const data = res.data;
@@ -399,7 +399,7 @@ export default function AddNewAddreess() {
               </div>
               <div className="pb-3">
                 <Label className="text-sm font-MontserratSemiBold">
-                  Street, house, apartment, unit (address line 2 required)
+                  Street, house, apartment, unit (address line 2 optional)
                 </Label>
                 <input
                   type="text"

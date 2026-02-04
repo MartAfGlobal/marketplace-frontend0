@@ -15,6 +15,8 @@ export function MobileCategorySkeleton({ count = 4 }: { count?: number }) {
           <div className="absolute bottom-0 w-full h-10 bg-gray-400/60 flex items-center px-2">
             <div className="h-3 w-3/4 bg-gray-300 rounded" />
           </div>
+
+          <div className="flex items-center justify-center gap-3.75 mt-c32 mb-c48 h-c40"></div>
         </motion.div>
       ))}
     </div>
