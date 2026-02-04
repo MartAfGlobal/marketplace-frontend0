@@ -173,7 +173,7 @@ export default function Header() {
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full bg-[#6A0DAD] md:hidden h-[56px]  pl-4 pr-6 flex items-center justify-between"
+          className="w-full bg-[#6A0DAD] md:hidden h-[56px]  px-4 flex items-center justify-between"
         >
           <div className="flex gap-3 items-center">
             <button
