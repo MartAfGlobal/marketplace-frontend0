@@ -182,7 +182,7 @@ export default function OrderOnTheWayPage() {
             <div>
               <p>Package details</p>
             </div>
-            {orderItems.map((item: any) => (
+            {orderItems.map((item:any) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: -10 }}

@@ -14,28 +14,38 @@ import SelectorBtn from "@/assets/icons/user-dashboard/atm-cards/SelectorButton.
 
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
+import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
+import { useHttp } from "@/hooks/use-http";
 
 interface UserAddressProps {
   className?: string;
-  selectedAddressId?: number; // optional external control
-  onSelectAddress?: (id: number) => void; // callback to parent
+  selectedAddressId?: string; // optional external control
+  onSelectAddress?: (id: string) => void;
+  mobile?: true | false;
 }
 
 export default function UserAddress({
   className,
   selectedAddressId,
+  mobile,
   onSelectAddress,
 }: UserAddressProps) {
   const router = useRouter();
   const buyerAddresses = useSelector(
-    (state: RootState) => state.buyer.BuyerAddresses
+    (state: RootState) => state.buyer.BuyerAddresses,
   );
 
-  const [selectedCardId, setSelectedCardId] = useState<number>(0);
+  const [selectedCardId, setSelectedCardId] = useState<string>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Partial<Address>>();
   const [showAll, setShowAll] = useState(false);
   const [windowWidth, setWindowWidth] = useState<number>(0);
+  const token = useSelector((state: RootState) => state.token.token);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const { sendHttpRequest: deleteAddressReq, loading: deleting } = useHttp();
+  const [deletedSuccessfull, setDeletedSuccessfull] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [addressId, setAddressId] = useState<string>();
 
   // Track window width for responsive "See More / See Less"
   useEffect(() => {
@@ -46,16 +56,26 @@ export default function UserAddress({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const isMobile = windowWidth < 768;
   useEffect(() => {
     if (selectedAddressId) {
-    
       setSelectedCardId(selectedAddressId);
     } else if (buyerAddresses.length > 0) {
-     
       const defaultAddr = buyerAddresses.find((a) => a.is_default);
       setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0].id);
     }
   }, [buyerAddresses, selectedAddressId]);
+
+  const handleEdit = (id: string) => {
+    setIsEdit(true);
+    setAddressId(id);
+    if (isMobile) {
+      router.push(`/dashboard/buyer/mobile/addresses/edit-address/${id}`);
+    } else{
+      setIsModalOpen(true)
+    }
+
+  };
 
   const cardVariants: Variants[] = [
     {
@@ -72,12 +92,30 @@ export default function UserAddress({
     },
   ];
 
-  const handleSelectAddress = (addressId: number) => {
+  const handleSelectAddress = (addressId: string) => {
     // Notify parent if controlled
     if (onSelectAddress) onSelectAddress(addressId);
 
     // Update internal state if not controlled
     if (!selectedAddressId) setSelectedCardId(addressId);
+  };
+
+  const handleDelete = (addressId: string) => {
+    if (!token) return;
+
+    deleteAddressReq({
+      requestConfig: {
+        url: `/shipping/shipping-addresses/delete/${addressId}/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res: any) => {
+        console.log(" updated:", res?.data);
+        setDeletedSuccessfull(true);
+      },
+    });
   };
 
   // Show first 3 on desktop, 2 on mobile by default
@@ -118,16 +156,16 @@ export default function UserAddress({
               viewport={{ once: false, amount: 0.3 }}
               whileHover={{ scale: 1.05 }}
               className={twMerge(
-                "p-c24 h-31 w-full md:w-80.75 md:h-34.5 rounded-c12 flex flex-col gap-2 cursor-pointer relative transition-colors duration-300",
+                "p-c24 h-40 w-full md:w-80.75 md:h-40 rounded-c12 flex flex-col gap-2 cursor-pointer relative transition-colors duration-300",
                 isSelected
                   ? "md:bg-black bg-6a0dad text-ffffff shadow-inner"
                   : "bg-black/20 text-black shadow",
-                className
+                className,
               )}
             >
               <div className="flex justify-between items-center">
                 <p className="font-MontserratSemiBold text-c12 leading-c16">
-                  {item.first_name}  {item.last_name}
+                  {item.first_name} {item.last_name}
                 </p>
                 <motion.div
                   layout
@@ -146,8 +184,30 @@ export default function UserAddress({
                   {item.phone}
                 </p>
                 <p className="text-c12 leading-4 font-MontserratNormal">
-                  {item.address} {item.state} {item.city}
+                  {item.address} {item.state}
                 </p>
+              </div>
+              <div className="flex gap-3 ">
+                {/* <button
+                  className={`text-ffaco6 text-c12 font-MontserratSemiBold ${
+                    isSelected ? "text-ffffff" : ""
+                  }`}
+                  onClick={() => handleEdit(item.id)}
+                >
+                  Edit
+                </button> */}
+                <button
+                  className={`text-c12 font-MontserratSemiBold text-ca0202 ${
+                    isSelected ? "text-ffffff" : ""
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+
+                    setDeleteModalOpen(true);
+                  }}
+                >
+                  Delete
+                </button>
               </div>
             </motion.div>
           );
@@ -157,7 +217,9 @@ export default function UserAddress({
           key="add-address"
           onClick={() => {
             setEditingAddress(undefined);
+             setIsEdit(false)
             setIsModalOpen(true);
+           
           }}
           initial={{ scale: 0.8, opacity: 0 }}
           whileInView={{
@@ -169,7 +231,7 @@ export default function UserAddress({
           viewport={{ once: false, amount: 0.3 }}
           className={twMerge(
             "p-c24 w-full hidden md:w-81 md:flex h-34.5 rounded-c12 flex-col justify-center items-center cursor-pointer bg-black/2 gap-c3 border-black text-black transition-colors duration-300",
-            className
+            className,
           )}
         >
           <Image src={AddcardBtn} width={20} height={20} alt="Add address" />
@@ -179,8 +241,17 @@ export default function UserAddress({
         </motion.div>
       </div>
 
-      {/* Mobile See More / See Less */}
-      {buyerAddresses.length > 2 && (
+      {buyerAddresses.length > 2 && !mobile && (
+        <div className="w-full flex pt-6 justify-end md:hidden">
+          <button
+            className="font-MontserratSemiBold text-sm text-ff715b"
+            onClick={() => router.push("/dashboard/buyer/mobile/addresses")}
+          >
+            {showAll ? "See less" : "See more"}
+          </button>
+        </div>
+      )}
+      {buyerAddresses.length > 2 && mobile && (
         <div className="w-full flex pt-6 justify-end md:hidden">
           <button
             className="font-MontserratSemiBold text-sm text-ff715b"
@@ -190,8 +261,9 @@ export default function UserAddress({
           </button>
         </div>
       )}
-
       <AddressModal
+        id={addressId}
+        isEdit = {isEdit}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         currentAddress={editingAddress}
@@ -199,6 +271,23 @@ export default function UserAddress({
           console.log("Saved Address:", newAddress);
           setIsModalOpen(false);
         }}
+      />
+
+      <ConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Delete Address"
+        description="are you sure you want to delete address?"
+        onNo={() => setDeleteModalOpen(false)}
+        onYes={() => {
+          if (selectedAddressId !== null) {
+            handleDelete(selectedCardId || "");
+          }
+        }}
+        success={deletedSuccessfull}
+        loading={deleting}
+        yesText="Confirm Delete"
+        noText="Cancel"
       />
     </div>
   );

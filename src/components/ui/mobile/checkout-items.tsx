@@ -30,19 +30,16 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
   const router = useRouter();
 
   const checkoutItems = useSelector(
-    (state: RootState) => state.cart.checkoutItems
+    (state: RootState) => state.cart.checkoutItems,
   );
 
-
-  
   const checkoutSummary = useSelector(
-    (state: RootState) => state.cart.checkoutSummary
+    (state: RootState) => state.cart.checkoutSummary,
   );
 
-  const totalPrice = Number(checkoutSummary?.subtotal ?? 0);
-  const discount = Number(checkoutSummary?.discount_amount ?? 0);
-  const shippingFee = Number(checkoutSummary?.shipping_cost ?? 0);
-  const TotalItems = checkoutItems.length;
+  const discountPrice =
+    Number(checkoutSummary?.subtotal) -
+    Number(checkoutSummary?.discount_amount);
 
   return (
     <div className="relative md: md:h-full">
@@ -87,7 +84,7 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
                   ) : (
                     checkoutItems.slice(0, visibleItems).map((item, index) => (
                       <motion.div
-                        key={`${item.variation_id || item.product_id || "item"}-${
+                        key={`${item.variation_id || item.id || "item"}-${
                           item.variation_display || index
                         }`}
                         initial={{ opacity: 0, y: -10 }}
@@ -98,27 +95,24 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
                         <div className="w-full justify-between   items-end  pb-8 flex">
                           <div className="flex gap-4 w-full j items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
-
-                              {item.product_image && <Image
-                                src={item.product_image || "/placeholder.png"}
-                                alt={item.product_name|| "product image"}
-                                width={96}
-                                height={96}
-                                className="rounded h-24 w-24"
-                              />}
+                              {item.product_image && (
+                                <Image
+                                  src={item.product_image || "/placeholder.png"}
+                                  alt={item.product_name || "product image"}
+                                  width={96}
+                                  height={96}
+                                  className="rounded h-24 w-24"
+                                />
+                              )}
                             </div>
                             <div className="w-full md:max-w-143.75">
                               <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
                                 {item.product_name}
                               </p>
 
-                              <div className="w-fit h-c32 px-2 justify-center rounded-c12 bg-black/3 flex items-center">
+                              <div className="w-fit p-2 justify-center rounded-c12 bg-black/3 flex items-center">
                                 <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
-                                  {item.quantity}PC,{" "}
-                                  {String(item.product_name).trim().length > 6
-                                    ? String(item.product_name).trim().slice(0, 6) +
-                                      "..."
-                                    : String(item.product_name).trim()}
+                                  {item.quantity}PC, {item.variation_display}
                                 </span>
                               </div>
                               <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">
@@ -161,7 +155,6 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
               <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
                 More to love
               </p>
-            
             </div>
           </div>
         </div>
@@ -181,23 +174,23 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
         <div className=" space-y-2 text-sm font-MontserratNormal">
           <div className="flex justify-between">
             <p className="">Total items:</p>
-            <p className="">${totalPrice}</p>
+            <p className="">${checkoutSummary?.subtotal}</p>
           </div>
           <div className="flex justify-between">
             <p className="font-MontserratSemiBold">Subtotal:</p>
-            <p className="">${totalPrice}</p>
+            <p className="">${checkoutSummary?.subtotal}</p>
           </div>
           <div className="flex justify-between">
             <p className="">Discount:</p>
-            <p className=" text-ca0202">{discount}</p>
+            <p className=" text-ca0202">{checkoutSummary?.discount_amount}</p>
           </div>
           <div className="flex justify-between">
             <p className="">Shipping fee: </p>
-            <p className="">{shippingFee}</p>
+            <p className="">{checkoutSummary?.shipping_cost}</p>
           </div>
           <div className="flex justify-between text-base font-MontserratSemiBold">
             <p className="">Estimated total:</p>
-            <p className="">₦{totalPrice}</p>
+            <p className="">₦{checkoutSummary?.total}</p>
           </div>
         </div>
       </motion.div>
@@ -205,10 +198,12 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
       <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
         <div className="flex items-center gap-3 w-full">
           <div>
-            <p className="font-MontserratSemiBold text-c20">₦{TotalItems}</p>
-            {discount > 0 && (
+            <p className="font-MontserratSemiBold text-c20">
+              ₦{checkoutSummary?.subtotal}
+            </p>
+            {Number(checkoutSummary?.discount_amount) > 0 && (
               <p className="text-c12 font-MontserratNormal text-ca0202 line-through">
-                ₦{totalPrice - discount}
+                ₦{discountPrice}
               </p>
             )}
           </div>

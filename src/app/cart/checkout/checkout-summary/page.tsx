@@ -19,35 +19,39 @@ import CaretDwn from "@/assets/mobile/carent-down.png";
 import CareteRight from "@/assets/mobile/cards/CaretRight.png";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import CheckoutModal from "@/components/ui/cart/CheckoutModal";
+import GuestCheckoutModal from "@/components/ui/Modals/guestCheckoutModal";
 
 export default function CheckoutSummary() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const [open, setOpen] = useState(false);
   // Prefer Redux token (set by login or axios refresh)
   const token = useSelector((state: RootState) => state.token.token);
-
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const checkoutItems = useSelector(
-    (state: RootState) => state.cart.checkoutItems
+    (state: RootState) => state.cart.checkoutItems,
   );
   const checkoutSummary = useSelector(
-    (state: RootState) => state.cart.checkoutSummary
+    (state: RootState) => state.cart.checkoutSummary,
   );
 
   const buyerAddresses = useSelector(
-    (state: RootState) => state.buyer.BuyerAddresses
+    (state: RootState) => state.buyer.BuyerAddresses,
   );
   const selectedAddressId = useSelector(
-    (state: RootState) => state.buyer.selectedAddressId
+    (state: RootState) => state.buyer.selectedAddressId,
   );
 
   const selectedAddress = buyerAddresses.find(
-    (addr) => addr.id === selectedAddressId
+    (addr) => addr.id === selectedAddressId,
   );
 
   const [openModal, setOpenModal] = useState(false);
   const [visible, setVisible] = useState(10);
 
   const { sendHttpRequest, loading } = useHttp();
+  const { sendHttpRequest: saveRequest, loading: saving } = useHttp();
 
   const [hasFetched, setHasFetched] = useState(false);
   useEffect(() => {
@@ -58,48 +62,49 @@ export default function CheckoutSummary() {
           method: "GET",
           token,
           isAuth: true,
+          userType: "buyer",
         },
         successRes: (res: any) => {
           const backendCart = res?.data;
-          console.log("kkkkkkkkkkkkkkk", res);
+
           if (!backendCart) return;
 
-          const uniqueMap = new Map();
+          // const uniqueMap = new Map();
 
-          backendCart.items.forEach((item: any) => {
-            const key = `${item.product_id}-${item.variation_name || "no-var"}`;
-            if (!uniqueMap.has(key)) {
-              uniqueMap.set(key, {
-                id: item.product_id,
-                name: item.product_name,
-                product_image: item.product_image,
-                quantity: item.quantity,
-                subtotal: Number(item.total_price),
-                unit_price: Number(item.unit_price),
-                variation_name: item.variation_name,
-                variation_id: item.variation_id,
-              });
-            }
-          });
+          // backendCart.items.forEach((item: any) => {
+          //   const key = `${item.product_id}-${item.variation_name || "no-var"}`;
+          //   if (!uniqueMap.has(key)) {
+          //     uniqueMap.set(key, {
+          //       id: item.product_id,
+          //       name: item.product_name,
+          //       product_image: item.product_image,
+          //       quantity: item.quantity,
+          //       subtotal: Number(item.total_price),
+          //       unit_price: Number(item.unit_price),
+          //       variation_name: item.variation_name,
+          //       variation_id: item.variation_id,
+          //     });
+          //   }
+          // });
 
-          const mappedItems = Array.from(uniqueMap.values());
+          // const mappedItems = Array.from(uniqueMap.values());
 
-          dispatch(setCheckoutItems(mappedItems));
-          dispatch(
-            setCheckoutSummary({
-              all_addresses: backendCart.all_addresses || [],
-              applied_coupon: backendCart.applied_coupon || null,
-              discount_amount:
-                backendCart.discount_amount?.toString() || "0.00",
-              shipping_address: backendCart.shipping_address || null,
-              shipping_cost: backendCart.shipping_cost?.toString() || "0.00",
-              shipping_methods: backendCart.shipping_methods || [],
-              subtotal: backendCart.subtotal?.toString() || "0.00",
-              total: backendCart.total?.toString() || "0.00",
-            })
-          );
+          // dispatch(setCheckoutItems(mappedItems));
+          // dispatch(
+          //   setCheckoutSummary({
+          //     all_addresses: backendCart.all_addresses || [],
+          //     applied_coupon: backendCart.applied_coupon || null,
+          //     discount_amount:
+          //       backendCart.discount_amount?.toString() || "0.00",
+          //     shipping_address: backendCart.shipping_address || null,
+          //     shipping_cost: backendCart.shipping_cost?.toString() || "0.00",
+          //     shipping_methods: backendCart.shipping_methods || [],
+          //     subtotal: backendCart.subtotal?.toString() || "0.00",
+          //     total: backendCart.total?.toString() || "0.00",
+          //   })
+          // );
 
-          setHasFetched(true);
+          // setHasFetched(true);
         },
       });
     }
@@ -109,18 +114,43 @@ export default function CheckoutSummary() {
     return <p className="text-c12">No address selected</p>;
   }
 
-  const totalPrice = Number(checkoutSummary?.subtotal ?? 0);
-  const discount = Number(checkoutSummary?.discount_amount ?? 0);
-  const shippingFee = Number(checkoutSummary?.shipping_cost ?? 0);
+  const handleGuestCheckout = (e?: React.FormEvent) => {
+    e?.preventDefault();
 
-  const showMore = () => setVisible((prev) => prev + 10);
+    const formData = checkoutSummary?.guest_address;
+    console.log("checking formdata", formData);
+
+    const items = checkoutItems.map((item) => ({
+      product_id: item.id,
+      variation_id: item.variation_id || null,
+      quantity: item.quantity,
+    }));
+
+    saveRequest({
+      requestConfig: {
+        url: "/checkout/guest/",
+        method: "POST",
+        body: { ...formData, items },
+        successMessage: "Redirecting to payment gateway...",
+      },
+      successRes: (res) => {
+        console.log("respons data:", res.data);
+
+        if (res.data?.paystack_payment_url) {
+          window.location.href = res.data.paystack_payment_url;
+        } else {
+          return;
+        }
+      },
+    });
+  };
 
   const handleCheckout = () => {
     sendHttpRequest({
       requestConfig: {
         url: "/checkout/",
         method: "POST",
-        body: { address: selectedAddressId },
+        body: { shipping_address_id: selectedAddressId },
         token: token ?? undefined,
         isAuth: true,
         successMessage: "Checkout successful!",
@@ -132,7 +162,6 @@ export default function CheckoutSummary() {
         if (res.data?.paystack_payment_url) {
           window.location.href = res.data.paystack_payment_url;
         } else {
-          // Fallback: navigate to your summary page
           return;
         }
       },
@@ -181,17 +210,32 @@ export default function CheckoutSummary() {
           className="w-full p-4 h-31 rounded-2xl bg-000000/7 circle-shadow flex-shrink-0 shadow-sm cursor-pointer flex items-center"
         >
           <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <p className="font-MontserratSemiBold text-c12">
-                {selectedAddress.first_name}  {selectedAddress.last_name}
-              </p>
-              <p className="text-c12 font-MontserratNormal">
-                {selectedAddress.phone}
-              </p>
-              <p className="text-c12 font-MontserratNormal">
-                {selectedAddress.address}
-              </p>
-            </div>
+            {token ? (
+              <div className="flex-1">
+                <p className="font-MontserratSemiBold text-c12 pb-2">
+                  {selectedAddress.first_name} {selectedAddress.last_name}
+                </p>
+                <p className="text-c12 font-MontserratNormal">
+                  {selectedAddress.phone}
+                </p>
+                <p className="text-c12 font-MontserratNormal">
+                  {selectedAddress.address}
+                </p>
+              </div>
+            ) : (
+              <div className="flex-1">
+                <p className="font-MontserratSemiBold text-c12 pb-2">
+                  {checkoutSummary?.guest_address?.guest_first_name}{" "}
+                  {checkoutSummary?.guest_address?.guest_last_name}
+                </p>
+                <p className="text-c12 font-MontserratNormal">
+                  {checkoutSummary?.guest_address?.guest_phone}
+                </p>
+                <p className="text-c12 font-MontserratNormal">
+                  {checkoutSummary?.guest_address?.guest_shipping_address.line1}
+                </p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
@@ -251,7 +295,7 @@ export default function CheckoutSummary() {
               >
                 {checkoutItems.map((item, index) => (
                   <motion.div
-                    key={`${item.product_id}-${item.variation_id}-${index} || "no-var"}`}
+                    key={`${item.id}-${item.variation_id}-${index} || "no-var"}`}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -272,12 +316,13 @@ export default function CheckoutSummary() {
                           <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
                             {item.product_name}
                           </p>
-                          <p className="font-MontserratNormal text-c12 pb-3">
+                          {/* <p className="font-MontserratNormal text-c12 pb-3">
                             Two piece shop
-                          </p>
-                          <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
-                            <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                              {item.quantity}PC, {item.product_name}
+                          </p> */}
+                          <div className="w-fit  p-2 justify-center rounded-c12 bg-black/3 flex items-center">
+                            <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
+                              {item.quantity}PC,{" "}
+                              {item.variation_display || item.product_name}
                             </span>
                           </div>
                           <p className="font-MontserratSemiBold text-base md:text-c18 pt-3 leading-6.5">
@@ -315,24 +360,24 @@ export default function CheckoutSummary() {
         <div className="space-y-2 text-sm font-MontserratNormal mt-4">
           <div className="flex justify-between">
             <p>Total items:</p>
-            <p>₦{totalPrice}</p>
+            <p>₦{checkoutSummary?.subtotal}</p>
           </div>
           <div className="flex justify-between">
             <p>Discount:</p>
-            <p className="text-ca0202">-₦{discount}</p>
+            <p className="text-ca0202">-₦{checkoutSummary?.discount_amount}</p>
           </div>
           <div className="flex justify-between">
             <p className="font-MontserratSemiBold">Subtotal:</p>
-            <p>₦{totalPrice}</p>
+            <p>₦{checkoutSummary?.subtotal}</p>
           </div>
 
           <div className="flex justify-between mt-4">
             <p>Shipping fee:</p>
-            <p>₦{shippingFee}</p>
+            <p>₦{checkoutSummary?.shipping_cost}</p>
           </div>
           <div className="flex justify-between text-base font-MontserratSemiBold mt-4">
             <p>Estimated total:</p>
-            <p>₦{totalPrice}</p>
+            <p>₦{checkoutSummary?.total}</p>
           </div>
         </div>
       </motion.div>
@@ -342,17 +387,29 @@ export default function CheckoutSummary() {
         <div className="flex items-center gap-3 w-full">
           <div>
             <p className="text-base font-MontserratSemiBold mb-3">Total</p>
-            <p className="font-MontserratSemiBold text-c20">₦{totalPrice}</p>
+            <p className="font-MontserratSemiBold text-c20">
+              ₦{checkoutSummary?.total}
+            </p>
           </div>
         </div>
 
-        <Button
-          onClick={handleCheckout}
-          className="border-0"
-          disabled={loading}
-        >
-          {loading ? <LoadingSpinner /> : "Confirm order"}
-        </Button>
+        {token ? (
+          <Button
+            onClick={handleCheckout}
+            className="border-0"
+            disabled={loading}
+          >
+            {loading ? <LoadingSpinner /> : "Confirm order"}
+          </Button>
+        ) : (
+          <Button
+            onClick={handleGuestCheckout}
+            className="border-0"
+            disabled={saving}
+          >
+            {saving ? <LoadingSpinner /> : "Confirm order"}
+          </Button>
+        )}
       </div>
     </div>
   );

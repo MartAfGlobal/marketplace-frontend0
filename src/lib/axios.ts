@@ -8,4 +8,13 @@ const axios = Axios.create({
   },
 });
 
+// ✅ CRITICAL FIX
+axios.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    // Let the browser set multipart boundary
+    delete config.headers?.["Content-Type"];
+  }
+  return config;
+});
+
 export default axios;

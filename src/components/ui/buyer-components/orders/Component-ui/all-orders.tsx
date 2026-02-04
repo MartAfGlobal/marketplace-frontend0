@@ -23,17 +23,25 @@ import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-or
 
 import { useFetchOrders } from "@/helpers/fetchOrders";
 
-export default function Orders() {
+import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
+
+interface OrdersProps {
+  searchTerm: string;
+}
+
+export default function Orders({ searchTerm }: OrdersProps) {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
-  const [addressOpen, setAddressOpen] = useState(false)
+  const [addressOpen, setAddressOpen] = useState(false);
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
   const [visible, setVisible] = useState(10); // Show 6 items by default
-  const { orders} = useSelector((state: any) => state.orders);
+  const { orders } = useSelector((state: any) => state.orders);
   const oneItem = orders.filter((order: any) => order.items?.length === 1);
-  const { fetchOrders } = useFetchOrders();
+  const { fetchOrders, fetchDisputeList } = useFetchOrders();
 
+  const [openCancelModal, setOpenCancelModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [loadingIds, setLoadingIds] = useState<string | null>(null);
 
   console.log("orders from redux store:", orders);
@@ -43,14 +51,28 @@ export default function Orders() {
   const showMore = () => setVisible((prev) => prev + 10);
 
   const token: string | undefined = useSelector(
-    (state: RootState) => state.token?.token ?? undefined
+    (state: RootState) => state.token?.token ?? undefined,
   );
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
-
-  // const token = useSelector((state: any) => state.token?.token);
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
-  const { sendHttpRequest: cancelReq } = useHttp();
+  const { loading: comfirming, sendHttpRequest: ComfirmReq } = useHttp();
+
+  const filteredOrders = orders.filter((order: OrderItem) => {
+    if (!searchTerm) return true;
+
+    const term = searchTerm.toLowerCase();
+
+    const matchesOrderId = order.order_no?.toLowerCase().includes(term);
+
+    const matchesStore = order.manufacturer?.toLowerCase().includes(term);
+
+    const matchesProduct = order.order_items?.some((item) =>
+      item.product_name?.toLowerCase().includes(term),
+    );
+
+    return matchesOrderId || matchesStore || matchesProduct;
+  });
 
   const handleRepay = (repay_order_id: any) => {
     console.log("checking item to pay", repay_order_id);
@@ -75,12 +97,34 @@ export default function Orders() {
     });
   };
 
+  const handleComfirmOder = (order_id: any) => {
+    console.log("checking item to pay", order_id);
+    ComfirmReq({
+      requestConfig: {
+        url: `/orders/buyer/${order_id}/confirm-delivery/`,
+        method: "POST",
+        token,
+        body: {
+          confirmed: true,
+        },
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res) => {
+        console.log("✅ User tracking info:", res);
+        setIsOpen(false);
+        fetchOrders();
+      },
+    });
+  };
+
   const handleTrackOrder = (orderId: string) => {
     router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
   };
 
   useEffect(() => {
     fetchOrders();
+    fetchDisputeList();
   }, [token]);
 
   const handleEditAddress = (id: string) => {
@@ -95,41 +139,20 @@ export default function Orders() {
     }
   };
 
-  const handleCancelOrder = (orderId: string) => {
-    setLoadingIds(orderId);
-    console.log("checking item to cancel", orderId);
-    if (!token) {
-      setLoadingIds(orderId);
-      return;
-    }
-
-    cancelReq({
-      requestConfig: {
-        url: `/orders/${orderId}/cancel/`,
-        method: "POST",
-        token,
-        isAuth: true,
-        userType: "buyer",
-      },
-      successRes: (res) => {
-        console.log("✅ User order cancel info:", res);
-        setLoadingIds("");
-        fetchOrders();
-      },
-    });
-  };
-
   const handleClick = (id: string) => {
     if (isMobile) {
       router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`);
     } else {
-      setOpen(true); // open modal on desktop
+      setSelectedId(id);
+      setOpen(true);
     }
   };
   console.log(
     "tracking id:",
-    orders.filter((order: any) => order.id)
+    orders.filter((order: any) => order.id),
   );
+
+  const mode = filteredOrders.map((item: OrderItem) => item.status);
 
   const handleCopy = (orderNo: string) => {
     navigator.clipboard
@@ -145,10 +168,10 @@ export default function Orders() {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // adjust breakpoint as needed
+      setIsMobile(window.innerWidth < 768);
     };
 
-    handleResize(); // check on mount
+    handleResize();
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
@@ -161,21 +184,29 @@ export default function Orders() {
           <AnimatePresence mode="wait">
             {orders.length === 0 ? (
               <motion.div
-                key="empty-state"
+                key="empty-orders"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
+                transition={{ duration: 0.4 }}
                 className="w-full flex flex-col items-center gap-c32 justify-center h-75.5"
               >
-                <p className="w-full text-center max-w-41.25 text-000000/60 font-MontserratMedium text-c18 leading-6.5">
+                <p className="text-center text-000000/60 font-MontserratMedium text-c18">
                   You haven’t made any orders yet
                 </p>
                 <Button className="w-51">Start shopping</Button>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 ">
-                
-                </div>
+              </motion.div>
+            ) : filteredOrders.length === 0 ? (
+              <motion.div
+                key="no-search-results"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full flex flex-col items-center justify-center h-60"
+              >
+                <p className="text-c16 font-MontserratMedium text-000000/60">
+                  No matching orders found
+                </p>
               </motion.div>
             ) : (
               <motion.div
@@ -184,17 +215,81 @@ export default function Orders() {
                 animate="visible"
                 exit="hidden"
                 variants={{
-                  hidden: { opacity: 0, height: 0 },
+                  hidden: { opacity: 0 },
                   visible: {
                     opacity: 1,
-                    height: "auto",
                     transition: { staggerChildren: 0.1 },
                   },
                 }}
                 className="space-y-c24"
               >
-                {orders.map((item: OrderItem) => {
-                  const isSingleItemOrder = item.items?.length === 1;
+                {filteredOrders.map((item: OrderItem) => {
+                  const isSingleItemOrder = item.order_items?.length === 1;
+                  const MobileActions = (
+                    <div className="w-full gap-4 text-c10 flex md:hidden mt-4 space-y-4">
+                      {item.status === "SHIPPED" && (
+                        <>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleTrackOrder(item.id)}
+                          >
+                            Track order
+                          </Button>
+
+                          <Button onClick={() => handleClick(item.id)}>
+                            Confirm delivery
+                          </Button>
+                        </>
+                      )}
+
+                      {item.status === "TO_SHIP" ||
+                        (item.status === "PENDING" && (
+                          <>
+                            {/* <Button
+                            onClick={() => handleEditAddress(item.id)}
+                            variant="secondary"
+                          >
+                            Edit address
+                          </Button> */}
+                            <div className="w-full"></div>
+
+                            <Button
+                              onClick={() => {
+                                setSelectedOrderId(item.id);
+                                setOpenCancelModal(true);
+                              }}
+                            >
+                              Cancel order
+                            </Button>
+                          </>
+                        ))}
+
+                      {item.status === "AWAITING_PAYMENT" && (
+                        <>
+                          {/* <Button
+                            onClick={() => handleEditAddress(item.id)}
+                            variant="secondary"
+                          >
+                            Edit address
+                          </Button> */}
+
+                          <Button
+                            disabled={repaying}
+                            onClick={() => handleRepay(item.id)}
+                          >
+                            {repaying ? <LoadingSpinner /> : "Confirm & pay"}
+                          </Button>
+                        </>
+                      )}
+
+                      {item.status === "DELIVERED" && (
+                        <>
+                          <Button>Add to cart</Button>
+                          <Button variant="secondary">Leave a review</Button>
+                        </>
+                      )}
+                    </div>
+                  );
 
                   return (
                     <motion.div
@@ -207,21 +302,30 @@ export default function Orders() {
                     >
                       <div className="w-full   flex items-center justify-between md:gap-0 md:justify-between mb-3 md:mb-c32">
                         <div>
-                          
-                          <p className="text-sm font-MontserratSemiBold leading-c20 text-000000">
-                            {item.status === "To Ship"
-                              ? "Order is being processed"
-                              : item.status === "Shipped"
-                              ? "Order on its way"
-                              : item.status === "Delivered"
-                              ? "Order delivered"
-                              : item.status === "Confirmed"
-                              ? "Delivered"
-                              : item.status === "Awaiting Confirmation" ||
-                                item.status === "Processing" ||
-                                item.status === "Awaiting Payment"
-                              ? "Awaiting payment"
-                              : item.status}
+                          <p
+                            className={`font-MontserratSemiBold text-c16  ${
+                              item.status === "CANCELLED"
+                                ? "text-ca0202"
+                                : item.status === "DELIVERED"
+                                  ? "text-2d7565"
+                                  : "text-161616"
+                            }`}
+                          >
+                            {item.status === "TO_SHIP"
+                              ? "Received at Central hub"
+                              : item.status === "SHIPPED"
+                                ? "Order on its way"
+                                : item.status === "DELIVERED"
+                                  ? "Delivered"
+                                  : item.status === "Confirmed"
+                                    ? "Delivered"
+                                    : item.status === "AWAITING_PAYMENT"
+                                      ? "Awaiting payment"
+                                      : item.status === "PENDING"
+                                        ? "Order is being processed"
+                                        : item.status === "CANCELLED"
+                                          ? "Cancelled"
+                                          : item.status}
                           </p>
                           <div className="md:flex hidden gap-2 mt-2">
                             <p className="text-c12  font-MontserratNormal">
@@ -245,270 +349,181 @@ export default function Orders() {
                             )}
                           </div>
                         </div>
-                        <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                          Delivery:{" "}
-                          {item.estimated_delivery_date || " May 15, 2025"}
-                        </p>
+                        {item.status !== "CANCELLED" && (
+                          <p className="text-c12 font-MontserratNormal leading-4 text-000000">
+                            Delivery:{" "}
+                            {item.estimated_delivery_date || " May 15, 2025"}
+                          </p>
+                        )}
                       </div>
 
                       <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
                         {isSingleItemOrder ? (
-                          <div className="flex flex-col md:flex-row gap-4 items-start  ">
-                            {item.items?.map((prod) => (
-                              <div
-                                key={prod.id}
-                                className="flex gap-4 items-start  w-full"
-                              >
-                                <Image
-                                  src={
-                                    prod.product?.main_image.medium || "/placeholder.png"
-                                  }
-                                  alt={prod.product?.name || "Product Image"}
-                                  width={96}
-                                  height={96}
-                                  className="h-24 w-24 "
-                                />
-                                <div className="w-full">
-                                  <p className="font-MontserratSemiBold text-base mb-1">
-                                    {prod.product?.name}
+                          <>
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="flex flex-col md:flex-row gap-4 items-start  "
+                            >
+                              {item.order_items?.map((prod) => (
+                                <div
+                                  key={prod.id}
+                                  className="flex gap-4 items-start  w-full"
+                                >
+                                  <Image
+                                    src={prod?.product_image}
+                                    alt={prod.product_name || "Product Image"}
+                                    width={96}
+                                    height={96}
+                                    className="h-24 w-24 "
+                                  />
+                                  <div className="w-full">
+                                    <p className="font-MontserratSemiBold text-base mb-1">
+                                      {prod.product_name}
+                                    </p>
+                                    <p className=" text-c12 font-MontserratMedium mb-3">
+                                      {item.manufacturer}
+                                    </p>
+                                    <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
+                                      {prod.quantity}Pc,
+                                      {prod.variation_name || prod.product_name}
+                                    </p>
+                                    <p className="font-MontserratSemiBold text-c16 pt-3">
+                                      ₦{item.total_price}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </Link>
+
+                            {MobileActions}
+                          </>
+                        ) : (
+                          <>
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="flex gap-4 w-full"
+                            >
+                              <div className="hidden sm:flex gap-4">
+                                <div
+                                  className={`grid gap-4 ${
+                                    item.order_items.length === 1
+                                      ? "grid-cols-1"
+                                      : item.order_items.length === 2
+                                        ? "grid-cols-2"
+                                        : "grid-cols-3"
+                                  }`}
+                                >
+                                  {item.order_items?.slice(0, 3).map((prod) => (
+                                    <div
+                                      key={prod.id}
+                                      className="flex flex-col items-center"
+                                    >
+                                      <div className="w-24 h-24 relative">
+                                        <Image
+                                          src={prod.product_image}
+                                          alt={
+                                            prod.product_name || "Product Image"
+                                          }
+                                          width={96}
+                                          height={96}
+                                          className="w-24 h-24 object-cover"
+                                        />
+                                        <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
+                                          x{prod.quantity}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div>
+                                  <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
+                                    {item.order_items
+                                      ?.slice(0, 3)
+                                      .map((prod, index) => (
+                                        <span
+                                          key={prod.id}
+                                          className="flex items-center"
+                                        >
+                                          <span
+                                            className="max-w-[110px] truncate inline-block align-middle"
+                                            title={prod.product_name}
+                                          >
+                                            {prod.product_name}
+                                          </span>
+                                          {index <
+                                            Math.min(
+                                              item.order_items.length,
+                                              3,
+                                            ) -
+                                              1 && <span>,&nbsp;</span>}
+                                        </span>
+                                      ))}
+                                    {item.order_items.length > 3 && (
+                                      <span>...</span>
+                                    )}
                                   </p>
-                                  <p className=" text-c12 font-MontserratMedium mb-3">
+
+                                  <p className="text-c12 font-MontserratMedium mb-3">
                                     {item.manufacturer}
                                   </p>
-                                  <p className="rounded-c12 bg-000000/10 text-000000/60  h-c32 py-2 w-fit min-w-24.5  px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
-                                    {prod.quantity}Pc, {prod.variant?.color}
+
+                                  <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
+                                    {item.order_items?.reduce(
+                                      (sum, i) => sum + (i.quantity || 0),
+                                      0,
+                                    )}{" "}
+                                    <span className="pl-0.5">Items</span>
                                   </p>
+
                                   <p className="font-MontserratSemiBold text-c16 pt-3">
                                     ₦{item.total_price}
                                   </p>
-                                  {/* <div className="w-full gap-4 pl flex md:hidden  mt-4 space-y-4">
-                                    <button
-                                      // onClick={() => {
-                                      //   setEditingAddress(undefined);
-                                      //   setIsModalOpen(true);
-                                      // }}
-                                      className="bg-transparent border h-c40 w-full rounded-c8 text-c10 border-ff715b text-ff715b"
-                                    >
-                                      Edit address
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        handleRepay(item.id);
-                                      }}
-                                      className="text-c10 text-ffffff bg-ff715b w-full h-c40 rounded-lg "
-                                    >
-                                      Confirm & pay
-                                    </button>
-                                  </div> */}
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex gap-4 w-full">
-                            <div className="hidden sm:flex gap-4">
-                              <div
-                                className={`grid gap-4 ${
-                                  item.items.length === 1
-                                    ? "grid-cols-1"
-                                    : item.items.length === 2
-                                    ? "grid-cols-2"
-                                    : "grid-cols-3"
-                                }`}
-                              >
-                                {item.items?.slice(0, 3).map((prod) => (
-                                  <div
-                                    key={prod.id}
-                                    className="flex flex-col items-center"
-                                  >
-                                    <div className="w-24 h-24 relative">
-                                      <Image
-                                        src={
-                                          prod.product?.main_image.medium ||
-                                          "/placeholder.png"
-                                        }
-                                        alt={
-                                          prod.product?.name || "Product Image"
-                                        }
-                                        width={96}
-                                        height={96}
-                                        className="w-24 h-24 object-cover"
-                                      />
-                                      <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                        x{prod.quantity}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
 
-                              <div>
-                                <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                  {item.items
-                                    ?.slice(0, 3)
-                                    .map((prod, index) => (
-                                      <span
-                                        key={prod.id}
-                                        className="flex items-center"
-                                      >
-                                        <span
-                                          className="max-w-[110px] truncate inline-block align-middle"
-                                          title={prod.product?.name}
-                                        >
-                                          {prod.product?.name}
-                                        </span>
-                                        {index <
-                                          Math.min(item.items.length, 3) -
-                                            1 && <span>,&nbsp;</span>}
-                                      </span>
-                                    ))}
-                                  {item.items.length > 3 && <span>...</span>}
-                                </p>
+                              <div className="flex sm:hidden w-full items-start gap-4">
+                                {item.order_items?.[0] && (
+                                  <Image
+                                    src={
+                                      item.order_items[0].product_image ||
+                                      "/placeholder.png"
+                                    }
+                                    alt={
+                                      item.order_items[0].product_name ||
+                                      "Product Image"
+                                    }
+                                    width={96}
+                                    height={96}
+                                    className="w-24 h-24"
+                                  />
+                                )}
 
-                                <p className="text-c12 font-MontserratMedium mb-3">
-                                  {item.manufacturer}
-                                </p>
+                                <div className="w-full ">
+                                  <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
+                                    {item.order_items?.[0]?.product_name}
+                                  </p>
 
-                                <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                  {item.items?.reduce(
-                                    (sum, i) => sum + (i.quantity || 0),
-                                    0
-                                  )}{" "}
-                                  <span className="pl-0.5">Items</span>
-                                </p>
+                                  <p className="text-c12 font-MontserratMedium mb-2">
+                                    {item.manufacturer}
+                                  </p>
 
-                                <p className="font-MontserratSemiBold text-c16 pt-3">
-                                  ₦{item.total_price}
-                                </p>
-                              </div>
-                            </div>
+                                  <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
+                                    {item.order_items?.length}{" "}
+                                    <span className="pl-0.5">Items</span>
+                                  </p>
 
-                            <div className="flex sm:hidden w-full items-start gap-4">
-                              {item.items?.[0] && (
-                                <Image
-                                  src={
-                                    item.items[0].product?.main_image.medium ||
-                                    "/placeholder.png"
-                                  }
-                                  alt={
-                                    item.items[0].product?.name ||
-                                    "Product Image"
-                                  }
-                                  width={96}
-                                  height={96}
-                                  className="w-24 h-24"
-                                />
-                              )}
-
-                              <div className="w-full ">
-                                <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
-                                  {item.items?.[0]?.product?.name}
-                                </p>
-
-                                <p className="text-c12 font-MontserratMedium mb-2">
-                                  {item.manufacturer}
-                                </p>
-
-                                <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                  {item.items?.length}{" "}
-                                  <span className="pl-0.5">Items</span>
-                                </p>
-
-                                <p className="font-MontserratSemiBold text-c16 pt-2">
-                                  ₦{item.total_price}
-                                </p>
-                                <div className="w-full gap-4 text-c10 pl flex md:hidden  mt-4 space-y-4">
-                                  {item.status === "Shipped" && (
-                                    <>
-                                      <Button
-                                        variant="secondary"
-                                        key={item.id}
-                                        onClick={() =>
-                                          handleTrackOrder(item.id)
-                                        }
-                                      >
-                                        Track order
-                                      </Button>
-
-                                      <Button
-                                        onClick={() => handleClick(item.id)}
-                                      >
-                                        Confirm delivery
-                                      </Button>
-                                    </>
-                                  )}
-
-                                  {item.status === "To Ship" && (
-                                    <>
-                                      <Button
-                                        onClick={() =>
-                                          handleEditAddress(item.id)
-                                        }
-                                        variant="secondary"
-                                        className=""
-                                      >
-                                        Edit address
-                                      </Button>
-                                      <Button
-                                        onClick={() =>
-                                          handleCancelOrder(item.id)
-                                        }
-                                        variant="primary"
-                                      >
-                                        {loadingIds === item.id ? (
-                                          <LoadingSpinner />
-                                        ) : (
-                                          "Cancel order"
-                                        )}
-                                      </Button>
-                                    </>
-                                  )}
-
-                                  {item.status === "Delivered" && (
-                                    <>
-                                      <Button className="">Add to cart</Button>
-                                      <Button variant="secondary" className="">
-                                        Leave a review
-                                      </Button>
-                                    </>
-                                  )}
-
-                                  {(item.status === "Awaiting Confirmation" ||
-                                    item.status === "Processing" ||
-                                    item.status === "Awaiting Payment") && (
-                                    <>
-                                      <Button
-                                        onClick={() =>
-                                          handleEditAddress(item.id)
-                                        }
-                                        variant="secondary"
-                                        className=""
-                                      >
-                                        Edit address
-                                      </Button>
-                                      <Button
-                                        disabled={repaying}
-                                        onClick={() => {
-                                          handleRepay(item.id);
-                                        }}
-                                        className=""
-                                      >
-                                        {repaying ? (
-                                          <LoadingSpinner />
-                                        ) : (
-                                          "Confirm & pay"
-                                        )}
-                                      </Button>
-                                    </>
-                                  )}
+                                  <p className="font-MontserratSemiBold text-c16 pt-2">
+                                    ₦{item.total_price}
+                                  </p>
                                 </div>
                               </div>
-                            </div>
-                          </div>
+                            </Link>
+                            {MobileActions}
+                          </>
                         )}
-
-                        <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
-                          {item.status === "Shipped" && (
+                        <div className="hidden w-full gap-4 pl-4 md:flex md:flex-col md:max-w-70 space-y-4">
+                          {item.status === "SHIPPED" && (
                             <>
                               <Button
                                 variant="secondary"
@@ -524,30 +539,40 @@ export default function Orders() {
                             </>
                           )}
 
-                          {item.status === "To Ship" && (
+                          {item.status === "TO_SHIP" && (
                             <>
                               <Button
+                                variant="secondary"
+                                key={item.id}
+                                onClick={() => handleTrackOrder(item.id)}
+                              >
+                                Track order
+                              </Button>
+                            </>
+                          )}
+
+                          {item.status === "PENDING" && (
+                            <>
+                              {/* <Button
                                 onClick={() => handleEditAddress(item.id)}
                                 variant="secondary"
                                 className=""
                               >
                                 Edit address
-                              </Button>
+                              </Button> */}
                               <Button
-                                onClick={() => handleCancelOrder(item.id)}
+                                onClick={() => {
+                                  setSelectedOrderId(item.id);
+                                  setOpenCancelModal(true);
+                                }}
                                 variant="primary"
                               >
-                                {" "}
-                                {loadingIds === item.id ? (
-                                  <LoadingSpinner />
-                                ) : (
-                                  "Cancel order"
-                                )}
+                                Cancel order
                               </Button>
                             </>
                           )}
 
-                          {item.status === "Delivered" && (
+                          {item.status === "DELIVERED" && (
                             <>
                               <Button className="">Add to cart</Button>
                               <Button variant="secondary" className="">
@@ -556,17 +581,15 @@ export default function Orders() {
                             </>
                           )}
 
-                          {(item.status === "Awaiting Confirmation" ||
-                            item.status === "Processing" ||
-                            item.status === "Awaiting Payment") && (
+                          {item.status === "AWAITING_PAYMENT" && (
                             <>
-                              <Button
+                              {/* <Button
                                 onClick={() => handleEditAddress(item.id)}
                                 variant="secondary"
                                 className=""
                               >
                                 Edit address
-                              </Button>
+                              </Button> */}
                               <Button
                                 disabled={repaying}
                                 onClick={() => {
@@ -597,7 +620,7 @@ export default function Orders() {
 
                           <div className="w-full hidden md:flex justify-center">
                             <Link
-                              href={`orders/${item.id}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
                               className="text-c14 font-MontserratSemiBold text-ff715b"
                             >
                               Order details
@@ -620,14 +643,19 @@ export default function Orders() {
         description="Confirming helps us complete your order and improve service."
         onNo={() => setOpen(false)}
         onYes={() => {
-          open;
+          handleComfirmOder(selectedId);
         }}
+        loading={comfirming}
       />
-      <OrderEditAddressModal
+      {/* <OrderEditAddressModal
         onClose={() => setAddressOpen(false)}
         isOpen={addressOpen}
         id={selectedId}
-
+      /> */}
+      <CancelOrderModal
+        isOpen={openCancelModal}
+        orderId={selectedOrderId}
+        onClose={() => setOpenCancelModal(false)}
       />
     </div>
   );

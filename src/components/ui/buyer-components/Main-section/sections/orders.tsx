@@ -19,13 +19,13 @@ import { useHttp } from "@/hooks/use-http";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-order-modal";
+import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
 
 export default function Orders() {
   const { orders, loading } = useSelector((state: any) => state.orders);
-  const oneItem = orders.filter((order: any) => order.items?.length === 1);
-  console.log("Orders with only one item:", oneItem);
-  const [open, setOpen] = useState(false);
 
+  const [open, setOpen] = useState(false);
+  const [cancelOrderOpen, setCancelOrderOpen] = useState(false);
   const { fetchOrders } = useFetchOrders();
 
   const [loadingIds, setLoadingIds] = useState<string | null>(null);
@@ -36,9 +36,8 @@ export default function Orders() {
   const [addressOpen, setAddressOpen] = useState(false);
 
   const token: string | undefined = useSelector(
-    (state: RootState) => state.token?.token ?? undefined
+    (state: RootState) => state.token?.token ?? undefined,
   );
-
 
   // const token = useSelector((state: any) => state.token?.token);
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
@@ -47,19 +46,19 @@ export default function Orders() {
   const router = useRouter();
 
   const totalToShip = orders.filter(
-    (order: any) => order.status === "To Ship"
+    (order: OrderItem) => order.status === "TO_SHIP",
   ).length;
   const totalShipped = orders.filter(
-    (order: any) => order.status === "Shipped"
+    (order: OrderItem) => order.status === "SHIPPED",
   ).length;
   const totalDelivered = orders.filter(
-    (order: any) => order.status === "Delivered"
+    (order: OrderItem) => order.status === "DELIVERED",
   ).length;
   const totalAwaitingPayment = orders.filter(
-    (order: any) => order.status === "Awaiting Payment"
+    (order: OrderItem) => order.status === "AWAITING_PAYMENT",
   ).length;
   const totalCancelled = orders.filter(
-    (order: any) => order.status === "Cancelled"
+    (order: OrderItem) => order.status === "Cancelled",
   ).length;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -92,7 +91,7 @@ export default function Orders() {
   ];
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // adjust breakpoint as needed
+      setIsMobile(window.innerWidth < 768);
     };
 
     handleResize(); // check on mount
@@ -116,27 +115,8 @@ export default function Orders() {
   };
 
   const handleCancelOrder = (orderId: string) => {
-    setLoadingIds(orderId);
-    console.log("checking item to cancel", orderId);
-    if (!token) {
-      setLoadingIds(orderId);
-      return;
-    }
-
-    cancelReq({
-      requestConfig: {
-        url: `/orders/${orderId}/cancel/`,
-        method: "POST",
-        token,
-        isAuth: true,
-        userType: "buyer",
-      },
-      successRes: (res) => {
-        console.log("✅ User order cancel info:", res);
-        setLoadingIds("");
-        fetchOrders();
-      },
-    });
+    setSelectedId(orderId);
+    setCancelOrderOpen(true);
   };
 
   const handleClick = (id: string) => {
@@ -170,6 +150,7 @@ export default function Orders() {
     });
   };
 
+  console.log("ordersssssssssssss", orders);
   // const handleTrackOrder = (orderId: string) => {
   //   router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
   // };
@@ -180,12 +161,14 @@ export default function Orders() {
         <p className="font-MontserratSemiBold text-base leading-c24 text-000000">
           Orders
         </p>
-       { orders.length > 0 && <Link
-          href="/dashboard/buyer/orders"
-          className="font-MontserratSemiBold text-ff715b text-sm leading-c20"
-        >
-          view all
-        </Link>}
+        {orders.length > 0 && (
+          <Link
+            href="/dashboard/buyer/orders"
+            className="font-MontserratSemiBold text-ff715b text-sm leading-c20"
+          >
+            view all
+          </Link>
+        )}
       </div>
       <div className="flex gap-8 w-full overflow-x-auto py-4   xl:gap-c32">
         {Orderahistory.map((item) => (
@@ -210,156 +193,206 @@ export default function Orders() {
           </div>
         ))}
       </div>
-      {orders.length > 0 ?(<div className="w-full">
-        <h1 className="text-sm font-MontserratSemiBold leading-6.5 text-000000 opacity-32">
-          Last orders
-        </h1>
-        <div className="w-full space-y-c24 mt-c32">
-          {orders.slice(-2).map((item: any) => (
-            <div key={item.id}>
-              <div className="w-full flex justify-between mb-c32">
-                <p className="text-sm font-MontserratNormal leading-c20 text-000000">
-                  {item.status === "To Ship"
-                    ? "Order is being processed"
-                    : item.status === "Shipped"
-                    ? "Order on its way"
-                    : item.status === "Delivered"
-                    ? "Order delivered"
-                    : item.status === "Confirmed"
-                    ? "Delivered"
-                    : item.status === "Awaiting Confirmation"
-                    ? "Awaiting payment"
-                    : item.status}
-                </p>
-                <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                  {item.estimated_delivery_date || "pending"}
-                </p>
-              </div>
-              <div className="w-full justify-between flex">
-                <div className="flex gap-4 items-start">
-                  <Image
-                    src={item.items?.[0]?.product?.image|| "/placeholder.png"}
-                    alt={item.items?.[0]?.product?.name || "Product Image"}
-                    width={96}
-                    height={96}
-                    className="rounded-lg"
-                  />
-
-                  <div className="w-full max-w-143.75">
-                    <p className="font-MontserratSemiBold text-base leading-c24 pb-1 text-000000">
-                      {item.items?.[0]?.product?.name}
-                    </p>
-                    <p className="font-MontserratMedium text-c12 leading-c16 pb-3 text-000000">
-                      {item.manufacturer}
-                    </p>
-                    <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
-                      <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                        {item.items.length}PC, {item.items?.[0]?.variant?.color}
-                      </span>
-                    </div>
-                    <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
-                      ₦{item.total_price}
-                    </p>
-                  </div>
+      {orders.length > 0 ? (
+        <div className="w-full">
+          <div className="flex justify-between">
+            <h1 className="text-sm font-MontserratSemiBold leading-6.5 text-000000 opacity-32">
+              Last orders
+            </h1>
+            {/* {orders.length > 0 && (
+              <Link
+                href="/dashboard/buyer/orders"
+                className="font-MontserratSemiBold text-ff715b text-sm leading-c20"
+              >
+                view all
+              </Link>
+            )} */}
+          </div>
+          <div className="w-full space-y-c24 mt-c32">
+            {orders.slice(-2).map((item: OrderItem) => (
+              <div key={item.id}>
+                <div className="w-full flex justify-between mb-c32">
+                  <p
+                    className={`font-MontserratSemiBold text-c16  ${
+                      item.status === "CANCELLED"
+                        ? "text-ca0202"
+                        : item.status === "DELIVERED"
+                          ? "text-2d7565"
+                          : "text-161616"
+                    }`}
+                  >
+                    {item.status === "TO_SHIP"
+                      ? "Received at Central hub"
+                      : item.status === "SHIPPED"
+                        ? "Order on its way"
+                        : item.status === "DELIVERED"
+                          ? "Delivered"
+                          : item.status === "Confirmed"
+                            ? "Delivered"
+                            : item.status === "AWAITING_PAYMENT"
+                              ? "Awaiting payment"
+                              : item.status === "PENDING"
+                                ? "Order is being processed"
+                                : item.status === "CANCELLED"
+                                  ? "Cancelled"
+                                  : item.status}
+                  </p>
+                  <p className="text-c12 font-MontserratNormal leading-4 text-000000">
+                    {item.estimated_delivery_date || "pending"}
+                  </p>
                 </div>
-                <div className="w-full gap-4 pl hidden  md:flex md:flex-col md:max-w-50 xl:max-w-70 space-y-4">
-                  {item.status === "Shipped" && (
-                    <>
-                      <Button
-                        variant="secondary"
-                        key={item.id}
-                        onClick={() => handleTrackOrder(item.id)}
-                      >
-                        Track order
-                      </Button>
+                <div className="w-full justify-between flex">
+                  <Link
+                    href={`/dashboard/buyer/orders/${item.id}`}
+                    className="flex flex-col md:flex-row gap-4 items-start  "
+                  >
+                    <div className="flex gap-4 items-start">
+                      <Image
+                        src={
+                          item.order_items?.[0]?.product_image ||
+                          "/placeholder.png"
+                        }
+                        alt={
+                          item.order_items?.[0]?.product_name || "Product Image"
+                        }
+                        width={96}
+                        height={96}
+                        className="rounded-lg"
+                      />
 
-                      <Button onClick={() => handleClick(item.id)}>
-                        Confirm delivery
-                      </Button>
-                    </>
-                  )}
+                      <div className="w-full max-w-143.75">
+                        <p className="font-MontserratSemiBold text-base leading-c24 pb-1 text-000000">
+                          {item.order_items?.[0]?.product_name}
+                        </p>
+                        <p className="font-MontserratMedium text-c12 leading-c16 pb-3 text-000000">
+                          {item.manufacturer}
+                        </p>
+                        <div className="w-fit p-2 justify-center rounded-c12 bg-black/3 flex items-center">
+                          <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
+                            {item.order_items.length}PC,{" "}
+                            {item.order_items?.[0]?.variation_name}
+                          </span>
+                        </div>
+                        <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
+                          ₦{item.total_price}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                  <div className="w-full gap-4 pl hidden  md:flex md:flex-col md:max-w-50 xl:max-w-70 space-y-4">
+                    {item.status === "SHIPPED" && (
+                      <>
+                        <Button
+                          variant="secondary"
+                          key={item.id}
+                          onClick={() => handleTrackOrder(item.id)}
+                        >
+                          Track order
+                        </Button>
 
-                  {item.status === "To Ship" && (
-                    <>
-                      <Button
-                        onClick={() => handleEditAddress(item.id)}
-                        variant="secondary"
-                        className=""
-                      >
-                        Edit address
-                      </Button>
-                      <Button
-                        onClick={() => handleCancelOrder(item.id)}
-                        variant="primary"
-                      >
-                        {" "}
-                        {loadingIds === item.id ? (
-                          <LoadingSpinner />
-                        ) : (
-                          "Cancel order"
-                        )}
-                      </Button>
-                    </>
-                  )}
+                        <Button onClick={() => handleClick(item.id)}>
+                          Confirm delivery
+                        </Button>
+                      </>
+                    )}
 
-                  {item.status === "Delivered" && (
-                    <>
-                      <Button className="">Add to cart</Button>
-                      <Button variant="secondary" className="">
-                        Leave a review
-                      </Button>
-                    </>
-                  )}
+                    {item.status === "TO_SHIP" && (
+                      <>
+                        {/* <Button
+                          onClick={() => handleEditAddress(item.id)}
+                          variant="secondary"
+                          className=""
+                        >
+                          Edit address
+                        </Button> */}
+                        
+                        <Button
+                          variant="secondary"
+                          key={item.id}
+                          onClick={() => handleTrackOrder(item.id)}
+                        >
+                          Track order
+                        </Button>
+                      </>
+                    )}
+                    {item.status === "PENDING" && (
+                      <>
+                        {/* <Button
+                          onClick={() => handleEditAddress(item.id)}
+                          variant="secondary"
+                          className=""
+                        >
+                          Edit address
+                        </Button> */}
+                        <Button
+                          onClick={() => handleCancelOrder(item.id)}
+                          variant="primary"
+                        >
+                          Cancel order
+                        </Button>
+                      </>
+                    )}
 
-                  {(item.status === "Awaiting Confirmation" ||
-                    item.status === "Processing" ||
-                    item.status === "Awaiting Payment") && (
-                    <>
-                      <Button
-                        onClick={() => handleEditAddress(item.id)}
-                        variant="secondary"
-                        className=""
-                      >
-                        Edit address
-                      </Button>
-                      <Button
-                        disabled={repaying}
-                        onClick={() => {
-                          handleRepay(item.id);
-                        }}
-                        className=""
-                      >
-                        {repaying ? <LoadingSpinner /> : "Confirm & pay"}
-                      </Button>
-                    </>
-                  )}
+                    {item.status === "DELIVERED" && (
+                      <>
+                        <Button className="">Add to cart</Button>
+                        <Button variant="secondary" className="">
+                          Leave a review
+                        </Button>
+                      </>
+                    )}
 
-                  {/* Default fallback (optional)
+                    {(item.status === "Awaiting Confirmation" ||
+                      item.status === "Processing" ||
+                      item.status === "AWAITING_PAYMENT") && (
+                      <>
+                        {/* <Button
+                          onClick={() => handleEditAddress(item.id)}
+                          variant="secondary"
+                          className=""
+                        >
+                          Edit address
+                        </Button> */}
+                        <Button
+                          disabled={repaying}
+                          onClick={() => {
+                            handleRepay(item.id);
+                          }}
+                          className=""
+                        >
+                          {repaying ? <LoadingSpinner /> : "Confirm & pay"}
+                        </Button>
+                      </>
+                    )}
+
+                    {/* Default fallback (optional)
                           {![
                             "Shipped",
                             "To Ship",
                             "Delivered",
-                            "Awaiting Payment",
+                            "AWAITING_PAYMENT",
                           ].includes(item.status) && (
                             <Button variant="secondary" className="">
                               View details
                             </Button>
                           )} */}
-
-                 
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>): (<div className="w-full h-40 flex justify-center items-center flex-col gap-4">
+      ) : (
+        <div className="w-full h-40 flex justify-center items-center flex-col gap-4">
+          <h1 className="text-sm font-MontserratSemiBold leading-6.5 text-000000 opacity-32">
+            No orders yet
+          </h1>
 
-           <h1 className="text-sm font-MontserratSemiBold leading-6.5 text-000000 opacity-32">
-          No orders yet
-        </h1>
-        
-          <p className="text-sm font-MontserratNormal text-000000 opacity-20">When you place an order, it will appear here.</p>
-      </div>)}
+          <p className="text-sm font-MontserratNormal text-000000 opacity-20">
+            When you place an order, it will appear here.
+          </p>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={open}
@@ -372,10 +405,15 @@ export default function Orders() {
         noText="Cancel"
         className="w-full max-w-106.5 text-center"
       />
-      <OrderEditAddressModal
+      {/* <OrderEditAddressModal
         onClose={() => setAddressOpen(false)}
         isOpen={addressOpen}
         id={selectedId}
+      /> */}
+      <CancelOrderModal
+        isOpen={cancelOrderOpen}
+        orderId={selectedId}
+        onClose={() => setCancelOrderOpen(false)}
       />
     </div>
   );

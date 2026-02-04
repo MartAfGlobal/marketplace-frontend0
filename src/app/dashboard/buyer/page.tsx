@@ -18,6 +18,7 @@ import { fetchOrdersSuccess } from "@/store/orders/order-slice";
 
 import WireframeLoader from "@/components/ui/WireframeLoader";
 import DotSpinner from "@/components/reloadSpinner/DotSpinner";
+import { Address } from "@/types/global";
 
 export default function BuyerDashBoardPage() {
   const { sendHttpRequest: userInforHttpRequest } = useHttp();
@@ -68,17 +69,18 @@ export default function BuyerDashBoardPage() {
         const addresses =
           res?.data?.map((addr: any) => ({
             id: addr.id,
-            country: addr.country,
-            full_name: addr.full_name,
+            country: addr.country_name,
+            first_name: addr.first_name,
+            last_name: addr.last_name,
             phone: addr.phone,
             state: addr.state,
             city: addr.city,
             postal_code: addr.postal_code,
             address: addr.address,
-            defaultAddress: addr.defaultAddress || false,
+            defaultAddress: addr.is_default || false,
           })) || [];
 
-        console.log("User address info:", addresses);
+        console.log("User address info:", res);
 
         dispatch(buyerActions.setBuyerAddresses(addresses));
       },
@@ -135,7 +137,7 @@ export default function BuyerDashBoardPage() {
 
     fetchUserReq({
       requestConfig: {
-        url: "/orders/",
+        url: "/orders/buyer/",
         method: "GET",
         token,
         isAuth: true,

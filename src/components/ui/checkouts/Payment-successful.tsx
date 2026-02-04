@@ -26,57 +26,59 @@ import { useHttp } from "@/hooks/use-http";
 export default function PaymentSuccessful() {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
-   const orderData = useSelector((state: RootState) => state.orderSlice.orderData);
 
-    const cartItems = useSelector((state: RootState) => state.cart.items);
+  const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
- 
+
   const router = useRouter();
   const orderId = "304657846532";
   const [visible, setVisible] = useState(10);
+
+  const orderDatas = useSelector(
+    (state: RootState) => state.orderSlice.SuccessOrderData
+  );
 
   const handleTrackOrder = () => {
     const trackingId = trackOrders[0]?.id?.toString() ?? "";
     router.push(`/dashboard/buyer/orders/tracking/${trackingId}`);
   };
-  
-    const { loading, sendHttpRequest:fetchSuccOrderRequest } = useHttp();
 
-// useEffect(() => {
-//   const queryParams = new URLSearchParams(window.location.search);
-//   const reference = queryParams.get("ref");
-  
-//   if (reference){
-//      fetchSuccOrderRequest({
-//       requestConfig: {
-//         url: `cart/order-details/?ref=${reference}`,
-//         method: "GET",
-       
-//         successMessage: "Redirecting to payment gateway...",
-//       },
-//       successRes: (res) => {
-//         console.log("respons data:", res.data);
+  const { loading, sendHttpRequest: fetchSuccOrderRequest } = useHttp();
 
-//         if (res.data?.paystack_payment_url) {
-//           window.location.href = res.data.paystack_payment_url;
-          
-//         } else {
-          
-//           return;
-//         }
-//       },
-//     });
-//   }
-  
-// //  {
-// //     re(url/cart/order-details/?ref=${reference})
-// //       .then((res) => res.json())
-// //       .then((data) => setOrderDetails(data.orders));
-// //   }
-// }, []);
+  // useEffect(() => {
+  //   const queryParams = new URLSearchParams(window.location.search);
+  //   const reference = queryParams.get("ref");
+
+  //   if (reference){
+  //      fetchSuccOrderRequest({
+  //       requestConfig: {
+  //         url: `cart/order-details/?ref=${reference}`,
+  //         method: "GET",
+
+  //         successMessage: "Redirecting to payment gateway...",
+  //       },
+  //       successRes: (res) => {
+  //         console.log("respons data:", res.data);
+
+  //         if (res.data?.paystack_payment_url) {
+  //           window.location.href = res.data.paystack_payment_url;
+
+  //         } else {
+
+  //           return;
+  //         }
+  //       },
+  //     });
+  //   }
+
+  // //  {
+  // //     re(url/cart/order-details/?ref=${reference})
+  // //       .then((res) => res.json())
+  // //       .then((data) => setOrderDetails(data.orders));
+  // //   }
+  // }, []);
 
   const showMore = () => setVisible((prev) => prev + 10);
-
 
   const trackOrders: TrackOrders[] = [
     // Uncomment to test non-empty state
@@ -128,17 +130,14 @@ export default function PaymentSuccessful() {
     <>
       <div className="w-full">
         <div className="w-full px-15">
-        
           <div className="pt-c32 pb-c64 w-full  flex justify-center ">
-            
             <div className="w-205 px-8 pt-c32 rounded-2xl border border-000000/10">
-             <PaymentSuccess/>
+              <PaymentSuccess />
               <div className="flex justify-between space-y-c32">
                 <div className="w-full max-w-57">
-                 
                   <div className="flex gap-2 mt-2">
                     <p className="text-sm mb-3 font-MontserratSemiBold">
-                      Order ID: {orderData?.checkout_id}
+                      Order ID: {orderDatas?.order.order_id}
                     </p>
                     <button onClick={handleCopy}>
                       <Image src={Copy} alt="copy" width={16} height={16} />
@@ -150,19 +149,24 @@ export default function PaymentSuccessful() {
                     )}
                   </div>
                   <div className="font-MontserratNormal text-sm text-000000 space-y-2">
-                    <p>Seller: Kinicho stores</p>
-                    <p>Order date: May 15, 2025</p>
+                    <p>
+                      Order date:{" "}
+                      {orderDatas?.order.created_at &&
+                        new Date(
+                          orderDatas.order.created_at
+                        ).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                    </p>
+
                     <p>Delivery date: June 15, 2025 - July 25, 2025</p>
                   </div>
                 </div>
                 <div className=" flex flex-col gap-c32 w-full max-w-84">
-                  <Button onClick={() => setOpen(true)}>
-                    Edit Address
-                  </Button>
-                  <Button variant="secondary"
-                    onClick={handleTrackOrder}
-                  
-                  >
+                  <Button onClick={() => setOpen(true)}>Edit Address</Button>
+                  <Button variant="secondary" onClick={handleTrackOrder}>
                     Cancel order
                   </Button>
                 </div>
@@ -175,11 +179,10 @@ export default function PaymentSuccessful() {
                     </p>
                   </div>
                   <div className="font-MontserratNormal text-sm text-000000 space-y-2">
-                    <p>Chisom Ebube Chris</p>
-                    <p>+2347034562314</p>
+                    <p>{orderDatas?.order.shipping_info.fullname}</p>
+                    <p>{orderDatas?.order.shipping_info.phone}</p>
                     <p>
-                      LEA Primary School Dakwo, Abuja Kabusa, Abuja, Nigeria,
-                      900102
+                     {orderDatas?.order.shipping_info.address}
                     </p>
                   </div>
                 </div>
@@ -230,9 +233,9 @@ export default function PaymentSuccessful() {
                       }}
                       className="space-y-c24"
                     >
-                      {trackOrders.map((item) => (
+                      {orderDatas?.order.items.map((item) => (
                         <motion.div
-                          key={item.id}
+                          key={item.product_id}
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
@@ -241,23 +244,23 @@ export default function PaymentSuccessful() {
                           <div className="w-full justify-between pb-8 flex">
                             <div className="flex gap-4 items-start">
                               <Image
-                                src={item.icon}
-                                alt={item.title}
+                                src={item.image}
+                                alt={item.name}
                                 width={100}
                                 height={100}
                               />
                               <div className="w-full max-w-143.75">
                                 <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
-                                  {item.title}
+                                  {item.name}
                                 </p>
 
-                                <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
-                                  <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                                    {item.totalQuantity}PC, {item.colour}
+                                <div className="w-fit p-2 justify-center rounded-c12 bg-black/3 flex items-center">
+                                  <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
+                                    {item.quantity}PC, {item.name}
                                   </span>
                                 </div>
                                 <p className="font-MontserratSemiBold text-c18 pt-3 leading-6.5">
-                                  ₦{item.totalAmount}
+                                  ₦{item.total_price}
                                 </p>
                               </div>
                             </div>
@@ -275,42 +278,41 @@ export default function PaymentSuccessful() {
                     <p className="font-MontserratNormal text-sm text-000000">
                       Total
                     </p>
-                    <p className="font-MontserratSemiBold text-c32 ">N30,000</p>
+                    <p className="font-MontserratSemiBold text-c32 ">
+                      {orderDatas?.order.total}
+                    </p>
                   </div>
                   <div className="font-MontserratNormal text-sm text-000000 space-y-2">
                     <div className="flex justify-between">
                       <p>Total items</p>
-                      <p>N50,000</p>
+                      <p>{orderDatas?.order.items.length}</p>
                     </div>
                     <div className="flex justify-between">
                       <p>Discounts</p>
-                      <p>-N25,000</p>
+                      <p>-N{orderDatas?.order.subtotal}</p>
                     </div>
                     <div className="flex justify-between">
                       <p>Subtotal</p>
-                      <p>N25,000</p>
+                      <p>N{orderDatas?.order.subtotal}</p>
                     </div>
                   </div>
                   <div className="font-MontserratNormal text-left text-sm mt-c24 text-000000 space-y-2">
                     <div className="flex justify-between">
                       <p>Shipping fee</p>
-                      <p>N5,000</p>
+                      <p>
+                        {orderDatas?.order.shipping}
+                      </p>
                     </div>
                     <div className="flex justify-between">
                       <p>Order total</p>
-                      <p>N30,000</p>
+                      <p>{orderDatas?.order.total}</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="py-c32">
-            <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
-              More to love
-            </p>
-           
-          </div>
+      
         </div>
       </div>
       <ConfirmModal

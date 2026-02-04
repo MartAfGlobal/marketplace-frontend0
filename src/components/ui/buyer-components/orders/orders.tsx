@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import OrdersNav from "./order-status-bar";
 import SearchInput from "../../landindPage/Header/SearchInput";
 import Orders from "./Component-ui/all-orders";
@@ -13,10 +13,15 @@ import { motion } from "framer-motion";
 import ProductCard from "@/components/ui/cards/ProductCard";
 import { RootState } from "@/store";
 import { useDispatch, useSelector } from "react-redux";
+import ProcessingOrders from "./Component-ui/processing";
+import { useHttp } from "@/hooks/use-http";
+import Disputes from "./Component-ui/dispute-items";
 
 const tabs = [
   "All",
+
   "Awaiting Payment",
+  "Processing",
   "To Ship",
   "Shipped",
   "Processed",
@@ -26,9 +31,10 @@ const tabs = [
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("All");
 
-  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const { sendHttpRequest, loading } = useHttp();
+
   const dispatch = useDispatch();
-  
+  const [searchTerm, setSearchTerm] = useState("");
 
   return (
     <div className="w-full  justify-center  flex flex-col">
@@ -37,9 +43,11 @@ export default function OrdersPage() {
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          className= "pl-60 md:pl-0"
+          className="pl-82 md:pl-0"
         />
         <SearchInput
+          onSearchChange={setSearchTerm}
+          showDropdown={false}
           placeholder="Order ID, Store name, Product name"
           className="border border-000000/18 focus:ring-ff715b shadow-neutral-50 hidden md:block"
         />
@@ -47,14 +55,17 @@ export default function OrdersPage() {
 
       <div className="flex-1 overflow-y-auto no-scrollbar">
         <div className="md:pt-c32 md:pb-c60 ">
-          {activeTab === "All" && <Orders />}
-          {activeTab === "Awaiting Payment" && <AwaitingOrders />}
-          {activeTab === "To Ship" && <ToShip />}
-          {activeTab === "Shipped" && <Shipped />}
-          {activeTab === "Processed" && <Proccessed />}
-          {activeTab === "In Dispute" && (
-            <div className="p-4 bg-red-100 rounded">In Dispute UI</div>
+          {activeTab === "All" && <Orders searchTerm={searchTerm} />}
+          {activeTab === "Awaiting Payment" && (
+            <AwaitingOrders searchTerm={searchTerm} />
           )}
+          {activeTab === "Processing" && (
+            <ProcessingOrders searchTerm={searchTerm} />
+          )}
+          {activeTab === "To Ship" && <ToShip searchTerm={searchTerm} />}
+          {activeTab === "Shipped" && <Shipped searchTerm={searchTerm} />}
+          {activeTab === "Processed" && <Proccessed searchTerm={searchTerm} />}
+          {activeTab === "In Dispute" && <Disputes searchTerm={searchTerm} />}
         </div>
       </div>
 
@@ -74,9 +85,7 @@ export default function OrdersPage() {
             },
           }}
           className="grid grid-cols-2 sm:grid-cols-4 justify-center lg:grid-cols-6 gap-2.5"
-        >
-      
-        </motion.div>
+        ></motion.div>
       </div>
     </div>
   );

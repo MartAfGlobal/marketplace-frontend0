@@ -13,31 +13,49 @@ import Copy from "@/assets/icons/Copy.png";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import { useSelector } from "react-redux";
 
-export default function Shipped() {
+interface OrdersProps {
+  searchTerm: string;
+}
+
+export default function Shipped({ searchTerm }: OrdersProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [copied, setCopied] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const { orders, loading } = useSelector((state: any) => state.orders);
 
   const shipped = orders.filter(
-    (order: OrderItem) => order.status === "Shipped"
+    (order: OrderItem) => order.status === "SHIPPED"
   );
-  
-    useEffect(() => {
-      const handleResize = () => {
-        setIsMobile(window.innerWidth < 768); // adjust breakpoint as needed
-      };
-  
-      handleResize(); // check on mount
-      window.addEventListener("resize", handleResize);
-  
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
 
+  const filteredOrders = shipped.filter((order: OrderItem) => {
+    if (!searchTerm) return true;
 
-   const handleTrackOrder = (orderId: string) => {
+    const term = searchTerm.toLowerCase();
+
+    const matchesOrderId = order.order_no?.toLowerCase().includes(term);
+
+    const matchesStore = order.manufacturer?.toLowerCase().includes(term);
+
+    const matchesProduct = order.order_items?.some((item) =>
+      item.product_name?.toLowerCase().includes(term)
+    );
+
+    return matchesOrderId || matchesStore || matchesProduct;
+  });
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // adjust breakpoint as needed
+    };
+
+    handleResize(); // check on mount
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const handleTrackOrder = (orderId: string) => {
     router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
   };
   console.log(
@@ -72,17 +90,29 @@ export default function Shipped() {
           <AnimatePresence mode="wait">
             {shipped.length === 0 ? (
               <motion.div
-                key="empty-state"
+                key="empty-orders"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
+                transition={{ duration: 0.4 }}
                 className="w-full flex flex-col items-center gap-c32 justify-center h-75.5"
               >
-                <p className="w-full text-center max-w-41.25 text-000000/60 font-MontserratMedium text-c18 leading-6.5">
+                <p className="text-center text-000000/60 font-MontserratMedium text-c18">
                   You haven’t made any orders yet
                 </p>
                 <Button className="w-51">Start shopping</Button>
+              </motion.div>
+            ) : filteredOrders.length === 0 ? (
+              <motion.div
+                key="no-search-results"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full flex flex-col items-center justify-center h-60"
+              >
+                <p className="text-c16 font-MontserratMedium text-000000/60">
+                  No matching orders found
+                </p>
               </motion.div>
             ) : (
               <motion.div
@@ -91,17 +121,17 @@ export default function Shipped() {
                 animate="visible"
                 exit="hidden"
                 variants={{
-                  hidden: { opacity: 0, height: 0 },
+                  hidden: { opacity: 0 },
                   visible: {
                     opacity: 1,
-                    height: "auto",
                     transition: { staggerChildren: 0.1 },
                   },
                 }}
                 className="space-y-c24"
               >
-                {shipped.map((item: OrderItem) => {
-                  const isSingleItemOrder = item.items?.length === 1;
+                {filteredOrders.map((item: OrderItem) => {
+                  const isSingleItemOrder = item.order_items?.length === 1;
+                  
                   return (
                     <motion.div
                       key={item.id}
@@ -143,178 +173,166 @@ export default function Shipped() {
 
                       <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
                         {isSingleItemOrder ? (
-                          <div className="flex flex-col md:flex-row gap-4 items-start  ">
-                            {item.items?.map((prod) => (
-                              <div
-                                key={prod.id}
-                                className="flex gap-4 items-start  w-full"
-                              >
-                                <Image
-                                  src={
-                                    prod.product?.main_image.medium || "/placeholder.png"
-                                  }
-                                  alt={prod.product?.name || "Product Image"}
-                                  width={96}
-                                  height={96}
-                                  className="h-24 w-24 "
-                                />
-                                <div className="w-full">
-                                  <p className="font-MontserratSemiBold text-base mb-1">
-                                    {prod.product?.name}
+                        <>
+                            <Link href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="flex flex-col md:flex-row gap-4 items-start  "
+                            >
+                              {item.order_items?.map((prod) => (
+                                <div
+                                  key={prod.id}
+                                  className="flex gap-4 items-start  w-full"
+                                >
+                                  <Image
+                                    src={prod?.product_image}
+                                    alt={prod.product_name || "Product Image"}
+                                    width={96}
+                                    height={96}
+                                    className="h-24 w-24 "
+                                  />
+                                  <div className="w-full">
+                                    <p className="font-MontserratSemiBold text-base mb-1">
+                                      {prod.product_name}
+                                    </p>
+                                    <p className=" text-c12 font-MontserratMedium mb-3">
+                                      {item.manufacturer}
+                                    </p>
+                                    <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
+                                      {prod.quantity}Pc,
+                                      {prod.variation_name || prod.product_name}
+                                    </p>
+                                    <p className="font-MontserratSemiBold text-c16 pt-3">
+                                      ₦{item.total_price}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </Link>
+
+                        
+                          </>
+                        ) : (
+                          <Link href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="flex gap-4 w-full"
+                            >
+                              <div className="hidden sm:flex gap-4">
+                                <div
+                                  className={`grid gap-4 ${
+                                    item.order_items.length === 1
+                                      ? "grid-cols-1"
+                                      : item.order_items.length === 2
+                                        ? "grid-cols-2"
+                                        : "grid-cols-3"
+                                  }`}
+                                >
+                                  {item.order_items?.slice(0, 3).map((prod) => (
+                                    <div
+                                      key={prod.id}
+                                      className="flex flex-col items-center"
+                                    >
+                                      <div className="w-24 h-24 relative">
+                                        <Image
+                                          src={
+                                            prod.product_image ||
+                                            "/placeholder.png"
+                                          }
+                                          alt={
+                                            prod.product_name || "Product Image"
+                                          }
+                                          width={96}
+                                          height={96}
+                                          className="w-24 h-24 object-cover"
+                                        />
+                                        <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
+                                          x{prod.quantity}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div>
+                                  <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
+                                    {item.order_items
+                                      ?.slice(0, 3)
+                                      .map((prod, index) => (
+                                        <span
+                                          key={prod.id}
+                                          className="flex items-center"
+                                        >
+                                          <span
+                                            className="max-w-[110px] truncate inline-block align-middle"
+                                            title={prod.product_name}
+                                          >
+                                            {prod.product_name}
+                                          </span>
+                                          {index <
+                                            Math.min(
+                                              item.order_items.length,
+                                              3,
+                                            ) -
+                                              1 && <span>,&nbsp;</span>}
+                                        </span>
+                                      ))}
+                                    {item.order_items.length > 3 && (
+                                      <span>...</span>
+                                    )}
                                   </p>
-                                  <p className=" text-c12 font-MontserratMedium mb-3">
+
+                                  <p className="text-c12 font-MontserratMedium mb-3">
                                     {item.manufacturer}
                                   </p>
-                                  <p className="rounded-c12 bg-000000/10 text-000000/60  h-c32 py-2 w-fit min-w-24.5  px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
-                                    {prod.quantity}Pc, {prod.variant?.color}
+
+                                  <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
+                                    {item.order_items?.reduce(
+                                      (sum, i) => sum + (i.quantity || 0),
+                                      0,
+                                    )}{" "}
+                                    <span className="pl-0.5">Items</span>
                                   </p>
+
                                   <p className="font-MontserratSemiBold text-c16 pt-3">
                                     ₦{item.total_price}
                                   </p>
-                                  <div className="w-full gap-4 pl flex md:hidden  mt-4 space-y-4">
-                                    <Button
-                                      variant="secondary"
-                                      key={item.id}
-                                      onClick={() => handleTrackOrder(item.id)}
-                                    >
-                                      Track order
-                                    </Button>
-                                    <Button  onClick={() => handleClick(item.id)}>
-                                      Confirm delivery
-                                    </Button>
-                                  </div>
                                 </div>
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex gap-4 w-full">
-                            <div className="hidden sm:flex gap-4">
-                              <div
-                                className={`grid gap-4 ${
-                                  item.items.length === 1
-                                    ? "grid-cols-1"
-                                    : item.items.length === 2
-                                    ? "grid-cols-2"
-                                    : "grid-cols-3"
-                                }`}
-                              >
-                                {item.items?.slice(0, 3).map((prod) => (
-                                  <div
-                                    key={prod.id}
-                                    className="flex flex-col items-center"
-                                  >
-                                    <div className="w-24 h-24 relative">
-                                      <Image
-                                        src={
-                                          prod.product?.main_image.medium ||
-                                          "/placeholder.png"
-                                        }
-                                        alt={
-                                          prod.product?.name || "Product Image"
-                                        }
-                                        width={96}
-                                        height={96}
-                                        className="w-24 h-24 object-cover"
-                                      />
-                                      <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                        x{prod.quantity}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
 
-                              <div>
-                                <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                  {item.items
-                                    ?.slice(0, 3)
-                                    .map((prod, index) => (
-                                      <span
-                                        key={prod.id}
-                                        className="flex items-center"
-                                      >
-                                        <span
-                                          className="max-w-[110px] truncate inline-block align-middle"
-                                          title={prod.product?.name}
-                                        >
-                                          {prod.product?.name}
-                                        </span>
-                                        {index <
-                                          Math.min(item.items.length, 3) -
-                                            1 && <span>,&nbsp;</span>}
-                                      </span>
-                                    ))}
-                                  {item.items.length > 3 && <span>...</span>}
-                                </p>
+                              <div className="flex sm:hidden w-full items-start gap-4">
+                                {item.order_items?.[0] && (
+                                  <Image
+                                    src={
+                                      item.order_items[0].product_image ||
+                                      "/placeholder.png"
+                                    }
+                                    alt={
+                                      item.order_items[0].product_name ||
+                                      "Product Image"
+                                    }
+                                    width={96}
+                                    height={96}
+                                    className="w-24 h-24"
+                                  />
+                                )}
 
-                                <p className="text-c12 font-MontserratMedium mb-3">
-                                  {item.manufacturer}
-                                </p>
+                                <div className="w-full ">
+                                  <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
+                                    {item.order_items?.[0]?.product_name}
+                                  </p>
 
-                                <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                  {item.items?.length}{" "}
-                                  <span className="pl-0.5">Items</span>
-                                </p>
+                                  <p className="text-c12 font-MontserratMedium mb-2">
+                                    {item.manufacturer}
+                                  </p>
 
-                                <p className="font-MontserratSemiBold text-c16 pt-3">
-                                  ₦{item.total_price}
-                                </p>
-                              </div>
-                            </div>
+                                  <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
+                                    {item.order_items?.length}{" "}
+                                    <span className="pl-0.5">Items</span>
+                                  </p>
 
-                            <div className="flex sm:hidden w-full items-start gap-4">
-                              {item.items?.[0] && (
-                                <Image
-                                  src={
-                                    item.items[0].product?.main_image.medium ||
-                                    "/placeholder.png"
-                                  }
-                                  alt={
-                                    item.items[0].product?.name ||
-                                    "Product Image"
-                                  }
-                                  width={96}
-                                  height={96}
-                                  className="w-24 h-24"
-                                />
-                              )}
-
-                              <div className="w-full ">
-                                <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
-                                  {item.items?.[0]?.product?.name}
-                                </p>
-
-                                <p className="text-c12 font-MontserratMedium mb-2">
-                                  {item.manufacturer}
-                                </p>
-
-                                <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                  {item.items?.reduce(
-                                    (sum, i) => sum + (i.quantity || 0),
-                                    0
-                                  )}{" "}
-                                  <span className="pl-0.5">Items</span>
-                                </p>
-
-                                <p className="font-MontserratSemiBold text-c16 pt-2">
-                                  ₦{item.total_price}
-                                </p>
-                                <div className="w-full text-c10 gap-4 pl flex md:hidden  mt-4 space-y-4">
-                                  <Button
-                                    variant="secondary"
-                                    key={item.id}
-                                    onClick={() => handleTrackOrder(item.id)}
-                                  >
-                                    Track order
-                                  </Button>
-                                  <Button  onClick={() => handleClick(item.id)}>
-                                    Confirm delivery
-                                  </Button>
+                                  <p className="font-MontserratSemiBold text-c16 pt-2">
+                                    ₦{item.total_price}
+                                  </p>
                                 </div>
                               </div>
-                            </div>
-                          </div>
+                            </Link>
                         )}
 
                         <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">

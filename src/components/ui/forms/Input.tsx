@@ -3,13 +3,13 @@ import { cn } from "@/lib/utils";
 
 interface InputProps extends React.ComponentProps<"input"> {
   icon?: React.ReactNode;
-  valid?: boolean; // Add this prop
+  valid?: boolean; 
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, icon, valid = true, ...props }, ref) => {
     const inputClasses = cn(
-      "h-c48 p-3.5 w-full rounded-c8 border outline-none md:text-sm",
+      "h-10 px-3.5 w-full rounded-c8 border outline-none md:text-sm",
       valid ? "border-efefef focus:border-ff715b focus:ring-1 focus:ring-ff715b" : "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500",
       "focus:ring-offset-0",
       className

@@ -16,8 +16,9 @@ import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useDispatch } from "react-redux";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { RegProps } from "./verify-email";
 
-export default function LoginForm() {
+export default function LoginForm({ userType }: RegProps) {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -67,7 +68,7 @@ export default function LoginForm() {
       localStorage.removeItem("rememberEmail");
       localStorage.removeItem("rememberPassword");
     }
-    
+
     localStorage.setItem("accessToken", accessToken);
 
     dispatch(tokenActions.setToken(accessToken));
@@ -84,9 +85,19 @@ export default function LoginForm() {
       return;
     }
 
+    if (userType === "seller") {
+      router.push("/dashboard/seller");
+      return;
+    }
+
     // ⭐ Default fallback
     router.back();
   };
+
+  const url =
+    userType === "seller"
+      ? "/accounts/manufacturer/login/"
+      : "/accounts/login";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,14 +113,14 @@ export default function LoginForm() {
 
     loginRequest({
       requestConfig: {
-        url: "/accounts/login",
+        url: url,
         method: "POST",
         body: {
           email: formData.email,
           password: formData.password,
           check: formData.rememberMe,
         },
-        userType: "buyer",
+        userType: userType,
         successMessage: "Login successful!",
       },
       successRes: loginSuccess,
@@ -215,9 +226,16 @@ export default function LoginForm() {
 
       <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
         <p className="text-161616"> have an account?</p>
-        <Link href="/auth/register" className="text-ff715b">
-          Sign up
-        </Link>
+
+        {userType === "seller" ? (
+          <Link href="/auth/seller/sign-up" className="text-ff715b">
+            Sign up
+          </Link>
+        ) : (
+          <Link href="/auth/register" className="text-ff715b">
+            Sign up
+          </Link>
+        )}
       </div>
     </div>
   );

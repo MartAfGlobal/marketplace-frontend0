@@ -16,41 +16,56 @@ import Cookies from "js-cookie";
 
 import NavBack from "@/assets/icons/navBacksmall.png";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
+import { useHttp } from "@/hooks/use-http";
+import UserAddress from "@/components/ui/buyer-components/Main-section/sections/address-selector";
 
 export default function AllAddressesPage() {
   const router = useRouter();
-
+  const selectedAddressId = useSelector(
+    (state: RootState) => state.buyer.selectedAddressId
+  );
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.token.token);
   // const token = useSelector((state: RootState) => state.token?.token);
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses
   );
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { sendHttpRequest: updateAddressReq } = useHttp();
 
-  console.log("bbbbbbb", buyerAddresses);
-
-  const [selectedCardId, setSelectedCardId] = useState<number>(0);
+  const [selectedCardId, setSelectedCardId] = useState<string>();
 
   const [editingAddress, setEditingAddress] = useState<Partial<Address>>();
 
   useEffect(() => {
+    if (buyerAddresses.length > 0 && !selectedAddressId) {
+      const defaultAddr = buyerAddresses.find((a) => a.is_default);
+      dispatch(
+        buyerActions.setSelectedAddress(defaultAddr?.id ?? buyerAddresses[0].id)
+      );
+    }
+  }, [buyerAddresses, selectedAddressId, dispatch]);
+
+  const handleSelectAddress = (addressId: string) => {
+    dispatch(buyerActions.setSelectedAddress(addressId));
+  };
+
+  useEffect(() => {
     const defaultAddr = buyerAddresses.find((a) => a.is_default);
-    setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0]?.id ?? 0);
+    setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0]?.id ?? "");
   }, [buyerAddresses]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!token) return;
 
     try {
-      const res = await fetch(`/shipping/shipping-addresses/${id}`, {
+      const res = await fetch(`/shipping/shipping-addresses/delete/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
 
       dispatch(buyerActions.removeBuyerAddress(id));
       setIsModalOpen(false);
@@ -60,32 +75,8 @@ export default function AllAddressesPage() {
     }
   };
 
-  const handleSelectDefaultAddress = async (addressId: number) => {
-    setSelectedCardId(addressId);
-    dispatch(buyerActions.setDefaultBuyerAddress(addressId));
+ 
 
-    if (!token) return;
-
-    try {
-      const response = await fetch(
-        `/shipping/shipping-addresses/${addressId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ is_default: true }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to update default address");
-      const updatedAddress = await response.json();
-      console.log("Default address updated:", updatedAddress);
-    } catch (err) {
-      console.error(err);
-    }
-  };
   return (
     <div className="w-full px-c24 flex flex-col gap-7">
       <button
@@ -103,94 +94,16 @@ export default function AllAddressesPage() {
           Shipping addresses
         </p>
       </button>
-      <div className=" w-full pb-25 space-y-3">
-        {buyerAddresses.map((item) => {
-          const isSelected = item.id === selectedCardId;
-
-          return (
-            <motion.div
-              key={item.id}
-              onClick={() => handleSelectDefaultAddress(item.id)}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2 }}
-              className={`w-full  h-39.5 rounded-2xl border border-000000/20  circle-shadow  shadow-sm cursor-pointer transition-colors flex  py-6 px-4 ${
-                isSelected ? "bg-6a0dad text-white" : " text-black"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <motion.div
-                  className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{
-                    border: "1px solid",
-                    borderImageSource:
-                      "linear-gradient(0deg, #000000, #000000), linear-gradient(0deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88))",
-                  }}
-                  animate={{
-                    backgroundColor: isSelected ? "" : "transparent",
-                  }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <AnimatePresence>
-                    {isSelected && (
-                      <motion.span
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-ffffff text-c10 font-bold"
-                      >
-                        ✓
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-
-                <div className="flex-1">
-                  <p className="font-MontserratSemiBold text-c12">
-                    {item.full_name}
-                  </p>
-                  <p className="text-c12 font-MontserratNormal">{item.phone}</p>
-                  <p className="text-c12 font-MontserratNormal">
-                    {item.address}
-                  </p>
-
-                  <div className="flex gap-3 mt-4">
-                    <button
-                      className={`text-ffaco6 text-c12 font-MontserratSemiBold ${
-                        isSelected ? "text-ffffff" : ""
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(
-                          `/dashboard/buyer/mobile/addresses/edit-address/${item.id}`
-                        );
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className={`text-c12 font-MontserratSemiBold text-ca0202 ${
-                        isSelected ? "text-ffffff" : ""
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedId(item.id);
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+      <div className="pb-c32 mb-15 border-b border-b-000000/5">
+        <UserAddress
+          mobile={true}
+          selectedAddressId={selectedAddressId ?? undefined}
+          onSelectAddress={handleSelectAddress}
+          className="md:w-64.25 min-w-full h-fit"
+        />
       </div>
 
-      <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
+      <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-30 flex items-center gap-4">
         <Button
           onClick={() =>
             router.push("/dashboard/buyer/mobile/addresses/add-address")
@@ -200,21 +113,8 @@ export default function AllAddressesPage() {
           + Add new address
         </Button>
       </div>
-      
-      <ConfirmModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Delete Address"
-        description="are you sure you want to delete address?"
-        onNo={() => setIsModalOpen(false)}
-        onYes={() => {
-          if (selectedId !== null) {
-            handleDelete(selectedId);
-          }
-        }}
-        yesText="Confirm Delete"
-        noText="Cancel"
-      />
+
+  
     </div>
   );
 }

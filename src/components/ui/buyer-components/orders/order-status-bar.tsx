@@ -38,7 +38,7 @@ export default function OrdersNav({ tabs, activeTab, onTabChange, className= "" 
 }, [activeTab, tabs]);
 
   return (
-    <div className={clsx("relative  flex gap-2 justify-center md:justify-center bg-947fff/10 w-full md:max-w-152.25 overflow-x-auto  no-scrollbar text-nowrap scroll-smooth", className)}>
+    <div className={clsx("relative  flex gap-2 justify-center md:justify-center bg-947fff/10 w-full md:max-w-179.25 overflow-x-auto  no-scrollbar text-nowrap scroll-smooth", className)}>
       {tabs.map((tab, index) => {
         const isActive = activeTab === tab;
         return (

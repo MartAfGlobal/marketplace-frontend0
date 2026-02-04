@@ -99,7 +99,7 @@ export const useHttp = () => {
             router.replace("/auth/seller/login");
           } else {
             if (isMobile) {
-              // Go to landing page and tell it to open login modal
+             
               router.replace("/?showLogin=true");
             } else {
               // Desktop → go to dedicated login page

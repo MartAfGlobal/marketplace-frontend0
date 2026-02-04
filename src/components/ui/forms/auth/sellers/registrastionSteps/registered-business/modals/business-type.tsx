@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Input } from "@/components/ui/forms/Input";
 import SelectButton from "@/assets/icons/selectbutton.png";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface DropdownInputProps {
   placeholder: string;
@@ -11,6 +12,8 @@ interface DropdownInputProps {
   value?: string;
   onChange?: (val: string) => void;
   disabled?: boolean;
+
+  loading?: boolean;
 }
 
 export function DropdownInput({
@@ -19,6 +22,7 @@ export function DropdownInput({
   value: propValue = "",
   onChange,
   disabled = false,
+  loading
 }: DropdownInputProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(propValue);
@@ -32,7 +36,10 @@ export function DropdownInput({
   // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -66,15 +73,16 @@ export function DropdownInput({
         />
         <button
           type="button"
-          className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
+          className="absolute  right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
         >
-          <Image
+          {loading? <LoadingSpinner color="border-ff715b"/>:   <Image
             src={SelectButton}
             alt="select"
             width={14}
             height={8}
             className={`transition-transform ${open ? "rotate-180" : ""}`}
-          />
+          />}
+        
         </button>
       </div>
 

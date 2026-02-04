@@ -73,7 +73,7 @@ export default function OrderTable({
 
   // ✅ Status color helper
   const getStatusClass = (status: string) => {
-    if (status === "Delivered") return "text-[#2D7565]";
+    if (status === "DELIVERED") return "text-[#2D7565]";
     if (status === "Returned" || status === "Refunded") return "text-[#CA0202]";
     if (status === "In transit") return "text-[#FFAC06]";
     return "";

@@ -50,7 +50,7 @@ export const buyerInitialData: BuyerData = {
 
 // Initial state
 const buyerInitialState: BuyerSliceParams & {
-  selectedAddressId?: number | null;
+  selectedAddressId?: string | null;
 } = {
   BuyerData: buyerInitialData,
   BuyerItems: [],
@@ -88,14 +88,14 @@ const buyerSlice = createSlice({
       state.BuyerAddresses = action.payload;
     },
 
-    setDefaultBuyerAddress(state, action: PayloadAction<number>) {
+    setDefaultBuyerAddress(state, action: PayloadAction<string>) {
       state.BuyerAddresses = state.BuyerAddresses.map((addr) => {
         if (!addr.id) return addr;
         return { ...addr, defaultAddress: addr.id === action.payload };
       });
     },
 
-    setSelectedAddress(state, action: PayloadAction<number>) {
+    setSelectedAddress(state, action: PayloadAction<string>) {
       state.selectedAddressId = action.payload;
     },
     addBuyerAddress(state, action: PayloadAction<Address>) {
@@ -106,7 +106,7 @@ const buyerSlice = createSlice({
         addr.id === action.payload.id ? action.payload : addr
       );
     },
-    removeBuyerAddress(state, action: PayloadAction<number>) {
+    removeBuyerAddress(state, action: PayloadAction<string>) {
       state.BuyerAddresses = state.BuyerAddresses.filter(
         (addr) => addr.id !== action.payload
       );

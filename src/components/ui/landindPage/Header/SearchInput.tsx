@@ -8,11 +8,15 @@ import SearchIcon from "@/assets/headerIcon/searchIcon.svg";
 interface SearchInputProps {
   placeholder?: string;
   className?: string;
+  onSearchChange?: (value: string) => void;
+  showDropdown?: boolean;
 }
 
 export default function SearchInput({
   placeholder = "Search for products",
   className = "",
+  onSearchChange,
+  showDropdown = false,
 }: SearchInputProps) {
   const [searchValue, setSearchValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -23,6 +27,7 @@ export default function SearchInput({
   ]);
   const [frequent, setFrequent] = useState(["Laptop", "Sneakers", "Bag"]);
   const [related, setRelated] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const inputRef = useRef<HTMLDivElement>(null);
 
@@ -52,20 +57,19 @@ export default function SearchInput({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-
   useEffect(() => {
-  if (isFocused) {
-    document.body.style.overflow = "hidden"; // Prevent scrolling
-  } else {
-    document.body.style.overflow = "";
-  }
+    if (!showDropdown) return;
 
-  // Clean up on unmount
-  return () => {
-    document.body.style.overflow = "";
-  };
-}, [isFocused]);
+    if (isFocused) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
 
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isFocused, showDropdown]);
 
   const handleRemoveHistoryItem = (item: string) => {
     setHistory((prev) => prev.filter((i) => i !== item));
@@ -81,22 +85,30 @@ export default function SearchInput({
     setRelated([]);
   };
 
-  const handleChange = (value: string) => {
-    setSearchValue(value);
+ const handleChange = (value: string) => {
+  setSearchValue(value);
+  onSearchChange?.(value);
 
-    if (value.trim() === "") {
-      setRelated([]);
-      return;
-    }
+  if (!showDropdown) return;
 
-    const filtered = dummyRelatedKeywords.filter((k) =>
-      k.toLowerCase().startsWith(value.toLowerCase())
-    );
-    setRelated(filtered);
-  };
+  if (value.trim() === "") {
+    setRelated([]);
+    return;
+  }
+
+  const filtered = dummyRelatedKeywords.filter((k) =>
+    k.toLowerCase().startsWith(value.toLowerCase())
+  );
+
+  setRelated(filtered);
+};
+
 
   return (
-    <div ref={inputRef} className={`relative md:static  w-full   md:max-w-80 xl:max-w-116 ${className}`}>
+    <div
+      ref={inputRef}
+      className={`relative md:static  w-full   md:max-w-80 xl:max-w-116 ${className}`}
+    >
       {/* Input */}
       <div className="relative w-full h-12 bg-ffffff shadow-customW rounded-c8">
         <Image
@@ -111,14 +123,15 @@ export default function SearchInput({
           placeholder={placeholder}
           value={searchValue}
           onChange={(e) => handleChange(e.target.value)}
-          onFocus={() => setIsFocused(true)}
+          onFocus={() => showDropdown && setIsFocused(true)}
           className={`w-full rounded-c8 pl-10 pr-4 py-2 h-full font-MontserratNormal text-000000 text-sm focus:outline-none  `}
         />
       </div>
 
       {/* Dropdown */}
       <AnimatePresence>
-        {isFocused &&
+        {showDropdown &&
+          isFocused &&
           (related.length > 0 ||
             (searchValue === "" &&
               (history.length > 0 || frequent.length > 0))) && (
@@ -127,7 +140,7 @@ export default function SearchInput({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.2 }}
-               className="absolute top-full md:top-full lg:translate-x-1/2  lg:left-0 sm:w-full sm:max-w-130 xl:max-w-157.5 mt-1 md:-mt-1.5 py-4 px-4 bg-white rounded-c8 shadow-custom  z-50 overflow-hidden" 
+              className="absolute top-0 md:top-0 lg:translate-x-1/2  lg:left-0 sm:w-full sm:max-w-130 xl:max-w-157.5 mt-1 md:-mt-1.5 py-4 px-4 bg-white rounded-c8 shadow-custom  z-50 overflow-hidden"
             >
               {searchValue === "" ? (
                 <>
@@ -201,7 +214,7 @@ export default function SearchInput({
                         onClick={() => handleSelect(item)}
                         className="flex items-center gap-2 cursor-pointer hover:bg-gray-100"
                       >
-                           <Image
+                        <Image
                           src={SearchIcon}
                           alt="Search"
                           width={11.39}
@@ -215,7 +228,6 @@ export default function SearchInput({
                             {restPart}
                           </span>
                         </span>
-                     
                       </div>
                     );
                   })}

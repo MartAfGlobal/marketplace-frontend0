@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button/Button";
 import { Label } from "../forms/Label";
@@ -24,9 +24,12 @@ import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
 
-// ✅ IMPORT CUSTOM DROPDOWN (same as GuestCheckout)
-import CountryStateDropdown from "../forms/CountryStateDropdown";
-import UserCountryStateDropdown from "../forms/userCountryStateDropdown";
+import {
+  CityDropdown,
+  CountryDropdown,
+  StateDropdown,
+} from "../forms/CountryStateDropdown";
+
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 // helper: map ISO code to flag URL
@@ -37,11 +40,16 @@ export default function AddressModal({
   isOpen,
   onClose,
   onSave,
-  currentAddress,
+  isEdit,
+  id
 }: AddressModalProps) {
+
+
+
+  
   const [formData, setFormData] = useState<Address>({
-    id: 0,
-    country: currentAddress?.country || "Nigeria",
+    id: "",
+    country: "",
     first_name: "",
     last_name: "",
     phone: "",
@@ -49,8 +57,10 @@ export default function AddressModal({
     city: "",
     postal_code: "",
     address: "",
+    shipping_location: "",
     is_default: false,
   });
+  const selectedCountryIdRef = useRef<string | null>(null);
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -60,6 +70,7 @@ export default function AddressModal({
   const [states, setStates] = useState<any[]>([]);
   const [flag, setFlag] = useState<string>(NigerianFlag.src);
   const token = useSelector((state: RootState) => state.token.token);
+ 
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
@@ -72,7 +83,7 @@ export default function AddressModal({
   // Update states when country changes
   useEffect(() => {
     const selectedCountry = Country.getAllCountries().find(
-      (c) => c.name === formData.country
+      (c) => c.name === formData.country,
     );
 
     if (selectedCountry) {
@@ -83,6 +94,49 @@ export default function AddressModal({
 
   const handleChange = (field: keyof Address, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleDropdownChange = (field: string, value: string | undefined) => {
+    if (field === "guest_country_id") {
+      selectedCountryIdRef.current = value ?? null;
+      return;
+    }
+
+    setFormData((prev) => {
+      switch (field) {
+        case "guest_country":
+          return {
+            ...prev,
+            country: value ?? "",
+            state: "",
+            city: "",
+            shipping_location: "",
+          };
+
+        case "guest_state":
+          return {
+            ...prev,
+            state: value ?? "",
+            city: "",
+            shipping_location: "",
+          };
+
+        case "guest_city":
+          return {
+            ...prev,
+            city: value ?? "",
+          };
+
+        case "guest_location_id":
+          return {
+            ...prev,
+            shipping_location: value ?? "",
+          };
+
+        default:
+          return prev;
+      }
+    });
   };
 
   const { loading, sendHttpRequest: saveRequest } = useHttp();
@@ -101,14 +155,19 @@ export default function AddressModal({
   const handleSave = (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    console.log("Token in handleSave:", token);
     const { id, ...bodyWithoutId } = formData;
 
+    const payload = {
+      ...bodyWithoutId,
+      country: selectedCountryIdRef.current, // ✅ send ID instead of name
+    };
+
+    console.log("Token in handleSave:", bodyWithoutId);
     saveRequest({
       requestConfig: {
         url: "shipping/shipping-addresses/",
         method: "POST",
-        body: bodyWithoutId,
+        body: payload,
         token: token ?? undefined,
         isAuth: true,
         userType: "buyer",
@@ -158,17 +217,23 @@ export default function AddressModal({
               ✕
             </button>
 
-            <h2 className="font-MontserratSemiBold text-c16 mb-c24">
-              Update Address
-            </h2>
+            {isEdit?<h2 className="font-MontserratSemiBold text-c16 mb-c24">
+             Update Address
+            </h2>:<h2 className="font-MontserratSemiBold text-c16 mb-c24">
+              Add new Address
+            </h2>}
 
             <div className="flex flex-col gap-3">
-              {/* ✅ REPLACED OLD SELECT WITH CUSTOM DROPDOWN */}
-              <UserCountryStateDropdown
-                country={formData.country}
-                state={formData.state}
-                onChange={handleChange}
-              />
+              <div className="flex gap-c24 w-full ">
+                <CountryDropdown
+                  country={formData.country}
+                  onChange={handleDropdownChange}
+                />
+                <StateDropdown
+                  state={formData.state}
+                  onChange={handleDropdownChange}
+                />
+              </div>
 
               <div>
                 <p className="font-MontserratSemiBold text-c12 mb-3  text-000000">
@@ -180,8 +245,8 @@ export default function AddressModal({
                       First Name
                     </Label>
                     <Input
-                      id="full_name"
-                      name="full_name"
+                      id="fullname"
+                      name="fullname"
                       type="text"
                       value={formData.first_name}
                       onChange={(e) =>
@@ -196,8 +261,8 @@ export default function AddressModal({
                       Last Name
                     </Label>
                     <Input
-                      id="full_name"
-                      name="full_name"
+                      id="fullname"
+                      name="fullname"
                       type="text"
                       value={formData.last_name}
                       onChange={(e) =>
@@ -242,16 +307,10 @@ export default function AddressModal({
                   <div className="flex gap-c24 w-full">
                     <div className="hidden"></div>
 
-                    <div className="flex flex-col gap-2 relative w-1/2">
-                      <Label className="text-c12 font-MontserratMedium">
-                        City
-                      </Label>
-                      <Input
-                        type="text"
-                        value={formData.city}
-                        placeholder="Lagos"
-                        onChange={(e) => handleChange("city", e.target.value)}
-                        className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
+                    <div className="flex flex-col gap-2 w-full">
+                      <CityDropdown
+                        city={formData.city}
+                        onChange={handleDropdownChange}
                       />
                     </div>
                   </div>

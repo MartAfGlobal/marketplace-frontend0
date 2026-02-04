@@ -11,7 +11,6 @@ import categoryProductsReducer from "@/store/user-data/products/categoryProducts
 import subCategoryProductsReducer from "@/store/user-data/products/subCategoryProductsSlice";
 import topDealsReducer from "@/store/user-data/products/topDealsSlice";
 
-
 import productReducer from "./user-data/products/product-slice";
 import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice";
 import tokenReducer from "@/store/token/token-slice";
@@ -22,16 +21,24 @@ import trackingReducer from "@/store/orders/tracking-slice";
 import wishlistLabelReducer from "./wishlistLabel/wishlistLabelSlice";
 import orderSliceReducer from "@/store/orders/payment-success-slice";
 import selectedVariationReducer from "@/store/slices/variationSelectorSlice";
+import registrationReducer from "@/store/auth/registration-slice";
+import registrationsReducer from "./slices/registration-slice";
+
 
 const tokenPersistConfig = {
   key: "token",
   storage,
 };
 
-const productDetailsPersistConfig = {
-  key : "productDetails",
+const checkoutPersistConfig = {
+  key: "checkout",
   storage,
-}
+};
+
+const productDetailsPersistConfig = {
+  key: "productDetails",
+  storage,
+};
 
 const variationIdPersistConfig = {
   key: "selectedVariation",
@@ -65,7 +72,6 @@ const wishlistPersistConfig = {
 const productsPersistConfig = {
   key: "products",
   storage,
-  
 };
 
 const ordersPersistConfig = {
@@ -80,9 +86,21 @@ const wishlistLabelPersistCobfig = {
   key: "labels",
   storage,
 };
+const registrationsPersistConfig = {
+  key: "registrations",
+  storage,
+};
+const registrationPersistConfig = {
+  key: "registration",
+  storage,
+};
 
 const rootReducer = combineReducers({
-  productDetails: persistReducer (productDetailsPersistConfig, productDetailReducer),
+  productDetails: persistReducer(
+    productDetailsPersistConfig,
+    productDetailReducer,
+  ),
+
   tracking: persistReducer(trackingPersistCobfig, trackingReducer),
   token: persistReducer(tokenPersistConfig, tokenReducer),
   buyer: persistReducer(buyerPersistConfig, buyerReducer),
@@ -94,13 +112,17 @@ const rootReducer = combineReducers({
   selectedProduct: selectedProductReducer,
   wishlistLabel: persistReducer(
     wishlistLabelPersistCobfig,
-    wishlistLabelReducer
+    wishlistLabelReducer,
   ),
+
+  registration: persistReducer(registrationPersistConfig, registrationReducer),
+  registrations: persistReducer(registrationsPersistConfig, registrationsReducer),
+
   orders: persistReducer(ordersPersistConfig, orderReducer),
   orderSlice: persistReducer(orderSlicePersistConfig, orderSliceReducer),
   selectedVariation: persistReducer(
     variationIdPersistConfig,
-    selectedVariationReducer
+    selectedVariationReducer,
   ),
   categoryProducts: categoryProductsReducer,
   subCategoryProducts: subCategoryProductsReducer,

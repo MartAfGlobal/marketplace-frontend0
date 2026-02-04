@@ -7,7 +7,7 @@ import { StaticImageData } from "next/image";
 
 export interface CartItem {
   product_slug: string;
-  product_id: string;
+  id: string;
   quantity: number;
   size?: string;
   product_name: string;
@@ -24,7 +24,7 @@ export interface CartItem {
 
 export interface GuestCartItem {
   product_slug: string;
-  product_id: string;
+  id: string;
   variation_id?: string;
   quantity: number;
   variation_display?: string;
@@ -71,12 +71,13 @@ interface CartState {
   items: CartItem[];
   checkoutItems: CartItem[];
   checkoutSummary: {
-    all_addresses: any[];
-    applied_coupon: string | null;
+    all_addresses?: any[];
+    applied_coupon?: string | null;
     discount_amount: string;
-    shipping_address: any | null;
-    shipping_cost: string;
-    shipping_methods: any[];
+    shipping_address?: any | null;
+    shipping_cost?: string;
+    guest_address?: GuestCheckoutAddress ;
+    shipping_methods?: any[];
     subtotal: string;
     total: string;
   } | null;
@@ -105,7 +106,7 @@ const cartSlice = createSlice({
 
       const existing = state.items.find(
         (i) =>
-          i.product_id === incoming.product_id &&
+          i.id === incoming.id &&
           i.variation_id === incoming.variation_id
 
       );
@@ -127,7 +128,7 @@ const cartSlice = createSlice({
 
       const existing = state.items.find(
         (i) =>
-          i.product_id === data.product_id &&
+          i.id === data.id &&
           i.variation_id === data.variation_id
       );
 
@@ -139,8 +140,8 @@ const cartSlice = createSlice({
       } else {
         state.items.push({
           product_slug:data.product_slug,
-          product_id: data.product_id,
-          variation_id: data.variation_id,
+          id: data.id,
+          variation_id: data.variation_id, 
           quantity: data.quantity,
           size: data.size,
           product_name: data.product_name,
@@ -270,6 +271,7 @@ export default cartSlice.reducer;
 
 import { RootState } from "@/store";
 import { object } from "framer-motion/client";
+import { GuestCheckoutAddress } from "@/types/global";
 
 export const selectCheckedItems = (state: RootState) =>
   state.cart.items.filter((item) => item.checked);

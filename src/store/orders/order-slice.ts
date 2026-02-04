@@ -1,22 +1,20 @@
-import { OrderItem } from "@/types/global";
+import { BuyerDispute, DisputePayload, OrderItem, OrderShippingAddress } from "@/types/global";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-
 
 interface OrderState {
   orders: OrderItem[];
-  count: number;
-  next: string | null;
-  previous: string | null;
+  shippingAddress: OrderShippingAddress | null;
+  disputes: BuyerDispute[];
+  disputeDetails: DisputePayload | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: OrderState = {
   orders: [],
-  count: 0,
-  next: null,
-  previous: null,
+  disputeDetails: null,
+  disputes: [],
+  shippingAddress: null,
   loading: false,
   error: null,
 };
@@ -29,31 +27,43 @@ const orderSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    fetchOrdersSuccess(state, action: PayloadAction<any>) {
-      state.loading = false;
 
-      // ✅ handle both array and object responses gracefully
-      if (Array.isArray(action.payload)) {
-        state.orders = action.payload;
-        state.count = action.payload.length;
-        state.next = null;
-        state.previous = null;
-      } else {
-        state.orders = action.payload.results || [];
-        state.count = action.payload.count || action.payload.results?.length || 0;
-        state.next = action.payload.next || null;
-        state.previous = action.payload.previous || null;
-      }
+    fetchOrdersSuccess(state, action: PayloadAction<OrderItem[]>) {
+      state.loading = false;
+      state.orders = action.payload;
     },
+
     fetchOrdersFailure(state, action: PayloadAction<string>) {
       state.loading = false;
       state.error = action.payload;
     },
+
+    fetchDisputesStart(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    fetchDisputesSuccess(state, action: PayloadAction<BuyerDispute[]>) {
+      state.loading = false;
+      state.disputes = action.payload;
+    },
+
+    fetchDisputesFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
+
+    fetchDisputeDetails(state, action: PayloadAction<DisputePayload>){
+      state.loading = false
+      state.disputeDetails = action.payload
+    },
+    setShippingAddress(state, action: PayloadAction<OrderShippingAddress>) {
+      state.shippingAddress = action.payload;
+    },
+
     clearOrders(state) {
+      state.shippingAddress = null;
       state.orders = [];
-      state.count = 0;
-      state.next = null;
-      state.previous = null;
+      state.disputes = [];
       state.error = null;
     },
   },
@@ -63,7 +73,12 @@ export const {
   fetchOrdersStart,
   fetchOrdersSuccess,
   fetchOrdersFailure,
+  fetchDisputesStart,
+  fetchDisputesSuccess,
+  setShippingAddress,
+  fetchDisputesFailure,
   clearOrders,
+  fetchDisputeDetails,
 } = orderSlice.actions;
 
 export default orderSlice.reducer;

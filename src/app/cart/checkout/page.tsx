@@ -18,27 +18,53 @@ import MobileCheckoutItems from "@/components/ui/mobile/checkout-items";
 import { useHttp } from "@/hooks/use-http";
 import { setCheckoutItems, setCheckoutSummary } from "@/store/cart/cartSlice";
 import DotSpinner from "@/components/reloadSpinner/DotSpinner";
+import UserAddress from "@/components/ui/buyer-components/Main-section/sections/address-selector";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
+import GuestUserAddress from "@/components/ui/buyer-components/guest/address_selector";
 
 export default function CheckoutPage() {
   const [visible, setVisible] = useState(10);
   const router = useRouter();
-
+  const buyerAddresses = useSelector(
+    (state: RootState) => state.buyer.BuyerAddresses,
+  );
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
   // Prefer Redux token which is updated by login and axios refresh
   const token = useSelector((state: RootState) => state.token.token);
 
-
-
   const { loading, sendHttpRequest } = useHttp();
+
+  const selectedAddressId = useSelector(
+    (state: RootState) => state.buyer.selectedAddressId,
+  );
+
+  useEffect(() => {
+    if (buyerAddresses.length > 0 && !selectedAddressId) {
+      const defaultAddr = buyerAddresses.find((a) => a.is_default);
+      dispatch(
+        buyerActions.setSelectedAddress(
+          defaultAddr?.id ?? buyerAddresses[0].id,
+        ),
+      );
+    }
+  }, [buyerAddresses, selectedAddressId, dispatch]);
+
+  const handleSelectAddress = (addressId: string) => {
+    dispatch(buyerActions.setSelectedAddress(addressId));
+  };
 
   useEffect(() => {
     if (!token) return;
 
     sendHttpRequest({
       requestConfig: {
-        url: "/cart/summary/",
-        method: "GET",
+        url: "/checkout/summary/",
+        method: "POST",
+        body: {
+          shipping_address_id:selectedAddressId,
+          discount_amount: "0.00"
+        },
         token,
         isAuth: true,
         userType: "buyer",
@@ -50,14 +76,14 @@ export default function CheckoutPage() {
         if (backendCart) {
           const mappedItems = (backendCart.items || []).map((item: any) => ({
             product_id: item.product_id,
-            produt_name: item.product_name,
+            product_name: item.product_name,
             product_image: item.product_image,
             quantity: item.quantity,
             subtotal: Number(item.total_price), // numeric subtotal
             unit_price: Number(item.unit_price),
 
             total_price: Number(item.total_price),
-            variation_name: item.variation_name,
+            variation_display: item.variation_name,
             variation_id: item.variation_id,
           }));
 
@@ -77,12 +103,12 @@ export default function CheckoutPage() {
               shipping_methods: backendCart.shipping_methods || [],
               subtotal: backendCart.subtotal || "0.00",
               total: backendCart.total || "0.00",
-            })
+            }),
           );
         }
       },
     });
-  }, [token, sendHttpRequest, dispatch]);
+  }, [token, sendHttpRequest, dispatch, selectedAddressId]);
 
   return (
     <>
@@ -138,9 +164,19 @@ export default function CheckoutPage() {
             </Link>
 
             <div className="flex justify-between mt-7 md:hidden ">
-              <p className="text-c12 font-MontserratSemiBold ">
-                Shipping address
-              </p>
+              <div className="w-full ">
+                <div className="pb-c32 border-b border-b-000000/5">
+                  {token ? (
+                    <UserAddress
+                      selectedAddressId={selectedAddressId ?? undefined}
+                      onSelectAddress={handleSelectAddress}
+                      className="md:w-64.25 h-31 "
+                    />
+                  ) : (
+                    <GuestUserAddress />
+                  )}
+                </div>
+              </div>
               <button
                 onClick={() =>
                   router.push("/dashboard/buyer/mobile/addresses/add-address")
@@ -163,9 +199,7 @@ export default function CheckoutPage() {
                 <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
                   More to love
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-                 
-                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 "></div>
               </div>
             </div>
           </div>

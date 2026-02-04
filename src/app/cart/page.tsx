@@ -8,7 +8,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { RootState } from "@/store";
 import GuestCheckoutModal from "@/components/ui/Modals/guestCheckoutModal";
-import { selectCheckedItems } from "@/store/cart/cartSlice";
+import { selectCheckedItems, setCheckoutSummary } from "@/store/cart/cartSlice";
 import {
   removeFromCart,
   updateQuantity,
@@ -42,6 +42,7 @@ import { Size } from "recharts/types/util/types";
 
 import { setSelectedVariation } from "@/store/slices/variationSelectorSlice";
 import CartSkeleton from "@/components/reloadSpinner/CartSkeleton";
+import { stat } from "fs";
 
 export default function CartPage() {
   const [selectedItems, setSelectedItems] = useState<{
@@ -52,6 +53,8 @@ export default function CartPage() {
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const initialHydratedRef = useRef(false);
   const [deleting, setDeleting] = useState("");
+
+  const checkingoutItems = useSelector((state: RootState) => state.cart.checkoutItems);
 
   const token = useSelector((state: RootState) => state.token?.token);
   const cartItems = useSelector((state: RootState) => state.cart.items || []);
@@ -64,9 +67,6 @@ export default function CartPage() {
   const [syncingCart, setSyncingCart] = useState(false);
   const [localQty, setLocalQty] = useState<number>(0);
   const [hydratingCart, setHydratingCart] = useState(true);
-
-
-  console.log ("cart------")
 
   const handleQtyChange = (newQty: number) => {
     if (newQty < 1) return;
@@ -85,7 +85,7 @@ export default function CartPage() {
   const hydrateSelectionFromItems = (items: CartItem[]) => {
     const selected: Record<string, boolean> = {};
     items.forEach((it) => {
-      const key = it.variation_id || it.product_id;
+      const key = it.variation_id || it.id;
       selected[key] = typeof it.checked === "boolean" ? it.checked : true;
     });
     return selected;
@@ -107,10 +107,10 @@ export default function CartPage() {
 
   const mapGuestCartForSync = (items: any[]) =>
     items
-      .filter((item) => item.variation_id && item.product_id) // only valid
+      .filter((item) => item.variation_id && item.id) // only valid
       .map((item) => ({
         variation_id: item.variation_id,
-        product_id: item.product_id,
+        product_id: item.id,
         quantity: item.quantity || 1,
       }));
 
@@ -118,7 +118,7 @@ export default function CartPage() {
 
   const applyCheckedToLocal = (id: string, checked: boolean) => {
     const updated = cartItems.map((it) =>
-      (it.variation_id || it.product_id) === id ? { ...it, checked } : it
+      (it.variation_id || it.id) === id ? { ...it, checked } : it,
     );
 
     dispatch(setCartItems(updated));
@@ -134,7 +134,7 @@ export default function CartPage() {
 
     const selected: Record<string, boolean> = {};
     updated.forEach((it) => {
-      const key = it.variation_id || it.product_id;
+      const key = it.variation_id || it.id;
       selected[key] = checked;
     });
 
@@ -173,7 +173,7 @@ export default function CartPage() {
     let changed = false;
 
     cartItems.forEach((it: any) => {
-      const id = it.variation_id || it.product_id;
+      const id = it.variation_id || it.id;
       const checked = typeof it.checked === "boolean" ? it.checked : true;
 
       if (newSelected[id] === undefined) {
@@ -183,7 +183,7 @@ export default function CartPage() {
     });
 
     const existingIds = new Set(
-      cartItems.map((it: any) => it.variation_id || it.product_id)
+      cartItems.map((it: any) => it.variation_id || it.id),
     );
     Object.keys(newSelected).forEach((k) => {
       if (!existingIds.has(k)) {
@@ -221,8 +221,8 @@ export default function CartPage() {
             (item: CartItem) => {
               return {
                 variation_id: item.variation_id,
-                product_id: item.product_id || "",
-                name: item.product_name || "",
+                product_id: item.id || "",
+                product_name: item.product_name || "",
                 price: item.price || 0,
                 quantity: item.quantity ?? 1,
                 product_slug: item.product_slug,
@@ -234,7 +234,7 @@ export default function CartPage() {
                 checked:
                   typeof item.checked === "boolean" ? item.checked : true,
               };
-            }
+            },
           );
 
           console.log("cartItems local:", cartItems);
@@ -256,7 +256,7 @@ export default function CartPage() {
 
           const newSelected: Record<string, boolean> = {};
           merged.forEach((mi) => {
-            newSelected[mi.variation_id || mi.product_id] =
+            newSelected[mi.variation_id || mi.id] =
               typeof mi.checked === "boolean" ? mi.checked : true;
           });
           setSelectedItems(newSelected);
@@ -278,46 +278,43 @@ export default function CartPage() {
     const stored = JSON.parse(localStorage.getItem("cart") || "[]");
     const payload = mapGuestCartForSync(stored);
 
-   if (payload.length > 0) {
-  await sendHttpRequest({
-    requestConfig: {
-      url: "/cart/bulk_add/",
-      method: "POST",
-      token,
-      isAuth: true,
-      userType: "buyer",
-      body: { items: payload },
-    },
-    successRes: () => {
-      // ✅ only clear local cart AFTER backend confirms success
-      localStorage.removeItem("cart");
-      setGuestCart([]);
-      hasSyncedGuestCart.current = true;
-    },
-  });
-}
-
+    if (payload.length > 0) {
+      await sendHttpRequest({
+        requestConfig: {
+          url: "/cart/bulk_add/",
+          method: "POST",
+          token,
+          isAuth: true,
+          userType: "buyer",
+          body: { items: payload },
+        },
+        successRes: () => {
+          // ✅ only clear local cart AFTER backend confirms success
+          localStorage.removeItem("cart");
+          setGuestCart([]);
+          hasSyncedGuestCart.current = true;
+        },
+      });
+    }
 
     // 2️⃣ Fetch final backend cart
     await fetchBackendCart();
   };
 
   const handleToggleItem = async (item: any) => {
-    const id = item.variation_id || item.product_id;
+    const id = item.variation_id || item.id;
 
     const newChecked = !selectedItems[id];
 
-    console.log("Toggling item:", item, "to", newChecked, id);
-
-    applyCheckedToLocal(item.variation_id || item.product_id, newChecked);
+    applyCheckedToLocal(item.variation_id || item.id, newChecked);
 
     if (!token) {
       try {
         dispatch(
           updateCheckedState({
-            variation_id: item.variation_id || item.product_id,
+            variation_id: item.variation_id || item.id,
             checked: newChecked,
-          })
+          }),
         );
       } catch (e) {
         console.error("Local update failed", e);
@@ -348,7 +345,7 @@ export default function CartPage() {
 
   const allSelected =
     cartItems.length > 0 &&
-    cartItems.every((i) => !!selectedItems[i.variation_id || i.product_id]);
+    cartItems.every((i) => !!selectedItems[i.variation_id || i.id]);
 
   const handleSelectAll = async () => {
     const newChecked = !allSelected;
@@ -362,8 +359,8 @@ export default function CartPage() {
             updateCheckedState({
               variation_id: it.variation_id,
               checked: newChecked,
-            })
-          )
+            }),
+          ),
         );
       } catch (e) {
         console.error("Guest update checked state failed", e);
@@ -376,7 +373,7 @@ export default function CartPage() {
         cartItems.map((item: any) =>
           toggleReq({
             requestConfig: {
-              url: `/cart/item/${item.variation_id || item.product_id}/`,
+              url: `/cart/item/${item.variation_id || item.id}/`,
               method: "PATCH",
               token,
               isAuth: true,
@@ -390,16 +387,16 @@ export default function CartPage() {
                 updateCheckedState({
                   variation_id: item.variation_id,
                   checked: newChecked,
-                })
+                }),
               );
             },
-          })
-        )
+          }),
+        ),
       );
     } catch (err) {
       console.error("Error in handleSelectAll:", err);
       toast.error("Failed to update some items on server. Re-syncing...");
-      // re-fetch from server to restore correct state
+
       await fetchBackendCart();
     }
   };
@@ -410,25 +407,25 @@ export default function CartPage() {
       setDeleting("");
       dispatch(
         removeFromCart({
-          variation_id: item.variation_id || item.product_id,
-        })
+          variation_id: item.variation_id || item.id,
+        }),
       );
     }
 
     setSelectedItems((p) => {
       const copy = { ...p };
-      delete copy[item.variation_id || item.product_id];
+      delete copy[item.variation_id || item.id];
       return copy;
     });
 
     const updatedLocal = (cartItems || []).filter(
-      (it: any) => it.variation_id !== item.variation_id
+      (it: any) => it.variation_id !== item.variation_id,
     );
     persistLocalCart(updatedLocal);
     console.log("Deleting item on server:", item);
 
     if (!token) return;
-    setDeleting(item.variation_id || item.product_id);
+    setDeleting(item.variation_id || item.id);
     try {
       await deleteReq({
         requestConfig: {
@@ -441,8 +438,8 @@ export default function CartPage() {
         successRes: (res) => {
           dispatch(
             removeFromCart({
-              variation_id: item.variation_id || item.product_id,
-            })
+              variation_id: item.variation_id || item.id,
+            }),
           );
           setDeleting("");
         },
@@ -468,7 +465,7 @@ export default function CartPage() {
     selectedIds.forEach((id) => dispatch(removeFromCart({ variation_id: id })));
 
     const remaining = (cartItems || []).filter(
-      (it) => !selectedIds.includes(it.variation_id || it.product_id)
+      (it) => !selectedIds.includes(it.variation_id || it.id),
     );
 
     persistLocalCart(remaining);
@@ -494,44 +491,78 @@ export default function CartPage() {
     }
   };
 
-  const handleCheckout = () => {
-    if (token) router.push("/cart/checkout");
-    else setCheckoutModalOpen(true);
-  };
+
 
   const totalPrice = Number(
     (cartItems || [])
       .reduce((acc, i) => {
-        if (!selectedItems[i.variation_id || i.product_id]) return acc;
+        if (!selectedItems[i.variation_id || i.id]) return acc;
 
         const price = Number(i.price) || 0;
         const qty = Number(i.quantity) || 0;
 
         return acc + price * qty;
       }, 0)
-      .toFixed(1)
+      .toFixed(1),
   );
+
+const checkoutItems = (cartItems || [])
+  .filter((item) => selectedItems[item.variation_id || item.id])
+  .map((item) => {
+    const price = Number(item.price) || 0;
+    const qty = Number(item.quantity) || 0;
+    const subtotal = price * qty;
+
+    return {
+      ...item,
+      subtotal, // ✅ overwrite null
+      formatted_subtotal: `₦${subtotal.toLocaleString()}`,
+    };
+  });
+
+
+  const handleCheckout = () => {
+    if (!token) {
+      dispatch(setCheckoutItems(checkoutItems));
+
+      dispatch(
+        setCheckoutSummary({
+          all_addresses: [],
+          discount_amount: "0.00",
+          shipping_address: null,
+          shipping_cost: "0.00",
+          shipping_methods: [],
+          subtotal: totalPrice.toLocaleString(),
+          total: totalPrice.toLocaleString(),
+        }),
+      );
+   
+      setCheckoutModalOpen(true);
+    } else {
+      router.push("/cart/checkout");
+    }
+  };
 
   console.log("cartItems:", cartItems);
 
   const variationSelector = useSelector(
-    (state: RootState) => state.selectedVariation
+    (state: RootState) => state.selectedVariation,
   );
 
   const selectedCount = Object.values(selectedItems).filter(Boolean).length;
 
-const handleClick = (item: CartItem) => {
-  const variationId = item.variation_id; // or whatever your field is
+  const handleClick = (item: CartItem) => {
+    const variationId = item.variation_id; // or whatever your field is
 
-  // Build the URL string manually
-  const url = `/product/${item.product_slug}${variationId ? `?variationId=${variationId}` : ""}`;
+    // Build the URL string manually
+    const url = `/product/${item.product_slug}${variationId ? `?variationId=${variationId}` : ""}`;
 
-  router.push(url);
+    router.push(url);
 
-  console.log("item clicked", item, variationId);
-};
+    console.log("item clicked", item, variationId);
+  };
 
-
+  console.log("why name missing", cartItems);
   return (
     <>
       {hydratingCart ? (
@@ -616,7 +647,7 @@ const handleClick = (item: CartItem) => {
                         </span>
                       </div>
                       {Object.values(selectedItems).some(
-                        (isSelected) => isSelected
+                        (isSelected) => isSelected,
                       ) && (
                         <button onClick={handleDeleteSelected}>
                           <Image
@@ -646,21 +677,22 @@ const handleClick = (item: CartItem) => {
                       >
                         {cartItems.map((item) => (
                           <motion.div
-                            key={item.variation_id || item.product_id}
+                            key={item.variation_id || item.id}
                             className="flex justify-between items-center md:border-b  border-gray-200 pb-4"
                           >
                             <div className="flex items-center md:items-start  gap-4 ">
                               <input
                                 type="checkbox"
                                 checked={
-                                  !!selectedItems[
-                                    item.variation_id || item.product_id
-                                  ]
+                                  !!selectedItems[item.variation_id || item.id]
                                 }
                                 onChange={() => handleToggleItem(item)}
                                 className="custom-checkbox flex-shrink-0"
                               />
-                              <button onClick={() => handleClick(item)} className="flex gap-4 items-center">
+                              <button
+                                onClick={() => handleClick(item)}
+                                className="flex gap-4 items-center"
+                              >
                                 {item.product_image && (
                                   <Image
                                     src={
@@ -672,29 +704,28 @@ const handleClick = (item: CartItem) => {
                                     className="rounded md:h-24 md:w-24 w-c56 h-c56"
                                   />
                                 )}
-                             
 
-                              <div>
-                                <p className="font-MontserratSemiBold  text-c12 md:text-base mb-1">
-                                  {item.product_name}
-                                </p>
-                                {!token ? (
-                                  <p className="bg-000000/5 px-3 py-1 md:px-4 md:py-2 w-fit rounded-c12 text-000000/36 mb-3 text-c12 font-MontserratSemiBold">
-                                    {item.quantity}pc,{" "}
-                                    {item.variation_display || "black"}
+                                <div>
+                                  <p className="font-MontserratSemiBold  text-c12 md:text-base mb-1">
+                                    {item.product_name}
                                   </p>
-                                ) : (
-                                  <p className="bg-000000/5 px-3 py-1 md:px-4 md:py-2 w-fit rounded-c12 text-000000/36 mb-3 text-c12 font-MontserratSemiBold">
-                                    {item.quantity}pc,{" "}
-                                    {item.variation_display || "black"}
-                                  </p>
-                                )}
+                                  {!token ? (
+                                    <p className="bg-000000/5 px-3 py-1 md:px-4 md:py-2 w-fit rounded-c12 text-000000/36 mb-3 text-c12 font-MontserratSemiBold">
+                                      {item.quantity}pc,{" "}
+                                      {item.variation_display || "black"}
+                                    </p>
+                                  ) : (
+                                    <p className="bg-000000/5 px-3 py-1 md:px-4 md:py-2 w-fit rounded-c12 text-000000/36 mb-3 text-c12 font-MontserratSemiBold">
+                                      {item.quantity}pc,{" "}
+                                      {item.variation_display || "black"}
+                                    </p>
+                                  )}
 
-                                <p className="font-MontserratNormal text-base md:text-c12 text-gray-600 text-left">
-                                  ₦{item.price}
-                                </p>
-                              </div>
-                               </button>
+                                  <p className="font-MontserratNormal text-base md:text-c12 text-gray-600 text-left">
+                                    ₦{item.price}
+                                  </p>
+                                </div>
+                              </button>
                             </div>
 
                             <motion.div
@@ -713,7 +744,7 @@ const handleClick = (item: CartItem) => {
                                 key="delete"
                                 // disabled={
                                 //   deleting === item.variation_id ||
-                                //   deleting === item.product_id
+                                //   deleting === item.id
                                 // }
                                 onClick={() => handleDeleteItem(item)}
                                 className="ml-2 transition-opacity hover:opacity-70 z-10"
@@ -743,10 +774,8 @@ const handleClick = (item: CartItem) => {
                                 className="w-full flex justify-end"
                               >
                                 <QuantitySelector
-                                  productId={item.product_id}
-                                  variation_id={
-                                    item.variation_id || item.product_id
-                                  }
+                                  productId={item.id}
+                                  variation_id={item.variation_id || item.id}
                                   quantity={localQty}
                                   onChange={handleQtyChange}
                                 />
@@ -927,12 +956,11 @@ const handleClick = (item: CartItem) => {
                     <div className="flex gap-2 overflow-x-scroll py-4">
                       {cartItems
                         .filter(
-                          (item) =>
-                            selectedItems[item.variation_id || item.product_id]
+                          (item) => selectedItems[item.variation_id || item.id],
                         )
                         .map((item) => (
                           <Image
-                            key={item.variation_id || item.product_id}
+                            key={item.variation_id || item.id}
                             src={item.product_image || "/placeholder.png"}
                             alt={item.product_name || "product name"}
                             width={56}
@@ -977,12 +1005,9 @@ const handleClick = (item: CartItem) => {
                 isOpen={open}
                 onClose={() => setOpen(false)}
                 selectedItems={cartItems
-                  .filter(
-                    (item) =>
-                      selectedItems[item.variation_id || item.product_id]
-                  )
+                  .filter((item) => selectedItems[item.variation_id || item.id])
                   .map((item) => ({
-                    product_id: item.product_id,
+                    product_id: item.id,
                     variation_id: item.variation_id,
                     quantity: item.quantity,
                     checked: true,

@@ -16,10 +16,6 @@ import { fetchOrdersSuccess } from "@/store/orders/order-slice";
 
 
 export default function OrderPage() {
-  
-
-
-  
   const router = useRouter()
   return (
     <div className="w-full">

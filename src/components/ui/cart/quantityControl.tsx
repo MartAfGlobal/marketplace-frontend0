@@ -81,7 +81,6 @@ const productDetails = useSelector(
 
  const variationDisplay = productDetails?.variations.find((p)=>p.id === variation_id)
 
- console.log ("yruryrururur", variationDisplay)
 
 
 
@@ -113,7 +112,7 @@ const productDetails = useSelector(
           addToCart({
              product_slug: products.find((p)=>p.id ===productId)?.slug || "",
             variation_display: variationDisplay?.name,
-            product_id: productId,
+            id: productId,
             variation_id: variation_id || "",
             quantity: res.data.quantity , // first add is always 1
             product_image: group_variation?.main_image || "",
@@ -161,7 +160,7 @@ const productDetails = useSelector(
           addGuestItemToCart({
             product_slug: products.find((p)=>p.id ===productId)?.slug || "",
             variation_display: variationDisplay?.name,
-            product_id: productId,
+            id: productId,
             variation_id: variation_id || "",
             quantity: newQty,
             product_image: group_variation?.main_image || "",

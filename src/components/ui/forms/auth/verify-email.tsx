@@ -5,25 +5,32 @@ import { Label } from "@/components/ui/forms/Label";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button/Button";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Google from "@/assets/socialIcons/Google.svg";
 import eye from "@/assets/FormIcon/eyeIcon.svg";
 import Email from "@/assets/FormIcon/email.svg";
 import { toast } from "sonner";
 import { UserType } from "@/resources/enum";
-import { RegisterParams } from "@/types/global";
+import { RegisterParams, VerifyParams } from "@/types/global";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useHttp } from "@/hooks/use-http";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { registrationActions } from "@/store/auth/registration-slice";
+import { useDispatch } from "react-redux";
 
-export default function RegisterForm() {
-  const [formData, setFormData] = useState<RegisterParams>({
+export interface RegProps {
+  userType: "seller" | "buyer";
+  token?: string;
+  businessType?: "registered" | "individual";
+}
+
+export default function VerifyEmail({ userType, token }: RegProps) {
+  const [formData, setFormData] = useState<VerifyParams>({
     email: "",
-    password: "",
-    confirm_password: "",
   });
 
+  const dispatch =useDispatch();
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const toggleConfirmPasswordVisibility = () => {
@@ -32,19 +39,32 @@ export default function RegisterForm() {
 
   const router = useRouter();
 
-  const { loading, sendHttpRequest: registerUserReq } = useHttp();
+  const { loading, error, sendHttpRequest: registerUserReq } = useHttp();
+
+  const email = formData.email;
 
   const registerUserRes = (res: any) => {
-    router.push(`/auth/login`);
+    dispatch(registrationActions.setEmail(email));
+    router.push(
+      `/auth/seller/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
+    );
+    
   };
+
+  useEffect(() => {
+    if (!error) return;
+    console.log("Error message:", error);
+
+    if (error.includes("verification message has already been sent")) {
+      router.push(
+        `/auth/seller/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
+      );
+      dispatch(registrationActions.setEmail(email));
+    }
+  }, [error, email, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (formData.password !== formData.confirm_password) {
-      toast.error("Passwords do not match!");
-      return;
-    }
 
     if (!formData.email.includes("@")) {
       toast.error("Please enter a valid email address!");
@@ -54,13 +74,13 @@ export default function RegisterForm() {
     registerUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/register",
+        url: "/accounts/register/manufacturer/",
         method: "POST",
         body: {
           ...formData,
         },
-        userType: "buyer",
-        successMessage: "Registration Complete, Please login.",
+        userType: userType,
+        successMessage: "Verification email sent successfully",
       },
     });
 
@@ -73,10 +93,7 @@ export default function RegisterForm() {
     setShowPassword((prev) => !prev);
   };
 
-  const isFormValid =
-    formData.email !== "" &&
-    formData.email.includes("@") &&
-    formData.password !== "";
+  const isFormValid = formData.email !== "";
 
   //   const handleSubmit = async (e: React.FormEvent) => {
   //     e.preventDefault();
@@ -88,7 +105,7 @@ export default function RegisterForm() {
       <div className="h-full w-ful">
         <form className="" onSubmit={handleSubmit}>
           <fieldset disabled={loading}>
-            <div className="flex flex-col gap-2 pt-2">
+            <div className="flex flex-col gap-2 pt-2 mb-c32">
               <Label className="text-c12 font-MontserratMedium ">email</Label>
               <Input
                 icon={<Image src={Email} alt="email" width={20} height={20} />}
@@ -99,60 +116,9 @@ export default function RegisterForm() {
                 className="border border-efefef "
               />
             </div>
-            <div className="flex flex-col gap-2 pt-3 ">
-              <Label className="text-c12 font-MontserratMedium ">
-                Password
-              </Label>
-              <Input
-                type={showPassword ? "text" : "password"}
-                icon={
-                  <button type="button" onClick={toggleVisibility}>
-                    {showPassword ? (
-                      <EyeIcon className="w-5 h-5" />
-                      
-                    ) : (
-                      <EyeOffIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                }
-                id="password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className=" "
-              />
-            </div>
-            <div className="flex flex-col gap-2 pt-3 mb-c20">
-              <Label className="text-c12 font-MontserratMedium ">
-                Confirm password
-              </Label>
-              <Input
-                type={showConfirmPassword ? "text" : "password"}
-                icon={
-                  <button
-                    type="button"
-                    onClick={toggleConfirmPasswordVisibility}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeIcon className="w-5 h-5" />
-                      
-                    ) : (
-                      <EyeOffIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                }
-                id="confirm_password"
-                value={formData.confirm_password}
-                onChange={(e) =>
-                  setFormData({ ...formData, confirm_password: e.target.value })
-                }
-                className=""
-              />
-            </div>
           </fieldset>
           <Button type="submit" disabled={loading || !isFormValid}>
-            {loading ? <LoadingSpinner /> : "Create Account"}
+            {loading ? <LoadingSpinner /> : "Verify email"}
           </Button>
         </form>
         <div className="flex justify-between items-center gap-c24 mt-c8 mb-c8 h-c24">

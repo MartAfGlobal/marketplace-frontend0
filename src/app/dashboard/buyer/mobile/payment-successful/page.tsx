@@ -1,44 +1,25 @@
 "use client";
 
-
-
 import PaymentSuccess from "@/components/ui/checkouts/success";
 import { Button } from "@/components/ui/Button/Button";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { motion} from "framer-motion";
+import { motion } from "framer-motion";
 
-
-import { useDispatch, useSelector} from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import ProductCard from "@/components/ui/cards/ProductCard";
 
 export default function PaymentSuccessfulPage() {
   const router = useRouter();
 
-
-
-  
   const dispatch = useDispatch();
 
-
-
-  const cartItems = useSelector((state: RootState) => state.cart.items);
-
-
-
-
-  const totalPrice = cartItems.reduce((acc, item) => {
-    const price = Number(String(item.price).replace(/[, ]/g, ""));  // removes commas & spaces
-    const quantity = item.quantity ?? 1; // default to 1 if undefined
-    return acc + (isNaN(price) ? 0 : price) * quantity;
-  }, 0);
-
-  console.log(totalPrice);
-
-
+  const orderDatas = useSelector(
+    (state: RootState) => state.orderSlice.SuccessOrderData
+  );
 
   return (
     <div className="w-full pt-11 px-6">
@@ -46,7 +27,12 @@ export default function PaymentSuccessfulPage() {
         <PaymentSuccess />
       </div>
       <div className="flex gap-1 w-full mt-c32 text-c12 font-MontserratSemiBold">
-        <Button onClick={()=> router.push("/")} className="bg-transparent border border-ff715b text-ff715b">Go home</Button>
+        <Button
+          onClick={() => router.push("/")}
+          className="bg-transparent border border-ff715b text-ff715b"
+        >
+          Go home
+        </Button>
         <Button>Check my order</Button>
       </div>
       <div className="relative md: md:h-full ">
@@ -54,7 +40,7 @@ export default function PaymentSuccessfulPage() {
         <div className="w-full  mt-7 pb-4 md:pb-0">
           <div className="flex justify-between items-center mb-c24">
             <p className="text-c12 font-MontserratSemiBold ">
-              Orders list ({cartItems.length})
+              Orders list ({orderDatas?.order.items.length})
             </p>
           </div>
 
@@ -78,7 +64,7 @@ export default function PaymentSuccessfulPage() {
                     }}
                     className="space-y-c24 w-full"
                   >
-                    {cartItems.map((item) => (
+                    {orderDatas?.order.items.map((item) => (
                       <motion.div
                         key={item.product_id}
                         initial={{ opacity: 0, y: -10 }}
@@ -89,41 +75,24 @@ export default function PaymentSuccessfulPage() {
                         <div className="w-full justify-between  items-end  pb-8 flex-flex-col md:flex-row">
                           <div className="flex gap-4 w-full j items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
-                              {(() => {
-                                const imageSrc = Array.isArray(item.product_image)
-                                  ? item.product_image[0]
-                                  : item.product_image ?? "";
-
-                                // If no image, render a simple placeholder div to avoid Next/Image errors
-                                if (!imageSrc) {
-                                  return (
-                                    <div className="w-16 h-16 md:w-25 md:h-25 bg-gray-100 flex items-center justify-center text-c12 text-gray-400">
-                                      No image
-                                    </div>
-                                  );
-                                }
-
-                                return (
-                                  <Image
-                                    src={imageSrc}
-                                    alt={item.product_name || "profile name"}
-                                    width={100}
-                                    height={100}
-                                    className="w-16 h-16 md:w-25 md:h-25"
-                                  />
-                                );
-                              })()}
+                              <Image
+                                src={item.image}
+                                alt={item.name || "profile name"}
+                                width={100}
+                                height={100}
+                                className="w-16 h-16 md:w-25 md:h-25"
+                              />
                             </div>
                             <div className="w-full md:max-w-143.75">
                               <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                                {item.product_name}
+                                {item.name}
                               </p>
                               <p className="font-MontserratNormal text-c12 pb-3">
-                                Two piece shop
+                                {item.manufacturer}
                               </p>
                               <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                                 <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                                  {item.quantity}PC, white
+                                  {item.quantity}PC, {item.name}
                                 </span>
                               </div>
                             </div>
@@ -142,9 +111,7 @@ export default function PaymentSuccessfulPage() {
         <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
           More to love
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 ">
-       
-        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 "></div>
       </div>
     </div>
   );

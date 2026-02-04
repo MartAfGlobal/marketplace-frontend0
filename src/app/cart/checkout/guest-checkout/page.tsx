@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -15,11 +15,17 @@ import { Label } from "@/components/ui/forms/Label";
 import { Button } from "@/components/ui/Button/Button";
 import { Country, State, City } from "country-state-city";
 import { useHttp } from "@/hooks/use-http";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import { GuestCheckoutAddress, CheckOutModalProps } from "@/types/global";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { selectCheckedItems } from "@/store/cart/cartSlice";
+import { selectCheckedItems, setCheckoutSummary } from "@/store/cart/cartSlice";
+import { RootState } from "@/store";
+import {
+  CityDropdown,
+  CountryDropdown,
+  StateDropdown,
+} from "@/components/ui/forms/CountryStateDropdown";
 
 function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   const ref = useRef<T | null>(null);
@@ -34,32 +40,47 @@ function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   return ref;
 }
 
+
 // Helper: map ISO code to flag URL
 const getFlagUrl = (isoCode: string) =>
   `https://flagcdn.com/w20/${isoCode.toLowerCase()}.png`;
 
 export default function AddNewAddreess() {
   const router = useRouter();
-  const currentAddress = null;
 
+  const searchParams = useSearchParams();
+
+  const isEditing = searchParams.get("editing") === "true";
   const selectedItems = useSelector(selectCheckedItems);
+
+  const checkoutSummary = useSelector(
+    (state: RootState) => state.cart.checkoutSummary,
+  );
+
+  const currentAddress = checkoutSummary?.guest_address;
+  
+const checkoutItems = useSelector(
+  (state: RootState) => state.cart.checkoutItems,
+);
 
   useEffect(() => {
     console.log("Selected Items in Guest:", selectedItems);
   }, [selectedItems]);
   const [formData, setFormData] = useState<GuestCheckoutAddress>({
-    first_name: "",
-    last_name: "",
-    guest_email: "",
-    guest_phone: "",
-    guest_address_line1: "",
-    guest_address_line2: "",
-    guest_city: "",
-    guest_state: "",
-    guest_postal_code: "",
-    guest_country: "Nigeria",
-    shipping_cost: 0,
-    discount_amount: 0,
+    shipping_location_id: currentAddress?.shipping_location_id || "",
+    guest_first_name: currentAddress?.guest_first_name || "",
+    guest_last_name: currentAddress?.guest_last_name || "",
+    guest_email: currentAddress?.guest_email || "",
+    guest_phone: currentAddress?.guest_phone || "",
+    guest_shipping_address: {
+      line1: currentAddress?.guest_shipping_address?.line1 || "",
+      line2: currentAddress?.guest_shipping_address?.line2 || "",
+      city: currentAddress?.guest_shipping_address?.city || "",
+      state: currentAddress?.guest_shipping_address?.state || "",
+      postal_code: currentAddress?.guest_shipping_address?.postal_code || "",
+      country: currentAddress?.guest_shipping_address?.country || "Nigeria",
+    },
+    discount_amount: currentAddress?.discount_amount || "0.00",
   });
 
   const [countries, setCountries] = useState<
@@ -91,9 +112,10 @@ export default function AddNewAddreess() {
   const [cityOpen, setCityOpen] = useState(false);
   const [zipOpen, setZipOpen] = useState(false);
   const [streetError, setStreetError] = useState("");
+  const dispatch = useDispatch();
 
   const countryRef = useClickOutside<HTMLDivElement>(() =>
-    setCountryOpen(false)
+    setCountryOpen(false),
   );
   const stateRef = useClickOutside<HTMLDivElement>(() => setStateOpen(false));
   const cityRef = useClickOutside<HTMLDivElement>(() => setCityOpen(false));
@@ -102,103 +124,119 @@ export default function AddNewAddreess() {
 
   const handleCheckout = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!formData.guest_address_line1?.trim()) {
+
+    if (!formData.guest_shipping_address.line1?.trim()) {
       setStreetError("House number and street address are required.");
       return;
-    } else {
-      setStreetError("");
     }
 
-    formData;
+    console.log("checking formdata", formData);
 
-    const items = selectedItems.map((item: any) => ({
-      product_id: item.product_id,
-      variation_id: item.variations?.[0]?.id || null,
-      quantity: item.quantity || 1,
+    const items = checkoutItems.map((item) => ({
+      product_id: item.id,
+      variation_id: item.variation_id || null,
+      quantity: item.quantity,
     }));
-
-    console.log("Items on Checkout:", selectedItems);
-
-    console.log("Form Data on Checkout:", formData);
 
     saveRequest({
       requestConfig: {
-        url: "/checkout/",
+        url: "/checkout/summary/guest/",
         method: "POST",
         body: { ...formData, items },
         successMessage: "Redirecting to payment gateway...",
       },
       successRes: (res) => {
-        console.log("respons data:", res.data);
+        const data = res.data;
+        console.log("respons data:", data);
+        dispatch(
+          setCheckoutSummary({
+            all_addresses: data?.all_addresses ?? [],
 
-        if (res.data?.paystack_payment_url) {
-          window.location.href = res.data.paystack_payment_url;
-        } else {
-          return;
-        }
+            discount_amount: data?.discount_amount ?? "0.00",
+            shipping_cost: data?.shipping_cost ?? "0.00",
+            shipping_methods: checkoutSummary?.shipping_methods ?? [],
+
+            subtotal: data?.subtotal ?? "0.00",
+            total: data?.total ?? "0.00",
+
+            guest_address: {
+              ...formData,
+            },
+          }),
+        );
+
+        router.push("/cart/checkout");
       },
     });
+
+    setStreetError("");
   };
 
-  useEffect(() => {
-    const allCountries = Country.getAllCountries();
-    setCountries(allCountries);
-    const defaultCountry =
-      allCountries.find((c) => c.name === formData.guest_country) ||
-      allCountries[0];
-    setSelectedCountry(defaultCountry);
-    setFlag(getFlagUrl(defaultCountry.isoCode));
+  const handleChange = (field: string, value: string | undefined) => {
+    // map dropdown fields to form structure
+    if (field === "guest_country") {
+      setFormData((prev) => ({
+        ...prev,
+        guest_shipping_address: {
+          ...prev.guest_shipping_address,
+          country: value ?? "",
+          state: "",
+          city: "",
+        },
+        shipping_location_id: "",
+      }));
+      return;
+    }
+
+    if (field === "guest_state") {
+      setFormData((prev) => ({
+        ...prev,
+        guest_shipping_address: {
+          ...prev.guest_shipping_address,
+          state: value ?? "",
+          city: "",
+        },
+        shipping_location_id: "",
+      }));
+      return;
+    }
+
+    if (field === "guest_city") {
+      setFormData((prev) => ({
+        ...prev,
+        guest_shipping_address: {
+          ...prev.guest_shipping_address,
+          city: value ?? "",
+        },
+      }));
+      return;
+    }
+
+    if (field === "guest_location_id") {
+      setFormData((prev) => ({
+        ...prev,
+        shipping_location_id: value ?? "",
+      }));
+      return;
+    }
+
+    // normal inputs
+    if (["line1", "line2", "postal_code"].includes(field)) {
+      setFormData((prev) => ({
+        ...prev,
+        guest_shipping_address: {
+          ...prev.guest_shipping_address,
+          [field]: value ?? "",
+        },
+      }));
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      country: defaultCountry.name,
-      phone: prev.guest_phone || "+" + defaultCountry.phonecode + " ",
+      [field]: value ?? "",
     }));
-  }, []);
-
-  // Update states and cities when country changes
-  useEffect(() => {
-    if (!selectedCountry) return;
-    const countryStates = State.getStatesOfCountry(selectedCountry.isoCode);
-    setStates(countryStates);
-    const defaultState =
-      countryStates.find((s) => s.name === formData.guest_state) || null;
-    setSelectedState(defaultState);
-
-    if (defaultState) {
-      const stateCities = City.getCitiesOfState(
-        selectedCountry.isoCode,
-        defaultState.isoCode
-      );
-      setCities(stateCities);
-      const defaultCity =
-        stateCities.find((c) => c.name === formData.guest_city) || null;
-      setSelectedCity(defaultCity);
-    } else {
-      setCities([]);
-      setSelectedCity(null);
-    }
-  }, [selectedCountry]);
-
-  // Update cities when state changes
-  useEffect(() => {
-    if (!selectedState || !selectedCountry) return;
-    const stateCities = City.getCitiesOfState(
-      selectedCountry.isoCode,
-      selectedState.isoCode
-    );
-    setCities(stateCities);
-    const defaultCity =
-      stateCities.find((c) => c.name === formData.guest_city) || null;
-    setSelectedCity(defaultCity);
-  }, [selectedState]);
-
-  const handleChange = (
-    field: keyof GuestCheckoutAddress,
-    value: string | boolean
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
   const handleCountrySelect = (c: typeof selectedCountry) => {
     if (!c) return;
     setSelectedCountry(c);
@@ -229,17 +267,6 @@ export default function AddNewAddreess() {
     }));
   };
 
-  const handleCitySelect = (c: typeof selectedCity) => {
-    if (!c) return;
-    setSelectedCity(c);
-    setCityOpen(false);
-    setFormData((prev) => ({
-      ...prev,
-      city: c.name,
-      postal_code: formData.guest_postal_code || "",
-    }));
-  };
-
   const menuVariants = {
     hidden: { opacity: 0, y: -10 },
     show: { opacity: 1, y: 0, transition: { duration: 0.2 } },
@@ -247,15 +274,16 @@ export default function AddNewAddreess() {
   };
 
   const invalidForm =
-    !formData.first_name?.trim() ||
-    !formData.last_name?.trim() ||
-    !formData.guest_country?.trim() ||
-    !formData.guest_address_line1?.trim() ||
-    !formData.guest_city?.trim() ||
-    !formData.guest_email?.trim() ||
-    !formData.guest_postal_code?.trim() ||
+    !formData.shipping_location_id?.trim() ||
+    !formData.guest_first_name?.trim() ||
+    !formData.guest_last_name?.trim() ||
+    !formData.guest_shipping_address.country?.trim() ||
+    !formData.guest_shipping_address.line1?.trim() ||
+    !formData.guest_shipping_address.city?.trim() ||
+    !formData.guest_shipping_address.postal_code?.trim() ||
+    !formData.guest_shipping_address.state?.trim() ||
     !formData.guest_phone?.trim() ||
-    !formData.guest_state?.trim();
+    !formData.guest_email?.trim();
 
   return (
     <div>
@@ -273,7 +301,7 @@ export default function AddNewAddreess() {
             className="brightness-20 w-2.25 h-[16.5px]"
           />
           <p className="font-MontserratSemiBold text-c16 text-161616">
-            Add new address
+            {isEditing ? "Edit address" : "Add new address"}
           </p>
         </button>
       </div>
@@ -281,60 +309,10 @@ export default function AddNewAddreess() {
       <div className="px-6 pt-7 pb-30">
         <form onSubmit={handleCheckout}>
           <fieldset className="space-y-6">
-            <div className="space-y-4">
-              <Label className="text-sm pb-4 font-MontserratSemiBold">
-                Country/region
-              </Label>
-              <div className="relative pt-4 w-full" ref={countryRef}>
-                <button
-                  type="button"
-                  onClick={() => setCountryOpen((p) => !p)}
-                  className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
-                >
-                  <div className="flex items-center gap-2">
-                    <Image src={flag} alt="flag" width={16} height={12} />
-                    <span>{selectedCountry?.name || "Select country"}</span>
-                  </div>
-                  <Image
-                    src={CaretDown}
-                    alt="select country"
-                    width={11}
-                    height={6}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {countryOpen && (
-                    <motion.div
-                      variants={menuVariants}
-                      initial="hidden"
-                      animate="show"
-                      exit="exit"
-                      className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
-                    >
-                      {countries.map((c) => (
-                        <div
-                          key={c.isoCode}
-                          onClick={() => handleCountrySelect(c)}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                        >
-                          <Image
-                            src={getFlagUrl(c.isoCode)}
-                            alt={c.name}
-                            width={16}
-                            height={12}
-                          />
-                          <span>{c.name}</span>
-                          <span className="ml-auto text-xs opacity-60">
-                            +{c.phonecode}
-                          </span>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
+            <CountryDropdown
+              country={formData.guest_shipping_address.country}
+              onChange={handleChange}
+            />
             <div>
               <div className="pb-3">
                 <Label className="text-sm font-MontserratSemiBold">
@@ -343,7 +321,7 @@ export default function AddNewAddreess() {
                 <input
                   type="text"
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
-                  value={formData.first_name}
+                  value={formData.guest_first_name}
                   onChange={(e) => handleChange("first_name", e.target.value)}
                 />
               </div>
@@ -354,7 +332,7 @@ export default function AddNewAddreess() {
                 <input
                   type="text"
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
-                  value={formData.last_name}
+                  value={formData.guest_last_name}
                   onChange={(e) => handleChange("last_name", e.target.value)}
                 />
               </div>
@@ -414,10 +392,8 @@ export default function AddNewAddreess() {
                   className={`w-full p-4 mt-2 border border-gray-300 rounded-lg h-10 ${
                     streetError ? "border-red-500" : "border-efefef"
                   }`}
-                  value={formData.guest_address_line1}
-                  onChange={(e) =>
-                    handleChange("guest_address_line1", e.target.value)
-                  }
+                  value={formData.guest_shipping_address.line1}
+                  onChange={(e) => handleChange("line1", e.target.value)}
                 />
               </div>
               <div className="pb-3">
@@ -427,98 +403,20 @@ export default function AddNewAddreess() {
                 <input
                   type="text"
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
-                  value={formData.guest_address_line2}
-                  onChange={(e) =>
-                    handleChange("guest_address_line2", e.target.value)
-                  }
+                  value={formData.guest_shipping_address.line2}
+                  onChange={(e) => handleChange("line2", e.target.value)}
                 />
               </div>
 
-              <div className="space-y-4">
-                <Label className="text-sm font-MontserratSemiBold">
-                  State/province
-                </Label>
-                <div className="relative pt-2 w-full" ref={stateRef}>
-                  <button
-                    type="button"
-                    onClick={() => setStateOpen((p) => !p)}
-                    className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
-                  >
-                    <span>
-                      {selectedState?.name || "Select state/province"}
-                    </span>
-                    <Image
-                      src={CaretDown}
-                      alt="select state"
-                      width={11}
-                      height={6}
-                    />
-                  </button>
+              <StateDropdown
+                state={formData.guest_shipping_address.state}
+                onChange={handleChange}
+              />
 
-                  <AnimatePresence>
-                    {stateOpen && (
-                      <motion.div
-                        variants={menuVariants}
-                        initial="hidden"
-                        animate="show"
-                        exit="exit"
-                        className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
-                      >
-                        {states.map((s) => (
-                          <div
-                            key={s.isoCode}
-                            onClick={() => handleStateSelect(s)}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                          >
-                            {s.name}
-                          </div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-3">
-                <Label className="text-sm font-MontserratSemiBold">City</Label>
-                <div className="relative pt-2 w-full" ref={cityRef}>
-                  <button
-                    type="button"
-                    onClick={() => setCityOpen((p) => !p)}
-                    className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
-                  >
-                    <span>{selectedCity?.name || "Select city"}</span>
-                    <Image
-                      src={CaretDown}
-                      alt="select city"
-                      width={11}
-                      height={6}
-                    />
-                  </button>
-
-                  <AnimatePresence>
-                    {cityOpen && (
-                      <motion.div
-                        variants={menuVariants}
-                        initial="hidden"
-                        animate="show"
-                        exit="exit"
-                        className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
-                      >
-                        {cities.map((c) => (
-                          <div
-                            key={c.name}
-                            onClick={() => handleCitySelect(c)}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                          >
-                            {c.name}
-                          </div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
+              <CityDropdown
+                city={formData.guest_shipping_address.city}
+                onChange={handleChange}
+              />
 
               <div className="pb-3">
                 <Label className="text-sm font-MontserratSemiBold">
@@ -527,7 +425,7 @@ export default function AddNewAddreess() {
                 <input
                   type="text"
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
-                  value={formData.guest_postal_code}
+                  value={formData.guest_shipping_address.postal_code}
                   onChange={(e) =>
                     handleChange("guest_postal_code", e.target.value)
                   }
@@ -536,7 +434,11 @@ export default function AddNewAddreess() {
             </div>
 
             <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
-              <Button disabled={invalidForm || loading} type="submit" className="border-0">
+              <Button
+                disabled={invalidForm || loading}
+                type="submit"
+                className="border-0"
+              >
                 {loading ? <LoadingSpinner /> : "continue to payment"}
               </Button>
             </div>

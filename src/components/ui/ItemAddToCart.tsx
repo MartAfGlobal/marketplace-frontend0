@@ -104,7 +104,7 @@ export default function ItemAddToCart({
       dispatch(
         addGuestItemToCart({
           product_slug,
-          product_id: productId,
+          id: productId,
           variation_id: selectedVariationId,
           quantity: 1,
           variation_display: selectedVariation.name,
@@ -169,8 +169,8 @@ export default function ItemAddToCart({
             (item: CartItem) => {
               return {
                 variation_id: item.variation_id,
-                product_id: item.product_id || "",
-                name: item.product_name || "",
+                product_id: item.id || "",
+                product_name: item.product_name || "",
                 price: item.price || 0,
                 quantity: item.quantity ?? 1,
                 product_slug: item.product_slug,
@@ -259,7 +259,7 @@ export default function ItemAddToCart({
 
             <Button>Buy now</Button>
           </div>
-          <div className=" flex w-full md:hidden items-center gap-3 ">
+          <div className=" flex w-full md:hidden items-center gap-3  ">
             {existingCartItem ? (
               <QuantitySelector
                 quantity={localQty}
@@ -274,7 +274,7 @@ export default function ItemAddToCart({
                 onClick={handleAddToCart}
                 disabled={loading}
               >
-                {loading ? <LoadingSpinner /> : "Add to cart"}
+                {loading ? <LoadingSpinner color="border-ff715b" /> : "Add to cart"}
               </Button>
             )}
 

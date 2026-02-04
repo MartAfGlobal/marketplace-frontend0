@@ -26,8 +26,14 @@ import { Country, State } from "country-state-city";
 import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
-import CountryStateDropdown from "../forms/CountryStateDropdown";
+
+import {
+  CityDropdown,
+  CountryDropdown,
+  StateDropdown,
+} from "../forms/CountryStateDropdown";
 import { RootState } from "@/store";
+import { setCheckoutSummary } from "@/store/cart/cartSlice";
 // token read from Redux store
 
 // helper: map ISO code to flag URL
@@ -37,23 +43,25 @@ const getFlagUrl = (isoCode: string) =>
 export default function GuestCheckoutModal({
   isOpen,
   onClose,
-
+  isEditing,
   selectedItems,
   currentAddress,
 }: CheckOutModalProps) {
   const [formData, setFormData] = useState<GuestCheckoutAddress>({
-    first_name: "",
-    last_name: "",
-    guest_email: "",
-    guest_phone: "",
-    guest_address_line1: "",
-    guest_address_line2: "",
-    guest_city: "",
-    guest_state: "",
-    guest_postal_code: "",
-    guest_country: currentAddress?.guest_country || "Nigeria",
-    shipping_cost: 0,
-    discount_amount: 0,
+    shipping_location_id: currentAddress?.shipping_location_id || "",
+    guest_first_name: currentAddress?.guest_first_name || "",
+    guest_last_name: currentAddress?.guest_last_name || "",
+    guest_email: currentAddress?.guest_email || "",
+    guest_phone: currentAddress?.guest_phone || "",
+    guest_shipping_address: {
+      line1: currentAddress?.guest_shipping_address?.line1 || "",
+      line2: currentAddress?.guest_shipping_address?.line2 || "",
+      city: currentAddress?.guest_shipping_address?.city || "",
+      state: currentAddress?.guest_shipping_address?.state || "",
+      postal_code: currentAddress?.guest_shipping_address?.postal_code || "",
+      country: currentAddress?.guest_shipping_address?.country || "Nigeria",
+    },
+    discount_amount: currentAddress?.discount_amount || "0.00",
   });
 
   const router = useRouter();
@@ -62,9 +70,15 @@ export default function GuestCheckoutModal({
 
   const [states, setStates] = useState<any[]>([]);
   const [flag, setFlag] = useState<string>(NigerianFlag.src);
-  // const tokenSlice = useSelector((state: any) => state.token);
-  // const { token } = tokenSlice;
-  const token = useSelector((state: RootState) => state.token.token);
+
+  const dispatch = useDispatch();
+  const checkoutSummary = useSelector(
+    (state: RootState) => state.cart.checkoutSummary,
+  );
+
+  const checkoutItems = useSelector(
+    (state: RootState) => state.cart.checkoutItems,
+  );
 
   useEffect(() => {
     console.log("Selected Items in Guest Checkout Modal:", selectedItems);
@@ -80,82 +94,142 @@ export default function GuestCheckoutModal({
 
   useEffect(() => {
     const selectedCountry = Country.getAllCountries().find(
-      (c) => c.name === formData.guest_country
+      (c) => c.name === formData.guest_shipping_address.country,
     );
 
     if (selectedCountry) {
       setStates(State.getStatesOfCountry(selectedCountry.isoCode));
       setFlag(getFlagUrl(selectedCountry.isoCode));
     }
-  }, [formData.guest_country]);
+  }, [formData.guest_shipping_address.country]);
 
-  const handleChange = (
-    field: keyof GuestCheckoutAddress,
-    value: string | boolean
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: string | undefined) => {
+    // map dropdown fields to form structure
+    if (field === "guest_country") {
+      setFormData((prev) => ({
+        ...prev,
+        guest_shipping_address: {
+          ...prev.guest_shipping_address,
+          country: value ?? "",
+          state: "",
+          city: "",
+        },
+        shipping_location_id: "",
+      }));
+      return;
+    }
+
+    if (field === "guest_state") {
+      setFormData((prev) => ({
+        ...prev,
+        guest_shipping_address: {
+          ...prev.guest_shipping_address,
+          state: value ?? "",
+          city: "",
+        },
+        shipping_location_id: "",
+      }));
+      return;
+    }
+
+    if (field === "guest_city") {
+      setFormData((prev) => ({
+        ...prev,
+        guest_shipping_address: {
+          ...prev.guest_shipping_address,
+          city: value ?? "",
+        },
+      }));
+      return;
+    }
+
+    if (field === "guest_location_id") {
+      setFormData((prev) => ({
+        ...prev,
+        shipping_location_id: value ?? "",
+      }));
+      return;
+    }
+
+    // normal inputs
+    if (["line1", "line2", "postal_code"].includes(field)) {
+      setFormData((prev) => ({
+        ...prev,
+        guest_shipping_address: {
+          ...prev.guest_shipping_address,
+          [field]: value ?? "",
+        },
+      }));
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value ?? "",
+    }));
   };
 
   const { loading, sendHttpRequest: saveRequest } = useHttp();
 
-  const SaveSuccess = (res: any) => {
-    console.log("address INFO:", res);
-
-    setStreetError("");
-
-    return;
-  };
   const invalidForm =
-    !formData.first_name?.trim() ||
-    !formData.last_name?.trim() ||
-    !formData.guest_country?.trim() ||
-    !formData.guest_address_line1?.trim() ||
-    !formData.guest_city?.trim() ||
-    !formData.guest_email?.trim() ||
-    !formData.guest_postal_code?.trim() ||
+    !formData.shipping_location_id?.trim() ||
+    !formData.guest_first_name?.trim() ||
+    !formData.guest_last_name?.trim() ||
+    !formData.guest_shipping_address.country?.trim() ||
+    !formData.guest_shipping_address.line1?.trim() ||
+    !formData.guest_shipping_address.city?.trim() ||
+    !formData.guest_shipping_address.postal_code?.trim() ||
+    !formData.guest_shipping_address.state?.trim() ||
     !formData.guest_phone?.trim() ||
-    !formData.guest_state?.trim();
-
+    !formData.guest_email?.trim();
   const handleCheckout = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!formData.guest_address_line1?.trim()) {
+
+    if (!formData.guest_shipping_address.line1?.trim()) {
       setStreetError("House number and street address are required.");
       return;
-    } else {
-      setStreetError("");
     }
 
-    formData;
+    console.log("checking formdata", formData);
 
-    const cleanedItems = (selectedItems ?? []).map((item) => {
-      const { product_id, ...rest } = item;
-      return rest;
-    });
+    const items = checkoutItems.map((item) => ({
+      product_id: item.id,
+      variation_id: item.variation_id || null,
+      quantity: item.quantity,
+    }));
 
-    console.log("Items on Checkoutggggg:", selectedItems);
-
-    console.log("Form Data on Checkout:", formData);
-
-    // Login request
     saveRequest({
       requestConfig: {
-        url: "/checkout/",
+        url: "/checkout/summary/guest/",
         method: "POST",
-        body: { ...formData, items: cleanedItems },
+        body: { ...formData, items },
         successMessage: "Redirecting to payment gateway...",
       },
       successRes: (res) => {
-        console.log("respons data:", res.data);
+        const data = res.data;
+        console.log("respons data:", data);
+        dispatch(
+          setCheckoutSummary({
+            all_addresses: data?.all_addresses ?? [],
 
-        if (res.data?.paystack_payment_url) {
-          window.location.href = res.data.paystack_payment_url;
-          onClose?.();
-        } else {
-          // Fallback: navigate to your summary page
-          return;
-        }
+            discount_amount: data?.discount_amount ?? "0.00",
+            shipping_cost: data?.shipping_cost ?? "0.00",
+            shipping_methods: checkoutSummary?.shipping_methods ?? [],
+
+            subtotal: data?.subtotal ?? "0.00",
+            total: data?.total ?? "0.00",
+
+            guest_address: {
+              ...formData,
+            },
+          }),
+        );
+        onClose?.();
+        router.push("/cart/checkout");
       },
     });
+
+    setStreetError("");
   };
 
   return (
@@ -200,32 +274,39 @@ export default function GuestCheckoutModal({
             </button>
 
             <h2 className="font-MontserratSemiBold text-c16 mb-c24">
-              Enter Shipping Address
+              {!isEditing ? "Enter Shipping Address" : "Edit Shipping Address"}
             </h2>
 
             <div className="flex flex-col gap-3">
-              {/* Country / Region */}
-              <CountryStateDropdown
-                country={formData.guest_country}
-                state={formData.guest_state}
-                onChange={handleChange}
-              />
+              <div className="flex gap-c24 w-full ">
+                <CountryDropdown
+                  country={formData.guest_shipping_address.country}
+                  onChange={handleChange}
+                />
+                <StateDropdown
+                  state={formData.guest_shipping_address.state}
+                  onChange={handleChange}
+                />
+              </div>
 
               <div>
+                <p className="font-MontserratSemiBold text-c12 mb-6  text-000000">
+                  Contact information
+                </p>
                 <div className="flex gap-c24 w-full mb-c24">
                   <div className="flex flex-col gap-2 relative w-1/2">
                     <Label className="text-c12 font-MontserratMedium">
                       First Name
                     </Label>
                     <Input
-                      id="firstName"
-                      name="firstName"
-                      type="firstName"
-                      value={formData.first_name}
+                      id="guest_first_name"
+                      name="guest_first_name"
+                      type="text"
+                      value={formData.guest_first_name}
                       onChange={(e) =>
-                        handleChange("first_name", e.target.value)
+                        handleChange("guest_first_name", e.target.value)
                       }
-                      placeholder="truthokoye@gamil.com"
+                      placeholder="Truth"
                       className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
                     />
                   </div>
@@ -238,18 +319,16 @@ export default function GuestCheckoutModal({
                       id="lastName"
                       name="lastName"
                       type="text"
-                      value={formData.last_name}
+                      value={formData.guest_last_name}
                       onChange={(e) =>
-                        handleChange("last_name", e.target.value)
+                        handleChange("guest_last_name", e.target.value)
                       }
-                      placeholder="john Doe"
+                      placeholder="john"
                       className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
                     />
                   </div>
                 </div>
-                <p className="font-MontserratSemiBold text-c12 mb-3  text-000000">
-                  Contact information
-                </p>
+
                 <div className="flex gap-c24 w-full">
                   <div className="flex flex-col gap-2 relative w-1/2">
                     <Label className="text-c12 font-MontserratMedium">
@@ -298,26 +377,16 @@ export default function GuestCheckoutModal({
               </div>
 
               <div>
-                <p className="font-MontserratSemiBold text-c12 mb-3 text-000000">
+                <p className="font-MontserratSemiBold text-c12 mb-6 text-000000">
                   Address information
                 </p>
                 <div className="flex flex-col gap-c24">
                   <div className="flex gap-c24 w-full">
                     {/* City */}
-                    <div className="flex flex-col gap-2 relative w-1/2">
-                      <Label className="text-c12 font-MontserratMedium">
-                        City
-                      </Label>
-                      <Input
-                        type="text"
-                        value={formData.guest_city}
-                        placeholder="Lagos"
-                        onChange={(e) =>
-                          handleChange("guest_city", e.target.value)
-                        }
-                        className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
-                      />
-                    </div>
+                    <CityDropdown
+                      city={formData.guest_shipping_address.city}
+                      onChange={handleChange}
+                    />
 
                     <div className="flex flex-col gap-2 relative w-1/2">
                       <Label className="text-c12 font-MontserratMedium">
@@ -325,9 +394,9 @@ export default function GuestCheckoutModal({
                       </Label>
                       <Input
                         type="text"
-                        value={formData.guest_postal_code}
+                        value={formData.guest_shipping_address.postal_code}
                         onChange={(e) =>
-                          handleChange("guest_postal_code", e.target.value)
+                          handleChange("postal_code", e.target.value)
                         }
                         placeholder="100001"
                         className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
@@ -342,10 +411,8 @@ export default function GuestCheckoutModal({
                       </Label>
                       <Input
                         type="text"
-                        value={formData.guest_address_line1}
-                        onChange={(e) =>
-                          handleChange("guest_address_line1", e.target.value)
-                        }
+                        value={formData.guest_shipping_address.line1}
+                        onChange={(e) => handleChange("line1", e.target.value)}
                         placeholder="12 Broad Street"
                         className={`border rounded-c8 p-4 pl-10 w-full text-c12 font-MontserratMedium ${
                           streetError ? "border-red-500" : "border-efefef"
@@ -365,10 +432,8 @@ export default function GuestCheckoutModal({
                         id="guest_address_line2"
                         name="guest_address_line2"
                         type="text"
-                        value={formData.guest_address_line2}
-                        onChange={(e) =>
-                          handleChange("guest_address_line2", e.target.value)
-                        }
+                        value={formData.guest_shipping_address.line2}
+                        onChange={(e) => handleChange("line2", e.target.value)}
                         placeholder="12 Broad Street"
                         className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
                       />

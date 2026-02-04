@@ -67,7 +67,7 @@ export default function AuthModal({
       return;
     }
 
-    if (!formData.email.includes("@")) {
+    if (!formData.email?.includes("@")) {
       toast.error("Please enter a valid email address!");
       return;
     }

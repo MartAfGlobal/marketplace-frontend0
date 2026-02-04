@@ -50,7 +50,8 @@ export default function EditAddressPage() {
   const { loading, sendHttpRequest } = useHttp();
 
   const [formData, setFormData] = useState<Address>({
-    id: 0,
+    id: "",
+    shipping_location: "",
     country: "",
     first_name: "",
     last_name: "",

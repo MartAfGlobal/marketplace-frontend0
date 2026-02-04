@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "../loading-spinner";
+import GuestUserAddress from "../buyer-components/guest/address_selector";
 
 interface loadinProps {
   loadingState: boolean;
@@ -26,46 +27,52 @@ interface loadinProps {
 
 export default function CheckoutItems({ loadingState }: loadinProps) {
   const buyerAddresses = useSelector(
-    (state: RootState) => state.buyer.BuyerAddresses
+    (state: RootState) => state.buyer.BuyerAddresses,
   );
 
   const [visibleItems, setVisibleItems] = useState(14);
   const dispatch = useDispatch();
 
   const selectedAddressId = useSelector(
-    (state: RootState) => state.buyer.selectedAddressId
+    (state: RootState) => state.buyer.selectedAddressId,
   );
 
   useEffect(() => {
     if (buyerAddresses.length > 0 && !selectedAddressId) {
       const defaultAddr = buyerAddresses.find((a) => a.is_default);
       dispatch(
-        buyerActions.setSelectedAddress(defaultAddr?.id ?? buyerAddresses[0].id)
+        buyerActions.setSelectedAddress(
+          defaultAddr?.id ?? buyerAddresses[0].id,
+        ),
       );
     }
   }, [buyerAddresses, selectedAddressId, dispatch]);
 
-  const handleSelectAddress = (addressId: number) => {
+  const handleSelectAddress = (addressId: string) => {
     dispatch(buyerActions.setSelectedAddress(addressId));
   };
 
   // const token = useSelector((state: RootState) => state.token?.token);
   const token = useSelector((state: RootState) => state.token.token);
   const checkoutItems = useSelector(
-    (state: RootState) => state.cart.checkoutItems
+    (state: RootState) => state.cart.checkoutItems,
   );
 
-  console.log("itemsdhdhhhhh", checkoutItems);
-  const router = useRouter();
 
   const checkoutSummary = useSelector(
-    (state: RootState) => state.cart.checkoutSummary
+    (state: RootState) => state.cart.checkoutSummary,
   );
 
-  const totalPrice = Number(checkoutSummary?.subtotal ?? 0);
-  const discount = Number(checkoutSummary?.discount_amount ?? 0);
-  const shippingFee = Number(checkoutSummary?.shipping_cost ?? 0);
-  const TotalItems = checkoutItems.length;
+  const { loading: guestchecking, sendHttpRequest: saveRequest } = useHttp();
+
+  const toNumber = (value: any): number => {
+    if (!value) return 0;
+
+    return Number(String(value).replace(/[^0-9.-]+/g, "")) || 0;
+  };
+
+
+  const TotalItems = checkoutItems.length; //
 
   const { sendHttpRequest, loading } = useHttp();
 
@@ -74,7 +81,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
       requestConfig: {
         url: "/checkout/",
         method: "POST",
-        body: { address: selectedAddressId },
+        body: { shipping_address_id: selectedAddressId },
         token: token ?? undefined,
         isAuth: true,
         successMessage: "Checkout successful!",
@@ -90,20 +97,48 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
         }
       },
     });
-  
   };
-  console.log("checkout items:", checkoutItems);
-  console.log("checkout summary:", checkoutSummary);
+
+  const handleGuestCheckout = (e?: React.FormEvent) => {
+    e?.preventDefault();
+
+    const formData = checkoutSummary?.guest_address;
+    console.log("checking formdata", formData)
+
+    const items = checkoutItems.map((item) => ({
+      product_id: item.id,
+      variation_id: item.variation_id || null,
+      quantity: item.quantity,
+    }));
+
+    saveRequest({
+      requestConfig: {
+        url: "/checkout/guest/",
+        method: "POST",
+        body: { ...formData, items },
+        successMessage: "Redirecting to payment gateway...",
+      },
+      successRes: (res) => {
+        console.log("respons data:", res.data);
+
+        if (res.data?.paystack_payment_url) {
+          window.location.href = res.data.paystack_payment_url;
+        } else {
+          return;
+        }
+      },
+    });
+  };
 
   const uniqueCheckoutItems = [
     ...new Map(
       checkoutItems.map((item) => [
-        `${item.product_id}-${item.variation_id || "no-var"}`,
+        `${item.id}-${item.variation_id || "no-var"}`,
         item,
-      ])
+      ]),
     ).values(),
   ];
-  console.log("uuuuuuuuuuuuuuu", uniqueCheckoutItems);
+
   //   if (!selectedAddress) {
   //     alert("Please select a shipping address");
   //     return;
@@ -148,13 +183,15 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
   //   }
   // };
 
+  console.log("selected address id:", checkoutItems);
+
   return (
     <div className="md:pt-c48  w-full md:pb-c64 ">
       <div className=" ">
         <div className="flex gap-18 justify-center ">
           {loadingState ? (
             <div className="w-full flex justify-center py-10">
-              <LoadingSpinner  color="border-ff715b" size={50}/>
+              <LoadingSpinner color="border-ff715b" size={50} />
             </div>
           ) : (
             <>
@@ -195,7 +232,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                         .slice(0, visibleItems)
                         .map((item) => {
                           // Create a reliable unique key
-                          const uniqueKey = `${item.product_id}-${
+                          const uniqueKey = `${item.id}-${
                             item.variation_id || "no-var"
                           }`;
 
@@ -209,13 +246,12 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                                 className="rounded h-24 w-24"
                               />
                               <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
-                                ₦{Number(item.subtotal).toLocaleString()}
+                                ₦{item.subtotal}
                               </p>
-                              {item.product_name && (
-                                <p className="text-c12 text-000000/70">
-                                  {item.product_name}
-                                </p>
-                              )}
+
+                              <p className="text-c12 text-000000/70">
+                                {item.product_name}
+                              </p>
                             </div>
                           );
                         })}
@@ -225,11 +261,15 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
 
                 <div className="w-full ">
                   <div className="pb-c32 border-b border-b-000000/5">
-                    <UserAddress
-                      selectedAddressId={selectedAddressId ?? undefined}
-                      onSelectAddress={handleSelectAddress}
-                      className="md:w-64.25 h-31 "
-                    />
+                    {token ? (
+                      <UserAddress
+                        selectedAddressId={selectedAddressId ?? undefined}
+                        onSelectAddress={handleSelectAddress}
+                        className="md:w-64.25 h-31 "
+                      />
+                    ) : (
+                      <GuestUserAddress />
+                    )}
                   </div>
                 </div>
               </div>
@@ -238,33 +278,35 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                 <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
                   Order Summary
                 </p>
-                <div className="flex gap-2 pb-3">
-                  <Input placeholder="Enter coupon code w-full" />
-                  <button className="w-full max-w-31.25 bg-transparent border border-ff715b text-c12 h-12 rounded-c8 font-MontserratSemiBold text-ff715b">
-                    Apply coupon
-                  </button>
-                </div>
+                {token && (
+                  <div className="flex gap-2 pb-3">
+                    <Input placeholder="Enter coupon code w-full" />
+                    <button className="w-full max-w-31.25 bg-transparent border border-ff715b text-c12 h-12 rounded-c8 font-MontserratSemiBold text-ff715b">
+                      Apply coupon
+                    </button>
+                  </div>
+                )}
                 <div className="font-MontserratNormal text-sm text-000000 h-23 border-b border-b-000000/10 space-y-2">
                   <div className="flex justify-between">
                     <p>Total items</p>
-                    <p>N{totalPrice}</p>
+                    <p>N{checkoutSummary?.subtotal}</p>
                   </div>
                   <div className="flex justify-between">
                     <p>Discounts</p>
-                    <p>-N{discount}</p>
+                    <p>-N{checkoutSummary?.discount_amount}</p>
                   </div>
                   <div className="flex justify-between">
                     <p>Subtotal</p>
-                    <p>{totalPrice - discount}</p>
+                    <p>{checkoutSummary?.subtotal}</p>
                   </div>
                 </div>
                 <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
                   <p>Shipping fee</p>
-                  <p>{shippingFee}</p>
+                  <p>{checkoutSummary?.shipping_cost}</p>
                 </div>
                 <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
                   <p>Order total</p>
-                  <p>{totalPrice - discount + shippingFee}</p>
+                  <p>{checkoutSummary?.total}</p>
                 </div>
 
                 <div className=" mt-3 mb-c32 flex gap-c42 items-center">
@@ -277,15 +319,24 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                     </p>
                   </div>
                   <p className="font-MontserratSemiBold text-c32 ">
-                    N{totalPrice - discount + shippingFee}
+                    N{checkoutSummary?.total}
                   </p>
                 </div>
-                <Button
-                  onClick={handleCheckout}
-                  disabled={loading || !selectedAddressId}
-                >
-                  {loading ? <LoadingSpinner /> : " Checkout"}({TotalItems})
-                </Button>
+                {token ? (
+                  <Button
+                    onClick={handleCheckout}
+                    disabled={loading || !selectedAddressId}
+                  >
+                    {loading ? <LoadingSpinner /> : " Checkout"}({TotalItems})
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleGuestCheckout}
+                    disabled={guestchecking || !selectedAddressId}
+                  >
+                    {guestchecking ? <LoadingSpinner /> : ` Checkout (${TotalItems})`}
+                  </Button>
+                )}
 
                 <div className="  w-full space-y-6 mt-c32 max-w-84">
                   <div className="space-y-2.5">

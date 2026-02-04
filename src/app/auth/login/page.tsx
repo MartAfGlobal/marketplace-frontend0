@@ -1,18 +1,17 @@
 // app/(auth)/login/page.tsx
 import AuthenticationLayout from "@/components/ui/LayoutWrappers/AuthenticationLayout";
-import LoginForm from "@/components/ui/forms/auth/buyer/loginForm";
-
-
+import LoginForm from "@/components/ui/forms/auth/loginForm";
 
 export default function LoginPage() {
   return (
     <AuthenticationLayout
+      userType="buyer"
       title="Sign in"
       description="Sign in to start enjoying our services"
     >
       <div>
         <>
-        <LoginForm/>
+          <LoginForm userType="buyer"/>
         </>
       </div>
     </AuthenticationLayout>

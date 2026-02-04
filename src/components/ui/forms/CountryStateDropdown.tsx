@@ -1,138 +1,243 @@
 "use client";
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Country, State } from "country-state-city";
-import Image from "next/image";
+
+import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { GuestCheckoutAddress } from "@/types/global";
+import { useHttp } from "@/hooks/use-http";
 
-const getFlagUrl = (isoCode: string) =>
-  `https://flagcdn.com/w20/${isoCode.toLowerCase()}.png`;
 
-interface Props {
-  country: string;
+interface City {
+  id: string;
+  name: string;
   state: string;
-    onChange: (field: keyof GuestCheckoutAddress, value: string | boolean) => void;
+  zone: string;
+  zone_name: string;
 }
 
-export default function CountryStateDropdown({ country, state, onChange }: Props) {
+export interface DropdownProps {
+  country?: string;
+  state?: string;
+  city?: string;
+  onChange: (field: string, value: string | undefined) => void;
+}
+
+/* ================= SHARED STORE ================= */
+
+let sharedStates: string[] = [];
+let sharedCities: City[] = [];
+
+/* ================= COUNTRY ================= */
+
+export function CountryDropdown({ country, onChange }: DropdownProps) {
+  const [show, setShow] = useState(false);
+  const [query, setQuery] = useState("");
   const [countries, setCountries] = useState<any[]>([]);
-  const [states, setStates] = useState<any[]>([]);
-  const [showCountry, setShowCountry] = useState(false);
-  const [showState, setShowState] = useState(false);
-  const [flag, setFlag] = useState<string>("");
+  const { sendHttpRequest } = useHttp();
 
-  // load all countries
   useEffect(() => {
-    const all = Country.getAllCountries();
-    setCountries(all);
-  }, []);
+    if (query.length < 2) return;
 
-  // update states when country changes
-  useEffect(() => {
-    const selected = Country.getAllCountries().find((c) => c.name === country);
-    if (selected) {
-      setFlag(getFlagUrl(selected.isoCode));
-      setStates(State.getStatesOfCountry(selected.isoCode));
-    }
-  }, [country]);
+    const timer = setTimeout(() => {
+      sendHttpRequest({
+        requestConfig: {
+          url: `/locations/countries/search/?q=${query}&operational_only=true&limit=10`,
+          method: "GET",
+          userType: "buyer",
+        },
+        successRes: (res: any) =>
+          setCountries(res.data?.results || []),
+      });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query, sendHttpRequest]);
+
+  const handleSelectCountry = (c: any) => {
+    onChange("guest_country", c.name);
+      onChange("guest_country_id", c.id)
+    onChange("guest_state", undefined);
+    onChange("guest_city", undefined);
+    onChange("shipping_location_id", undefined);
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/shippingcalculator/locations/by_country/?country_id=${c.id}&active_only=true`,
+        method: "GET",
+        userType: "buyer",
+      },
+      successRes: (res: any) => {
+        sharedCities = res.data || [];
+        sharedStates = Array.from(
+          new Set(sharedCities.map((c) => String(c.state)))
+        );
+        console.log ("shareeed stare", sharedStates)
+      },
+    });
+
+    setShow(false);
+  };
 
   return (
-    <div className="flex gap-c24 justify-between w-full">
-      {/* COUNTRY SELECT */}
-      <div className="relative w-full max-w-67.5">
-        <label className="block text-c12 font-MontserratMedium mb-2">
-          Country / Region
-        </label>
-        <div
-          onClick={() => setShowCountry((prev) => !prev)}
-          className="border border-efefef rounded-c8 p-4 flex justify-between items-center cursor-pointer bg-white relative"
-        >
-          <div className="flex items-center gap-2">
-            {flag && (
-              <Image
-                src={flag}
-                alt="Flag"
-                width={18}
-                height={18}
-                className="rounded-full"
-              />
-            )}
-            <span className="text-gray-700 text-c12 font-MontserratMedium">
-              {country || "Select Country"}
-            </span>
-          </div>
-          {showCountry ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-        </div>
+    <div className="relative w-full">
+      <label className="block text-c12 font-MontserratMedium mb-2">
+        Country / Region
+      </label>
 
-        <AnimatePresence>
-          {showCountry && (
-            <motion.ul
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 overflow-y-auto w-full shadow-lg"
-            >
-              {countries.map((c) => (
+      <div
+        onClick={() => setShow((p) => !p)}
+        className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
+      >
+        <span className="text-gray-700 text-c12 font-MontserratMedium">
+          {country || "Select Country"}
+        </span>
+        {show ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </div>
+
+      <AnimatePresence>
+        {show && (
+          <motion.ul
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 overflow-y-auto w-full shadow-lg"
+          >
+            <input
+              type="text"
+              placeholder="Search country..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full p-3 border-b text-c12 outline-none"
+            />
+
+            {countries.map((c) => (
+              <li
+                key={c.id}
+                onClick={() => handleSelectCountry(c)}
+                className="p-3 hover:bg-blue-50 cursor-pointer text-c12 font-MontserratMedium"
+              >
+                {c.name}
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ================= STATE ================= */
+
+export function StateDropdown({ state, onChange }: DropdownProps) {
+  const [show, setShow] = useState(false);
+
+  const handleSelect = (s: string) => {
+    onChange("guest_state", s);
+    onChange("guest_city", undefined);
+    onChange("guest_location_id", undefined);
+    setShow(false);
+  };
+
+  return (
+    <div className="relative w-full">
+      <label className="block text-c12 font-MontserratMedium mb-2">
+        State / Province
+      </label>
+
+      <div
+        onClick={() => setShow((p) => !p)}
+        className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
+      >
+        <span className="text-gray-700 text-c12 font-MontserratMedium">
+          {state || "Select State"}
+        </span>
+        {show ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </div>
+
+      <AnimatePresence>
+        {show && (
+          <motion.ul
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 overflow-y-auto w-full shadow-lg"
+          >
+            {sharedStates.length ? (
+              sharedStates.map((s) => (
                 <li
-                  key={c.isoCode}
-                  onClick={() => {
-                    onChange("guest_country", c.name);
-                    setShowCountry(false);
-                  }}
+                  key={s}
+                  onClick={() => handleSelect(s)}
+                  className="p-3 hover:bg-blue-50 cursor-pointer text-c12 font-MontserratMedium"
+                >
+                  {s}
+                </li>
+              ))
+            ) : (
+              <li className="p-3 text-gray-400 text-c12">
+                Select a country first
+              </li>
+            )}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ================= CITY ================= */
+
+export function CityDropdown({ city, onChange }: DropdownProps) {
+  const [show, setShow] = useState(false);
+
+  const handleSelect = (c: City) => {
+    onChange("guest_city", c.name);
+    onChange("guest_location_id", c.id);
+    setShow(false);
+  };
+
+
+
+  return (
+    <div className="relative w-full md:w-1/2">
+      <label className="block text-c12 font-MontserratMedium mb-2">
+        City
+      </label>
+
+      <div
+        onClick={() => setShow((p) => !p)}
+        className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
+      >
+        <span className="text-gray-700 text-c12 font-MontserratMedium">
+          {city || "Select City"}
+        </span>
+        {show ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </div>
+
+      <AnimatePresence>
+        {show && (
+          <motion.ul
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 overflow-y-auto w-full shadow-lg"
+          >
+            {sharedCities.length ? (
+              sharedCities.map((c) => (
+                <li
+                  key={c.id}
+                  onClick={() => handleSelect(c)}
                   className="p-3 hover:bg-blue-50 cursor-pointer text-c12 font-MontserratMedium"
                 >
                   {c.name}
                 </li>
-              ))}
-            </motion.ul>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* STATE SELECT */}
-      <div className="relative w-1/2">
-        <label className="block text-c12 font-MontserratMedium mb-2">
-          State / Province
-        </label>
-        <div
-          onClick={() => setShowState((prev) => !prev)}
-          className="border border-efefef rounded-c8 p-4 flex justify-between items-center cursor-pointer bg-white relative"
-        >
-          <span className="text-gray-700 text-c12 font-MontserratMedium">
-            {state || "Select State"}
-          </span>
-          {showState ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-        </div>
-
-        <AnimatePresence>
-          {showState && (
-            <motion.ul
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 overflow-y-auto w-full shadow-lg"
-            >
-              {states.length > 0 ? (
-                states.map((s) => (
-                  <li
-                    key={s.isoCode}
-                    onClick={() => {
-                      onChange("guest_state", s.name);
-                      setShowState(false);
-                    }}
-                    className="p-3 hover:bg-blue-50 cursor-pointer text-c12 font-MontserratMedium"
-                  >
-                    {s.name}
-                  </li>
-                ))
-              ) : (
-                <li className="p-3 text-gray-400 text-c12">No states found</li>
-              )}
-            </motion.ul>
-          )}
-        </AnimatePresence>
-      </div>
+              ))
+            ) : (
+              <li className="p-3 text-gray-400 text-c12">
+                Select a state first
+              </li>
+            )}
+          </motion.ul>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

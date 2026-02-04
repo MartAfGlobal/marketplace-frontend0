@@ -89,38 +89,46 @@ export type Passwords = {
 };
 
 export interface RegisterParams {
-  email: string;
+  email?: string;
   password: string;
   confirm_password: string;
   is_manufacturer?: boolean;
   phone?: string; // ✅ optional
 }
+export interface VerifyParams {
+  email: string;
+}
 
 export interface BusinessRegisterParams {
   company_name?: string;
-  buisness_type?: string;
-
-  business_category?: string;
-  business_description?: string;
-  company_city?: string;
-  business_registration_location?: string;
-  company_country?: string;
-  company_state?: string;
-  phone2?: string;
-  postal_code?: string;
-  is_registered_business: boolean;
+  buisness_type? : string
+  business_industry?: string;
+  business_registration_number?: string;
+  CAC_No?: string;
+  shipping_zone?: string;
+  CAC_No_file?: File | null;
+  tax_identification_number?: string;
+  tax_identification_file?: File | null;
+  certificate_of_registration?: File | null;
+  vat_number?: string;
+  is_registered_business?: boolean;
 }
-export interface IndividualRegisterParams {
-  first_name: string;
-  last_name: string;
-  address: string;
-  residence_country: string;
-  nationality: string;
-  dob: string;
-  phone2?: string;
-  postal_code: string;
-  identification_verifications: IdentificationVerification[];
+export type IdEntry = {
+  means_of_id: string;
+  id_number: string;
+  id_front_image?: File | null;
+  id_back_image?: File | null;
+};
 
+export interface IndividualRegisterParams {
+  fullname: string;
+
+  vat_number: string;
+  tax_identification_number: string;
+
+  tax_identification_file?: File | null;
+
+  ids: IdEntry[];
   is_registered_business: boolean;
 }
 
@@ -166,6 +174,7 @@ export interface ProfileImageProps {
 
 export interface AddressModalProps {
   id?: string | null;
+  isEdit: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSave?: (address: Address) => void;
@@ -175,7 +184,7 @@ export interface CheckOutModalProps {
   isOpen?: boolean;
   onClose?: () => void;
   selectedItems?: any[];
-
+  isEditing?: boolean;
   currentAddress?: Partial<GuestCheckoutAddress>; // optional for pre-filling form
 }
 
@@ -455,31 +464,279 @@ export interface OrderProduct {
   images: [];
 }
 export interface OrderItem {
+  can_cancel?: boolean;
   id: string;
-  status: string;
-  order_no: string | null;
-  manufacturer?: string | null;
-  estimated_delivery_date: string | null;
-  tracking_number: string | null;
-  items: [
-    {
-      id: string;
-      product: Product;
-      total_price: string;
-      quantity: number;
-      price_at_purchase: number;
-      total_price: string;
-      variant?: {
-        id: string;
-        sku: string;
-        size?: string | null;
-        color?: string | null;
-        stock?: number;
-      } | null;
-    }
-  ];
+  items_count: number;
+  checkout: string;
+  order_no: string;
+  created_at: string;
+  updated_at: string;
+  status: string; // "To Ship"
+  payment_status: string; // "Paid"
+  subtotal: number;
+  tax: number;
 
+  shipping_cost: number;
+  total_price: number;
+
+  discount_amount: number;
+  escrow: string | null;
+  coupon: string | null;
+
+  shipping_info: ShippingInfo;
+  shipping_address: string;
+
+  tracking_number: string | null;
+  estimated_delivery_date: string | null;
+  return_reason: string | null;
+
+  manufacturer: string | null;
+  user: string;
+
+  order_items: OrderLineItem[];
+}
+
+export interface ShippingAddress {
+  first_name: string;
+  last_name: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string;
+}
+export interface OrderShippingAddress {
+  first_name: string;
+  last_name: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string;
+}
+export interface BuyerDispute {
+  id: string;
+  dispute_number: string;
+
+  product_image: string;
+
+  dispute_type: string;
+  dispute_type_display: string;
+
+  status: string;
+  status_display: string;
+
+  buyer_name: string;
+  seller_name: string;
+
+  order_number: string;
+  order_item_id: string;
+
+  product_id: string;
+  product_name: string;
+
+  variant_id: string;
+  variant_name: string;
+
+  return_method: string;
+  return_method_display: string | null;
+
+  cancellation_reason_title: string;
+
+  requested_refund_amount: number;
+  approved_refund_amount: number | null;
+
+  created_at: string; // ISO date
+  resolved_at: string | null;
+}
+
+
+export interface DisputePayload {
+  id: string;
+  dispute_number: string;
+  dispute_type: "RETURN" | string;
+  dispute_type_display: string;
+
+  status: string;
+  status_display: string;
+  new_status: string;
+  old_status: string;
+
+  is_active: boolean;
+  is_pending: boolean;
+
+  created_at: string;
+  updated_at: string;
+
+  buyer_name: string;
+  buyer_email: string;
+  seller_name: string;
+
+  order_number: string;
+  order_item_id: string;
+
+  product_id: string;
+  product_name: string;
+  product_image: string;
+
+  variant_id: string;
+  variant_name: string;
+
+  item_price: number;
+  item_quantity: number;
+  affected_quantity: number;
+
+  requested_refund_amount: number;
+  approved_refund_amount: number | null;
+
+  resolution_type: string | null;
+  resolution_type_display: string | null;
+
+  return_method: "DROP_OFF" | "PICK_UP" | string;
+  return_method_display: string;
+
+  return_tracking_number: string | null;
+  return_received_at_hub: string | null;
+
+  inspection_passed: boolean | null;
+  inspection_notes: string;
+
+  admin_notes: string;
+  additional_info: string;
+
+  can_be_cancelled_by_buyer: boolean;
+  can_raise_dispute: boolean;
+  can_be_resolved: boolean;
+
+  cancellation_reason_title: string;
+  cancellation_reason_description: string;
+  rejection_reason: string | null;
+
+  assigned_to_name: string | null;
+  resolved_by_name: string | null;
+  resolved_at: string | null;
+  reviewed_at: string | null;
+
+  evidence: EvidenceItem[];
+  timeline: TimelineItem[];
+}
+export interface EvidenceItem {
+  id: string;
+  file: string;
+  file_url: string;
+  file_type: "IMAGE" | "VIDEO" | string;
+  caption: string;
+  uploaded_at: string;
+}
+
+
+export interface TimelineItem {
+  id: string;
+  action: string;
+  actor_name: string;
+  actor_type: "BUYER" | "SELLER" | "ADMIN" | string;
+  created_at: string;
+
+  notes: string;
+  metadata: {
+    cancellation_reason_code?: string;
+    return_method?: string;
+  };
+}
+
+
+export interface Items {
+  id: string;
+  product: Product;
   total_price: string;
+  quantity: number;
+  price_at_purchase: number;
+  total_price: string;
+  variation?: {
+    id: string;
+    age_group: string;
+    base_price: number;
+    final_price: number;
+    main_image: {
+      image_urls: {
+        medium: string;
+        original: string;
+        thumbnail: string;
+      };
+    };
+    gender: string;
+    sku: string;
+    size?: string | null;
+
+    name: string | null;
+    stock?: number;
+  } | null;
+}
+
+export interface OrderLineItem {
+  id: string;
+
+  has_dispute: boolean;
+  product: string;
+  product_name: string;
+  product_image: string;
+  product_sku: string;
+  product_slug: string;
+  category_name: string;
+  category_slug: string;
+
+  quantity: number;
+  fulfilled_quantity: number;
+
+  price_at_purchase: number;
+  total_price: string;
+
+  can_cancel?: boolean;
+  cancellation_reason: string | null;
+
+  refundable_amount: string;
+  shipping_share: number;
+
+  status: string;
+  seller_order_status: string;
+
+  manufacturer_id: string;
+  manufacturer_name: string;
+  manufacturer_email: string;
+
+  variation: string | null;
+  variation_name: string;
+  variation_sku: string;
+
+  attributes: {
+    [key: string]: {
+      id?: string;
+      name?: string;
+      value?: string;
+    };
+  };
+
+  weight_kg: number;
+}
+
+export interface Variation {
+  id: string;
+  name: string;
+  sku: string;
+  age_group: string;
+  gender: string;
+  base_price: number;
+  final_price: number;
+  stock?: number;
+  main_image?: {
+    image_urls: {
+      original: string;
+      medium: string;
+      thumbnail: string;
+    };
+  };
 }
 
 export interface GuestShippingAddress {
@@ -557,6 +814,9 @@ export interface AuthenticationLayoutProps {
   title: string;
   description: string;
   children: ReactNode;
+  userType: "seller" | "buyer";
+  stage?: 1 | 2 | 3;
+  className?: string;
 }
 
 export type TokenSliceParams = {
@@ -620,6 +880,8 @@ interface FooterComponent {
   children: ReactNode;
 }
 interface ConfirmModalProps {
+  success?: boolean;
+  loading?: boolean;
   isOpen: boolean;
   onClose: () => void;
   title: string;
@@ -631,8 +893,9 @@ interface ConfirmModalProps {
   className?: string; // for extra styling
 }
 
-export interface OrderDetailsPageProps {
-  params: Promise<{ id: string }>;
+interface OrderDetailsPageProps {
+  params: { id: string };
+  searchParams: { mode?: string };
 }
 
 // types/global.ts (or wherever QuantitySelectorProps is defined)
@@ -720,8 +983,8 @@ export type BuyerItem = {
 };
 
 export type Address = {
-  id: number;
-  full_name?: string
+  id: string;
+  country_name?: string;
   country: string;
   first_name: string;
   last_name: string;
@@ -730,10 +993,11 @@ export type Address = {
   city: string;
   postal_code: string;
   address: string;
+  shipping_location: string;
   is_default: boolean;
 };
 export type OrderAddress = {
-  full_name?: string
+  fullname?: string;
   id: string | null;
   country: string;
   first_name: string;
@@ -746,18 +1010,21 @@ export type OrderAddress = {
   is_default: boolean;
 };
 export type GuestCheckoutAddress = {
-  first_name: string;
-  last_name: string;
+  shipping_location_id?: string;
+  guest_first_name: string;
+  guest_last_name: string;
   guest_email: string;
   guest_phone: string;
-  guest_address_line1: string;
-  guest_address_line2: string;
-  guest_city: string;
-  guest_state: string;
-  guest_postal_code: string;
-  guest_country: string;
-  shipping_cost: number;
-  discount_amount: number;
+  guest_shipping_address: {
+    line1: string;
+    line2: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+  };
+
+  discount_amount: string;
 };
 
 export type BuyerSliceParams = {
@@ -973,4 +1240,50 @@ export interface OrderData {
 
 export interface OrderState {
   orderData: OrderData | null;
+}
+export interface ShippingInfo {
+  fullname: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string;
+}
+
+export interface SuccessOrderItem {
+  product_id: string;
+  name: string;
+  slug: string;
+  image: string;
+  manufacturer: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
+export interface SuccessOrder {
+  order_id: string;
+  status: string; // "To Ship"
+  payment_status: string; // "Paid"
+  created_at: string;
+
+  items_count: number;
+  items: SuccessOrderItem[];
+
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+
+  shipping_info: ShippingInfo;
+}
+
+export interface SuccessOrderData {
+  checkout_id: string;
+  order: SuccessOrder;
+}
+
+export interface SuccessOrderState {
+  SuccessOrderData: SuccessOrderData | null;
 }

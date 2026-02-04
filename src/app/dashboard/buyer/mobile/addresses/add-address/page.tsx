@@ -21,6 +21,11 @@ import { Address } from "@/types/global";
 import { RootState } from "@/store";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  CityDropdown,
+  CountryDropdown,
+  StateDropdown,
+} from "@/components/ui/forms/CountryStateDropdown";
 
 // Helper to close dropdowns on outside click
 function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
@@ -46,7 +51,7 @@ export default function AddNewAddreess() {
   const token = useSelector((state: RootState) => state.token.token);
 
   const [formData, setFormData] = useState<Address>({
-    id: 0,
+    id: "",
     country: "",
     first_name: "",
     last_name: "",
@@ -55,36 +60,35 @@ export default function AddNewAddreess() {
     city: "",
     postal_code: "",
     address: "",
+    shipping_location: "",
     is_default: false,
   });
 
-  const [countries, setCountries] = useState(
-    Country.getAllCountries()
-  );
-  const [selectedCountry, setSelectedCountry] =
-    useState<(typeof countries)[number] | null>(null);
+  const [countries, setCountries] = useState(Country.getAllCountries());
+  const [selectedCountry, setSelectedCountry] = useState<
+    (typeof countries)[number] | null
+  >(null);
+  const selectedCountryIdRef = useRef<string | null>(null);
 
-  const [states, setStates] = useState(
-    State.getStatesOfCountry("NG")
-  );
-  const [selectedState, setSelectedState] =
-    useState<(typeof states)[number] | null>(null);
+  const [states, setStates] = useState(State.getStatesOfCountry("NG"));
+  const [selectedState, setSelectedState] = useState<
+    (typeof states)[number] | null
+  >(null);
 
   const [flag, setFlag] = useState<string>(NigerianFlag.src);
   const menuVariants = {
-  hidden: { opacity: 0, y: -10 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.2 },
-  },
-  exit: {
-    opacity: 0,
-    y: -10,
-    transition: { duration: 0.15 },
-  },
-};
-
+    hidden: { opacity: 0, y: -10 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.2 },
+    },
+    exit: {
+      opacity: 0,
+      y: -10,
+      transition: { duration: 0.15 },
+    },
+  };
 
   const [countryOpen, setCountryOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
@@ -92,35 +96,33 @@ export default function AddNewAddreess() {
   const [isDefault, setIsDefault] = useState<boolean>(false);
 
   const countryRef = useClickOutside<HTMLDivElement>(() =>
-    setCountryOpen(false)
+    setCountryOpen(false),
   );
   const stateRef = useClickOutside<HTMLDivElement>(() => setStateOpen(false));
 
   const { loading, sendHttpRequest } = useHttp();
 
- useEffect(() => {
-  const allCountries = Country.getAllCountries();
+  useEffect(() => {
+    const allCountries = Country.getAllCountries();
 
-  // Find Nigeria
-  const nigeria = allCountries.find(
-    (c) => c.isoCode === "NG"
-  );
+    // Find Nigeria
+    const nigeria = allCountries.find((c) => c.isoCode === "NG");
 
-  // Put Nigeria first, then the rest
-  const sortedCountries = nigeria
-    ? [nigeria, ...allCountries.filter((c) => c.isoCode !== "NG")]
-    : allCountries;
+    // Put Nigeria first, then the rest
+    const sortedCountries = nigeria
+      ? [nigeria, ...allCountries.filter((c) => c.isoCode !== "NG")]
+      : allCountries;
 
-  setCountries(sortedCountries);
-  setSelectedCountry(nigeria || sortedCountries[0]);
-  setFlag(getFlagUrl((nigeria || sortedCountries[0]).isoCode));
+    setCountries(sortedCountries);
+    setSelectedCountry(nigeria || sortedCountries[0]);
+    setFlag(getFlagUrl((nigeria || sortedCountries[0]).isoCode));
 
-  setFormData((prev) => ({
-    ...prev,
-    country: (nigeria || sortedCountries[0]).name,
-    phone: "+" + (nigeria || sortedCountries[0]).phonecode + " ",
-  }));
-}, []);
+    setFormData((prev) => ({
+      ...prev,
+      country: (nigeria || sortedCountries[0]).name,
+      phone: "+" + (nigeria || sortedCountries[0]).phonecode + " ",
+    }));
+  }, []);
 
   useEffect(() => {
     if (!selectedCountry) return;
@@ -133,32 +135,47 @@ export default function AddNewAddreess() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleCountrySelect = (c: typeof selectedCountry) => {
-    if (!c) return;
-    setSelectedCountry(c);
-    setFlag(getFlagUrl(c.isoCode));
-    setSelectedState(null);
-    setCountryOpen(false);
+  const handleDropdownChange = (field: string, value: string | undefined) => {
+    if (field === "guest_country_id") {
+      selectedCountryIdRef.current = value ?? null;
+      return;
+    }
 
-    setFormData((prev) => ({
-      ...prev,
-      country: c.name,
-      phone: "+" + c.phonecode + " ",
-      state: "",
-      city: "",
-      postal_code: "",
-    }));
-  };
+    setFormData((prev) => {
+      switch (field) {
+        case "guest_country":
+          return {
+            ...prev,
+            country: value ?? "",
+            state: "",
+            city: "",
+            shipping_location: "",
+          };
 
-  const handleStateSelect = (s: typeof selectedState) => {
-    if (!s) return;
-    setSelectedState(s);
-    setStateOpen(false);
+        case "guest_state":
+          return {
+            ...prev,
+            state: value ?? "",
+            city: "",
+            shipping_location: "",
+          };
 
-    setFormData((prev) => ({
-      ...prev,
-      state: s.name,
-    }));
+        case "guest_city":
+          return {
+            ...prev,
+            city: value ?? "",
+          };
+
+        case "guest_location_id":
+          return {
+            ...prev,
+            shipping_location: value ?? "",
+          };
+
+        default:
+          return prev;
+      }
+    });
   };
 
   useEffect(() => {
@@ -168,33 +185,36 @@ export default function AddNewAddreess() {
     }
   }, [token, router]);
 
+  const SaveSuccess = (res: any) => {
+    console.log("address INFO:", res);
+    dispatch(buyerActions.addBuyerAddress(res.data));
+    return;
+  };
+
   const handleSave = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!token) return;
 
-    const { id, ...bodyWithoutId } = {
-  ...formData,
-  phone: formData.phone.replace(/\s+/g, " ").trim(),
-};
+    const { id, ...bodyWithoutId } = formData;
 
+    const payload = {
+      ...bodyWithoutId,
+      country: selectedCountryIdRef.current, // ✅ send ID instead of name
+    };
 
+    console.log("Token in handleSave:", bodyWithoutId);
     sendHttpRequest({
       requestConfig: {
         url: "shipping/shipping-addresses/",
         method: "POST",
-        body: bodyWithoutId,
-        token,
+        body: payload,
+        token: token ?? undefined,
         isAuth: true,
-        successMessage: "Address added successfully!",
         userType: "buyer",
+        successMessage: "address added successful!",
       },
-      successRes: (res) => {
-        dispatch(buyerActions.addBuyerAddress(res.data));
-        router.back();
-      },
+      successRes: SaveSuccess,
     });
   };
-
 
   return (
     <div>
@@ -220,60 +240,10 @@ export default function AddNewAddreess() {
       <div className="px-6 pt-7 pb-30">
         <form onSubmit={handleSave} className="space-y-6">
           {/* Country dropdown */}
-          <div className="space-y-4">
-            <Label className="text-sm pb-4 font-MontserratSemiBold">
-              Country/region
-            </Label>
-            <div className="relative pt-4 w-full" ref={countryRef}>
-              <button
-                type="button"
-                onClick={() => setCountryOpen((p) => !p)}
-                className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
-              >
-                <div className="flex items-center gap-2">
-                  <Image src={flag} alt="flag" width={16} height={12} />
-                  <span>{selectedCountry?.name || "Select country"}</span>
-                </div>
-                <Image
-                  src={CaretDown}
-                  alt="select country"
-                  width={11}
-                  height={6}
-                />
-              </button>
-
-              <AnimatePresence>
-                {countryOpen && (
-                  <motion.div
-                    variants={menuVariants}
-                    initial="hidden"
-                    animate="show"
-                    exit="exit"
-                    className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
-                  >
-                    {countries.map((c) => (
-                      <div
-                        key={c.isoCode}
-                        onClick={() => handleCountrySelect(c)}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
-                      >
-                        <Image
-                          src={getFlagUrl(c.isoCode)}
-                          alt={c.name}
-                          width={16}
-                          height={12}
-                        />
-                        <span>{c.name}</span>
-                        <span className="ml-auto text-xs opacity-60">
-                          +{c.phonecode}
-                        </span>
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
+          <CountryDropdown
+            country={formData.country}
+            onChange={handleDropdownChange}
+          />
 
           {/* Contact info */}
           <div>
@@ -342,63 +312,18 @@ export default function AddNewAddreess() {
               />
             </div>
 
-            {/* State dropdown */}
-            <div className="space-y-4">
-              <Label className="text-sm font-MontserratSemiBold">
-                State/province
-              </Label>
-              <div className="relative pt-2 w-full" ref={stateRef}>
-                <button
-                  type="button"
-                  onClick={() => setStateOpen((p) => !p)}
-                  className="flex w-full items-center justify-between border border-gray-300 rounded-lg px-3 h-10 bg-white"
-                >
-                  <span>{selectedState?.name || "Select state/province"}</span>
-                  <Image
-                    src={CaretDown}
-                    alt="select state"
-                    width={11}
-                    height={6}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {stateOpen && (
-                    <motion.div
-                      variants={menuVariants}
-                      initial="hidden"
-                      animate="show"
-                      exit="exit"
-                      className="absolute left-0 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg z-20 max-h-60 overflow-auto"
-                    >
-                      {states.map((s) => (
-                        <div
-                          key={s.isoCode}
-                          onClick={() => handleStateSelect(s)}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                        >
-                          {s.name}
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
+            <StateDropdown
+              state={formData.state}
+              onChange={handleDropdownChange}
+            />
 
             {/* City dropdown */}
-            <div className="space-y-4 pt-3">
-            <Label className="text-sm font-MontserratSemiBold">
-              City
-            </Label>
-            <input
-              type="text"
-              className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
-              value={formData.city}
-              onChange={(e) => handleChange("city", e.target.value)}
-              placeholder="Enter city"
-            />
-          </div>
+            <div className="space-y-4 pt-3 mb-1">
+              <CityDropdown
+                city={formData.city}
+                onChange={handleDropdownChange}
+              />
+            </div>
 
             <div className="pb-3">
               <Label className="text-sm font-MontserratSemiBold">
@@ -442,7 +367,7 @@ export default function AddNewAddreess() {
           {/* Submit button */}
           <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
             <Button type="submit" className="border-0">
-              {loading ? <LoadingSpinner/> : "Save address"}
+              {loading ? <LoadingSpinner /> : "Save address"}
             </Button>
           </div>
         </form>

@@ -1,41 +1,22 @@
 "use client";
 
-
-
 import PaymentSuccess from "@/components/ui/checkouts/success";
 import { Button } from "@/components/ui/Button/Button";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import { motion} from "framer-motion";
+import { motion } from "framer-motion";
 
-
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-
 
 export default function MobilePaymentSuccessfulPage() {
   const router = useRouter();
 
-
-
-
-  const cartItems = useSelector((state: RootState) => state.cart.items);
-
-
-
-
-
-  const totalPrice = cartItems.reduce((acc, item) => {
-    const price = Number(String(item.price).replace(/[, ]/g, ""));  // removes commas & spaces
-    const quantity = item.quantity ?? 1; // default to 1 if undefined
-    return acc + (isNaN(price) ? 0 : price) * quantity;
-  }, 0);
-
-  console.log(totalPrice);
-
-
+  const orderDatas = useSelector(
+    (state: RootState) => state.orderSlice.SuccessOrderData
+  );
 
   return (
     <div className="w-full pt-11 px-6 ">
@@ -43,7 +24,12 @@ export default function MobilePaymentSuccessfulPage() {
         <PaymentSuccess />
       </div>
       <div className="flex gap-1 w-full mt-c32 text-c12 font-MontserratSemiBold">
-        <Button onClick={()=> router.push("/")} className="bg-transparent border border-ff715b text-ff715b">Go home</Button>
+        <Button
+          onClick={() => router.push("/")}
+          className="bg-transparent border border-ff715b text-ff715b"
+        >
+          Go home
+        </Button>
         <Button>Check my order</Button>
       </div>
       <div className="relative md: md:h-full ">
@@ -51,7 +37,7 @@ export default function MobilePaymentSuccessfulPage() {
         <div className="w-full  mt-7 pb-4 md:pb-0">
           <div className="flex justify-between items-center mb-c24">
             <p className="text-c12 font-MontserratSemiBold ">
-              Orders list ({cartItems.length})
+              Orders list ({orderDatas?.order.items.length})
             </p>
           </div>
 
@@ -75,9 +61,9 @@ export default function MobilePaymentSuccessfulPage() {
                     }}
                     className="space-y-c24 w-full"
                   >
-                    {cartItems.map((item) => (
+                    {orderDatas?.order.items.map((item) => (
                       <motion.div
-                        key={item.variation_id}
+                        key={item.product_id}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -87,8 +73,8 @@ export default function MobilePaymentSuccessfulPage() {
                           <div className="flex gap-4 w-full  items-center md:items-start">
                             <div className="flex gap-3  items-center w-full max-w-fit">
                               <Image
-                                src={item.product_image || "profile image"}
-                                alt={item.product_name || "name"}
+                                src={item.image || "profile image"}
+                                alt={item.name || "name"}
                                 width={100}
                                 height={100}
                                 className="w-16 h-16 md:w-25 md:h-25"
@@ -96,14 +82,14 @@ export default function MobilePaymentSuccessfulPage() {
                             </div>
                             <div className="w-full md:max-w-143.75">
                               <p className="font-MontserratSemiBold text-c12 md:text-sm md:leading-c24 pb-1 md:pb-3 text-000000">
-                                {item.product_name}
+                                {item.name}
                               </p>
                               <p className="font-MontserratNormal text-c12 pb-3">
-                                Two piece shop
+                                {item.manufacturer}
                               </p>
-                              <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
+                              <div className="w-fit p-2 justify-center rounded-c12 bg-black/3 flex items-center">
                                 <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                                  {item.quantity}PC, white
+                                  {item.quantity}PC, {item.name}
                                 </span>
                               </div>
                             </div>

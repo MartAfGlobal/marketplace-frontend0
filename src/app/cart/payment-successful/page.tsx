@@ -30,7 +30,7 @@ export default function CartPage() {
   const cartItems = useSelector((state: RootState) => state.cart.items);
   
     const {sendHttpRequest: getOrderRequest } = useHttp();
-    const orderData = useSelector((state: RootState) => state.orderSlice.orderData);
+    const orderDatas = useSelector((state: RootState) => state.orderSlice.SuccessOrderData);
 
   useEffect(() => {
     dispatch(removeCheckedOutItems());
@@ -55,7 +55,7 @@ useEffect(() => {
         
       },
       successRes: (orderData) => {
-        console.log("Order Datasss:", orderData.data.orders);
+        console.log("Order Datasss:", orderData.data.order);
 
         console.log("orderfffff", orderData)
        dispatch(setOrderData(orderData.data));
@@ -66,7 +66,7 @@ useEffect(() => {
   }
 }, []);
 
-
+ console.log("orde", orderDatas)
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} // Start slightly down and transparent
