@@ -75,7 +75,7 @@ export const useFetchOrders = (id?: string) => {
     });
   };
   const fetchDisputerDetails = () => {
-    console.log("dispute details fetchib=ng");
+   
     if (!token) return;
 
     sendHttpRequest({
@@ -92,9 +92,31 @@ export const useFetchOrders = (id?: string) => {
       },
     });
   };
+  const fetchLogs = () => {
+    
+   
+    if (!token) return;
+
+    console.log ("fetching notification logs......")
+
+    sendHttpRequest({
+
+      requestConfig: {
+        url: "notifications/logs/?page=1076",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (responseData: any) => {
+        console.log("dispute logs", responseData.data);
+        dispatch(fetchDisputeDetails(responseData.data));
+      },
+    });
+  };
 
   const fetchAddress = () => {
-    console.log("dispute details fetchib=ng");
+   
     if (!token) return;
 
     sendHttpRequest({
@@ -127,10 +149,12 @@ export const useFetchOrders = (id?: string) => {
     });
   };
 
+
   return {
     fetchOrders,
     fetchAddress,
     fetchDisputeList,
+    fetchLogs,
     fetchOrderDetails,
     fetchDisputerDetails,
     loading,

@@ -39,14 +39,13 @@ export default function FooterPage() {
 
         <FooterCard title="Selling on MartAf">
           <>
-            <Link href="/">Become a Seller</Link>
-            <Link href="/">Login to Seller Panel</Link>
+            <Link href="/auth/seller/sign-up">Become a Seller</Link>
+            <Link href="/auth/seller/login">Login to Seller Panel</Link>
             <Link href="/">MartAf Seller Policy</Link>
           </>
         </FooterCard>
         <FooterCard title="Contacts">
           <>
-            <Link href="/">Contacts</Link>
             <Link href="/">Address :</Link>
             <Link href="/">
               No 333 you and I street, Ikeja, Lagos State, Nigeria
@@ -138,7 +137,10 @@ export default function FooterPage() {
                 id="remember"
                 className="appearance-none w-5 h-5 rounded-c4 border border-white bg-transparent checked:bg-transparent checked:border-white checked:before:content-['✔'] checked:before:text-white checked:before:block checked:before:text-xs checked:before:leading-none flex items-center justify-center"
               />
-              <label htmlFor="remember" className="font-MontserratSemiBold text-sm text-white">
+              <label
+                htmlFor="remember"
+                className="font-MontserratSemiBold text-sm text-white"
+              >
                 i agree with privacy terms and policy
               </label>
             </div>

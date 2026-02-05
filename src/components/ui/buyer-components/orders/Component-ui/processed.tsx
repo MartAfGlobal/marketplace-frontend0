@@ -165,7 +165,7 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                           <>
                           <Link
                             href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
-                            className="flex flex-col md:flex-row gap-4 items-start  "
+                            className="flex flex-col md:flex-row gap-4 items-start"
                           >
                             {item.order_items?.map((prod) => (
                               <div

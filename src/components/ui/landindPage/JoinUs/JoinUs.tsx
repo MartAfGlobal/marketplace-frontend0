@@ -1,8 +1,11 @@
 import Image from "next/image";
 import JoinUs from "@/assets/images/JoinImage.svg";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function JoinUsPage() {
+ 
+ const router = useRouter()
   return (
     <div className="flex flex-col items-center lg:flex-row mt-[112px] w-ful">
       {/* Left: Image Section */}
@@ -32,7 +35,7 @@ export default function JoinUsPage() {
             you’re a buyer or a seller, we offer the tools and support you need
             to succeed.
           </p>
-          <button className="w-c192  bg-ff715b h-c48 rounded-c8 font-MontserratSemiBold text-c12 text-ffffff mt-c32">
+          <button onClick={()=>router.push("/auth/seller/sign-up")} className="w-c192  bg-ff715b h-c48 rounded-c8 font-MontserratSemiBold text-c12 text-ffffff mt-c32">
             Register now
           </button>
         </div>
@@ -57,7 +60,7 @@ export default function JoinUsPage() {
             you’re a buyer or a seller, we offer the tools and support you need
             to succeed.
           </p>
-          <button className="w-c192 border border-ffffff h-c44 rounded-c8 font-MontserratSemiBold text-sm text-ffffff mt-c32">
+          <button onClick={()=>router.push("/auth/seller/sign-up")} className="w-c192 border border-ffffff h-c44 rounded-c8 font-MontserratSemiBold text-sm text-ffffff mt-c32">
             Register now
           </button>
         </div>

@@ -23,7 +23,7 @@ export default function NotificationButton({
 
   return (
     <div className="w-fit h-fit relative">
-      <Link href="/cart">
+      <Link href="">
         <button
           style={{ width: size, height: size }}
           className="flex items-center justify-center"
@@ -37,12 +37,12 @@ export default function NotificationButton({
           />
         </button>
 
-        {/* ✅ Only show badge if count > 0 */}
+        {/* ✅ Only show badge if count > 0
         {showBadge && cartCount > 0 && (
           <span className="bg-[#CA0202] text-white absolute -top-2 -right-2 flex items-center justify-center w-4 h-4 rounded-full font-MontserratSemiBold text-[8px]">
             {cartCount}
           </span>
-        )}
+        )} */}
       </Link>
     </div>
   );

@@ -15,7 +15,7 @@ import OtherSearchInput from "../../others/Search";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import DropdownModal from "../../mobile/modal/header-drop-modal";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CartButton from "../../cart/cartButton";
 import Gear from "@/assets/icons/Gear.svg";
 import LogOut from "@/assets/icons/ArrowBendDownRight.svg";
@@ -26,6 +26,8 @@ import { useLogout } from "@/utils/logout";
 import AuthModal from "../../mobile/auth/sign-up";
 import { AuthStep } from "@/types/global";
 import NotificationButton from "../../Button/notificationButton";
+import { useFetchOrders } from "@/helpers/fetchOrders";
+import { useHttp } from "@/hooks/use-http";
 
 export default function Header() {
   const [showModal, setShowModal] = useState(false);
@@ -34,11 +36,14 @@ export default function Header() {
   const searchParams = useSearchParams();
   const showLogin = searchParams.get("showLogin");
   const resetToken = searchParams.get("resetToken");
+  // const  {fetchLogs} = useFetchOrders()
 
   const token = useSelector((state: RootState) => state.token?.token);
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
+   const { sendHttpRequest, loading } = useHttp();
+
   // const [openDropdown, setOpenDropdown] = useState(false);
 
   const openDropdown = useSelector(
@@ -58,6 +63,30 @@ export default function Header() {
       setShowModal(true);
     }
   }, [showLogin, resetToken]);
+
+ const fetchLogs = useCallback(() => {
+  console.log("fetching notification logs......");
+
+  if (!token) return;
+
+  sendHttpRequest({
+    requestConfig: {
+      url: "notifications/logs/?page=1076",
+      method: "GET",
+      token,
+      isAuth: true,
+      userType: "buyer",
+    },
+    successRes: (responseData: any) => {
+      console.log("dispute logs", responseData.data);
+    },
+  });
+}, [token, sendHttpRequest]);
+
+useEffect(() => {
+  fetchLogs();
+}, [fetchLogs]);
+
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const [mounted, setMounted] = useState(false);

@@ -33,6 +33,8 @@ export default function ProductListPage() {
     });
   };
 
+  
+
   const fetchProducts = async (updateCache = true) => {
     setIsLoading(true);
 
