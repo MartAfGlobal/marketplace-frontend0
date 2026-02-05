@@ -109,7 +109,7 @@ export default function CategoriesGrid() {
   return (
     <div
       id="scrollableDiv"
-      className="flex flex-col gap-2 bg-dual-gradient py-c32 w-full max-w-c281 max-h-134 overflow-y-auto overflow-x-hidden custom-scroll"
+      className="flex flex-col gap-2 bg-dual-gradient py-c32 w-full max-w-full max-h-134 overflow-y-auto overflow-x-hidden custom-scroll"
     >
       <h1 className="font-MontserratBold text-c20 pb-c24 text-000000 pl-c32">
         Categories

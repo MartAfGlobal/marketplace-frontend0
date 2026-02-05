@@ -285,12 +285,12 @@ export default function NotificationSettings() {
 
  if (loading) {
   return (
-    <div className="w-full animate-pulse">
+    <div className="w-full animate-pulse ">
       <h2 className="text-base hidden md:flex leading-6 font-MontserratSemiBold text-black mb-6">
         Notification Settings
       </h2>
 
-      <div className="flex flex-col md:flex-row gap-8 md:gap-27">
+      <div className="flex flex-col md:flex-row gap-8 md:gap-27 ">
         {/* EMAIL SKELETON */}
         <div className="w-full space-y-4">
           <div className="h-4 w-40 bg-gray-200 rounded" />
@@ -309,7 +309,7 @@ export default function NotificationSettings() {
         </div>
 
         {/* PUSH SKELETON */}
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-4 ">
           <div className="h-4 w-40 bg-gray-200 rounded" />
           {[...Array(6)].map((_, i) => (
             <div
@@ -339,13 +339,13 @@ export default function NotificationSettings() {
       initial="hidden"
       animate="visible"
     >
-      <h2 className="text-base hidden md:flex leading-6 font-MontserratSemiBold text-black mb-6">
+      <h2 className="text-base hidden md:flex leading-6  font-MontserratSemiBold text-black mb-6">
         Notification Settings
       </h2>
 
       <div className="flex  flex-col md:flex-row gap-8 md:gap-27 items-center">
         {/* EMAIL */}
-        <motion.div className="md:space-y-4 w-full">
+        <motion.div className="md:space-y-4 w-full ">
           <p className="text-sm font-MontserratNormal md:border-0 border-b py-3 md:py-0 leading-6 text-black/50 mb-4">
             Email notifications
           </p>
@@ -354,7 +354,7 @@ export default function NotificationSettings() {
             <motion.div
               key={item.id}
               variants={itemVariants}
-              className="flex flex-row-reverse md:flex-row items-center  justify-between md:gap-4 border-b md:border-0 py-3"
+              className="flex flex-row-reverse md:flex-row items-center  justify-between md:gap-4 md:justify-start border-b md:border-0 py-3"
             >
               <motion.button
                 onClick={() => toggleSetting(item.id)}
@@ -374,8 +374,8 @@ export default function NotificationSettings() {
                 />
               </motion.button>
 
-              <div>
-                <h3 className="font-MontserratSemiBold text-sm text-black/72">
+              <div className="text-left">
+                <h3 className="font-MontserratSemiBold text-left text-sm text-black/72">
                   {item.title}
                 </h3>
                 <p className="text-c12 font-MontserratNormal hidden md:flex text-black/60">
@@ -396,7 +396,7 @@ export default function NotificationSettings() {
             <motion.div
               key={item.id}
               variants={itemVariants}
-              className="flex flex-row-reverse md:flex-row items-center  justify-between md:gap-4 border-b md:border-0 py-3"
+              className="flex flex-row-reverse md:flex-row items-center  justify-between  md:justify-start md:gap-4 border-b md:border-0 py-3"
             >
               <motion.button
                 onClick={() => toggleSetting(item.id)}

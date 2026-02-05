@@ -47,7 +47,7 @@ const backgrounds = [
     id: 2,
     type: "ad",
     content: (
-      <div className="w-full h-52.5 relative rounded-2xl flex items-center justify-center">
+      <div className="w-full  h-95 relative rounded-2xl flex items-center justify-center">
         <Image
           src="/assets/images/AdBanner.svg"
           alt="Ad Banner"

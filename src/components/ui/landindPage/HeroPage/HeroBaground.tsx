@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Cart from "@/assets/headerIcon/cart.svg";
 
+
 const backgrounds = [
   {
     id: 1,
@@ -45,7 +46,9 @@ const backgrounds = [
   {
     id: 2,
     className: "ad-hero",
-    // content: <div className="text-white text-4xl font-bold"></div>,
+   content: <div className="text-white wfull h-full text-4xl font-bold">
+
+   </div>,
   },
 ];
 
@@ -61,7 +64,7 @@ export default function HeroBackground() {
   }, []);
 
   return (
-    <div className="relative xl:max-w-[970px] w-full md:h-125 xl:h-134 overflow-hidden rounded-2xl">
+    <div className="relative  w-full md:h-125 xl:h-134 overflow-hidden rounded-2xl">
       <AnimatePresence mode="sync">
         {" "}
         {/* sync keeps both present until animation ends */}
@@ -77,7 +80,7 @@ export default function HeroBackground() {
             bounce: 0.3, // bounce intensity
             duration: 0.3,
           }}
-          className={`absolute inset-0 flex items-center pl-[34px] ${backgrounds[index].className}`}
+          className={`absolute h-full w-full inset-0 flex items-center pl-[34px] ${backgrounds[index].className}`}
         >
           {backgrounds[index].content}
         </motion.div>

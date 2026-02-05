@@ -34,7 +34,7 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Load saved credentials on mount
+  
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberEmail");
     const savedPassword = localStorage.getItem("rememberPassword");
@@ -55,7 +55,7 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       return;
     }
 
-    // ✅ Save email & password if "Remember me" is checked
+  
     if (formData.rememberMe) {
       localStorage.setItem("rememberEmail", formData.email);
       localStorage.setItem("rememberPassword", formData.password);

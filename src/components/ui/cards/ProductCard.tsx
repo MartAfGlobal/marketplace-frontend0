@@ -242,7 +242,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         // ⭐ Add animation on hover
         whileHover={{ scale: 1.03, boxShadow: "0 8px 20px rgba(0,0,0,0.15)" }}
         whileTap={{ scale: 0.98 }}
-        className="rounded-lg shadow-custom w-full h-[264.69px] pb-4 flex-shrink-0 md:max-w-49 bg-white overflow-hidden cursor-pointer"
+        className="rounded-lg shadow-custom w-full h-[264.69px] pb-4 flex-shrink-0  bg-white overflow-hidden cursor-pointer"
       >
         {/* Product Image */}
         <div onClick={handleClick} className="relative h-40 w-full">

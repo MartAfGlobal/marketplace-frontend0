@@ -45,7 +45,7 @@ export default function CheckoutSummary() {
   );
 
   const selectedAddress = buyerAddresses.find(
-    (addr) => addr.id === selectedAddressId,
+    (addr:any) => addr.id === selectedAddressId,
   );
 
   const [openModal, setOpenModal] = useState(false);
@@ -116,9 +116,7 @@ export default function CheckoutSummary() {
   return <p className="text-c12">Loading addresses...</p>;
 }
 
-  if (token && !selectedAddress) {
-    return <p className="text-c12">No address selected</p>;
-  }
+
 
   const handleGuestCheckout = (e?: React.FormEvent) => {
     e?.preventDefault();

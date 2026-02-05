@@ -15,7 +15,7 @@ export default function HeroPage() {
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <motion.div
-        className="w-full  md:max-w-70.25 hidden md:flex"
+        className="w-full  md:max-w-80 hidden md:flex"
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
