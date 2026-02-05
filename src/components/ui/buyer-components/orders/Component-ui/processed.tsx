@@ -108,13 +108,13 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex md:hidden mt-4 space-y-4">
                       <Button className="">Add to cart</Button>
-                      <Button
+                    { item.status === "DELIVERED" && <Button
                         onClick={() => handleReview(item.id)}
                         variant="secondary"
                         className=""
                       >
                         Leave a review
-                      </Button>
+                      </Button>}
                     </div>
                   );
                   return (
@@ -327,16 +327,16 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
 
                         <div className="w-full  pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
                           <Button className="">Add to cart</Button>
-                          <Button
+                         { item.status === "DELIVERED" && <Button
                             onClick={() => handleReview(item.id)}
                             variant="secondary"
                             className=""
                           >
                             Leave a review
-                          </Button>
-                          <Button className="border-0" variant="secondary">
+                          </Button>}
+                          {/* <Button className="border-0" variant="secondary">
                             Remove
-                          </Button>
+                          </Button> */}
                         </div>
                       </div>
                     </motion.div>
