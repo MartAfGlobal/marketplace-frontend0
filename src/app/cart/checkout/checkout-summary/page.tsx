@@ -112,9 +112,6 @@ export default function CheckoutSummary() {
   }, [token]);
 
 
-  if (loading) {
-  return <p className="text-c12">Loading addresses...</p>;
-}
 
 
 

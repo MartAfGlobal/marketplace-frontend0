@@ -87,7 +87,7 @@ export function CountryDropdown({ country, onChange }: DropdownProps) {
         onClick={() => setShow((p) => !p)}
         className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
       >
-        <span className="text-gray-700 text-c12 font-MontserratMedium">
+        <span className="text-gray-800 text-c12 font-MontserratMedium">
           {country || "Select Country"}
         </span>
         {show ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -103,7 +103,7 @@ export function CountryDropdown({ country, onChange }: DropdownProps) {
           >
             <input
               type="text"
-              placeholder="Search country..."
+              placeholder="Type 3+ letters"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full p-3 border-b text-c12 outline-none"
@@ -147,7 +147,7 @@ export function StateDropdown({ state, onChange }: DropdownProps) {
         onClick={() => setShow((p) => !p)}
         className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
       >
-        <span className="text-gray-700 text-c12 font-MontserratMedium">
+        <span className="text-gray-800 text-c12 font-MontserratMedium">
           {state || "Select State"}
         </span>
         {show ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -197,7 +197,7 @@ export function CityDropdown({ city, onChange }: DropdownProps) {
 
 
   return (
-    <div className="relative w-full md:w-1/2 mt-2">
+    <div className="relative w-full">
       <label className="block text-c12 font-MontserratMedium mb-2">
         City
       </label>
@@ -206,7 +206,7 @@ export function CityDropdown({ city, onChange }: DropdownProps) {
         onClick={() => setShow((p) => !p)}
         className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
       >
-        <span className="text-gray-700 text-c12 font-MontserratMedium">
+        <span className="text-gray-800 text-c12 font-MontserratMedium">
           {city || "Select City"}
         </span>
         {show ? <ChevronUp size={18} /> : <ChevronDown size={18} />}

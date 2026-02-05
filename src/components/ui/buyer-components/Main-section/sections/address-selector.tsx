@@ -16,6 +16,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import { useHttp } from "@/hooks/use-http";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 
 interface UserAddressProps {
   className?: string;
@@ -46,6 +47,7 @@ export default function UserAddress({
   const [deletedSuccessfull, setDeletedSuccessfull] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [addressId, setAddressId] = useState<string>();
+  const { fetchAddress } = useFetchOrders();
 
   // Track window width for responsive "See More / See Less"
   useEffect(() => {
@@ -55,6 +57,10 @@ export default function UserAddress({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    fetchAddress();
+  }, [token]);
 
   const isMobile = windowWidth < 768;
   useEffect(() => {
@@ -66,15 +72,16 @@ export default function UserAddress({
     }
   }, [buyerAddresses, selectedAddressId]);
 
+  console.log("buyer addresssss", buyerAddresses);
+
   const handleEdit = (id: string) => {
     setIsEdit(true);
     setAddressId(id);
     if (isMobile) {
       router.push(`/dashboard/buyer/mobile/addresses/edit-address/${id}`);
-    } else{
-      setIsModalOpen(true)
+    } else {
+      setIsModalOpen(true);
     }
-
   };
 
   const cardVariants: Variants[] = [
@@ -93,10 +100,7 @@ export default function UserAddress({
   ];
 
   const handleSelectAddress = (addressId: string) => {
-    // Notify parent if controlled
     if (onSelectAddress) onSelectAddress(addressId);
-
-    // Update internal state if not controlled
     if (!selectedAddressId) setSelectedCardId(addressId);
   };
 
@@ -114,11 +118,11 @@ export default function UserAddress({
       successRes: (res: any) => {
         console.log(" updated:", res?.data);
         setDeletedSuccessfull(true);
+        fetchAddress();
       },
     });
   };
 
-  // Show first 3 on desktop, 2 on mobile by default
   const getVisibleAddresses = () => {
     if (showAll) return buyerAddresses;
     const limit = windowWidth >= 768 ? 3 : 2;
@@ -142,84 +146,78 @@ export default function UserAddress({
       </div>
 
       <div className="flex flex-col gap-3 md:flex-row w-full md:gap-6 md:flex-wrap">
-        {getVisibleAddresses().map((item, idx) => {
-          const isSelected = item.id === selectedCardId;
-          const variant = cardVariants[idx % cardVariants.length];
+        {/* Render addresses if available */}
+        {buyerAddresses.length > 0
+          ? getVisibleAddresses().map((item, idx) => {
+              const isSelected = item.id === selectedCardId;
+              const variant = cardVariants[idx % cardVariants.length];
 
-          return (
-            <motion.div
-              key={item.id}
-              onClick={() => handleSelectAddress(item.id)}
-              variants={variant}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: false, amount: 0.3 }}
-              whileHover={{ scale: 1.05 }}
-              className={twMerge(
-                "p-c24 h-40 w-full md:w-80.75 md:h-40 rounded-c12 flex flex-col gap-2 cursor-pointer relative transition-colors duration-300",
-                isSelected
-                  ? "md:bg-black bg-6a0dad text-ffffff shadow-inner"
-                  : "bg-black/20 text-black shadow",
-                className,
-              )}
-            >
-              <div className="flex justify-between items-center">
-                <p className="font-MontserratSemiBold text-c12 leading-c16">
-                  {item.first_name} {item.last_name}
-                </p>
+              return (
                 <motion.div
-                  layout
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  key={item.id}
+                  onClick={() => handleSelectAddress(item.id)}
+                  variants={variant}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: false, amount: 0.3 }}
+                  whileHover={{ scale: 1.05 }}
+                  className={twMerge(
+                    "p-c24 h-40 w-full md:w-80.75 md:h-40 rounded-c12 flex flex-col gap-2 cursor-pointer relative transition-colors duration-300",
+                    isSelected
+                      ? "md:bg-black bg-6a0dad text-ffffff shadow-inner"
+                      : "bg-black/20 text-black shadow",
+                    className,
+                  )}
                 >
-                  <Image
-                    src={isSelected ? ActiveCardBtn : SelectorBtn}
-                    alt="Select"
-                    width={20}
-                    height={20}
-                  />
+                  <div className="flex justify-between items-center">
+                    <p className="font-MontserratSemiBold text-c12 leading-c16">
+                      {item.first_name} {item.last_name}
+                    </p>
+                    <motion.div
+                      layout
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      <Image
+                        src={isSelected ? ActiveCardBtn : SelectorBtn}
+                        alt="Select"
+                        width={20}
+                        height={20}
+                      />
+                    </motion.div>
+                  </div>
+                  <div className="w-full max-w-51">
+                    <p className="text-c12 leading-4 font-MontserratNormal">
+                      {item.phone}
+                    </p>
+                    <p className="text-c12 leading-4 font-MontserratNormal">
+                      {item.address} {item.state}
+                    </p>
+                  </div>
+                  <div className="flex gap-3 ">
+                    <button
+                      className={`text-c12 font-MontserratSemiBold text-ca0202 ${
+                        isSelected ? "text-ffffff" : ""
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteModalOpen(true);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </motion.div>
-              </div>
-              <div className="w-full max-w-51">
-                <p className="text-c12 leading-4 font-MontserratNormal">
-                  {item.phone}
-                </p>
-                <p className="text-c12 leading-4 font-MontserratNormal">
-                  {item.address} {item.state}
-                </p>
-              </div>
-              <div className="flex gap-3 ">
-                {/* <button
-                  className={`text-ffaco6 text-c12 font-MontserratSemiBold ${
-                    isSelected ? "text-ffffff" : ""
-                  }`}
-                  onClick={() => handleEdit(item.id)}
-                >
-                  Edit
-                </button> */}
-                <button
-                  className={`text-c12 font-MontserratSemiBold text-ca0202 ${
-                    isSelected ? "text-ffffff" : ""
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
+              );
+            })
+          : null}
 
-                    setDeleteModalOpen(true);
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
-
+        {/* Always show Add new address card */}
         <motion.div
           key="add-address"
           onClick={() => {
             setEditingAddress(undefined);
-             setIsEdit(false)
+            setIsEdit(false);
             setIsModalOpen(true);
-           
           }}
           initial={{ scale: 0.8, opacity: 0 }}
           whileInView={{
@@ -236,11 +234,14 @@ export default function UserAddress({
         >
           <Image src={AddcardBtn} width={20} height={20} alt="Add address" />
           <p className="text-center font-MontserratNormal text-base">
-            Add new address
+            {buyerAddresses.length === 0
+              ? "Please add an address to continue."
+              : "Add new address"}
           </p>
         </motion.div>
       </div>
 
+      {/* See More buttons */}
       {buyerAddresses.length > 2 && !mobile && (
         <div className="w-full flex pt-6 justify-end md:hidden">
           <button
@@ -261,9 +262,10 @@ export default function UserAddress({
           </button>
         </div>
       )}
+
       <AddressModal
         id={addressId}
-        isEdit = {isEdit}
+        isEdit={isEdit}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         currentAddress={editingAddress}

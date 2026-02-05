@@ -54,7 +54,9 @@ export default function CartPage() {
   const initialHydratedRef = useRef(false);
   const [deleting, setDeleting] = useState("");
 
-  const checkingoutItems = useSelector((state: RootState) => state.cart.checkoutItems);
+  const checkingoutItems = useSelector(
+    (state: RootState) => state.cart.checkoutItems,
+  );
 
   const token = useSelector((state: RootState) => state.token?.token);
   const cartItems = useSelector((state: RootState) => state.cart.items || []);
@@ -491,8 +493,6 @@ export default function CartPage() {
     }
   };
 
-
-
   const totalPrice = Number(
     (cartItems || [])
       .reduce((acc, i) => {
@@ -506,20 +506,19 @@ export default function CartPage() {
       .toFixed(1),
   );
 
-const checkoutItems = (cartItems || [])
-  .filter((item) => selectedItems[item.variation_id || item.id])
-  .map((item) => {
-    const price = Number(item.price) || 0;
-    const qty = Number(item.quantity) || 0;
-    const subtotal = price * qty;
+  const checkoutItems = (cartItems || [])
+    .filter((item) => selectedItems[item.variation_id || item.id])
+    .map((item) => {
+      const price = Number(item.price) || 0;
+      const qty = Number(item.quantity) || 0;
+      const subtotal = price * qty;
 
-    return {
-      ...item,
-      subtotal, // ✅ overwrite null
-      formatted_subtotal: `₦${subtotal.toLocaleString()}`,
-    };
-  });
-
+      return {
+        ...item,
+        subtotal, // ✅ overwrite null
+        formatted_subtotal: `₦${subtotal.toLocaleString()}`,
+      };
+    });
 
   const handleCheckout = () => {
     if (!token) {
@@ -536,7 +535,7 @@ const checkoutItems = (cartItems || [])
           total: totalPrice.toLocaleString(),
         }),
       );
-   
+
       setCheckoutModalOpen(true);
     } else {
       router.push("/cart/checkout");
@@ -1002,6 +1001,7 @@ const checkoutItems = (cartItems || [])
                 onGuestCheckout={() => setOpen(true)}
               />
               <GuestCheckoutModal
+                isEditing={false}
                 isOpen={open}
                 onClose={() => setOpen(false)}
                 selectedItems={cartItems

@@ -21,6 +21,7 @@ import DotSpinner from "@/components/reloadSpinner/DotSpinner";
 import UserAddress from "@/components/ui/buyer-components/Main-section/sections/address-selector";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 import GuestUserAddress from "@/components/ui/buyer-components/guest/address_selector";
+import { toast } from "sonner";
 
 export default function CheckoutPage() {
   const [visible, setVisible] = useState(10);
@@ -40,7 +41,10 @@ export default function CheckoutPage() {
   );
 
   useEffect(() => {
-    if (buyerAddresses.length > 0 && !selectedAddressId) {
+    if (!buyerAddresses.length) return;
+
+    
+    if (!selectedAddressId || buyerAddresses.length === 1) {
       const defaultAddr = buyerAddresses.find((a) => a.is_default);
       dispatch(
         buyerActions.setSelectedAddress(
@@ -56,14 +60,30 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (!token) return;
+    if (buyerAddresses.length === 0) {
+      toast.warning("Please add an address to get summary");
+      dispatch(
+        setCheckoutSummary({
+          all_addresses: [],
+          applied_coupon: null,
+          discount_amount: "0.00",
+          shipping_address: null,
+          shipping_cost: "0.00",
+          shipping_methods: [],
+          subtotal: "0.00",
+          total: "0.00",
+        }),
+      );
+      return;
+    }
 
     sendHttpRequest({
       requestConfig: {
         url: "/checkout/summary/",
         method: "POST",
         body: {
-          shipping_address_id:selectedAddressId,
-          discount_amount: "0.00"
+          shipping_address_id: selectedAddressId,
+          discount_amount: "0.00",
         },
         token,
         isAuth: true,
@@ -86,9 +106,6 @@ export default function CheckoutPage() {
             variation_display: item.variation_name,
             variation_id: item.variation_id,
           }));
-
-          console.log("summary datas444444:", mappedItems);
-
           // Store items for checkout
           dispatch(setCheckoutItems(mappedItems));
 
@@ -170,7 +187,7 @@ export default function CheckoutPage() {
                     <UserAddress
                       selectedAddressId={selectedAddressId ?? undefined}
                       onSelectAddress={handleSelectAddress}
-                      className="md:w-64.25 h-31 "
+                      className="md:w-64.25  "
                     />
                   ) : (
                     <GuestUserAddress />
@@ -181,7 +198,7 @@ export default function CheckoutPage() {
                 onClick={() =>
                   router.push("/dashboard/buyer/mobile/addresses/add-address")
                 }
-                className="rounded-full bg-ff715b text-ffffff w-c32 h-c32"
+                className="rounded-full flex-shrink-0 bg-ff715b text-ffffff w-c32 h-c32"
               >
                 +
               </button>

@@ -41,12 +41,8 @@ export default function AddressModal({
   onClose,
   onSave,
   isEdit,
-  id
+  id,
 }: AddressModalProps) {
-
-
-
-  
   const [formData, setFormData] = useState<Address>({
     id: "",
     country: "",
@@ -70,7 +66,6 @@ export default function AddressModal({
   const [states, setStates] = useState<any[]>([]);
   const [flag, setFlag] = useState<string>(NigerianFlag.src);
   const token = useSelector((state: RootState) => state.token.token);
- 
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
@@ -217,11 +212,15 @@ export default function AddressModal({
               ✕
             </button>
 
-            {isEdit?<h2 className="font-MontserratSemiBold text-c16 mb-c24">
-             Update Address
-            </h2>:<h2 className="font-MontserratSemiBold text-c16 mb-c24">
-              Add new Address
-            </h2>}
+            {isEdit ? (
+              <h2 className="font-MontserratSemiBold text-c16 mb-c24">
+                Update Address
+              </h2>
+            ) : (
+              <h2 className="font-MontserratSemiBold text-c16 mb-c24">
+                Add new Address
+              </h2>
+            )}
 
             <div className="flex flex-col gap-3">
               <div className="flex gap-c24 w-full ">
@@ -229,10 +228,7 @@ export default function AddressModal({
                   country={formData.country}
                   onChange={handleDropdownChange}
                 />
-                <StateDropdown
-                  state={formData.state}
-                  onChange={handleDropdownChange}
-                />
+                <div className="w-full"></div>
               </div>
 
               <div>
@@ -250,10 +246,13 @@ export default function AddressModal({
                       type="text"
                       value={formData.first_name}
                       onChange={(e) =>
-                        handleChange("first_name", e.target.value)
+                        handleChange(
+                          "first_name",
+                          e.target.value.replace(/\s/g, ""),
+                        )
                       }
-                      placeholder="John Doe"
-                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                      placeholder="John"
+                      className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                     />
                   </div>
                   <div className="flex flex-col gap-2 relative w-1/2">
@@ -266,14 +265,17 @@ export default function AddressModal({
                       type="text"
                       value={formData.last_name}
                       onChange={(e) =>
-                        handleChange("last_name", e.target.value)
+                        handleChange(
+                          "last_name",
+                          e.target.value.replace(/\s/g, ""),
+                        )
                       }
                       placeholder="John Doe"
                       className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
                     />
                   </div>
                 </div>
-                <div className="flex flex-col gap-2 relative w-1/2">
+                <div className="flex flex-col gap-2 relative w-1/2 mt-4">
                   <Label className="text-c12 font-MontserratMedium">
                     Mobile Number
                   </Label>
@@ -291,7 +293,9 @@ export default function AddressModal({
                       name="phone"
                       type="text"
                       value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
+                      onChange={(e) =>
+                        handleChange("phone", e.target.value.replace(/\s/g, ""))
+                      }
                       placeholder="+2347058675432"
                       className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
                     />
@@ -305,8 +309,10 @@ export default function AddressModal({
                 </p>
                 <div className="flex flex-col gap-c24">
                   <div className="flex gap-c24 w-full">
-                    <div className="hidden"></div>
-
+                    <StateDropdown
+                      state={formData.state}
+                      onChange={handleDropdownChange}
+                    />
                     <div className="flex flex-col gap-2 w-full">
                       <CityDropdown
                         city={formData.city}

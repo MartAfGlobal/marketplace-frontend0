@@ -58,7 +58,6 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
     (state: RootState) => state.cart.checkoutItems,
   );
 
-
   const checkoutSummary = useSelector(
     (state: RootState) => state.cart.checkoutSummary,
   );
@@ -70,7 +69,6 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
 
     return Number(String(value).replace(/[^0-9.-]+/g, "")) || 0;
   };
-
 
   const TotalItems = checkoutItems.length; //
 
@@ -103,7 +101,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
     e?.preventDefault();
 
     const formData = checkoutSummary?.guest_address;
-    console.log("checking formdata", formData)
+    console.log("checking formdata", formData);
 
     const items = checkoutItems.map((item) => ({
       product_id: item.id,
@@ -327,14 +325,18 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                     onClick={handleCheckout}
                     disabled={loading || !selectedAddressId}
                   >
-                    {loading ? <LoadingSpinner /> : " Checkout"}({TotalItems})
+                    {loading ? <LoadingSpinner /> : ` Checkout (${TotalItems})`}
                   </Button>
                 ) : (
                   <Button
                     onClick={handleGuestCheckout}
                     disabled={guestchecking || !selectedAddressId}
                   >
-                    {guestchecking ? <LoadingSpinner /> : ` Checkout (${TotalItems})`}
+                    {guestchecking ? (
+                      <LoadingSpinner />
+                    ) : (
+                      ` Checkout (${TotalItems})`
+                    )}
                   </Button>
                 )}
 

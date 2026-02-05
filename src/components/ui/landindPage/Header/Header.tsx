@@ -245,13 +245,14 @@ export default function Header() {
                   {token ? (
                     <Link
                       href="/dashboard/buyer"
+                       onClick={() => setUserOpen(false)}
                       className="gap-2.5 items-baseline-last text-ff715b px-4 h-6 flex "
                     >
                       <Image src={Gear} alt="gear" width={12} height={12} />
                       Settings
                     </Link>
                   ) : (
-                    <Link href="/auth/login" className="block px-4 py-2  h-6">
+                    <Link href="/auth/login"  onClick={() => setUserOpen(false)} className="block px-4 py-2  h-6">
                       Login
                     </Link>
                   )}

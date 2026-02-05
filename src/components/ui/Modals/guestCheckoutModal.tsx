@@ -59,7 +59,7 @@ export default function GuestCheckoutModal({
       city: currentAddress?.guest_shipping_address?.city || "",
       state: currentAddress?.guest_shipping_address?.state || "",
       postal_code: currentAddress?.guest_shipping_address?.postal_code || "",
-      country: currentAddress?.guest_shipping_address?.country || "Nigeria",
+      country: currentAddress?.guest_shipping_address?.country || "select country",
     },
     discount_amount: currentAddress?.discount_amount || "0.00",
   });
@@ -203,7 +203,7 @@ export default function GuestCheckoutModal({
         url: "/checkout/summary/guest/",
         method: "POST",
         body: { ...formData, items },
-        successMessage: "Redirecting to payment gateway...",
+        successMessage: "Redirecting to summary page...",
       },
       successRes: (res) => {
         const data = res.data;
