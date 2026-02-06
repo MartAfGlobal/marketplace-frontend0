@@ -26,7 +26,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
   const { orders, loading } = useSelector((state: any) => state.orders);
 
   const shipped = orders.filter(
-    (order: OrderItem) => order.status === "SHIPPED"
+    (order: OrderItem) => order.status === "SHIPPED",
   );
 
   const filteredOrders = shipped.filter((order: OrderItem) => {
@@ -39,7 +39,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
     const matchesStore = order.manufacturer?.toLowerCase().includes(term);
 
     const matchesProduct = order.order_items?.some((item) =>
-      item.product_name?.toLowerCase().includes(term)
+      item.product_name?.toLowerCase().includes(term),
     );
 
     return matchesOrderId || matchesStore || matchesProduct;
@@ -60,7 +60,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
   };
   console.log(
     "tracking id:",
-    orders.filter((order: any) => order.id)
+    orders.filter((order: any) => order.id),
   );
 
   const handleClick = (id: string) => {
@@ -131,7 +131,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
               >
                 {filteredOrders.map((item: OrderItem) => {
                   const isSingleItemOrder = item.order_items?.length === 1;
-                  
+
                   return (
                     <motion.div
                       key={item.id}
@@ -173,8 +173,9 @@ export default function Shipped({ searchTerm }: OrdersProps) {
 
                       <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
                         {isSingleItemOrder ? (
-                        <>
-                            <Link href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                          <>
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
                               {item.order_items?.map((prod) => (
@@ -207,11 +208,23 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                 </div>
                               ))}
                             </Link>
-
-                        
+                            <div className="w-full gap-4 pl md:hidden flex  md:max-w-70 ">
+                              <Button
+                                variant="secondary"
+                                key={item.id}
+                                onClick={() => handleTrackOrder(item.id)}
+                              >
+                                Track order
+                              </Button>
+                              <Button onClick={() => setOpen(true)}>
+                                Confirm delivery
+                              </Button>
+                            </div>
                           </>
                         ) : (
-                          <Link href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                          <>
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
                               className="flex gap-4 w-full"
                             >
                               <div className="hidden sm:flex gap-4">
@@ -333,6 +346,19 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                 </div>
                               </div>
                             </Link>
+                            <div className="w-full gap-4 pl md:hidden flex  md:max-w-70 ">
+                              <Button
+                                variant="secondary"
+                                key={item.id}
+                                onClick={() => handleTrackOrder(item.id)}
+                              >
+                                Track order
+                              </Button>
+                              <Button onClick={() => setOpen(true)}>
+                                Confirm delivery
+                              </Button>
+                            </div>
+                          </>
                         )}
 
                         <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">

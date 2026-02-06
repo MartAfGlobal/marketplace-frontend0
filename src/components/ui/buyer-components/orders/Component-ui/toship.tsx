@@ -76,7 +76,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
       setTimeout(() => setIsOpen(true), 0);
     }
   };
- const handleTrackOrder = (orderId: string) => {
+  const handleTrackOrder = (orderId: string) => {
     router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
   };
   const [copied, setCopied] = useState(false);
@@ -144,20 +144,20 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                   const isSingleItemOrder = item.order_items?.length === 1;
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex md:hidden mt-4 space-y-4">
-                      <Button
+                      {/* <Button
                         onClick={() => handleEditAddress(item.id)}
                         variant="secondary"
                       >
                         Edit address
-                      </Button>
+                      </Button> */}
+                      <div className="w-full"></div>
 
                       <Button
-                        onClick={() => {
-                          setSelectedOrderId(item.id);
-                          setOpenCancelModal(true);
-                        }}
+                        variant="secondary"
+                        key={item.id}
+                        onClick={() => handleTrackOrder(item.id)}
                       >
-                        Cancel order
+                        Track order
                       </Button>
                     </div>
                   );
@@ -195,10 +195,10 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                             )}
                           </div>
                         </div>
-                         <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                            Delivery:{" "}
-                            {item.estimated_delivery_date || " May 15, 2025"}
-                          </p>
+                        <p className="text-c12 font-MontserratNormal leading-4 text-000000">
+                          Delivery:{" "}
+                          {item.estimated_delivery_date || " May 15, 2025"}
+                        </p>
                       </div>
 
                       <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">

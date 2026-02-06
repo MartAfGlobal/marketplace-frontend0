@@ -62,10 +62,10 @@ export default function BuyerDashboard() {
   return (
     <div>
       <div className="px-6">
-        <div className="pb-7 ">
+        <div className="pb-6 ">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-4 mt-3 md:mt-c32"
+            className="flex items-center gap-4 -mt-2 md:mt-c32"
           >
             <Image
               src={NavBack}

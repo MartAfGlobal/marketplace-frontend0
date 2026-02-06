@@ -74,14 +74,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
     return matchesOrderId || matchesStore || matchesProduct;
   });
 
-  const handleRepay = (repay_order_id: any) => {
-    console.log("checking item to pay", repay_order_id);
+  const handleRepay = (order_id: any, expected_amount: any) => {
+    console.log("checking item to pay", order_id);
     repayReq({
       requestConfig: {
-        url: "/orders/repay/",
+        url: "/checkout/repay/",
         method: "POST",
         token,
-        body: { repay_order_id: repay_order_id },
+        body: { order_id, expected_amount: expected_amount.toFixed(2) },
         isAuth: true,
         userType: "buyer",
       },
@@ -241,28 +241,38 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
+                      {item.status === "TO_SHIP" && (
+                        <>
+                          <div className="w-full"></div>
+                          <Button
+                          
+                            onClick={() => handleTrackOrder(item.id)}
+                          >
+                            Track order
+                          </Button>
+                        </>
+                      )}
 
-                      {item.status === "TO_SHIP" ||
-                        (item.status === "PENDING" && (
-                          <>
-                            {/* <Button
+                      {item.status === "PENDING" && (
+                        <>
+                          {/* <Button
                             onClick={() => handleEditAddress(item.id)}
                             variant="secondary"
                           >
                             Edit address
                           </Button> */}
-                            <div className="w-full"></div>
+                          <div className="w-full"></div>
 
-                            <Button
-                              onClick={() => {
-                                setSelectedOrderId(item.id);
-                                setOpenCancelModal(true);
-                              }}
-                            >
-                              Cancel order
-                            </Button>
-                          </>
-                        ))}
+                          <Button
+                            onClick={() => {
+                              setSelectedOrderId(item.id);
+                              setOpenCancelModal(true);
+                            }}
+                          >
+                            Cancel order
+                          </Button>
+                        </>
+                      )}
 
                       {item.status === "AWAITING_PAYMENT" && (
                         <>
@@ -272,10 +282,13 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           >
                             Edit address
                           </Button> */}
+                          <div className="w-full"></div>
 
                           <Button
                             disabled={repaying}
-                            onClick={() => handleRepay(item.id)}
+                            onClick={() =>
+                              handleRepay(item.id, item.total_price)
+                            }
                           >
                             {repaying ? <LoadingSpinner /> : "Confirm & pay"}
                           </Button>
@@ -593,7 +606,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               <Button
                                 disabled={repaying}
                                 onClick={() => {
-                                  handleRepay(item.id);
+                                  handleRepay(item.id, item.total_price);
                                 }}
                                 className=""
                               >

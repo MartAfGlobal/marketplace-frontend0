@@ -84,7 +84,7 @@ export default function Settings() {
       <div className="w-full ">
         <button
           onClick={() => toggleSection(id)}
-          className={`w-full flex items-center px-6  justify-between  h-13 border-b border-b-000000/5 ${
+          className={`w-full flex items-center   justify-between  h-13 border-b border-b-000000/5 ${
             open ? "border-b-0" : "border-b"
           }`}
         >
@@ -106,7 +106,7 @@ export default function Settings() {
               transition={{ duration: 0.25 }}
               className="overflow-hidden"
             >
-              <div className=" px-6">{children}</div>
+              <div className="">{children}</div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -256,7 +256,7 @@ export default function Settings() {
           />
         </div>
       </Section>
-      <div className="text-sm font-MontserratSemiBold px-6 pb-38 ">
+      <div className="text-sm font-MontserratSemiBold  pb-38 ">
         <div className="flex items-center h-11 border-b border-b-000000/5">
           <span>Privacy policy</span>
         </div>
