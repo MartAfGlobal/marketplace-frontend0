@@ -49,7 +49,7 @@ export default function OrdersPage() {
           onSearchChange={setSearchTerm}
           showDropdown={false}
           placeholder="Order ID, Store name, Product name"
-          className="border border-000000/18 focus:ring-ff715b shadow-neutral-50 hidden md:block"
+          className="border border-000000/18 focus:ring-ff715b shadow-neutral-50 hidden md:block  md:max-w-80 xl:max-w-116"
         />
       </div>
 
