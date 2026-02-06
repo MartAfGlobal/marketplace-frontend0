@@ -107,7 +107,7 @@ export default function SearchInput({
   return (
     <div
       ref={inputRef}
-      className={`relative md:static  w-full   md:max-w-80 xl:max-w-116 ${className}`}
+      className={`relative md:static  w-full   ${className}`}
     >
       {/* Input */}
       <div className="relative w-full h-12 bg-ffffff shadow-customW rounded-c8">

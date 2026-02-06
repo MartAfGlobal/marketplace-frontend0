@@ -32,24 +32,7 @@ export default function ProductBody() {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <ProductHeader />
-      </motion.div>
-
-      {/* Add Product Header */}
-      <motion.div
-        ref={addRef}
-        initial={{ opacity: 0, y: 30 }}
-        animate={addInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-        transition={{ duration: 0.5 }}
-        className="flex justify-between items-center"
-      >
-        <div className="flex items-center gap-3">
-          <Image src={AddIcon} width={24} height={24} alt="adding" />
-          <p className="text-c18 font-MontserratSemiBold">
-            Add New Product
-          </p>
-        </div>
-
-        <button
+         {/* <button
           onClick={() => setShowAddForm((prev) => !prev)}
           className={`text-[14px] font-MontserratSemiBold flex items-center justify-center gap-2 w-c160 h-c48 rounded-c8 ${
             showAddForm
@@ -61,7 +44,25 @@ export default function ProductBody() {
             <Image src={backIcon} alt="back" width={16} height={16} />
           )}
           {showAddForm ? "Back to Product" : "Add Product"}
-        </button>
+        </button> */}
+      </motion.div>
+
+      {/* Add Product Header */}
+      <motion.div
+        ref={addRef}
+        initial={{ opacity: 0, y: 30 }}
+        animate={addInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+        transition={{ duration: 0.5 }}
+        className="flex justify-between items-center"
+      >
+        {/* <div className="flex items-center gap-3">
+          <Image src={AddIcon} width={24} height={24} alt="adding" />
+          <p className="text-c18 font-MontserratSemiBold">
+            Add New Product
+          </p>
+        </div> */}
+
+       
       </motion.div>
 
       <AnimatePresence mode="wait">

@@ -113,7 +113,7 @@ useEffect(() => {
             <h1 className="font-MontserratBold text-2xl text-ffffff">MARTAF</h1>
           </Link>
           <div></div>
-          {changeSearch ? <OtherSearchInput /> : <SearchInput />}
+          {changeSearch ? <OtherSearchInput /> : <SearchInput className=" md:max-w-80 xl:max-w-116" />}
           <div className="flex gap-6 items-center">
             <div className="flex items-center gap-2">
               <h1 className="text-ffffff font-MontserratMedium text-[18px]">

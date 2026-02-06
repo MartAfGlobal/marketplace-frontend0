@@ -152,19 +152,15 @@ export default function CategoriesGrid() {
       <AnimatePresence>
         {selectedCategory && subcategories.length > 0 && (
           <motion.div
-            className="fixed top-0 inset-0 bg-black/50 flex items-center justify-start z-50"
+            className="fixed top-0 inset-0 bg-black/50 flex items-center justify-start z-50 w-full h-full"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedCategory(null)}
           >
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className="absolute top-20 right-50 z-[60] bg-white/90 hover:bg-white text-black rounded-full p-2 shadow-md transition"
-            >
-              <X size={20} />
-            </button>
+          
+            
+           
             <motion.div
               className="w-full h-full absolute top-26 left-91.25"
               initial={{ y: "-100%", opacity: 0 }}

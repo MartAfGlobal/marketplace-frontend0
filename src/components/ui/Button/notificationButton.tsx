@@ -17,33 +17,31 @@ export default function NotificationButton({
   image = DefaultNofication,
   showBadge = true,
 }: CartButtonProps) {
-//   const cartItems = useSelector((state: RootState) => state.cart.items);
-//   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
- const cartCount = 1
+  //   const cartItems = useSelector((state: RootState) => state.cart.items);
+  //   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const cartCount = 1;
 
   return (
     <div className="w-fit h-fit relative">
-      <Link href="">
-        <button
-          style={{ width: size, height: size }}
-          className="flex items-center justify-center"
-        >
-          <Image
-            src={image}
-            alt="Cart"
-            width={size}
-            height={size}
-            className="object-cover"
-          />
-        </button>
+      <button
+        style={{ width: size, height: size }}
+        className="flex items-center justify-center"
+      >
+        <Image
+          src={image}
+          alt="Cart"
+          width={size}
+          height={size}
+          className="object-cover"
+        />
+      </button>
 
-        {/* ✅ Only show badge if count > 0
+      {/* ✅ Only show badge if count > 0
         {showBadge && cartCount > 0 && (
           <span className="bg-[#CA0202] text-white absolute -top-2 -right-2 flex items-center justify-center w-4 h-4 rounded-full font-MontserratSemiBold text-[8px]">
             {cartCount}
           </span>
         )} */}
-      </Link>
     </div>
   );
 }
