@@ -150,7 +150,7 @@ export default function FooterPage() {
       <div className="flex flex-col">
         <p className="w-full bg-b1b1b1 h-c1  mt-c32 md:mt-c61"></p>
         <p className=" mb-c32 pt-c32 text-center text-f0f0f">
-          © Martaf 2025. All rights Reserved
+          © Martaf {new Date().getFullYear()}. All rights Reserved
         </p>
       </div>
     </div>
