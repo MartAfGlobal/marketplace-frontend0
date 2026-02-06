@@ -27,7 +27,7 @@ export default function Wishlist() {
           <p>Wishlist</p>
         </h2>
         
-        {wishlistProducts.length > 0 && (
+        {wishlistProducts.length > 10 && (
           <button
             onClick={showMore}
             className="font-MontserratSemiBold text-[#FF715B] hover:underline text-sm"
