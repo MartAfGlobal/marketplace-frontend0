@@ -226,7 +226,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                 {filteredOrders.map((item: OrderItem) => {
                   const isSingleItemOrder = item.order_items?.length === 1;
                   const MobileActions = (
-                    <div className="w-full gap-4 text-c10 flex md:hidden mt-4 space-y-4">
+                    <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
                       {item.status === "SHIPPED" && (
                         <>
                           <Button

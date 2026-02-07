@@ -104,7 +104,7 @@ export default function Disputes({ searchTerm }: OrdersProps) {
               >
                 {filteredOrders.map((item: BuyerDispute) => {
                   const MobileActions = (
-                    <div className="w-full gap-4 text-c10 flex md:hidden mt-4 space-y-4">
+                    <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
                       
                       <Button onClick={() => viewDisputeDetails(item.id)}>
                         Dispute details
