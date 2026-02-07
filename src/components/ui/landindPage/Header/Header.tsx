@@ -64,28 +64,28 @@ export default function Header() {
     }
   }, [showLogin, resetToken]);
 
- const fetchLogs = useCallback(() => {
-  console.log("fetching notification logs......");
+//  const fetchLogs = useCallback(() => {
+//   console.log("fetching notification logs......");
 
-  if (!token) return;
+//   if (!token) return;
 
-  sendHttpRequest({
-    requestConfig: {
-      url: "notifications/logs/?page=1076",
-      method: "GET",
-      token,
-      isAuth: true,
-      userType: "buyer",
-    },
-    successRes: (responseData: any) => {
-      console.log("dispute logs", responseData.data);
-    },
-  });
-}, [token, sendHttpRequest]);
+//   sendHttpRequest({
+//     requestConfig: {
+//       url: "notifications/logs/?page=1076",
+//       method: "GET",
+//       token,
+//       isAuth: true,
+//       userType: "buyer",
+//     },
+//     successRes: (responseData: any) => {
+//       console.log("dispute logs", responseData.data);
+//     },
+//   });
+// }, [token, sendHttpRequest]);
 
-useEffect(() => {
-  fetchLogs();
-}, [fetchLogs]);
+// useEffect(() => {
+//   fetchLogs();
+// }, [fetchLogs]);
 
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
