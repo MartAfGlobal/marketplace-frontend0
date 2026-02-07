@@ -71,7 +71,7 @@ export default function AdSlider({
             <div
               key={ad.id}
               className={`relative h-full ${
-                isMobile ? "w-full" : "w-[calc(50%-8px)]"
+                isMobile ? "w-full h-52.5" : "w-[calc(50%-8px)]"
               } rounded-2xl overflow-hidden`}
             >
               <Image

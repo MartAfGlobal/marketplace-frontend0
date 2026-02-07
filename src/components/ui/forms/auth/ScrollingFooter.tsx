@@ -12,7 +12,7 @@ export default function ScrollingFooter() {
         animate={{ x: ["0%", "-50%"] }}
         transition={{
           repeat: Infinity,
-          duration: 20, 
+          duration: 4, 
           ease: "linear",
           
         }}
@@ -23,245 +23,553 @@ export default function ScrollingFooter() {
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
         />
         <Image
           src={FormFooter}
           alt="form footer"
           width={268}
           height={154}
-          className="w-67 h-c80 opacity-30"
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
+        />
+        <Image
+          src={FormFooter}
+          alt="form footer"
+          width={268}
+          height={154}
+          className="w-67 h-c80 opacity-20"
         />
        
       </motion.div>

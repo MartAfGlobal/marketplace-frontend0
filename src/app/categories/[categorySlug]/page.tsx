@@ -102,9 +102,9 @@ export default function CategoryPage() {
   }
 
   return (
-    <div className="md:px-16 px-6">
+    <div className="md:px-16 ">
       {/* Breadcrumb */}
-      <div className="py-8 flex items-center gap-1 text-sm font-semibold">
+      <div className="py-8 flex items-center gap-1 text-sm font-semibold px-6">
         <Link href="/" className="opacity-40">
           Home
         </Link>
@@ -112,19 +112,21 @@ export default function CategoryPage() {
         <span className="capitalize">{category?.name}</span>
       </div>
 
-      {/* Hero */}
+      <div className="md:hidden px-6 mb-c32">
+          <AdSlider />
+      </div>
       <div
-        className="h-70 flex items-center justify-center text-white text-3xl font-bold rounded-c30 bg-center bg-cover relative"
+        className="md:h-70 h-22  flex items-center justify-center text-white text-3xl font-bold  md:rounded-c30 bg-center bg-cover relative"
         style={{
           backgroundImage: `url(${category?.image || ""})`,
         }}
       >
-        <div className="absolute inset-0 bg-black/40 rounded-c30" />
-        <h1 className="relative z-10">{category?.name || "Category"}</h1>
+        <div className="absolute inset-0 bg-black/40 md:rounded-c30" />
+        <h1 className="relative z-10 text-c20 md:text-5xl font-MontserratSemiBold">{category?.name || "Category"}</h1>
       </div>
 
       {/* Products */}
-      <div className="pt-c64 flex flex-col gap-12">
+      <div className="md:pt-c64 pt-c32 flex flex-col md:gap-12  mb-c32 px-6">
         {error && <p className="text-red-500">{error}</p>}
 
         {!isLoading && categoryProducts.length === 0 && !error && (
