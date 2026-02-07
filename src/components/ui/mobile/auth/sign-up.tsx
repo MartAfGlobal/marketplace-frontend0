@@ -112,13 +112,14 @@ export default function AuthModal({
             onClick={onClose}
           />
 
-         <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999]">
+         <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999] pointer-events-none">
           <motion.div
+            onClick={(e) => e.stopPropagation()}
             initial={{ y: 100 }}
             animate={{ y: 0 }}
             exit={{ y: 100 }}
             transition={{ duration: 0.3 }}
-            className="w-full bg-white rounded-t-2xl shadow-lg p-8 z-50"
+            className="w-full bg-white rounded-t-2xl shadow-lg p-8 z-50 pointer-events-auto"
           >
             {/* ---------- SIGN UP ---------- */}
             {step === "signup" && (

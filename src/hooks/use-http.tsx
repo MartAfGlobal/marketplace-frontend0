@@ -93,16 +93,23 @@ export const useHttp = () => {
           dispatch(tokenActions.deleteToken());
 
           const userType = requestConfig.userType ?? "seller"; // default buyer
-          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(
+            navigator.userAgent,
+          );
 
           if (userType === "seller") {
             router.replace("/auth/seller/login");
           } else {
             if (isMobile) {
-             
-              router.replace("/?showLogin=true");
+              const params = new URLSearchParams(window.location.search);
+              params.set("showLogin", "true");
+
+              window.history.replaceState(
+                {},
+                "",
+                `${window.location.pathname}?${params.toString()}`,
+              );
             } else {
-              // Desktop → go to dedicated login page
               router.replace("/auth/login");
             }
           }
@@ -114,7 +121,7 @@ export const useHttp = () => {
         setLoading(false);
       }
     },
-    [router, dispatch]
+    [router, dispatch],
   );
 
   return {

@@ -27,6 +27,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
   const [editingAddress, setEditingAddress] = useState<
     Partial<Address> | undefined
   >(undefined);
+
   const router = useRouter();
 
   const { orders } = useSelector((state: any) => state.orders);
@@ -70,6 +71,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
 
   const handleRepay = (order_id: any, expected_amount: any) => {
     console.log("checking item to pay", order_id, expected_amount);
+    setSelectedId (order_id)
     repayReq({
       requestConfig: {
         url: "/checkout/repay/",
@@ -183,7 +185,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                       <p className=" text-c12 font-MontserratMedium mb-3">
                                         {item.manufacturer}
                                       </p>
-                                      <p className="rounded-c12 bg-000000/10 text-000000/60  h-c32 py-2 w-fit min-w-24.5  px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
+                                      <p className="rounded-c12 bg-000000/10 text-000000/60  h-fit py-2 w-fit min-w-24.5  px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
                                         {prod.quantity}Pc {prod.variation_name},
                                       </p>
                                       <p className="font-MontserratSemiBold text-c16 pt-3">
@@ -205,9 +207,19 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                       Edit address
                                     </button> */}
                               <div className="w-full"></div>
-                              <button className="text-c10 text-ffffff bg-ff715b w-full h-c40 rounded-lg ">
-                                Confirm & pay
-                              </button>
+                              <Button
+                                disabled={repaying}
+                                onClick={() => {
+                                  handleRepay(item.id, item.total_price);
+                                }}
+                                className=""
+                              >
+                                {selectedId === item.id && repaying ? (
+                                  <LoadingSpinner />
+                                ) : (
+                                  "Confirm & pay"
+                                )}
+                              </Button>
                             </div>
                           </>
                         ) : (
@@ -287,7 +299,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                       {item.manufacturer}
                                     </p>
 
-                                    <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
+                                    <p className="rounded-c12 bg-000000/10 h-fit py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
                                       {item.order_items?.length}{" "}
                                       <span className="pl-0.5">Items</span>
                                     </p>
@@ -324,7 +336,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                       {item.manufacturer}
                                     </p>
 
-                                    <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
+                                    <p className="rounded-c12 bg-000000/10 h-fit py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
                                       {item.order_items?.reduce(
                                         (sum, i) => sum + (i.quantity || 0),
                                         0,
@@ -349,7 +361,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                         }}
                                         className=""
                                       >
-                                        {repaying ? (
+                                        {selectedId === item.id && repaying ? (
                                           <LoadingSpinner />
                                         ) : (
                                           "Confirm & pay"
@@ -371,9 +383,19 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                       Edit address
                                     </button> */}
                               <div className="w-full"></div>
-                              <button className="text-c10 text-ffffff bg-ff715b w-full h-c40 rounded-lg ">
-                                Confirm & pay
-                              </button>
+                              <Button
+                                disabled={repaying}
+                                onClick={() => {
+                                  handleRepay(item.id, item.total_price);
+                                }}
+                                className=""
+                              >
+                                {selectedId === item.id && repaying ? (
+                                  <LoadingSpinner />
+                                ) : (
+                                  "Confirm & pay"
+                                )}
+                              </Button>
                             </div>
                           </>
                         )}
@@ -389,7 +411,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                             }}
                             className=""
                           >
-                            {repaying ? <LoadingSpinner /> : "Confirm & pay"}
+                            {selectedId === item.id && repaying ? <LoadingSpinner /> : "Confirm & pay"}
                           </Button>
                         </div>
                       </div>
