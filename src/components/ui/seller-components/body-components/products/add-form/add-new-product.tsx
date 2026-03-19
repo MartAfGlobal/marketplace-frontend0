@@ -8,11 +8,14 @@ import { Input } from "@/components/ui/forms/Input";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
 import { Textarea } from "@/components/ui/forms/auth/text-area";
 import PlusIcon from "@/assets/Seller/plusIcon.png";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 
 export default function AddProductForm() {
   const [gender, setGender] = useState<string>("");
 
   const genderOptions = ["Men", "Women", "Unisex"];
+
+  
 
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [keyFeature, setKeyFeature] = useState<string | null>(null);
@@ -42,6 +45,8 @@ export default function AddProductForm() {
       getFilePreview(e.target.files[0], (url) => setMainImage(url));
     }
   };
+
+
 
   // Additional images
   const handleAdditionalImages = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -230,7 +230,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       setOpenAddToCart(true);
     }, 0);
   };
-  const productImage = product.main_image.thumbnail || "/placeholder.png";
+  const productImage = product.main_image?.thumbnail || "/placeholder.png";
 
   return (
     <div className="cursor-pointer">

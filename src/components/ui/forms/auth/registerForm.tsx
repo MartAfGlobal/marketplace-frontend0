@@ -100,7 +100,7 @@ export default function RegisterForm({ userType, token }: RegProps) {
         body: {
           ...formData,
         },
-        userType: "buyer",
+        userType: userType,
         successMessage: "Registration Complete, Please login.",
       },
     });

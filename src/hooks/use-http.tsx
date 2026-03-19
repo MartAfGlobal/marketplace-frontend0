@@ -89,8 +89,9 @@ export const useHttp = () => {
           error?.response?.status === 401 ||
           error?.response?.status === 403
         ) {
-          errorMessage = "Please login!";
+          errorMessage = error?.response?.data?.detail || "Unauthorized. Please login again.";
           dispatch(tokenActions.deleteToken());
+          console.log("Unauthorized access - redirecting to login", errorMessage);
 
           const userType = requestConfig.userType ?? "seller"; // default buyer
           const isMobile = /Android|iPhone|iPad|iPod/i.test(

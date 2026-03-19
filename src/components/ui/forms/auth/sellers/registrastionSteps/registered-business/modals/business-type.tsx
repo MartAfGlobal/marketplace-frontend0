@@ -92,7 +92,7 @@ export function DropdownInput({
             <button
               key={idx}
               onClick={() => handleSelect(opt)}
-              className="w-full text-left px-3 py-2 font-MontserratMedium text-c20 hover:bg-[#F4E7FD]"
+              className="w-full text-left px-3 py-2 font-MontserratNormal text-c12 hover:bg-[#F4E7FD]"
             >
               {opt}
             </button>

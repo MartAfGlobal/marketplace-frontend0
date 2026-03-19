@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -254,6 +256,10 @@ select option {
 }
 
 @layer utilities {
+
+  body{
+    user-select: none;
+  }
   .shadow-custom {
     box-shadow: 0px 2px 4px 0px #00000040;
   }
@@ -441,9 +447,9 @@ select option {
   /* Base checkbox */
   .custom-checkbox {
     width: 1.25rem; /* 20px */
-    height: 1.25rem; /* 20px */
+    height: 1.25rem; 
     border: 2px solid #ff715b;
-    border-radius: 9999px; /* fully round */
+    border-radius: 9999px;
     background-color: #ffffff;
     appearance: none;
     cursor: pointer;

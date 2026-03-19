@@ -3,7 +3,13 @@ import Image from "next/image";
 import HandBug from "@/assets/Seller/handBug.png";
 import { useSelector } from "react-redux";
 import Empty from "@/assets/Seller/Empty.svg";
-
+import { RootState } from "@/store";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import EditIcon from "@/assets/icons/edit.svg";
+import DeleteIcon from "@/assets/icons/deleteREd.svg";
+import EyeIcon from "@/assets/icons/eye.png";
 export type InventoryTableProps = {
   currentPage: number;
   rowsPerPage: number;
@@ -22,52 +28,44 @@ export default function InventoryTable({
 }: InventoryTableProps) {
   // ✅ dataset simulation
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
-  const allRows = Array.from({ length: 7 }, (_, i) => {
-    const sold = Math.floor(Math.random() * 50) + 1;
-    const stock = Math.floor(Math.random() * 100) + 20;
-    const perc = Math.floor((sold / stock) * 100);
-
-    return {
-      id: i + 1,
-      sku: `${1000 + i}`,
-      product: `Product ${i + 1}`,
-      sold,
-      stock,
-      perc,
-      date: (() => {
-        const base = new Date(2023, 0, 1);
-        base.setDate(base.getDate() + i);
-        return base.toISOString().split("T")[0]; // YYYY-MM-DD
-      })(),
-    };
-  });
-
+    const [activeRowId, setActiveRowId] = useState<string | null>(null);
+  const allRows = useSelector(
+        (state: RootState) => state.sellerProduct.product,
+      );
+const router = useRouter();
+ 
   // ✅ apply filters
   let filteredRows = allRows;
 
-  if (filters.date?.start && filters.date?.end) {
+   if (filters.date?.start && filters.date?.end) {
     filteredRows = filteredRows.filter(
-      (row) => row.date >= filters.date!.start && row.date <= filters.date!.end
+      (row) =>
+        row.created_at >= filters.date!.start &&
+        row.created_at <= filters.date!.end,
     );
   }
 
   if (filters.perc) {
-    filteredRows = filteredRows.filter((row) => row.perc >= filters.perc!);
+    filteredRows = filteredRows.filter((row) => row.sales_percentag >= filters.perc!);
   }
 
-  if (filters.sku) {
-    filteredRows = filteredRows.filter((row) =>
-      row.sku.toLowerCase().includes(filters.sku!.toLowerCase())
-    );
-  }
+  // if (filters.sku) {
+  //   filteredRows = filteredRows.filter((row) =>
+  //     row.sku.toLowerCase().includes(filters.sku!.toLowerCase())
+  //   );
+  // }
 
-  if (filters.qty) {
-    filteredRows = filteredRows.filter((row) => row.stock >= filters.qty!);
+   if (filters.qty) {
+    filteredRows = filteredRows.filter((row) => row.inventory >= filters.qty!);
   }
-
   // ✅ pagination
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);
+
+  const handleViewDetails = (id: string) => {
+    console.log("View details for product ID:", id);
+    router.push(`/dashboard/seller/products/product-details/${id}`)
+  }
 
   return (
     <div className="w-full mt-c32">
@@ -75,7 +73,7 @@ export default function InventoryTable({
         {/* Table Head */}
         <thead className="text-ffffff font-MontserratSemiBold text-base bg-947fff h-12">
           <tr>
-            <th className="px-4 text-center">SKU</th>
+            <th className="px-4 text-center">Stock code</th>
             <th className="px-4 text-left">Product name</th>
             <th className="px-4 text-center">Q.sold</th>
             <th className="px-4 text-center">Q. in stock</th>
@@ -92,22 +90,85 @@ export default function InventoryTable({
                 key={row.id}
                 className="h-c48 border-b border-b-000000/10 text-sm font-MontserratNormal"
               >
-                <td className="px-4 text-center">{row.sku}</td>
-                <td className="px-4 text-left">{row.product}</td>
+                <td className="px-4 text-center">{row.stockcode}</td>
+                <td className="px-4 text-left">{row.name}</td>
                 <td className="px-4 text-center">{row.sold}</td>
-                <td className="px-4 text-center">{row.stock}</td>
-                <td className="px-4 text-center">{row.perc}%</td>
-                <td>
-                  <button className="w-6 h-6 flex-shrink-0">
-                    <Image
-                      src={HandBug}
-                      alt="side button"
-                      width={24}
-                      height={24}
-                      className="flex-shrink-0"
-                    />
-                  </button>
-                </td>
+                <td className="px-4 text-center">{row.inventory}</td>
+                <td className="px-4 text-center">{row.sales_percentag}%</td>
+               <td className="px-4 text-center relative">
+                              <button
+                                className="w-6 h-6 flex-shrink-0"
+                                onClick={() =>
+                                  setActiveRowId((prev) => (prev === row.id ? null : row.id))
+                                }
+                              >
+                                <Image
+                                  src={HandBug}
+                                  alt="side button"
+                                  width={24}
+                                  height={24}
+                                />
+                              </button>
+                              <AnimatePresence>
+                                {activeRowId === row.id && (
+                                  <motion.div
+                                    key="dropdown"
+                                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                    className="absolute -right-12 mt-2 w-37.75 text-nowrap text-000000/65 text-c12 flex flex-col gap-3 py-2.5 px-4 font-MontserratNormal bg-white rounded-xl shadow-lg border z-40 "
+                                  >
+                                    {/* More Details */}
+                                    <button
+                                      className="flex items-center gap-3 w-full  text-ff715b hover:bg-gray-100 "
+                                      onClick={() => handleViewDetails(row.id)}
+                                    >
+                                      <Image
+                                        src={EyeIcon}
+                                        alt="view details"
+                                        width={15}
+                                        height={10}
+                                      />
+                                      More Details
+                                    </button>
+                                    {/* Edit */}
+                                    <button
+                                      className="flex items-center gap-3 w-full  hover:bg-gray-100 "
+                                      onClick={() => {
+                                        console.log("Edit", row.id);
+                                        setActiveRowId(null);
+                                      }}
+                                    >
+                                      <Image
+                                        src={EditIcon}
+                                        alt="edit"
+                                        width={12.5}
+                                        height={12.5}
+                                      />
+                                      Edit Product
+                                    </button>
+              
+                                    {/* Delete */}
+                                    <button
+                                      className="flex items-center gap-3 w-full  hover:bg-red-50 "
+                                      onClick={() => {
+                                        console.log("Delete", row.id);
+                                        setActiveRowId(null);
+                                      }}
+                                    >
+                                      <Image
+                                        src={DeleteIcon}
+                                        alt="edit"
+                                        width={12}
+                                        height={13}
+                                      />
+                                      Delete Product
+                                    </button>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </td>
               </tr>
             ))
           ) : (

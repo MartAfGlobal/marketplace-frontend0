@@ -18,5 +18,5 @@ export function Finance() {
   return <div className=""> <FinanceSecions/></div>;
 }
 export function Customers() {
-  return <div className="p-4">👥 This is your Customers section</div>;
+  return <div className="p-4"></div>;
 }

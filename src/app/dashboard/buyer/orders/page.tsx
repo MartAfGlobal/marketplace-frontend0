@@ -8,11 +8,11 @@ import NavBack from "@/assets/icons/navBacksmall.png";
 import OrdersPage from "@/components/ui/buyer-components/orders/orders";
 import SearchBtn from "@/assets/mobile/searchBtn.png"
 import { useRouter } from "next/navigation";
-import { useHttp } from "@/hooks/use-http";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/store";
-import { useEffect } from "react";
-import { fetchOrdersSuccess } from "@/store/orders/order-slice";
+// import { useHttp } from "@/hooks/use-http";
+// import { useDispatch, useSelector } from "react-redux";
+// import { RootState } from "@/store";
+// import { useEffect } from "react";
+// import { fetchOrdersSuccess } from "@/store/orders/order-slice";
 
 
 export default function OrderPage() {

@@ -17,16 +17,18 @@ import ArrowRightIcon from "@/assets/Seller/ArrowRight2.png";
 import CalenderIcon from "@/assets/Seller/calender2.png";
 import PercentageIcon from "@/assets/Seller/Percent2.png";
 import Quantity from "@/assets/Seller/quantity2.png";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function DraftProduct() {
   const [filters, setFilters] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
+const draft = useSelector((state: RootState) =>state.draft.draft);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const rowsPerPage = 10;
-  const totalRows = 20;
+  const totalRows = draft?.length || 0;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
   // 🔴 optional: close dropdown when clicking outside

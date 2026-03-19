@@ -21,15 +21,15 @@ export default function AuthenticationLayout({
   className="max-w-c393",
 }: AuthenticationLayoutProps) {
   return (
-    <div className="w-full relative h-dvh">
+    <div className="w-full relative h-dvh px-6 md:px-0">
       {/* Animated Logo/Link */}
       <motion.div
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
-        className="absolute top-c42 left-c40 h-fit"
+        className="absolute top-6.5 md:top-c42 left-1/2 -translate-x-1/2 md:left-c40 h-fit md:translate-0" 
       >
-        <Link href="/" className="flex items-center gap-4">
+        <Link href="/" className="flex items-center gap-2 md:gap-4">
           <Image src={authLogo} alt="Logo" width={34.36} height={28} />
           <p className="text-6a0dad font-MontserratBold text-c20">MARTAF</p>
         </Link>
@@ -102,7 +102,7 @@ export default function AuthenticationLayout({
               {description}
             </p>
           </div>
-          <div className={`m-auto w-full mt-4 ${className}`}>{children}</div>
+          <div className={`m-auto w-full mt-4  ${className}`}>{children}</div>
         </motion.div>
       </div>
 

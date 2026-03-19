@@ -152,8 +152,8 @@ const [isOpen, setIsOpen] = useState(false);
         </div>
 
         {/* ROW 2 */}
-        <div className="flex gap-4 items-center">
-          <div className="flex-1 flex flex-col gap-2">
+        <div className="flex gap-4 items-center md:flex-row flex-col">
+          <div className="flex-1 flex flex-col w-full gap-2">
             <Label>CAC02 & CAC07</Label>
 
             <input
@@ -185,7 +185,7 @@ const [isOpen, setIsOpen] = useState(false);
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-2">
+          <div className="flex-1 flex flex-col gap-2 w-full">
             <Label>TIN (tax identification number)</Label>
             <Input
               value={formData.tax_identification_number}
@@ -200,8 +200,8 @@ const [isOpen, setIsOpen] = useState(false);
         </div>
 
         {/* ROW 3 */}
-        <div className="flex gap-4 items-center">
-          <div className="flex-1 flex flex-col gap-2">
+        <div className="flex gap-4 items-center md:flex-row flex-col">
+          <div className="flex-1 flex flex-col gap-2 w-full">
             <Label>Upload TIN (tax identification number)</Label>
 
             <input
@@ -235,7 +235,7 @@ const [isOpen, setIsOpen] = useState(false);
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-2">
+          <div className="flex-1 flex flex-col gap-2 w-full">
             <Label>Certificate of Registration</Label>
 
             <input
@@ -274,8 +274,8 @@ const [isOpen, setIsOpen] = useState(false);
         </div>
 
         {/* ROW 4 */}
-        <div className="flex gap-4 items-center">
-          <div className="flex-1 flex flex-col gap-2">
+        <div className="flex gap-4 items-center w-full md:flex-row flex-col">
+          <div className="flex-1 flex flex-col gap-2 w-full">
             <Label>VAT number</Label>
             <Input
               value={formData.vat_number}

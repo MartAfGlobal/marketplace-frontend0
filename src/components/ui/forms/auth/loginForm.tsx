@@ -218,7 +218,7 @@ export default function LoginForm({ userType }: RegProps) {
             width={24}
             height={24}
             alt="google sign in"
-            className="h-c24 w-24"
+            className="md:h-c24 md:w-24 h-c32 w-c32"
           />
           Sign in with Google
         </button>

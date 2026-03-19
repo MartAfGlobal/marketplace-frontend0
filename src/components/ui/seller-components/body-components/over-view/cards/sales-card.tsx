@@ -6,9 +6,11 @@ import UsableCard from "./cardUse";
 import RedPointerIcon from "@/assets/Seller/redPointer.svg";
 import WhitePointerIcon from "@/assets/Seller/WhitePointer.svg?component";
 import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function SalesCard() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+    const product = useSelector((state: RootState) =>state.sellerProduct.product);
 
   const targets = [75, 15];
   const [progresses, setProgresses] = useState<number[]>(targets.map(() => 0));

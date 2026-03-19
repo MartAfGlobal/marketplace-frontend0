@@ -10,7 +10,8 @@ import productDetailReducer from "@/store/productDetails/productDetailsSlice";
 import categoryProductsReducer from "@/store/user-data/products/categoryProductsSlice";
 import subCategoryProductsReducer from "@/store/user-data/products/subCategoryProductsSlice";
 import topDealsReducer from "@/store/user-data/products/topDealsSlice";
-import uiSliceReducer from "@/store/uiSlice"
+import uiSliceReducer from "@/store/uiSlice";
+import draftReducer from "@/store/sellers/draftSlice";
 
 import productReducer from "./user-data/products/product-slice";
 import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice";
@@ -24,10 +25,24 @@ import orderSliceReducer from "@/store/orders/payment-success-slice";
 import selectedVariationReducer from "@/store/slices/variationSelectorSlice";
 import registrationReducer from "@/store/auth/registration-slice";
 import registrationsReducer from "./slices/registration-slice";
+import AddProductReducer from "@/store/sellers/addProductSlice";
+import SellerProductReducer from "@/store/sellers/productSlice";
 
-
+const SellerPersistConfig = {
+  key: "sellerProduct",
+  storage,
+};
 const tokenPersistConfig = {
   key: "token",
+  storage,
+};
+const addProducPersistConfig = {
+  key: "addProduct",
+  storage,
+};
+
+const draftPersistConfig = {
+  key: "draft",
   storage,
 };
 
@@ -101,16 +116,17 @@ const rootReducer = combineReducers({
     productDetailsPersistConfig,
     productDetailReducer,
   ),
-
+  sellerProduct: persistReducer(SellerPersistConfig, SellerProductReducer),
   tracking: persistReducer(trackingPersistCobfig, trackingReducer),
   token: persistReducer(tokenPersistConfig, tokenReducer),
   buyer: persistReducer(buyerPersistConfig, buyerReducer),
   seller: persistReducer(sellerPersistConfig, sellerReducer),
   cart: persistReducer(cartPersistConfig, cartReducer),
+  draft: persistReducer(draftPersistConfig, draftReducer),
   wishlist: persistReducer(wishlistPersistConfig, wishlistReducer),
   products: persistReducer(productsPersistConfig, productReducer),
   counter: counterReducer,
-
+  addProduct: persistReducer(addProducPersistConfig, AddProductReducer),
   selectedProduct: selectedProductReducer,
   wishlistLabel: persistReducer(
     wishlistLabelPersistCobfig,
@@ -118,7 +134,10 @@ const rootReducer = combineReducers({
   ),
 
   registration: persistReducer(registrationPersistConfig, registrationReducer),
-  registrations: persistReducer(registrationsPersistConfig, registrationsReducer),
+  registrations: persistReducer(
+    registrationsPersistConfig,
+    registrationsReducer,
+  ),
 
   orders: persistReducer(ordersPersistConfig, orderReducer),
   orderSlice: persistReducer(orderSlicePersistConfig, orderSliceReducer),
@@ -130,7 +149,7 @@ const rootReducer = combineReducers({
   subCategoryProducts: subCategoryProductsReducer,
   topDeals: topDealsReducer,
 
-  ui: uiSliceReducer
+  ui: uiSliceReducer,
 });
 
 const store = configureStore({

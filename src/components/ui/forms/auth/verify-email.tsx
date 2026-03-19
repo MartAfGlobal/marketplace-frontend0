@@ -30,7 +30,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
     email: "",
   });
 
-  const dispatch =useDispatch();
+  const dispatch = useDispatch();
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const toggleConfirmPasswordVisibility = () => {
@@ -48,7 +48,6 @@ export default function VerifyEmail({ userType, token }: RegProps) {
     router.push(
       `/auth/seller/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
     );
-    
   };
 
   useEffect(() => {
@@ -133,7 +132,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
               width={24}
               height={24}
               alt="google sign in"
-              className="h-c24 w-24"
+              className="md:h-c24 md:w-24 h-c32 w-c32"
             />
             Sign in with Google
           </button>

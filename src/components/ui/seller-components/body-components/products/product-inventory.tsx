@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 
-
 import ArrowRightIcon from "@/assets/Seller/ArrowRight2.png";
 import CalenderIcon from "@/assets/Seller/calender2.png";
 import PercentageIcon from "@/assets/Seller/Percent2.png";
@@ -11,23 +10,52 @@ import Quantity from "@/assets/Seller/quantity2.png";
 
 import downloadIcon from "@/assets/Seller/downloadIcon.svg";
 import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
-
+import productIcon from "@/assets/icons/productBox.svg";
 import FilterDropdown from "../over-view/Filter-components/filterButton";
 import { filterOptions } from "../over-view/Filter-components/filterOptions";
 import InventoryFullTable from "../../tables/inventory-full-table";
 import Pagination from "./pignation-button";
 import FullFilterButton from "../../tables/Filters/full-filterButton";
 import FilterModal from "../../tables/Filters/filter-modal";
+import uploadIcon from "@/assets/icons/uploadIcon.svg";
+import RichTextEditor from "@/components/ui/seller-product-form/RichTextEditor";
+import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { setStep1Data } from "@/store/sellers/addProductSlice";
+import { RootState } from "@/store";
 
 export default function ProductInventoryPage() {
   const [filters, setFilters] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [description, setDescription] = useState("");
+  const dispatch = useDispatch();
+
+  const product = useSelector(
+    (state: RootState) => state.sellerProduct.product,
+  );
+  const draft = useSelector((state: RootState) => state.draft.draft);
+
+  const liveproduct = product?.filter((prod) => prod.is_active === true);
+  const inactiveproduct = product?.filter((prod) => prod.is_active === false);
+
+  const router = useRouter();
+  const handleAddNewProduct = () => {
+    dispatch(
+      setStep1Data({
+        id: "",
+
+        attributes: [],
+      }),
+    );
+
+    router.push("/dashboard/seller/products/add-product");
+  };
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const rowsPerPage = 10;
-  const totalRows = 7;
+  const totalRows = product?.length || 0;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
   // 🔴 optional: close dropdown when clicking outside
@@ -45,7 +73,202 @@ export default function ProductInventoryPage() {
   }, []);
 
   return (
-    <div className="w-full  bg-ffffff h-233.5 circle-shadow rounded-c16 py-6 px-8 relative">
+    <div className="w-full  bg-ffffff  circle-shadow rounded-c16 py-6 px-8 relative">
+      <div className="w-full h-58 flex gap-39 ">
+        <div className="space-y-c48">
+          <div className="flex gap-2.5 items-end">
+            <div className="h-8">
+              <Image
+                src={productIcon}
+                height={20.99}
+                width={19.5}
+                className="flex-shrink-0"
+                alt="products"
+              />
+            </div>
+
+            <div className="flex-col gap-3">
+              <p className="font-MontserratNormal text-base text-left ">
+                Products available
+              </p>
+              <p className="text-c32 font-MontserratSemiBold">
+                {product?.length || 0}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-c64">
+            <div className="flex gap-2.5 items-end">
+              <div className="h-8">
+                <Image
+                  src={productIcon}
+                  height={20.99}
+                  width={19.5}
+                  className="flex-shrink-0"
+                  alt="products"
+                />
+              </div>
+
+              <div className="flex-col gap-2">
+                <p className="font-MontserratNormal text-base text-left">
+                  Live products
+                </p>
+                <p className="text-c20 font-MontserratSemiBold text-2d7565">
+                  {liveproduct?.length || 0}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2.5 items-end">
+              <div className="h-8">
+                <Image
+                  src={productIcon}
+                  height={20.99}
+                  width={19.5}
+                  className="flex-shrink-0"
+                  alt="products"
+                />
+              </div>
+
+              <div className="flex-col gap-2">
+                <p className="font-MontserratNormal text-base text-left">
+                  Inactive products
+                </p>
+                <p className="text-c20 font-MontserratSemiBold text-2d7565">
+                  {inactiveproduct?.length || 0}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2.5 items-end">
+              <div className="h-8 flex-shrink-0">
+                <Image
+                  src={productIcon}
+                  height={20.99}
+                  width={19.5}
+                  className="flex-shrink-0"
+                  alt="products"
+                />
+              </div>
+
+              <div className="flex-col gap-2">
+                <p className="font-MontserratNormal text-base text-left">
+                  Drafts
+                </p>
+                <p className="text-c20 font-MontserratSemiBold text-2d7565">
+                  {draft?.length || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p className="text-base text-left font-MontserratNormal">
+            Quick links
+          </p>
+          <div className="flex gap-6">
+            <button
+              type="button"
+              onClick={handleAddNewProduct}
+              className="mt-6 rounded-c8 w-full hover:text-ffffff hover:bg-ff715b   py-2 px-3 "
+            >
+              <div className="flex gap-2.5 ">
+                <div className="h-5">
+                  <Image
+                    src={productIcon}
+                    height={16.25}
+                    width={17.5}
+                    className="flex-shrink-0"
+                    alt="products"
+                  />
+                </div>
+
+                <div className="flex-col gap-2 ">
+                  <p className="font-MontserratSemiBold text-base text-left">
+                    Create new live product
+                  </p>
+                  <p className="text-c12 text-left font-MontserratNormal ">
+                    add a new product to live
+                  </p>
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() =>
+                router.push(
+                  "/dashboard/seller/products/add-product/add-to-draft",
+                )
+              }
+              className="mt-6 rounded-c8 w-full hover:text-ffffff hover:bg-ff715b   py-2 px-3 "
+            >
+              <div className="flex gap-2.5 ">
+                <div className="h-5">
+                  <Image
+                    src={uploadIcon}
+                    height={16.25}
+                    width={17.5}
+                    className="flex-shrink-0"
+                    alt="products"
+                  />
+                </div>
+
+                <div className="flex-col gap-2 text-left">
+                  <p className="font-MontserratSemiBold text-base text-left ">
+                    Create new product draft
+                  </p>
+                  <p className="text-c12 text-left font-MontserratNormal ">
+                    add a new product to your drafts
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+          <div className="flex gap-6">
+            <button className="mt-6 rounded-c8 w-full hover:text-ffffff hover:bg-ff715b   py-2 px-3 ">
+              <div className="flex gap-2.5 ">
+                <div className="h-5">
+                  <Image
+                    src={uploadIcon}
+                    height={16.25}
+                    width={17.5}
+                    className="flex-shrink-0"
+                    alt="products"
+                  />
+                </div>
+
+                <div className="flex-col gap-2 ">
+                  <p className="font-MontserratSemiBold text-base text-left">
+                    Upload bulk products
+                  </p>
+                  <p className="text-c12 text-left font-MontserratNormal ">
+                    Upload multiple products using our template
+                  </p>
+                </div>
+              </div>
+            </button>
+            <button className="mt-6 rounded-c8 w-full hover:text-ffffff hover:bg-ff715b   py-2 px-3 ">
+              <div className="flex gap-2.5 ">
+                <div className="h-5">
+                  <Image
+                    src={productIcon}
+                    height={16.25}
+                    width={17.5}
+                    className="flex-shrink-0"
+                    alt="products"
+                  />
+                </div>
+
+                <div className="flex-col gap-2 text-left">
+                  <p className="font-MontserratSemiBold text-base text-left  ">
+                    Request for product review
+                  </p>
+                  <p className="text-c12 text-left font-MontserratNormal ">
+                    Request for a product review for inactive products
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="w-full border border-000000/10 my-c48" />
       <p className="text-c18 font-MontserratSemiBold">Products Inventory</p>
       <div className="flex justify-between mt-6">
         <div className="w-full max-w-87.5">
@@ -105,10 +328,17 @@ export default function ProductInventoryPage() {
                 </span>
               )}
               {key === "perc" && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 w-fit justify-center">
                   <Image src={PercentageIcon} alt="%" width={13} height={13} />
-                  <span>
-                    {">"} {value}%
+                  <span className="flex gap-1">
+                    {value.from ?? 0}%
+                    <Image
+                      src={ArrowRightIcon}
+                      alt="TO"
+                      width={16}
+                      height={16}
+                    />
+                    {value.to ?? 100}%
                   </span>
                 </span>
               )}
@@ -136,8 +366,8 @@ export default function ProductInventoryPage() {
         filters={filters}
       />
 
-      <div className="w-full bg-2d7565 ">
-        <div className="w-full left-0 px-c32 absolute bottom-c32 ">
+      <div className="w-full  pt-13 ">
+        <div className="w-full left-0 px-c32 absolute bottom-4 ">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

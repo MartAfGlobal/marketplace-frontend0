@@ -4,16 +4,33 @@ import Image from "next/image";
 import AddIcon from "@/assets/Seller/addIcon.png";
 import backIcon from "@/assets/Seller/red-caret-left.png";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInView } from "framer-motion";
 
 import ProductHeader from "./productHeader";
 import ProductInventoryPage from "./product-inventory";
 import DraftProduct from "./draft-product";
 import AddProductForm from "./add-form/add-new-product";
+import { useFetchOrders } from "@/helpers/fetchOrders";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 
 export default function ProductBody() {
   const [showAddForm, setShowAddForm] = useState(false);
+
+     const { fetchdDraft } = useFetchProducts();
+     const { fetchProducts, fetchOrders } = useFetchProducts();
+     const token = useSelector((state:RootState)=>state.token?.token)
+  
+      useEffect(() => {
+        fetchdDraft();
+        fetchProducts();
+        // fetchOrders();
+      }, [ token]);
+
+
+
 
   // Refs for only header and add section
   const headerRef = useRef(null);
@@ -21,6 +38,8 @@ export default function ProductBody() {
 
   const headerInView = useInView(headerRef, { once: false });
   const addInView = useInView(addRef, { once: false });
+
+
 
   return (
     <div className="w-full space-y-c32 pb-c32">

@@ -101,7 +101,7 @@ export interface VerifyParams {
 
 export interface BusinessRegisterParams {
   company_name?: string;
-  buisness_type? : string
+  buisness_type?: string;
   business_industry?: string;
   business_registration_number?: string;
   CAC_No?: string;
@@ -302,6 +302,8 @@ export interface ProductImage {
   thumbnail: string;
   medium: string;
   large: string;
+  cloudinary_id?: string;
+  url?: string;
 }
 export interface AvailableAttribute {
   id: string;
@@ -351,6 +353,8 @@ export interface ProductVariation {
   has_discount: boolean;
   stock: number;
   is_default: boolean;
+
+  images: ProductImage[];
 
   main_image_url: string;
 }
@@ -552,7 +556,6 @@ export interface BuyerDispute {
   resolved_at: string | null;
 }
 
-
 export interface DisputePayload {
   id: string;
   dispute_number: string;
@@ -631,7 +634,6 @@ export interface EvidenceItem {
   uploaded_at: string;
 }
 
-
 export interface TimelineItem {
   id: string;
   action: string;
@@ -645,7 +647,6 @@ export interface TimelineItem {
     return_method?: string;
   };
 }
-
 
 export interface Items {
   id: string;
@@ -686,7 +687,7 @@ export interface OrderLineItem {
   product_slug: string;
   category_name: string;
   category_slug: string;
-  can_raise_dispute: boolean
+  can_raise_dispute: boolean;
 
   quantity: number;
   fulfilled_quantity: number;
@@ -1288,3 +1289,208 @@ export interface SuccessOrderData {
 export interface SuccessOrderState {
   SuccessOrderData: SuccessOrderData | null;
 }
+
+// export interface ProductListResponse {
+//   count: number;
+//   next: string | null;
+//   previous: string | null;
+//   results: Product[];
+// }
+export interface PriceRange {
+  min: string;
+  max: string;
+  currency: string;
+}
+export interface sellerProduct {
+  id: string;
+  name: string;
+  slug: string;
+  base_price: number;
+  inventory: number;
+  manufacturer_name: string;
+
+  is_active: boolean;
+  is_draft: boolean;
+  is_published: boolean;
+  is_approved: "approved" | "pending" | "rejected";
+
+  created_at: string;
+
+  brand: string | null;
+
+  main_image: {
+    medium: string;
+    thumbnail: string;
+  };
+
+  has_bulk_pricing: boolean;
+  has_variations: boolean;
+  variation_count: number;
+
+  sold: number;
+  rating_average: number;
+
+  price_range: PriceRange;
+
+  category: Category;
+
+  sales_percentag: number;
+  subcategory: SubCategory;
+  stockcode: string;
+
+  color_preview: ColorPreview[];
+
+  bulk_price_threshold: number;
+  bulk_price_tiers: BulkPriceTier[];
+
+  variation_options: Record<string, VariationOption>;
+}
+
+export interface ProductAttribute {
+  id: string;
+  name: string;
+  slug: string;
+  display_order: number;
+}
+
+export interface sellerImage {
+  id: string;
+  alt_text: string;
+  thumbnail: string;
+  medium: string;
+  large: string;
+}
+export interface SellerProductDetails {
+  id: string;
+  name: string;
+  slug: string;
+  stockcode: string;
+  first_image?: string;
+  activation_requested: boolean;
+  deactivation_requested: boolean;
+
+  can_edit: boolean;
+
+  description: string;
+  description_html: string;
+
+  specifications: any[];
+  specifications_html: string;
+  specifications_text: string;
+
+  features: any[];
+  category_info?: {
+    category: {
+      id: string;
+      name: string;
+    };
+    subcategory: {
+      id: string;
+      name: string;
+    };
+  };
+  draft_data?: {
+    product_images: sellerImage[];
+    specifications: any[];
+    specifications_text: string;
+    variations: ProductVariation[];
+  };
+
+  available_attributes: ProductAttribute[];
+
+  variation_options: VariationOptions;
+  variations: ProductVariation[];
+  variation_count: number;
+
+  has_variations: boolean;
+  has_bulk_pricing: boolean;
+
+  bulk_price_threshold: number;
+  bulk_price_tiers: any[];
+
+  base_price: number;
+  price_range: PriceRange;
+
+  inventory: number;
+  sold: number;
+  sales_percentage: number;
+
+  rating_average: number;
+
+  brand: string | null;
+  manufacturer_name: string;
+
+  main_image: {
+    medium: string;
+    thumbnail: string;
+  };
+  images: sellerImage[];
+
+  is_active: boolean;
+  is_approved: "approved" | "pending" | "rejected";
+  is_published: boolean;
+
+  created_at: string;
+
+  category?: ProductCategory;
+  weight: number;
+  whatsinbox: string | null;
+  whatsinbox_html: string;
+}
+
+export interface ProductCategory {
+  id: string;
+  name: string;
+  slug: string;
+  name: string;
+  slug: string;
+  image: string | null;
+  subcategory: SellersubCategory;
+}
+
+export interface SellersubCategory {
+  id: string;
+  name: string;
+  slug: string;
+  name: string;
+  slug: string;
+  image: string | null;
+}
+export interface ProductDraftPayload {
+  id: string;
+  name: string;
+  base_price: number;
+  quantity: number;
+  category: string;
+  first_image: string;
+  created_at: string;
+  updated_at: string;
+  last_edited_at: string;
+  time_since_edit: string;
+
+  category_info: {
+    category: {
+      id: string;
+      name: string;
+    };
+    subcategory: {
+      id: string;
+      name: string;
+    };
+  };
+
+  draft_summary: {
+    completeness_percent: number;
+    feature_count: number;
+    has_category: boolean;
+    has_description: boolean;
+    has_images: boolean;
+    has_name: boolean;
+    has_price: boolean;
+    spec_count: number;
+    variation_count: number;
+  };
+}
+export type RequestType = {
+  requestType: "activation" | "deactivation" | "submit" | null;
+};

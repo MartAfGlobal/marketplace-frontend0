@@ -171,10 +171,10 @@ export default function RegisterIndividual3({
   return (
     <div className="w-full h-full text-black/65">
       {!isOpen && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 d max-h-[70vh] overflow-y-auto p-4 rounded-c8">
           {/* ROW 1: Full Name + ID Selector */}
-          <div className="flex gap-4">
-            <div className="flex-1">
+          <div className="flex md:flex-row flex-col gap-4">
+            <div className="flex-1 flex flex-col gap-2">
               <Label>Full Legal Name</Label>
               <Input
                 value={formData.fullname}
@@ -184,7 +184,7 @@ export default function RegisterIndividual3({
               />
             </div>
 
-            <div className="flex-1 relative">
+            <div className="flex-1 flex flex-col gap-2 relative">
               <Label>ID type</Label>
               <div
                 className="border rounded-c8 px-3 py-2 min-h-[44px] flex flex-wrap gap-2 cursor-pointer relative items-center"
@@ -193,7 +193,7 @@ export default function RegisterIndividual3({
                 {/* LEFT: Dropdown Icon */}
 
                 {/* ID Tags */}
-                <div className="flex flex-wrap gap-2 flex-1">
+                <div className="flex flex-wrap gap-2 flex-1 ">
                   {formData.ids.length === 0 && (
                     <span className="text-sm text-gray-400">Select ID</span>
                   )}
@@ -263,8 +263,8 @@ export default function RegisterIndividual3({
 
           {/* ROW 2: ID Number + ID Front/Back Upload */}
           {formData.ids.map((id, idx) => (
-            <div key={id.means_of_id} className="flex gap-4">
-              <div className="flex-1 flex flex-col gap-2">
+            <div key={id.means_of_id} className="flex gap-4 md:flex-row flex-col">
+              <div className="flex-1 flex flex-col gap-2 ">
                 <Label> {getIdLabel(id.means_of_id)}</Label>
                 <Input
                   value={id.id_number}
@@ -276,11 +276,11 @@ export default function RegisterIndividual3({
                 />
               </div>
 
-              <div className="flex-1 flex flex-col gap-2">
+              <div className="flex-1 flex flex-col gap-2 ">
                 <Label> Upload {id.means_of_id.toLocaleLowerCase()} </Label>
                 <div className="flex gap-4">
                   {(["id_front_image", "id_back_image"] as const).map((key) => (
-                    <div key={key} className="flex-1">
+                    <div key={key} className="flex-1 flex flex-col gap-2">
                       <input
                         type="file"
                         className="hidden"
@@ -317,8 +317,8 @@ export default function RegisterIndividual3({
           ))}
 
           {/* ROW 3: Tax Number + Tax File */}
-          <div className="flex gap-4">
-            <div className="flex-1">
+          <div className="flex gap-4 flex-col md:flex-row">
+            <div className="flex-1 flex flex-col gap-2">
               <Label>TIN (tax identification number)</Label>
               <Input
                 value={formData.tax_identification_number}
@@ -331,7 +331,7 @@ export default function RegisterIndividual3({
               />
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col gap-2">
               <Label>Upload TIN (tax identification number)</Label>
               <input
                 type="file"
@@ -353,6 +353,7 @@ export default function RegisterIndividual3({
                 <span className="truncate text-sm">
                   {formData.tax_identification_file?.name || "Upload File"}
                 </span>
+                
                 {formData.tax_identification_file ? (
                   <button
                     type="button"
@@ -374,7 +375,7 @@ export default function RegisterIndividual3({
 
           {/* ROW 4: VAT */}
           <div className="flex gap-4">
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col gap-2">
               <Label>VAT Number</Label>
               <Input
                 value={formData.vat_number}
@@ -383,7 +384,7 @@ export default function RegisterIndividual3({
                 }
               />
             </div>
-            <div className="flex-1" />
+            <div className="flex-1 flex flex-col gap-2" />
           </div>
 
           <Button type="submit" disabled={loading}>

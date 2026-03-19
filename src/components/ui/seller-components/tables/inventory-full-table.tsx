@@ -5,18 +5,14 @@ import { useState } from "react";
 
 import HandBug from "@/assets/Seller/handBug.png";
 import ProductImage from "@/assets/Seller/productImage.png";
-
-// ✅ helper for status text
-const getStatusClass = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "active":
-      return "text-[#2D7565] font-semibold";
-    case "inactive":
-      return "text-[#CA0202] font-semibold";
-    default:
-      return "";
-  }
-};
+import { RootState } from "@/store";
+import { useSelector } from "react-redux";
+import { sellerProduct } from "@/types/global";
+import { AnimatePresence, motion } from "framer-motion";
+import EditIcon from "@/assets/icons/edit.svg";
+import DeleteIcon from "@/assets/icons/deleteREd.svg";
+import EyeIcon from "@/assets/icons/eye.png";
+import { useRouter } from "next/navigation";
 
 // ✅ helper for approval badge
 const getApprovalClass = (approval: string) => {
@@ -33,12 +29,12 @@ const getApprovalClass = (approval: string) => {
 };
 
 // ✅ props from parent
-export type InventoryFullTableProps = {
+ export type InventoryFullTableProps = {
   currentPage: number;
   rowsPerPage: number;
   filters?: {
     date?: { start: string; end: string };
-    perc?: number;
+    perc?: { from?: number; to?: number }; // <- change here
     sku?: string;
     qty?: number;
   };
@@ -49,51 +45,50 @@ export default function InventoryFullTable({
   rowsPerPage,
   filters = {},
 }: InventoryFullTableProps) {
-  // ✅ dataset (95 rows)
-  const allRows = Array.from({ length: 95 }, (_, i) => {
-    const sold = Math.floor(Math.random() * 50) + 1;
-    const stock = Math.floor(Math.random() * 100) + 20;
-    const perc = Math.floor((sold / stock) * 100);
+  const [activeRowId, setActiveRowId] = useState<string | null>(null);
 
-    return {
-      id: i + 1,
-      sku: `00${i + 1}`,
-      sold: i % 2 === 0 ? 25 : 0,
-      stock: 30,
-      status: i % 2 === 0 ? "Active" : "Inactive",
-      approval: i % 3 === 0 ? "Approved" : i % 3 === 1 ? "Pending" : "Rejected",
-      price: "#3200",
-      sales: i % 2 === 0 ? "60%" : "0",
-  
-      perc,
-      date: (() => {
-        const base = new Date(2023, 0, 1);
-        base.setDate(base.getDate() + i);
-        return base.toISOString().split("T")[0]; // YYYY-MM-DD
-      })(),
-    };
-  });
+  // ✅ dataset (95 rows)
+    const allRows = useSelector(
+      (state: RootState) => state.sellerProduct.product,
+    );
+    const router = useRouter();
+
+  console.log("all rows in table", allRows);
 
   let filteredRows = allRows;
 
-  if (filters.date?.start && filters.date?.end) {
-    filteredRows = filteredRows.filter(
-      (row) => row.date >= filters.date!.start && row.date <= filters.date!.end
-    );
+
+  const percentageSold = (row: sellerProduct) => {
+    const total = row.inventory;
+    return total > 0 ? (row.sold / total) * 100 : 0;
+  };
+
+if (filters.perc) {
+  const from = filters.perc.from ?? 0;
+  const to = filters.perc.to ?? 100;
+
+  filteredRows = filteredRows.filter((row) => {
+    const pct = percentageSold(row);
+    return pct >= from && pct <= to;
+  });
+}
+  const handleViewDetails = (id: string) => {
+    console.log("View details for product ID:", id);
+    router.push(`/dashboard/seller/products/product-details/${id}?isPublish=true`)
+  }
+    const handleEditDetails = (id: string) => {
+    console.log("View details for product ID:", id);
+    router.push(`/dashboard/seller/products/add-product/updateProduct/${id}`)
   }
 
-  if (filters.perc) {
-    filteredRows = filteredRows.filter((row) => row.perc >= filters.perc!);
-  }
-
-  if (filters.sku) {
-    filteredRows = filteredRows.filter((row) =>
-      row.sku.toLowerCase().includes(filters.sku!.toLowerCase())
-    );
-  }
+  // if (filters.sku) {
+  //   filteredRows = filteredRows.filter((row) =>
+  //     row.sku.toLowerCase().includes(filters.sku!.toLowerCase())
+  //   );
+  // }
 
   if (filters.qty) {
-    filteredRows = filteredRows.filter((row) => row.stock >= filters.qty!);
+    filteredRows = filteredRows.filter((row) => row.inventory >= filters.qty!);
   }
 
   // ✅ page slice logic
@@ -101,11 +96,11 @@ export default function InventoryFullTable({
   const currentRows = allRows.slice(startIndex, startIndex + rowsPerPage);
 
   // ✅ selected row state (per table, not pagination)
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
-  const toggleRow = (id: number) => {
+  const toggleRow = (id: string) => {
     setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id],
     );
   };
 
@@ -114,7 +109,7 @@ export default function InventoryFullTable({
   const togglePage = () => {
     if (allPageSelected) {
       setSelectedRows((prev) =>
-        prev.filter((id) => !currentRows.some((r) => r.id === id))
+        prev.filter((id) => !currentRows.some((r) => r.id === id)),
       );
     } else {
       setSelectedRows((prev) => [
@@ -160,10 +155,10 @@ export default function InventoryFullTable({
                 </div>
               </label>
             </th>
-            <th className="px-4 text-center w-21">SKU</th>
-            <th className="px-4 text-left w-70">Product name</th>
-            <th className="px-4 w-25 text-center">Q.sold</th>
-            <th className="px-4 w-33.5 text-center">Q. in stock</th>
+            <th className="px-4 text-center  text-nowrap">Stock code</th>
+            <th className="px-4 text-left">Product name</th>
+            <th className="px-4  text-center">Q.sold</th>
+            <th className="px-4 text-center">Q. in stock</th>
             <th className="px-4 text-center">Status</th>
             <th className="px-4 text-center">Approval</th>
             <th className="px-4 text-center">Price</th>
@@ -208,34 +203,44 @@ export default function InventoryFullTable({
                   </div>
                 </label>
               </td>
-              <td className="px-4 text-center">{row.sku}</td>
+
+              <td className="px-4 text-left">{row.stockcode}</td>
               <td className="px-4 max-w-70 align-middle">
                 <div className="inline-flex items-center gap-2">
                   <div className="w-12 h-12 rounded-full overflow-hidden">
                     <Image
-                      src={ProductImage}
+                      src={row.main_image?.medium || ProductImage}
                       alt="Product image"
                       width={48}
                       height={48}
                     />
                   </div>
-                  <span>Ankara Top and sleeves</span>
+                  <span>{row.name}</span>
                 </div>
               </td>
               <td className="px-4 text-center">{row.sold}</td>
-              <td className="px-4 text-center">{row.stock}</td>
-              <td className={`px-4 text-center ${getStatusClass(row.status)}`}>
-                {row.status}
+              <td className="px-4 text-center">{row.inventory}</td>
+              <td
+                className={`px-4 text-center ${row.is_active ? "text-2d7565" : "text-000000/50"}`}
+              >
+                {row.is_active ? "Live" : "Inactive"}
               </td>
               <td className="px-4 text-center">
-                <span className={getApprovalClass(row.approval)}>
-                  {row.approval}
+                <span className={getApprovalClass(row.is_approved)}>
+                  {row.is_approved}
                 </span>
               </td>
-              <td className="px-4 text-center">{row.price}</td>
-              <td className="px-4 text-center">{row.sales}</td>
+              <td className="px-4 text-center">₦{row.base_price}</td>
               <td className="px-4 text-center">
-                <button className="w-6 h-6 flex-shrink-0">
+                {row.sales_percentag > 0 ? row.sales_percentag : 0}%
+              </td>
+              <td className="px-4 text-center relative">
+                <button
+                  className="w-6 h-6 flex-shrink-0"
+                  onClick={() =>
+                    setActiveRowId((prev) => (prev === row.id ? null : row.id))
+                  }
+                >
                   <Image
                     src={HandBug}
                     alt="side button"
@@ -243,6 +248,62 @@ export default function InventoryFullTable({
                     height={24}
                   />
                 </button>
+                <AnimatePresence>
+                  {activeRowId === row.id && (
+                    <motion.div
+                      key="dropdown"
+                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="absolute -right-12 mt-2 w-37.75 text-nowrap text-000000/65 text-c12 flex flex-col gap-3 py-2.5 px-4 font-MontserratNormal bg-white rounded-xl shadow-lg border z-40 "
+                    >
+                      {/* More Details */}
+                      <button
+                        className="flex items-center gap-3 w-full  text-ff715b hover:bg-gray-100 "
+                        onClick={() => handleViewDetails(row.id)}
+                      >
+                        <Image
+                          src={EyeIcon}
+                          alt="view details"
+                          width={15}
+                          height={10}
+                        />
+                        More Details
+                      </button>
+                      {/* Edit */}
+                      <button
+                        className="flex items-center gap-3 w-full  hover:bg-gray-100 "
+                      onClick={() => handleEditDetails(row.id)}
+                      >
+                        <Image
+                          src={EditIcon}
+                          alt="edit"
+                          width={12.5}
+                          height={12.5}
+                        />
+                        Edit Product
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        className="flex items-center gap-3 w-full  hover:bg-red-50 "
+                        onClick={() => {
+                          console.log("Delete", row.id);
+                          setActiveRowId(null);
+                        }}
+                      >
+                        <Image
+                          src={DeleteIcon}
+                          alt="edit"
+                          width={12}
+                          height={13}
+                        />
+                        Delete Product
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </td>
             </tr>
           ))}

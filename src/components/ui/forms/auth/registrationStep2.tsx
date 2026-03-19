@@ -153,7 +153,7 @@ export default function RegisterFormStep2({ userType }: RegProps) {
       <div>
         <h1 className="mt-2 font-MontserratMedium">Business type</h1>
 
-        <div className="flex items-center text-c12 font-MontserratMedium gap-6 mt-3 mb-6">
+        <div className="flex text-nowrap items-center text-c12 font-MontserratMedium md:gap-6 gap-4  mt-3 mb-6">
           {/* Registered Company */}
           <button
             type="button"

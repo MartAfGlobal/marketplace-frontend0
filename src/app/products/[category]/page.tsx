@@ -42,7 +42,6 @@ export default function CategoryPage() {
     );
   }
 
-  // ✅ Derive display title from slug
   const title = categorySlug
     .replace(/-/g, " ")
     .replace(/\b\w/g, (c: string) => c.toUpperCase());

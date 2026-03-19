@@ -11,7 +11,7 @@ import AddProductMethodModal from "./add-product-modal";
 import { useState } from "react";
 
 export default function ProductHeader() {
-  const [isOpen, setIsOpen] = useState(false)
+  // const [isOpen, setIsOpen] = useState(false)
 
 
   return (
@@ -22,12 +22,12 @@ export default function ProductHeader() {
         
           <SearchInput showDropdown = {false}  className="max-w-138.5" placeholder="Search for anything" />
         
-        <Button onClick={()=> setIsOpen(true)} className="flex items-center justify-center gap-3 max-w-40">
+        {/* <Button onClick={()=> setIsOpen(true)} className="flex items-center justify-center gap-3 max-w-40">
           <Image src={addIcon} width={20} height={20} alt="adding" />
           <span>Add Product</span>
-        </Button>
+        </Button> */}
       </div>
-      <AddProductMethodModal isOpen={isOpen} onClose={()=>setIsOpen(false)}/>
+      {/* <AddProductMethodModal isOpen={isOpen} onClose={()=>setIsOpen(false)}/> */}
     </div>
   );
 }

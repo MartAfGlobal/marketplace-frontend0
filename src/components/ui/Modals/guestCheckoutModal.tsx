@@ -197,6 +197,7 @@ export default function GuestCheckoutModal({
       variation_id: item.variation_id || null,
       quantity: item.quantity,
     }));
+    console.log("checking formdata", formData, "items:", items);
 
     saveRequest({
       requestConfig: {
