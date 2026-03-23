@@ -34,6 +34,7 @@ export default function ProductInventoryPage() {
   const [description, setDescription] = useState("");
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [showToggleModal, setShowToggleModal] = useState(false);
+  const topRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.token?.token);
   const { sendHttpRequest } = useHttp();
@@ -104,7 +105,7 @@ export default function ProductInventoryPage() {
   }, []);
 
   return (
-    <div className="w-full  bg-ffffff  circle-shadow rounded-c16 py-6 px-8 relative">
+    <div className="w-full  bg-ffffff  circle-shadow rounded-c16 py-6 px-8 relative" ref={topRef}>
       <div className="w-full h-58 flex gap-39 ">
         <div className="space-y-c48">
           <div className="flex gap-2.5 items-end">
@@ -324,7 +325,7 @@ export default function ProductInventoryPage() {
           {/* Extra filters */}
           <FilterDropdown
             options={filterOptions}
-            onChange={(value) => console.log("Selected:", value)}
+            onChange={(value) => setFilters(prev => ({ ...prev, timeFilter: value }))}
           />
 
           <button className="w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8">
@@ -405,7 +406,14 @@ export default function ProductInventoryPage() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={(page) => setCurrentPage(page)}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              if (topRef.current) {
+                topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
           />
         </div>
       </div>

@@ -33,7 +33,7 @@ export default function AddProductStep1Page() {
   const router = useRouter();
 
   const [category, setCategory] = useState<Category | undefined>();
-  const [basePrice, setBasePrice] = useState<number | undefined>();
+  const [basePrice, setBasePrice] = useState<number | string | undefined>();
   const [subCategory, setSubCategory] = useState<SubCategory | undefined>();
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
@@ -330,9 +330,10 @@ export default function AddProductStep1Page() {
                 <Input
                   className="mt-2"
                   placeholder="Product base price"
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={basePrice ?? ""}
-                  onChange={(e) => setBasePrice(Number(e.target.value))}
+                  onChange={(e) => setBasePrice(e.target.value.replace(/[^0-9.]/g, ''))}
                 />
               </div>
             </div>

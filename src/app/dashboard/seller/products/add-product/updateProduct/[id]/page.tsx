@@ -33,6 +33,9 @@ import ResultModal from "@/components/ui/forms/resultModal";
 
 export interface VariantForm extends Omit<BaseVariantForm, 'images'> {
   images: (File | string | null)[];
+  attributeValueIds?: Record<string, string>;
+  price?: number | string;
+  stock?: number | string;
 }
 
 export default function UpdateProductPage() {
@@ -44,7 +47,7 @@ export default function UpdateProductPage() {
   const isLiveMode = searchParams?.get("isPublish") !== "false";
   const [specificationsText, setSpecificationsText] = useState("");
   const [category, setCategory] = useState<Category | undefined>();
-  const [basePrice, setBasePrice] = useState<number | undefined>();
+  const [basePrice, setBasePrice] = useState<number | string | undefined>();
   const [subCategory, setSubCategory] = useState<SubCategory | undefined>();
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
@@ -98,6 +101,8 @@ export default function UpdateProductPage() {
   const [draftId, setDraftId] = useState("");
   const [showDraftSuccess, setShowDraftSuccess] = useState(false);
   const [showLiveSuccess, setShowLiveSuccess] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!id || !token) return;
@@ -145,15 +150,19 @@ export default function UpdateProductPage() {
               if (idx < 4) variantImages[idx] = img.thumbnail || img.url || img;
             });
             const attrValues: Record<string, string> = {};
+            const attrIds: Record<string, string> = {};
             if (v.attribute_summary) {
               Object.entries(v.attribute_summary).forEach(([slug, val]: [string, any]) => {
                 attrValues[slug] = val.value || val.name || val;
+                if (val.id) attrIds[slug] = val.id;
+                else if (val.value_id) attrIds[slug] = val.value_id;
               });
             }
             return {
               id: String(v.id || crypto.randomUUID()),
               name: v.variation_name || v.name || "",
               attributesValues: attrValues,
+              attributeValueIds: attrIds,
               price: v.base_price || draft.base_price,
               stock: v.stock || v.inventory || draft.inventory || 0,
               images: variantImages,
@@ -254,9 +263,15 @@ export default function UpdateProductPage() {
       prev.map((v) => {
         if (v.id !== variantId) return v;
         const newValues = { ...v.attributesValues, [attributeSlug]: value };
+
+        const newId = getAttributeValueId(attributeSlug, value);
+        const newIds = { ...(v.attributeValueIds || {}) };
+        if (newId) newIds[attributeSlug] = newId;
+
         return {
           ...v,
           attributesValues: newValues,
+          attributeValueIds: newIds,
           name: generateVariantName(newValues),
         };
       }),
@@ -277,18 +292,100 @@ export default function UpdateProductPage() {
     setImages(newImages);
   };
 
-  const handleUpdateLiveProduct = () => {
-    if (!token) return;
+  const getAttributeValueId = (attributeSlug: string, value: string) => {
+    const attribute = step1Data.step1.attributes?.find(
+      (attr) => attr.attribute_slug === attributeSlug,
+    );
+    if (!attribute) return null;
 
+    const foundValue = attribute.values?.find((v: Values) => String(v.value).toLowerCase() === String(value).toLowerCase());
+    if (foundValue) return foundValue.id;
+
+    for (const extra of attribute.extra_fields || []) {
+      if (String(extra.default).toLowerCase() === String(value).toLowerCase() || String(extra.name).toLowerCase() === String(value).toLowerCase()) return extra.name;
+    }
+
+    return null;
+  };
+
+  const buildFormData = () => {
     const formData = new FormData();
     formData.append("name", productName);
     formData.append("description", description);
-    formData.append("base_price", String(basePrice));
-    formData.append("category_id", subCategory?.id || "");
+    if (basePrice !== undefined) formData.append("base_price", String(basePrice));
+    if (subCategory?.id) formData.append("category_id", subCategory.id);
+    if (specificationsText) formData.append("specifications_text", specificationsText);
 
     images.forEach((file) => {
       if (file && typeof file !== "string") formData.append("images", file);
     });
+
+    const isNewVariant = (vId: string) => vId.length === 36 && vId.includes("-");
+
+    const variationsPayload = variants.map((v, idx) => {
+      let finalIds = v.attributeValueIds ? Object.values(v.attributeValueIds) : [];
+      if (finalIds.length === 0) {
+        finalIds = Object.entries(v.attributesValues)
+          .map(([slug, value]) => getAttributeValueId(slug, value))
+          .filter((valId): valId is string => valId !== null);
+      }
+
+      return {
+        attribute_value_ids: finalIds,
+        base_price: Number(v.price ?? 0).toFixed(2),
+        stock: Number(v.stock ?? 0),
+        is_default: idx === 0,
+        gender: "unisex",
+        age_group: "adult",
+        low_stock_threshold: 10,
+        ...(isNewVariant(v.id) ? {} : { id: v.id }),
+      };
+    });
+
+    formData.append("variations", JSON.stringify(variationsPayload));
+
+    variants.forEach((variant, vIndex) => {
+      variant.images.forEach((file) => {
+        if (file && typeof file !== "string") {
+          formData.append(`variation_${vIndex}_images`, file);
+        }
+      });
+    });
+
+    return formData;
+  };
+
+  const validateForm = (): boolean => {
+    if (variants.length === 0) {
+      setErrorMessage("Please add at least one product variant.");
+      setShowErrorModal(true);
+      return false;
+    }
+
+    const hasAttributesRequired = step1Data.step1.attributes && step1Data.step1.attributes.length > 0;
+    
+    for (const v of variants) {
+      const finalIds = v.attributeValueIds ? Object.values(v.attributeValueIds) : [];
+      const fallbackIds = Object.entries(v.attributesValues)
+        .map(([slug, value]) => getAttributeValueId(slug, value))
+        .filter((valId): valId is string => valId !== null);
+      
+      const currentIdsCount = finalIds.length > 0 ? finalIds.length : fallbackIds.length;
+
+      if (hasAttributesRequired && currentIdsCount === 0) {
+        setErrorMessage("Please completely select attributes for your variants before publishing.");
+        setShowErrorModal(true);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleUpdateLiveProduct = () => {
+    if (!token) return;
+    if (!validateForm()) return;
+
+    const formData = buildFormData();
 
     updatingDraft({
       requestConfig: {
@@ -313,16 +410,9 @@ export default function UpdateProductPage() {
 
   const handleNext = () => {
     if (!isNextEnabled || !token) return;
+    if (!validateForm()) return;
 
-    const formData = new FormData();
-    formData.append("name", productName);
-    formData.append("description", description);
-    formData.append("base_price", String(basePrice));
-    formData.append("category_id", subCategory?.id || "");
-
-    images.forEach((file) => {
-      if (file && typeof file !== "string") formData.append("images", file);
-    });
+    const formData = buildFormData();
 
     updatingDraft({
       requestConfig: {
@@ -334,32 +424,19 @@ export default function UpdateProductPage() {
         userType: "seller",
       },
       successRes: (responseData: any) => {
-        const id = responseData.data.id;
+        const id = responseData.data?.id || draftId;
         setDraftId(id);
 
         fetchNextDraftDetails({
           requestConfig: {
-            url: `/products/manufacturer/drafts/${id}/`,
-            method: "GET",
+            url: `/products/manufacturer/drafts/${id}/publish/`,
+            method: "POST",
             token,
             isAuth: true,
             userType: "seller",
           },
-          successRes: (responseData: any) => {
-            const draft = responseData.data;
-
-            console.log("ggggggggg", draft);
-
-            dispatch(
-              setStep1Data({
-                id: draft.id ?? id,
-
-                attributes: subCategory?.effective_attributes ?? [],
-                // images: images.filter((i): i is File => i !== null), // File[]
-              }),
-            );
-
-            router.push("/dashboard/seller/products/add-product/step2");
+          successRes: (submitRes: any) => {
+            setShowLiveSuccess(true);
           },
         });
       },
@@ -369,30 +446,21 @@ export default function UpdateProductPage() {
   const handleSaveDraft = () => {
     if (!isSaveEnabled || !token) return;
 
-    const formData = new FormData();
-    formData.append("name", productName);
-    formData.append("description", description);
-
-    images.forEach((file) => {
-      if (file && typeof file !== "string") formData.append("images", file);
-    });
-
-    formData.append("base_price", String(basePrice));
-    formData.append("category_id", subCategory?.id || "");
+    const formData = buildFormData();
 
     savingToDraftReq({
       requestConfig: {
         url: url,
-        method: "POST",
+        method: method,
         token,
         body: formData,
         isAuth: true,
         userType: "seller",
       },
       successRes: (responseData: any) => {
-        const id = responseData.data.id;
-        setDraftId(id);
-
+        const id = responseData.data?.id || draftId;
+        if(id) setDraftId(id);
+        
         sendHttpRequest({
           requestConfig: {
             url: `/products/manufacturer/drafts/${id}/`,
@@ -401,13 +469,11 @@ export default function UpdateProductPage() {
             isAuth: true,
             userType: "seller",
           },
-          successRes: (responseData: any) => {
-            const draft = responseData.data;
-
+          successRes: (fetchRes: any) => {
+            const draft = fetchRes.data;
             dispatch(
               setStep1Data({
                 id: draft.id ?? id,
-
                 attributes: subCategory?.effective_attributes ?? [],
               }),
             );
@@ -500,9 +566,10 @@ export default function UpdateProductPage() {
                 <Input
                   className="mt-2"
                   placeholder="Product base price"
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={basePrice ?? ""}
-                  onChange={(e) => setBasePrice(Number(e.target.value))}
+                  onChange={(e) => setBasePrice(e.target.value.replace(/[^0-9.]/g, ''))}
                 />
               </div>
             </div>
@@ -638,14 +705,15 @@ export default function UpdateProductPage() {
                 <div>
                   <Label>Price</Label>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     className="mt-2"
                     value={variant.price ?? ""}
                     onChange={(e) =>
                       setVariants((prev) =>
                         prev.map((v) =>
                           v.id === variant.id
-                            ? { ...v, price: Number(e.target.value) }
+                            ? { ...v, price: e.target.value.replace(/[^0-9.]/g, '') }
                             : v,
                         ),
                       )
@@ -655,14 +723,15 @@ export default function UpdateProductPage() {
                 <div>
                   <Label>Quantity</Label>
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     className="mt-2"
                     value={variant.stock ?? ""}
                     onChange={(e) =>
                       setVariants((prev) =>
                         prev.map((v) =>
                           v.id === variant.id
-                            ? { ...v, stock: Number(e.target.value) }
+                            ? { ...v, stock: e.target.value.replace(/[^0-9.]/g, '') }
                             : v,
                         ),
                       )
@@ -754,6 +823,17 @@ export default function UpdateProductPage() {
         onConfirm={() => setShowLiveSuccess(false)}
         onCancel={() => setShowLiveSuccess(false)}
         onSecondaryAction={() => router.push("/dashboard/seller/products")}
+      />
+
+      <ResultModal
+        result="error"
+        title="Validation Error"
+        message={errorMessage}
+        discRescription="Please fix the errors before submitting."
+        buttenText="Close"
+        isOpen={showErrorModal}
+        onConfirm={() => setShowErrorModal(false)}
+        onCancel={() => setShowErrorModal(false)}
       />
     </AddProductLayout>
   );

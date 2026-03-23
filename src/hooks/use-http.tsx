@@ -99,7 +99,7 @@ export const useHttp = () => {
           error?.response?.status === 401 ||
           error?.response?.status === 403
         ) {
-          errorMessage = error?.response?.data?.detail || "Unauthorized. Please login again.";
+          errorMessage = "Token expired, please login.";
           dispatch(tokenActions.deleteToken());
           console.log("Unauthorized access - redirecting to login", errorMessage);
 

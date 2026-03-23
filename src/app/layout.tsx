@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import ClientProvider from "@/components/store/client-provider";
 import "./globals.css";
 import LayoutWrapper from "@/components/ui/LayoutWrappers/LayoutWrapper";
@@ -10,8 +10,11 @@ export const metadata: Metadata = {
   title: "market Africa",
   description:
     "Martaf is a pan-African e-commerce platform that connects buyers worldwide to authentic, locally crafted African products",
-  themeColor: "#6A0DAD",
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6A0DAD",
 };
 
 export default function RootLayout({

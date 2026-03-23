@@ -46,8 +46,8 @@ export default function ResultModal({
 
   const config = {
     success: {
-      bg: "bg-#FFAC06",
-      border: "#FFAC06",
+      bg: "bg-[#2D7565]",
+      border: "#4DBEA7",
       icon: (
         <motion.path
           d="M14 27 L22 35 L38 17"

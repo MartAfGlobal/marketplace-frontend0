@@ -33,6 +33,7 @@ export default function DraftProduct() {
   
   const draft = useSelector((state: RootState) =>state.draft.draft);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const topRef = useRef<HTMLDivElement>(null);
   
   const token = useSelector((state: RootState) => state.token?.token);
   const { sendHttpRequest } = useHttp();
@@ -76,7 +77,7 @@ export default function DraftProduct() {
   }, []);
 
   return (
-    <div className="w-full max-w-250  bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8 relative">
+    <div className="w-full max-w-250  bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8 relative" ref={topRef}>
       <p className="text-c18 font-MontserratSemiBold">Products in Draft</p>
       <div className="flex justify-between mt-6">
         <div className="w-full max-w-87.5">
@@ -99,7 +100,7 @@ export default function DraftProduct() {
 
           <FilterDropdown
             options={filterOptions}
-            onChange={(value) => console.log("Selected:", value)}
+            onChange={(value) => setFilters((prev) => ({ ...prev, timeFilter: value }))}
           />
 
           <button className="w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8">
@@ -180,7 +181,14 @@ export default function DraftProduct() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={(page: number) => setCurrentPage(page)}
+            onPageChange={(page: number) => {
+              setCurrentPage(page);
+              if (topRef.current) {
+                topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
           />
         )}
       </div>

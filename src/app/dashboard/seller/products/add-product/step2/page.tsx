@@ -28,8 +28,8 @@ export interface VariantForm {
   id: string;
   name: string;
   attributesValues: Record<string, string>;
-  price?: number;
-  stock?: number;
+  price?: number | string;
+  stock?: number | string;
   images: (File | null)[];
 }
 
@@ -185,8 +185,8 @@ export default function AddProductStep1Page() {
         .map(([slug, value]) => getAttributeValueId(slug, value))
         .filter((id): id is string => id !== null),
 
-      base_price: (v.price ?? 0).toFixed(2),
-      stock: v.stock ?? 0,
+      base_price: Number(v.price ?? 0).toFixed(2),
+      stock: Number(v.stock ?? 0),
       is_default: idx === 0,
       gender: "unisex",
       age_group: "adult",
@@ -218,9 +218,9 @@ export default function AddProductStep1Page() {
 
     const hasImage = first.images.some((img) => img !== null);
 
-    const hasPrice = first.price !== undefined && first.price > 0;
+    const hasPrice = first.price !== undefined && Number(first.price) > 0;
 
-    const hasStock = first.stock !== undefined && first.stock > 0;
+    const hasStock = first.stock !== undefined && Number(first.stock) > 0;
 
     return attributesFilled && hasImage && hasPrice && hasStock;
   })();
@@ -383,14 +383,15 @@ export default function AddProductStep1Page() {
               <div>
                 <Label>Price</Label>
                 <Input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   className="mt-2"
                   value={variant.price ?? ""}
                   onChange={(e) =>
                     setVariants((prev) =>
                       prev.map((v) =>
                         v.id === variant.id
-                          ? { ...v, price: Number(e.target.value) }
+                          ? { ...v, price: e.target.value.replace(/[^0-9.]/g, '') }
                           : v,
                       ),
                     )
@@ -400,14 +401,15 @@ export default function AddProductStep1Page() {
               <div>
                 <Label>Quantity</Label>
                 <Input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   className="mt-2"
                   value={variant.stock ?? ""}
                   onChange={(e) =>
                     setVariants((prev) =>
                       prev.map((v) =>
                         v.id === variant.id
-                          ? { ...v, stock: Number(e.target.value) }
+                          ? { ...v, stock: e.target.value.replace(/[^0-9.]/g, '') }
                           : v,
                       ),
                     )

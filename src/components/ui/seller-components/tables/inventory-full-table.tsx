@@ -39,6 +39,7 @@ const getApprovalClass = (approval: string) => {
     perc?: { from?: number; to?: number };
     sku?: string;
     qty?: { min?: number; max?: number };
+    timeFilter?: string;
   };
   onFilteredCount?: (count: number) => void;
   onToggleActive?: (id: string, isActive: boolean) => void;
@@ -80,6 +81,27 @@ if (filters.perc) {
     return pct >= from && pct <= to;
   });
 }
+  
+  if (filters.timeFilter && filters.timeFilter !== "All Time") {
+    const now = new Date();
+    filteredRows = filteredRows.filter((row) => {
+      if (!row.created_at) return false;
+      const rowDate = new Date(row.created_at);
+      
+      if (filters.timeFilter === "This Week") {
+        const startOfWeek = new Date();
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+        return rowDate >= startOfWeek;
+      } else if (filters.timeFilter === "This Month") {
+        return rowDate.getMonth() === now.getMonth() && rowDate.getFullYear() === now.getFullYear();
+      } else if (filters.timeFilter === "This Year") {
+        return rowDate.getFullYear() === now.getFullYear();
+      }
+      return true;
+    });
+  }
+
   const handleViewDetails = (id: string) => {
     console.log("View details for product ID:", id);
     router.push(`/dashboard/seller/products/product-details/${id}?isPublish=true`)

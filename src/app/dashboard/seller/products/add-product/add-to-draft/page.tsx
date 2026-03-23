@@ -221,7 +221,7 @@ export default function AddToDraftPage() {
         .map(([slug, value]) => getAttributeValueId(slug, value))
         .filter((id): id is string => id !== null),
 
-      base_price: (v.price ?? 0).toFixed(2),
+      base_price: Number(v.price ?? 0).toFixed(2),
       stock: v.stock ?? 0,
       is_default: idx === 0,
       gender: "unisex",
