@@ -7,20 +7,18 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { SellerProductDetails } from "@/types/global";
 import { useHttp } from "@/hooks/use-http";
 
-import Image from "next/image";
-import { Button } from "@/components/ui/Button/Button";
-import Trash from "@/assets/icons/trashWhite.svg";
-
 import ProductDetailsSkeleton from "@/components/reloadSpinner/ProductDetailsSkeleton";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import ResultModal from "@/components/ui/forms/resultModal";
-
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 
+// Extracted Components
+import ProductImageGallery from "./components/ProductImageGallery";
+import ProductInfo from "./components/ProductInfo";
+import ProductActions from "./components/ProductActions";
+import ProductVariants from "./components/ProductVariants";
+
 export default function SellerProductDetailsPage() {
-
   /* ------------------------- CORE HOOKS ------------------------- */
-
   const dispatch = useDispatch();
   const router = useRouter();
   const params = useParams();
@@ -28,104 +26,110 @@ export default function SellerProductDetailsPage() {
 
   const id = params?.id as string;
   const published = searchParams.get("isPublish") || undefined;
-
   const token = useSelector((state: RootState) => state.token?.token);
 
-
   /* ------------------------- LOCAL STATE ------------------------- */
-
-  const [productDetails, setProductDetails] =
-    useState<SellerProductDetails | null>(null);
-
+  const [productDetails, setProductDetails] = useState<SellerProductDetails | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
 
   const [successful, setSuccessful] = useState(false);
   const [DeleteDraftSuccess, setDeleteDraftSuccess] = useState(false);
-  const [deactivate, setDeactivate] = useState(false);
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"activate" | "deactivate" | "cancel activation" | "cancel deactivation" | null>(null);
 
-
-  /* ------------------------- HTTP HOOKS ------------------------- */
-
-  const { sendHttpRequest, loading } = useHttp();
-  const { sendHttpRequest: deleteReq, loading: deleteLoading } = useHttp();
-  const { sendHttpRequest: submitReq, loading: submiting } = useHttp();
-
+  /* ------------------------- HTTP HOOKS & ERRORS ------------------------- */
+  const { sendHttpRequest: fetchReq, loading: fetchLoading, error: fetchError, setError: setFetchError } = useHttp();
+  const { sendHttpRequest: deleteReq, loading: deleteLoading, error: deleteError, setError: setDeleteError } = useHttp();
+  const { sendHttpRequest: submitReq, loading: submiting, error: submitError, setError: setSubmitError } = useHttp();
 
   /* ------------------------- CUSTOM HOOK ------------------------- */
-
   const {
     activateProduct,
     loading: ActivatingLoading,
     success: ActivationSuccess,
+    setSuccess: setActivationSuccess,
     setIsActive,
     activated,
+    setActivated,
     cancelProductRequest,
     successMessage,
+    error: activateError,
+    setError: setActivateError,
   } = useFetchProducts(id);
 
-
   /* ------------------------- DERIVED VALUES ------------------------- */
+  const isDeactivation = successMessage === "Deactivation request cancelled.";
 
- const isDeactivation = successMessage === "Deactivation request cancelled.";
+  const url = published === "true"
+    ? `/products/manufacturer/products/${id}/`
+    : `/products/manufacturer/drafts/${id}/`;
 
+  const images = productDetails?.images?.length
+    ? productDetails.images
+    : productDetails?.draft_data?.product_images?.map((img: any, index: number) => ({
+        id: img.cloudinary_id || index.toString(),
+        thumbnail: img.url,
+        medium: img.url,
+        large: img.url,
+        alt_text: img.alt_text || productDetails?.name,
+      })) || [];
 
-const modalDescription = isDeactivation
-  ? "Your request to deactivate this product has been cancelled. The product will remain active and visible to customers."
-  : "Your request to activate this product has been cancelled. The product will remain inactive until you submit a new activation request.";
+  const variations = productDetails?.variations || productDetails?.draft_data?.variations || [];
 
-
-  const url =
-    published === "true"
-      ? `/products/manufacturer/products/${id}/`
-      : `/products/manufacturer/drafts/${id}/`;
-
-  const images =
-    productDetails?.images?.length
-      ? productDetails.images
-      : productDetails?.draft_data?.product_images?.map((img: any, index: number) => ({
-          id: img.cloudinary_id || index.toString(),
-          thumbnail: img.url,
-          medium: img.url,
-          large: img.url,
-          alt_text: img.alt_text || productDetails?.name,
-        })) || [];
-
-  const variations =
-    productDetails?.variations ||
-    productDetails?.draft_data?.variations ||
-    [];
-
+  // Centralized Error Handling
+  const anyError = fetchError || deleteError || submitError || activateError;
+  const clearError = () => {
+    if (fetchError) setFetchError(null);
+    if (deleteError) setDeleteError(null);
+    if (submitError) setSubmitError(null);
+    if (activateError) setActivateError(null);
+  };
 
   /* ------------------------- EFFECTS ------------------------- */
-
   useEffect(() => {
     if (!id || !token) return;
 
-    sendHttpRequest({
+    fetchReq({
       requestConfig: {
         url,
         method: "GET",
         token,
         isAuth: true,
-        userType: "buyer",
+        userType: "seller",
       },
       successRes: (responseData: any) => {
         setProductDetails(responseData?.data);
       },
     });
-  }, [id, token, sendHttpRequest]);
-
-
+  }, [id, token, fetchReq, url]);
 
   useEffect(() => {
-    if (!productDetails) return;
-
+    if (!productDetails || !token) return;
     if (productDetails.is_active) {
       setIsActive(true);
     }
-  }, [productDetails]);
+  }, [productDetails, setIsActive]);
 
+  useEffect(() => {
+    if (ActivationSuccess || activated) {
+      if (token) {
+        fetchReq({
+          requestConfig: {
+            url,
+            method: "GET",
+            token,
+            isAuth: true,
+            userType: "seller",
+          },
+          successRes: (responseData: any) => {
+            setProductDetails(responseData?.data);
+          },
+        });
+      }
+      setConfirmAction(null);
+    }
+  }, [ActivationSuccess, activated, fetchReq, url, token]);
 
   useEffect(() => {
     if (images.length) {
@@ -134,20 +138,10 @@ const modalDescription = isDeactivation
     }
   }, [images]);
 
-
-  useEffect(() => {
-    if (activated) {
-      setDeactivate(false);
-    }
-  }, [activated]);
-
-
   /* ------------------------- HANDLERS ------------------------- */
-
   const handleActivateToggle = () => {
     activateProduct();
   };
-
 
   const handleCancelRequest = () => {
     if (productDetails?.activation_requested) {
@@ -157,7 +151,6 @@ const modalDescription = isDeactivation
     }
   };
 
-
   const handleDeleteDraft = () => {
     if (!token) return;
 
@@ -165,9 +158,9 @@ const modalDescription = isDeactivation
       requestConfig: {
         url: `products/manufacturer/drafts/${id}/`,
         method: "DELETE",
-        token,
+        token: token as string,
         isAuth: true,
-        userType: "buyer",
+        userType: "seller",
       },
       successRes: () => {
         setDeleteDraftSuccess(true);
@@ -175,15 +168,40 @@ const modalDescription = isDeactivation
     });
   };
 
+  const isDraftComplete = () => {
+    if (!productDetails) return false;
+    
+    // Core fields
+    const hasName = !!productDetails.name;
+    const hasPrice = !!productDetails.base_price;
+    const hasCategory = !!(productDetails.category?.id || productDetails.category_info?.category?.id);
+    const hasDesc = !!(productDetails.description || productDetails.description_html);
+    
+    // Images
+    const imagesCount = productDetails.images?.length || productDetails.draft_data?.product_images?.length || 0;
+    const hasImages = imagesCount > 0;
+
+    // Variants or specs
+    const variantsCount = productDetails.variations?.length || productDetails.draft_data?.variations?.length || 0;
+    const hasInventory = !!(productDetails.inventory);
+    const hasVariantsOrInventory = variantsCount > 0 || hasInventory;
+
+    return hasName && hasPrice && hasCategory && hasDesc && hasImages && hasVariantsOrInventory;
+  };
 
   const handleSubmitDraftProduct = () => {
     if (!token || !id) return;
+
+    if (!isDraftComplete()) {
+      setShowIncompleteModal(true);
+      return;
+    }
 
     submitReq({
       requestConfig: {
         url: `/products/manufacturer/drafts/${id}/publish/`,
         method: "POST",
-        token,
+        token: token as string,
         isAuth: true,
         userType: "seller",
       },
@@ -193,350 +211,49 @@ const modalDescription = isDeactivation
     });
   };
 
-
   /* ------------------------- LOADING STATE ------------------------- */
-
-  if (!productDetails || loading) {
+  if (!productDetails || fetchLoading) {
     return <ProductDetailsSkeleton />;
   }
 
-
-  /* ------------------------- SELECTED IMAGE ------------------------- */
-
-  const selectedImage = images.find((img) => img.id === selectedImageId);
-
-
   /* ------------------------- UI ------------------------- */
-
-
-
-  //  const selectedImage = images.find((img) => img.id === selectedImageId);
   return (
-    <div className="w-full flex justify-center gap-c48  bg-ffffff  circle-shadow rounded-c16 py-6 px-8 relative">
+    <div className="w-full flex justify-center gap-c48 bg-ffffff circle-shadow rounded-c16 py-6 px-8 relative">
       <div className="w-full">
-        <div>
-          <div>
-            <div
-              // className={`w-full md:max-w-94.75 md:pb-12 ${
-              //   isModal ? "h-127.25 overflow-scroll no-scrollbar" : ""
-              // }`}
-              className="w-full   flex gap-6 h-76"
-            >
-              <Image
-                src={selectedImage?.large || "/placeholder.png"}
-                alt={selectedImage?.alt_text || "imgae"}
-                height={410}
-                width={397}
-                className="w-full  md:max-w-76 h-76"
-              />
-
-              {/* <div className=" gap-2 mt-4 hidden">
-              {images.map((img, i) => (
-                <button
-                  key={img.id}
-                  onMouseEnter={() => {
-                    setSelectedImageId(img.id);
-                    setActiveSlide(i);
-                  }}
-                  className={`h-1 rounded-full ${
-                    activeSlide === i
-                      ? "w-c117 bg-gray-700"
-                      : "w-c40 bg-gray-300"
-                  }`}
-                />
-              ))}
-            </div> */}
-              {images.length > 1 && (
-                <div className="flex gap-4 h-full w-full flex-col overflow-y-auto hcustom-scroll">
-                  {" "}
-                  {images.map((thumb, index) => (
-                    <button
-                      key={thumb.id}
-                      onMouseEnter={() => {
-                        setSelectedImageId(thumb.id);
-                        setActiveSlide(index);
-                      }}
-                      className={`w-c66-81  flex-shrink-0    ${
-                        activeSlide === index
-                          ? "my-gradient-border"
-                          : "border-transparent"
-                      } transition-all duration-200`}
-                    >
-                      {" "}
-                      <Image
-                        src={thumb.thumbnail}
-                        alt={thumb.alt_text}
-                        width={64}
-                        height={64}
-                        className="object-cover w-16 h-16"
-                      />{" "}
-                    </button>
-                  ))}{" "}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-4 mt-8">
-          <div className="space-y-2">
-            <h2 className="text-base font-MontserratNormal">Quantity sold</h2>
-            <p className="text-c20 font-MontserratNormal ">
-              {productDetails?.sold || 0}
-            </p>
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-base font-MontserratNormal">
-              Quantity in stock
-            </h2>
-            <p className="text-c20 font-MontserratNormal text-000000/78">
-              {productDetails.inventory ||
-                (productDetails as any).quantity ||
-                0}
-            </p>
-          </div>
-        </div>
-        <div className="mt-6 space-y-1">
-          <h1 className="text-c12 font-MontserratNormal">Product name</h1>
-          <p className="text-c18 font-MontserratMedium">
-            {productDetails?.name || "Product name not available"}
-          </p>
-        </div>
-        <div className="mt-4 space-y-1">
-          <h1 className="text-c12 font-MontserratNormal">Status</h1>
-          <p className="text-c18 font-MontserratMedium">
-            {published === "true"
-              ? productDetails?.is_active
-                ? "Live"
-                : "Inactive"
-              : "Draft"}
-          </p>
-        </div>
-        <div className="mt-4 space-y-1">
-          <h1 className="text-c12 font-MontserratNormal">Price</h1>
-          <p className="text-c24 font-MontserratSemiBold">
-            N{productDetails?.base_price}
-          </p>
-        </div>
-        <div className="mt-6 flex gap-6">
-          <div>
-            <h1 className="text-c12 font-MontserratNormal">Category</h1>
-            <p className="text-c18 font-MontserratMedium">
-              {productDetails?.category?.name ||
-                productDetails.category_info?.category.name ||
-                "N/A"}
-            </p>
-          </div>
-          <div>
-            <h1 className="text-c12 font-MontserratNormal">Subcategory</h1>
-            <p className="text-c18 font-MontserratMedium">
-              {productDetails?.category?.subcategory?.name ||
-                productDetails.category_info?.subcategory?.name ||
-                "N/A"}
-            </p>
-          </div>
-          <div>
-            <h1 className="text-c12 font-MontserratNormal">Stock code</h1>
-            {!published && (
-              <p className="text-c18 font-MontserratMedium">
-                {productDetails?.stockcode || "N/A"}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="mt-6">
-          <h1 className="text-sm font-MontserratSemiBold">
-            Product description
-          </h1>
-          <div className=" text-c12 font-MontserratNormal prose max-w-none prose-p:mt-0 prose-p:mb-0">
-            <div
-              dangerouslySetInnerHTML={{
-                __html:
-                  productDetails?.description_html ||
-                  productDetails?.description ||
-                  "",
-              }}
-            />
-          </div>
-        </div>
-        <div className="mt-6">
-          <h1 className="text-sm font-MontserratSemiBold">
-            Product specification
-          </h1>
-          <div className=" text-c12 font-MontserratNormal prose max-w-none prose-p:mt-0 prose-p:mb-0">
-            <div
-              dangerouslySetInnerHTML={{
-                __html:
-                  productDetails?.specifications_html ||
-                  productDetails?.draft_data?.specifications_text ||
-                  "",
-              }}
-            />
-            <p>{}</p>
-          </div>
-        </div>
+        <ProductImageGallery
+          images={images}
+          selectedImageId={selectedImageId}
+          activeSlide={activeSlide}
+          setSelectedImageId={setSelectedImageId}
+          setActiveSlide={setActiveSlide}
+        />
+        <ProductInfo
+          productDetails={productDetails}
+          published={published}
+        />
       </div>
+
       <div className="w-full mb-c32">
-        <div className="w-full flex gap-6  justify-end">
-          {published &&
-            productDetails.activation_requested === false &&
-            productDetails.deactivation_requested === false &&
-            productDetails.is_approved !== "pending" && (
-              <Button
-                onClick={() =>
-                  router.push(`/dashboard/seller/products/edit/${id}`)
-                }
-                className="max-w-41.75"
-              >
-                Edit product
-              </Button>
-            )}
+        <ProductActions
+          published={published}
+          productDetails={productDetails}
+          id={id}
+          ActivatingLoading={ActivatingLoading}
+          submiting={submiting}
+          deleteLoading={deleteLoading}
+          setConfirmAction={setConfirmAction}
+          handleCancelRequest={handleCancelRequest}
+          handleSubmitDraftProduct={handleSubmitDraftProduct}
+          handleDeleteDraft={handleDeleteDraft}
+        />
 
-          {published &&
-          productDetails.is_active &&
-          productDetails.is_approved === "approved" &&
-          productDetails.deactivation_requested === false ? (
-            <Button
-              onClick={() => setDeactivate(true)}
-              className="max-w-41.75  bg-ca0202"
-            >
-              Deactivate product
-            </Button>
-          ) : published &&
-            productDetails.is_active === false &&
-            productDetails.activation_requested === false &&
-            productDetails.is_approved === "approved" ? (
-            <Button
-              disabled={ActivatingLoading}
-              onClick={() => setDeactivate(true)}
-              className="max-w-41.75"
-              variant="primary"
-            >
-              {ActivatingLoading ? <LoadingSpinner /> : "Activate product"}
-            </Button>
-          ) : published && productDetails.activation_requested ? (
-            <Button
-              disabled={ActivatingLoading}
-              onClick={handleCancelRequest}
-              className="max-w-41.75"
-              variant="primary"
-            >
-              {ActivatingLoading? <LoadingSpinner/>: "Cancel activation"}
-            </Button>
-          ) : published && productDetails.deactivation_requested ? (
-            <Button
-              disabled={ActivatingLoading}
-              onClick={handleCancelRequest}
-              className="max-w-41.75"
-              variant="primary"
-            >
-             {ActivatingLoading? <LoadingSpinner/>: "Cancel deactivation"}
-            </Button>
-          ) : published &&
-            !productDetails.activation_requested &&
-            !productDetails.deactivation_requested &&
-            productDetails.is_approved === "pending" ? (
-            <Button
-              disabled={ActivatingLoading}
-              onClick={handleActivateToggle}
-              className="max-w-41.75"
-              variant="primary"
-            >
-              Cancel submission
-            </Button>
-          ) : (
-            !published && (
-              <Button
-                disabled={submiting || !id}
-                onClick={handleSubmitDraftProduct}
-                className="max-w-41.75"
-                variant="primary"
-              >
-                {submiting ? <LoadingSpinner /> : "Submit for review"}
-              </Button>
-            )
-          )}
-          {!published && (
-            <button
-              onClick={handleDeleteDraft}
-              className="bg-ca0202 rounded-c8 flex items-center justify-center w-c48 flex-shrink-0"
-            >
-              {deleteLoading ? (
-                <LoadingSpinner />
-              ) : (
-                <Image src={Trash} alt="Delete" width={18.12} height={19.63} />
-              )}
-            </button>
-          )}
-        </div>
-        <p className="text-c18 font-MontserratSemiBold mt-c32">Variants</p>
-        <div className="grid grid-cols-2 gap-y-12 gap-x-16 mt-c48">
-          {variations.map((variant, index) => (
-            <div
-              key={variant.id ?? `variant-${index}`}
-              className="flex gap-6 bg"
-            >
-              <div className="space-y-4">
-                <Image
-                  src={
-                    variant.main_image_url ||
-                    variant.images[0]?.url ||
-                    "/placeholder.png"
-                  }
-                  alt={variant.name || `Variant ${index + 1}`}
-                  width={96}
-                  height={96}
-                />
-                <div className="mt-4 space-y-1">
-                  <h1 className="text-c12 font-MontserratNormal">
-                    Variant name
-                  </h1>
-                  <p className="text-base flex-nowrap  font-MontserratSemiBold">
-                    {variant.name}
-                  </p>
-                </div>
-                <div className="mt-4 space-y-1">
-                  <h1 className="text-c12 font-MontserratNormal">Price</h1>
-                  <p className="text-base font-MontserratSemiBold">
-                    N{variant.base_price}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col gap-4 text-c12 font-MontserratNormal">
-                {Object.entries(variant.attribute_summary || {}).map(
-                  ([attribute, value]) => (
-                    <div
-                      key={attribute}
-                      className="flex gap-4 text-c12 font-MontserratNormal"
-                    >
-                      <div className="flex flex-col gap-1">
-                        <p>Attribute</p>
-                        <span className="font-semibold">{attribute}:</span>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <p>Value</p>
-                        <span>{value}</span>
-                      </div>
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <ProductVariants variations={variations} />
       </div>
+
+      {/* SUCCESS MODALS */}
       <ResultModal
         title="Product deleted from draft"
-        message="Your product has been Deleted from draft."
-        discRescription="Your product has been successfully deleted from the draft."
-        buttenText="Go to Products"
-        isOpen={DeleteDraftSuccess}
-        onConfirm={() => router.push("/dashboard/seller/products")}
-      />
-
-            <ResultModal
-        title="Product deleted from draft"
-        message="Your product has been Deleted from draft."
+        message="Your product has been deleted from the draft."
         discRescription="Your product has been successfully deleted from the draft."
         buttenText="Go to Products"
         isOpen={DeleteDraftSuccess}
@@ -553,23 +270,71 @@ const modalDescription = isDeactivation
       />
 
       <ResultModal
-        title={successMessage || ""}
-       
-        discRescription={modalDescription}
-        buttenText="Go to Products"
+        title={successMessage || "Request Cancelled"}
+        message="The action has been cancelled."
+        discRescription="Your cancellation request was successful and the product details are refreshed."
+        buttenText="Ok"
         isOpen={activated}
-        onConfirm={() => router.push("/dashboard/seller/products")}
+        onConfirm={() => setActivated(false)}
+        onCancel={() => setActivated(false)}
       />
 
       <ResultModal
+        title="Incomplete Draft"
+        message="Please complete all required fields before submitting."
+        discRescription="Your product is missing required details like images, category, price, or variations."
+        buttenText="Continue"
+        secondaryButtonText="Close"
+        isOpen={showIncompleteModal}
+        onConfirm={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}?isPublish=false`)}
+        onCancel={() => setShowIncompleteModal(false)}
+        onSecondaryAction={() => setShowIncompleteModal(false)}
+      />
+
+      <ResultModal
+        title="Status Updated Successfully"
+        message="The product has been successfully updated."
+        discRescription="Your changes have been applied and the product details are refreshed."
+        buttenText="Ok"
+        isOpen={ActivationSuccess}
+        onConfirm={() => setActivationSuccess(false)}
+        onCancel={() => setActivationSuccess(false)}
+      />
+
+      {/* CONFIRMATION MODAL */}
+      <ResultModal
         result="warning"
-        title="Are you sure you want to deactivate this product?"
-        discRescription="deactivating this product removes it from live viewing and ordering"
-        onCancel={() => setDeactivate(false)}
+        title={`Are you sure you want to ${confirmAction}?`}
+        discRescription={
+          confirmAction === "activate"
+            ? "Activating this product will make it live and available for viewing and ordering."
+            : confirmAction === "deactivate"
+            ? "Deactivating this product will remove it from live viewing and ordering."
+            : "This will cancel your pending request and revert the product's status."
+        }
+        onCancel={() => setConfirmAction(null)}
         loading={ActivatingLoading}
         buttenText="Yes, I accept"
-        isOpen={deactivate}
-        onConfirm={handleActivateToggle}
+        isOpen={!!confirmAction}
+        onConfirm={() => {
+          if (confirmAction === "activate" || confirmAction === "deactivate") {
+            handleActivateToggle();
+          } else {
+            handleCancelRequest();
+          }
+        }}
+      />
+
+      {/* ERROR MODAL (NEW) */}
+      <ResultModal
+        result="error"
+        title="Action Failed"
+        message={anyError || "An unexpected error occurred."}
+        discRescription="Please review your network connection and try again."
+        buttenText="Close"
+        isOpen={!!anyError}
+        onConfirm={clearError}
+        onCancel={clearError}
       />
     </div>
   );

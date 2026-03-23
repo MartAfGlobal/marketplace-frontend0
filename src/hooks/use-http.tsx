@@ -73,16 +73,26 @@ export const useHttp = () => {
         } else if (error?.response?.data) {
           const data = error.response.data;
 
-          // Extract the first message dynamically
-          if (typeof data === "object") {
-            const firstKey = Object.keys(data)[0];
-            const firstValue = data[firstKey];
-
-            if (Array.isArray(firstValue)) {
-              errorMessage = firstValue[0];
-            } else if (typeof firstValue === "string") {
-              errorMessage = firstValue;
+          // Extract the first message dynamically regardless of nesting depth
+          const extractFirstString = (obj: any): string | null => {
+            if (typeof obj === "string") return obj;
+            if (Array.isArray(obj)) {
+              for (const item of obj) {
+                const res = extractFirstString(item);
+                if (res) return res;
+              }
+            } else if (typeof obj === "object" && obj !== null) {
+              for (const key of Object.keys(obj)) {
+                const res = extractFirstString(obj[key]);
+                if (res) return res;
+              }
             }
+            return null;
+          };
+
+          const foundMessage = extractFirstString(data);
+          if (foundMessage) {
+            errorMessage = foundMessage;
           }
         }
         if (
@@ -97,6 +107,13 @@ export const useHttp = () => {
           const isMobile = /Android|iPhone|iPad|iPod/i.test(
             navigator.userAgent,
           );
+          
+          if (typeof window !== "undefined") {
+            const currentUrl = window.location.pathname + window.location.search;
+            if (currentUrl.startsWith("/dashboard/seller")) {
+               localStorage.setItem("sellerRedirectUrl", currentUrl);
+            }
+          }
 
           if (userType === "seller") {
             router.replace("/auth/seller/login");

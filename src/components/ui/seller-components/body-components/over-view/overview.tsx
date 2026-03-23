@@ -10,18 +10,24 @@ import ProductInventory from "./product-inventory";
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 import { RootState } from "@/store";
 import { useEffect } from "react";
+import OverviewSkeleton from "@/components/reloadSpinner/OverviewSkeleton";
+
+import { useState } from "react";
 
 export default function OverviewBody() {
- 
+  const [initialLoading, setInitialLoading] = useState(true);
   
-       const { fetchdDraft } = useFetchProducts();
-       const { fetchProducts } = useFetchProducts();
-       const token = useSelector((state:RootState)=>state.token?.token)
+       const { fetchProducts, fetchdDraft, loading } = useFetchProducts();
+       const product = useSelector((state:RootState)=>state.sellerProduct.product)
     
         useEffect(() => {
-          fetchdDraft;
+          fetchdDraft();
           fetchProducts();
+          const timer = setTimeout(() => setInitialLoading(false), 800);
+          return () => clearTimeout(timer);
         }, []);
+ 
+  if (initialLoading || (loading && (!product || product.length === 0))) return <OverviewSkeleton />;
  
   return (
     <div className="space-y-6 pb-c32 ">

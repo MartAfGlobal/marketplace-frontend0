@@ -27,7 +27,7 @@ export default function NavigationBar() {
   return (
     <nav className="text-white font-MontserratSemiBold text-sm flex gap-6 relative">
       {navItems.map((item, index) => {
-        const isActive = pathname === item.href;
+        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         const isDisabled = isIncomplete && index !== 0; // Only first item active if incomplete
 
         return (

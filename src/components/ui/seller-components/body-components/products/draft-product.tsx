@@ -19,16 +19,46 @@ import PercentageIcon from "@/assets/Seller/Percent2.png";
 import Quantity from "@/assets/Seller/quantity2.png";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { useHttp } from "@/hooks/use-http";
+import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export default function DraftProduct() {
   const [filters, setFilters] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-const draft = useSelector((state: RootState) =>state.draft.draft);
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  const draft = useSelector((state: RootState) =>state.draft.draft);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  
+  const token = useSelector((state: RootState) => state.token?.token);
+  const { sendHttpRequest } = useHttp();
+  const { fetchdDraft } = useFetchProducts();
+
+  const handleDeleteDraft = (id: string) => {
+    if (!token) return;
+    setDeletingId(id);
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/manufacturer/drafts/${id}/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: () => {
+        setDeletingId(null);
+        setShowDeleteModal(true);
+        fetchdDraft();
+      }
+    });
+  };
 
   const rowsPerPage = 10;
-  const totalRows = draft?.length || 0;
+  const totalRows = filteredCount !== null ? filteredCount : (draft?.length || 0);
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
   // 🔴 optional: close dropdown when clicking outside
@@ -104,10 +134,17 @@ const draft = useSelector((state: RootState) =>state.draft.draft);
                 </span>
               )}
               {key === "perc" && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 w-fit justify-center">
                   <Image src={PercentageIcon} alt="%" width={13} height={13} />
-                  <span>
-                    {">"} {value}%
+                  <span className="flex gap-1">
+                    {value.from ?? 0}%
+                    <Image
+                      src={ArrowRightIcon}
+                      alt="TO"
+                      width={16}
+                      height={16}
+                    />
+                    {value.to ?? 100}%
                   </span>
                 </span>
               )}
@@ -133,6 +170,9 @@ const draft = useSelector((state: RootState) =>state.draft.draft);
         rowsPerPage={rowsPerPage}
         currentPage={currentPage}
         filters={filters}
+        onFilteredCount={setFilteredCount}
+        onDelete={handleDeleteDraft}
+        deletingId={deletingId}
       />
 
       <div className="w-full mt-c32">
@@ -144,6 +184,15 @@ const draft = useSelector((state: RootState) =>state.draft.draft);
           />
         )}
       </div>
+
+      <ResultModal
+        title="Product deleted from draft"
+        message="Your product has been deleted from the draft."
+        discRescription="Your product has been successfully deleted from the draft."
+        buttenText="Ok"
+        isOpen={showDeleteModal}
+        onConfirm={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 }

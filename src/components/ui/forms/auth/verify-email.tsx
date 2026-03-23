@@ -86,11 +86,11 @@ export default function VerifyEmail({ userType, token }: RegProps) {
     console.log("Registration data:", { ...formData });
   };
 
-  const [showPassword, setShowPassword] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false);
 
-  const toggleVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
+  // const toggleVisibility = () => {
+  //   setShowPassword((prev) => !prev);
+  // };
 
   const isFormValid = formData.email !== "";
 
@@ -139,7 +139,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
         </div>
         <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
           <p className="text-161616"> have an account?</p>
-          <Link href="/auth/login" className="text-ff715b">
+          <Link href="/auth/seller/login" className="text-ff715b">
             Sign in
           </Link>
         </div>

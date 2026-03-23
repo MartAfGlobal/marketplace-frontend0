@@ -26,6 +26,7 @@ import { base } from "framer-motion/client";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export default function AddProductStep1Page() {
   const dispatch = useDispatch();
@@ -50,12 +51,14 @@ export default function AddProductStep1Page() {
     Record<string, string>
   >({});
 
-  const hasImage = images.some((img) => img !== null);
+  const [showDraftSuccess, setShowDraftSuccess] = useState(false);
+
+  const hasAllImages = images.every((img) => img !== null);
 
   const isNextEnabled =
-    productName && category && subCategory && hasImage && description;
+    productName && category && subCategory && hasAllImages && description && !!basePrice;
 
-  const isSaveEnabled = !!productName;
+  const isSaveEnabled = !!productName && !!basePrice;
 
   const handleImageChange = (file: File, index: number) => {
     const newImages = [...images];
@@ -65,9 +68,16 @@ export default function AddProductStep1Page() {
 
   const token = useSelector((state: RootState) => state.token?.token);
 
-  const { sendHttpRequest: savingToDraftReq, loading: savingDraft } = useHttp();
-  const { sendHttpRequest, loading: fetchingDraftDetails } = useHttp();
-  const { sendHttpRequest: updatingDraft, loading: updating } = useHttp();
+  const { sendHttpRequest: savingToDraftReq, loading: savingDraft, error: saveDraftError, setError: setSaveDraftError } = useHttp();
+  const { sendHttpRequest, loading: fetchingDraftDetails, error: fetchDraftError, setError: setFetchDraftError } = useHttp();
+  const { sendHttpRequest: updatingDraft, loading: updating, error: updateDraftError, setError: setUpdateDraftError } = useHttp();
+
+  const anyError = saveDraftError || fetchDraftError || updateDraftError;
+  const clearError = () => {
+    setSaveDraftError(null);
+    setFetchDraftError(null);
+    setUpdateDraftError(null);
+  };
 
   const step1Data = useSelector((state: RootState) => state.addProduct);
 
@@ -226,12 +236,12 @@ export default function AddProductStep1Page() {
 
             dispatch(
               setStep1Data({
-                
                 id: draft.id ?? id,
-                
                 attributes: subCategory?.effective_attributes ?? [],
               }),
             );
+            
+            setShowDraftSuccess(true);
           },
         });
       },
@@ -360,9 +370,7 @@ export default function AddProductStep1Page() {
         <div className="mt-c48 flex justify-end gap-6 items-center">
           <Button
             type="button"
-            disabled={
-              loading || updating || fetchingDraftDetails || savingDraft
-            }
+            disabled={loading || updating || fetchingDraftDetails || savingDraft || !isSaveEnabled}
             onClick={handleSaveDraft}
             variant="secondary"
             className="max-w-32.5"
@@ -375,9 +383,7 @@ export default function AddProductStep1Page() {
           </Button>
 
           <Button
-            disabled={
-              loading || updating || fetchingDraftDetails || savingDraft
-            }
+            disabled={loading || updating || fetchingDraftDetails || savingDraft || !isNextEnabled}
             type="button"
             onClick={handleNext}
             className="max-w-32.5"
@@ -386,6 +392,30 @@ export default function AddProductStep1Page() {
           </Button>
         </div>
       </form>
+
+      <ResultModal
+        title="Product Saved to Draft"
+        message="Your product has been securely saved as a draft."
+        discRescription="You can continue editing now, or view your drafts from the products dashboard."
+        buttenText="Continue"
+        secondaryButtonText="Go back to products"
+        isOpen={showDraftSuccess}
+        onConfirm={() => setShowDraftSuccess(false)}
+        onCancel={() => setShowDraftSuccess(false)}
+        onSecondaryAction={() => router.push("/dashboard/seller/products")}
+      />
+
+      {/* ERROR MODAL */}
+      <ResultModal
+        result="error"
+        title="Action Failed"
+        message={anyError || "An unexpected error occurred."}
+        discRescription="Please review the error and try again."
+        buttenText="Close"
+        isOpen={!!anyError}
+        onConfirm={clearError}
+        onCancel={clearError}
+      />
     </AddProductLayout>
   );
 }

@@ -1,7 +1,6 @@
 "use client"
 
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import OrderSectionSelector from "../side-selector";
 
 import AnalyticsIcon from "@/assets/Seller/analytics.png";
@@ -11,10 +10,17 @@ import FinanceOverview from "./Finance-Overview/finance-overview";
 import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
 import FinanceTransaction from "./finance-transactions";
 import Payout from "./payout";
+import DashboardTableSkeleton from "@/components/reloadSpinner/DashboardTableSkeleton";
 
 export default function FinanceSecions() {
   const [activeId, setActiveId] = useState("overview");
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const sections = [
     {
@@ -36,6 +42,8 @@ export default function FinanceSecions() {
       content:  <Payout/>,
     },
   ];
+
+  if (loading) return <DashboardTableSkeleton />;
 
   return (
     <div>

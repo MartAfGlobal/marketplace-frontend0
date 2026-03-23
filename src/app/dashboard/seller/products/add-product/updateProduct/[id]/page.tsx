@@ -28,7 +28,12 @@ import { base } from "framer-motion/client";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { VariantForm } from "../../step2/page";
+import { VariantForm as BaseVariantForm } from "../../step2/page";
+import ResultModal from "@/components/ui/forms/resultModal";
+
+export interface VariantForm extends Omit<BaseVariantForm, 'images'> {
+  images: (File | string | null)[];
+}
 
 export default function UpdateProductPage() {
   const dispatch = useDispatch();
@@ -36,6 +41,7 @@ export default function UpdateProductPage() {
   const params = useParams();
   const id = params?.id as string;
   const searchParams = useSearchParams();
+  const isLiveMode = searchParams?.get("isPublish") !== "false";
   const [specificationsText, setSpecificationsText] = useState("");
   const [category, setCategory] = useState<Category | undefined>();
   const [basePrice, setBasePrice] = useState<number | undefined>();
@@ -43,7 +49,7 @@ export default function UpdateProductPage() {
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
 
-  const [images, setImages] = useState<(File | null)[]>([
+  const [images, setImages] = useState<(File | string | null)[]>([
     null,
     null,
     null,
@@ -84,47 +90,109 @@ export default function UpdateProductPage() {
   const { sendHttpRequest: savingToDraftReq, loading: savingDraft } = useHttp();
   const { sendHttpRequest, loading: fetchingDraftDetails } = useHttp();
   const { sendHttpRequest: updatingDraft, loading: updating } = useHttp();
+  const { sendHttpRequest: fetchNextDraftDetails, loading: fetchingNextDraftDetails } = useHttp();
+  const { sendHttpRequest: fetchAttributesReq } = useHttp();
 
   const step1Data = useSelector((state: RootState) => state.addProduct);
 
   const [draftId, setDraftId] = useState("");
+  const [showDraftSuccess, setShowDraftSuccess] = useState(false);
+  const [showLiveSuccess, setShowLiveSuccess] = useState(false);
 
-  //   useEffect(() => {
-  //   const existingId = draftId || step1Data.step1.id;
+  useEffect(() => {
+    if (!id || !token) return;
 
-  //   if (!existingId || !token) return;
+    sendHttpRequest({
+      requestConfig: {
+        url: isLiveMode 
+          ? `/products/manufacturer/products/${id}/` 
+          : `/products/manufacturer/drafts/${id}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (responseData: any) => {
+        const draft = responseData.data;
+        if (!draft) return;
 
-  //   sendHttpRequest({
-  //     requestConfig: {
-  //       url: `/products/manufacturer/drafts/${existingId}/`,
-  //       method: "GET",
-  //       token,
-  //       isAuth: true,
-  //       userType: "seller",
-  //     },
-  //     successRes: (responseData: any) => {
-  //       const draft = responseData.data;
+        setProductName(draft.name ?? "");
+        setDescription(draft.description || draft.description_html || "");
+        setBasePrice(draft.base_price ?? undefined);
+        setSpecificationsText(draft.specifications_text || draft.specifications_html || draft.draft_data?.specifications_text || "");
 
-  //       // 🔥 populate form states
-  //       setProductName(draft.name ?? "");
-  //       setDescription(draft.description ?? "");
-  //       setBasePrice(draft.base_price ?? undefined);
+        const cat = draft.category_info?.category || draft.category;
+        if (cat) setCategory(cat);
 
-  //       // If your API returns category/subcategory objects
-  //       if (draft.category) setCategory(draft.category);
-  //       if (draft.sub_category) setSubCategory(draft.sub_category);
+        const subCat = draft.category_info?.subcategory || draft.subcategory || draft.sub_category || draft.category?.subcategory;
+        if (subCat) setSubCategory(subCat);
 
-  //       // Images (if URLs returned)
-  //       if (draft.draft_data.product_images && draft.draft_data.product_images.length > 0) {
-  //         setImages(
-  //           draft.draft_data.product_images.map(() => null) // keep slots but no File objects
-  //         );
-  //       }
+        const draftImages = draft.draft_data?.product_images || draft.images || [];
+        if (draftImages.length > 0) {
+          const newImages: (File | string | null)[] = [null, null, null, null];
+          draftImages.forEach((img: any, idx: number) => {
+            if (idx < 4) newImages[idx] = img.thumbnail || img.url || img;
+          });
+          setImages(newImages);
+        }
 
-  //       setDraftId(draft.id);
-  //     },
-  //   });
-  // }, [token, draftId, step1Data.step1.id]);
+        const draftVariants = draft.variations || draft.draft_data?.variations || [];
+        if (draftVariants.length > 0) {
+          const mappedVariants = draftVariants.map((v: any) => {
+            const variantImages: (File | string | null)[] = [null, null, null, null];
+            const vImgs = v.images || v.product_images || [];
+            vImgs.forEach((img: any, idx: number) => {
+              if (idx < 4) variantImages[idx] = img.thumbnail || img.url || img;
+            });
+            const attrValues: Record<string, string> = {};
+            if (v.attribute_summary) {
+              Object.entries(v.attribute_summary).forEach(([slug, val]: [string, any]) => {
+                attrValues[slug] = val.value || val.name || val;
+              });
+            }
+            return {
+              id: String(v.id || crypto.randomUUID()),
+              name: v.variation_name || v.name || "",
+              attributesValues: attrValues,
+              price: v.base_price || draft.base_price,
+              stock: v.stock || v.inventory || draft.inventory || 0,
+              images: variantImages,
+            };
+          });
+          setVariants(mappedVariants);
+        } else if (draft.inventory || draft.quantity) {
+          setVariants((prev) => [
+            { ...prev[0], price: draft.base_price, stock: draft.inventory || draft.quantity }
+          ]);
+        }
+      }
+    });
+  }, [id, token, sendHttpRequest]);
+
+  // Sync subcategory attributes to Redux for Variations display
+  useEffect(() => {
+    if (!category?.id || !subCategory?.id || !token) return;
+
+    fetchAttributesReq({
+      requestConfig: {
+        url: `/products/manufacturer/categories/${category.id}/subcategories/`,
+        method: "GET",
+        token,
+      },
+      successRes: (res: any) => {
+        const subs = res.data?.subcategories || [];
+        const fullSub = subs.find((s: any) => s.id === subCategory.id);
+        if (fullSub?.effective_attributes) {
+          dispatch(
+            setStep1Data({
+              id: draftId || step1Data.step1.id,
+              attributes: fullSub.effective_attributes,
+            })
+          );
+        }
+      },
+    });
+  }, [category?.id, subCategory?.id, token, dispatch]);
 
   const handleAddVariant = () => {
     setVariants((prev) => [
@@ -195,17 +263,46 @@ export default function UpdateProductPage() {
     );
   };
 
-  const url =
-    draftId === "" || step1Data.step1.id === ""
+  const url = isLiveMode
+    ? `/products/manufacturer/products/${id}/`
+    : draftId === "" || step1Data.step1.id === ""
       ? "/products/manufacturer/drafts/"
       : `/products/manufacturer/drafts/${draftId || step1Data.step1.id}/`;
 
-  const method = draftId === "" || step1Data.step1.id === "" ? "POST" : "PUT";
+  const method = isLiveMode ? "PUT" : draftId === "" || step1Data.step1.id === "" ? "POST" : "PUT";
 
   const handleImageRemove = (index: number) => {
     const newImages = [...images];
     newImages[index] = null;
     setImages(newImages);
+  };
+
+  const handleUpdateLiveProduct = () => {
+    if (!token) return;
+
+    const formData = new FormData();
+    formData.append("name", productName);
+    formData.append("description", description);
+    formData.append("base_price", String(basePrice));
+    formData.append("category_id", subCategory?.id || "");
+
+    images.forEach((file) => {
+      if (file && typeof file !== "string") formData.append("images", file);
+    });
+
+    updatingDraft({
+      requestConfig: {
+        url,
+        method,
+        token,
+        body: formData,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: () => {
+        setShowLiveSuccess(true);
+      },
+    });
   };
 
   useEffect(() => {
@@ -224,7 +321,7 @@ export default function UpdateProductPage() {
     formData.append("category_id", subCategory?.id || "");
 
     images.forEach((file) => {
-      if (file) formData.append("images", file);
+      if (file && typeof file !== "string") formData.append("images", file);
     });
 
     updatingDraft({
@@ -240,7 +337,7 @@ export default function UpdateProductPage() {
         const id = responseData.data.id;
         setDraftId(id);
 
-        sendHttpRequest({
+        fetchNextDraftDetails({
           requestConfig: {
             url: `/products/manufacturer/drafts/${id}/`,
             method: "GET",
@@ -277,7 +374,7 @@ export default function UpdateProductPage() {
     formData.append("description", description);
 
     images.forEach((file) => {
-      if (file) formData.append("images", file);
+      if (file && typeof file !== "string") formData.append("images", file);
     });
 
     formData.append("base_price", String(basePrice));
@@ -314,6 +411,7 @@ export default function UpdateProductPage() {
                 attributes: subCategory?.effective_attributes ?? [],
               }),
             );
+            setShowDraftSuccess(true);
           },
         });
       },
@@ -340,7 +438,7 @@ export default function UpdateProductPage() {
                 {img ? (
                   <>
                     <Image
-                      src={URL.createObjectURL(img)}
+                      src={typeof img === "string" ? img : URL.createObjectURL(img!)}
                       alt={`image-${i}`}
                       width={96}
                       height={96}
@@ -425,6 +523,14 @@ export default function UpdateProductPage() {
                 onSelect={(sub: SubCategory) => {
                   setSubCategory(sub);
                   setAttributesValues({});
+                  if (sub?.effective_attributes) {
+                    dispatch(
+                      setStep1Data({
+                        id: draftId || step1Data.step1.id,
+                        attributes: sub.effective_attributes,
+                      })
+                    );
+                  }
                 }}
               />
             </div>
@@ -476,7 +582,7 @@ export default function UpdateProductPage() {
                     className="relative h-24 w-24 overflow-hidden rounded-c8 border"
                   >
                     <Image
-                      src={URL.createObjectURL(img!)}
+                      src={typeof img === "string" ? img : URL.createObjectURL(img!)}
                       alt={`variant-${idx}`}
                       width={96}
                       height={96}
@@ -584,35 +690,71 @@ export default function UpdateProductPage() {
           </div>
         </fieldset>
 
-        <div className="mt-c48 flex justify-end gap-6 items-center">
-          <Button
-            type="button"
-            disabled={
-              loading || updating || fetchingDraftDetails || savingDraft
-            }
-            onClick={handleSaveDraft}
-            variant="secondary"
-            className="max-w-32.5"
-          >
-            {savingDraft ? (
-              <LoadingSpinner color="border-ff715b" />
-            ) : (
-              "Save in draft"
-            )}
-          </Button>
+        {isLiveMode ? (
+          <div className="mt-c48 flex justify-end gap-6 items-center">
+            <Button
+              type="button"
+              disabled={loading || updating || fetchingDraftDetails}
+              onClick={handleUpdateLiveProduct}
+              className="max-w-32.5"
+            >
+              {updating ? <LoadingSpinner color="border-white" /> : "Update Product"}
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-c48 flex justify-end gap-6 items-center">
+            <Button
+              type="button"
+              disabled={
+                loading || updating || fetchingDraftDetails || savingDraft
+              }
+              onClick={handleSaveDraft}
+              variant="secondary"
+              className="max-w-32.5"
+            >
+              {savingDraft ? (
+                <LoadingSpinner color="border-ff715b" />
+              ) : (
+                "Save in draft"
+              )}
+            </Button>
 
-          <Button
-            disabled={
-              loading || updating || fetchingDraftDetails || savingDraft
-            }
-            type="button"
-            onClick={handleNext}
-            className="max-w-32.5"
-          >
-            {updating || fetchingDraftDetails ? <LoadingSpinner /> : "Next"}
-          </Button>
-        </div>
+            <Button
+              disabled={
+                loading || updating || fetchingDraftDetails || savingDraft || fetchingNextDraftDetails
+              }
+              type="button"
+              onClick={handleNext}
+              className="max-w-32.5"
+            >
+              {updating || fetchingNextDraftDetails ? <LoadingSpinner color="border-white" /> : "Next"}
+            </Button>
+          </div>
+        )}
       </form>
+      <ResultModal
+        title="Saved as Draft"
+        message="Your product details have been securely saved as a draft."
+        discRescription="You can continue editing now, or go back to your products dashboard."
+        buttenText="Continue Editing"
+        secondaryButtonText="Go to Products"
+        isOpen={showDraftSuccess}
+        onConfirm={() => setShowDraftSuccess(false)}
+        onCancel={() => setShowDraftSuccess(false)}
+        onSecondaryAction={() => router.push("/dashboard/seller/products")}
+      />
+      
+      <ResultModal
+        title="Update Submitted for Review"
+        message="Your product updates have been successfully submitted."
+        discRescription="Changes will be visible to customers once approved by an admin."
+        buttenText="Continue Editing"
+        secondaryButtonText="Go to Dashboard"
+        isOpen={showLiveSuccess}
+        onConfirm={() => setShowLiveSuccess(false)}
+        onCancel={() => setShowLiveSuccess(false)}
+        onSecondaryAction={() => router.push("/dashboard/seller/products")}
+      />
     </AddProductLayout>
   );
 }

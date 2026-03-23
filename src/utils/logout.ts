@@ -21,6 +21,14 @@ export const logout = (
 
     // Clear redux token
     dispatch(tokenActions.deleteToken());
+    
+    // Save current url before redirecting to login
+    if (typeof window !== "undefined") {
+      const currentUrl = window.location.pathname + window.location.search;
+      if (currentUrl.startsWith("/dashboard/seller")) {
+         localStorage.setItem("sellerRedirectUrl", currentUrl);
+      }
+    }
 
     // Redirect based on role
     if (isSeller) {

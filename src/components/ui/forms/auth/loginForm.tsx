@@ -86,7 +86,13 @@ export default function LoginForm({ userType }: RegProps) {
     }
 
     if (userType === "seller") {
-      router.push("/dashboard/seller");
+      const redirectUrl = localStorage.getItem("sellerRedirectUrl");
+      if (redirectUrl) {
+        localStorage.removeItem("sellerRedirectUrl");
+        router.push(redirectUrl);
+      } else {
+        router.push("/dashboard/seller");
+      }
       return;
     }
 

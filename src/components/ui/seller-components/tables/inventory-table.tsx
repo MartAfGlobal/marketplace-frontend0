@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import Empty from "@/assets/Seller/Empty.svg";
 import { RootState } from "@/store";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import EditIcon from "@/assets/icons/edit.svg";
 import DeleteIcon from "@/assets/icons/deleteREd.svg";
@@ -15,49 +15,68 @@ export type InventoryTableProps = {
   rowsPerPage: number;
   filters?: {
     date?: { start: string; end: string };
-    perc?: number;
+    perc?: { from?: number; to?: number };
     sku?: string;
-    qty?: number;
+    qty?: { min?: number; max?: number };
   };
+  onFilteredCount?: (count: number) => void;
 };
 
 export default function InventoryTable({
   currentPage,
   rowsPerPage,
   filters = {},
+  onFilteredCount,
 }: InventoryTableProps) {
   // ✅ dataset simulation
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
     const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const allRows = useSelector(
         (state: RootState) => state.sellerProduct.product,
-      );
+      ) || [];
 const router = useRouter();
  
   // ✅ apply filters
   let filteredRows = allRows;
 
-   if (filters.date?.start && filters.date?.end) {
-    filteredRows = filteredRows.filter(
-      (row) =>
-        row.created_at >= filters.date!.start &&
-        row.created_at <= filters.date!.end,
+  if (filters.date?.start && filters.date?.end) {
+    const start = new Date(filters.date.start).getTime();
+    const end = new Date(filters.date.end).getTime();
+    filteredRows = filteredRows.filter((row) => {
+      if (!row.created_at) return false;
+      const rowTime = new Date(row.created_at).getTime();
+      return rowTime >= start && rowTime <= end;
+    });
+  }
+
+  if (filters.perc?.from !== undefined || filters.perc?.to !== undefined) {
+    filteredRows = filteredRows.filter((row) => {
+      const from = filters.perc!.from ?? 0;
+      const to = filters.perc!.to ?? 100;
+      const total = row.inventory || 0;
+      const pct = total > 0 ? (row.sold / total) * 100 : 0;
+      return pct >= from && pct <= to;
+    });
+  }
+
+  if (filters.sku) {
+    filteredRows = filteredRows.filter((row) =>
+      row.stockcode?.toLowerCase().includes(filters.sku!.toLowerCase())
     );
   }
 
-  if (filters.perc) {
-    filteredRows = filteredRows.filter((row) => row.sales_percentag >= filters.perc!);
+  if (filters.qty?.min !== undefined || filters.qty?.max !== undefined) {
+    filteredRows = filteredRows.filter((row) => {
+      const min = filters.qty!.min ?? 0;
+      const max = filters.qty!.max ?? Infinity;
+      return (row.inventory || 0) >= min && (row.inventory || 0) <= max;
+    });
   }
+  // ✅ report filtered count to parent
+  useEffect(() => {
+    onFilteredCount?.(filteredRows.length);
+  }, [filteredRows.length, onFilteredCount]);
 
-  // if (filters.sku) {
-  //   filteredRows = filteredRows.filter((row) =>
-  //     row.sku.toLowerCase().includes(filters.sku!.toLowerCase())
-  //   );
-  // }
-
-   if (filters.qty) {
-    filteredRows = filteredRows.filter((row) => row.inventory >= filters.qty!);
-  }
   // ✅ pagination
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);

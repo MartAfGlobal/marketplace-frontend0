@@ -5,7 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import ImageExtension from "@tiptap/extension-image";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   Image as ImageIcon,
@@ -48,6 +48,12 @@ export default function RichTextEditor({ value, onChange, label }: Props) {
       },
     },
   });
+
+  useEffect(() => {
+    if (editor && value && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
 
   if (!editor) return null;
 

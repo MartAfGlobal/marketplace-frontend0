@@ -1,7 +1,20 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import SearchInput from "../../../landindPage/Header/SearchInput";
 import OrderSecions from "./Order-section-body/order-section-body";
+import DashboardTableSkeleton from "@/components/reloadSpinner/DashboardTableSkeleton";
 
 export default function SelleOrderspage() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) return <DashboardTableSkeleton />;
+
   return (
     <div className="w-full">
       <div className="w-full flex justify-between ">

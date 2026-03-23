@@ -39,9 +39,16 @@ export default function AddProductStep1Page() {
 
   const token = useSelector((state: RootState) => state.token?.token);
 
-  const { sendHttpRequest: savingToDraftReq, loading: savingDraft } = useHttp();
-  const { sendHttpRequest, loading: fetchingDraftDetails } = useHttp();
-  const { sendHttpRequest: updatingDraft, loading: updating } = useHttp();
+  const { sendHttpRequest: savingToDraftReq, loading: savingDraft, error: saveDraftError, setError: setSaveDraftError } = useHttp();
+  const { sendHttpRequest, loading: fetchingDraftDetails, error: fetchDraftError, setError: setFetchDraftError } = useHttp();
+  const { sendHttpRequest: updatingDraft, loading: updating, error: updateDraftError, setError: setUpdateDraftError } = useHttp();
+
+  const anyError = saveDraftError || fetchDraftError || updateDraftError;
+  const clearError = () => {
+    setSaveDraftError(null);
+    setFetchDraftError(null);
+    setUpdateDraftError(null);
+  };
   const [saveDraftSuccess, setSaveDraftSuccess] = useState(false);
 
   const step1Data = useSelector((state: RootState) => state.addProduct.step1);
@@ -139,7 +146,7 @@ export default function AddProductStep1Page() {
   };
 
   const handleSaveDraft = () => {
-    if (!specificationsText || !token) return;
+    if (!token) return;
     console.log("saving draft", step1Data);
 
     const formData = new FormData();
@@ -167,8 +174,7 @@ export default function AddProductStep1Page() {
             userType: "seller",
           },
           successRes: () => {
-            resetAllSteps();
-            setSaveDraftSuccess;
+            setSaveDraftSuccess(true);
           },
         });
       },
@@ -233,11 +239,26 @@ export default function AddProductStep1Page() {
       />
       <ResultModal
         title="Product Saved to Draft"
-        message="Your product has been saved as a draft."
-        discRescription="You can edit it later or submit it for approval."
-        buttenText="Go to Products"
+        message="Your product has been securely saved as a draft."
+        discRescription="You can continue editing now, or view your drafts from the products dashboard."
+        buttenText="Continue"
+        secondaryButtonText="Go back to products"
         isOpen={saveDraftSuccess}
-        onConfirm={() => router.push("/dashboard/seller/products")}
+        onConfirm={() => setSaveDraftSuccess(false)}
+        onCancel={() => setSaveDraftSuccess(false)}
+        onSecondaryAction={() => router.push("/dashboard/seller/products")}
+      />
+
+      {/* ERROR MODAL */}
+      <ResultModal
+        result="error"
+        title="Action Failed"
+        message={anyError || "An unexpected error occurred."}
+        discRescription="Please review the error and try again."
+        buttenText="Close"
+        isOpen={!!anyError}
+        onConfirm={clearError}
+        onCancel={clearError}
       />
     </AddProductLayout>
   );

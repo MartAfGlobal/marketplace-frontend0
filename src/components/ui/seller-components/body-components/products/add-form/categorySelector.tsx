@@ -202,8 +202,9 @@ export function SubCategoryDropdown({
       },
     });
 
-    // Reset selected subcategory when category changes
-    onSelect(null as any); // or onSelect(undefined) if you use undefined in parent
+    // We removed the automatic onSelect(null as any) because the parent (CategoryDropdown) 
+    // already handles resetting the subcategory when the user manually selects a new category.
+    // Firing it here wipes out the autofill during initial mount.
   }, [category, token]);
 
   return category ? (

@@ -19,7 +19,7 @@ import { RequestType } from "@/types/global";
 export const useFetchProducts = (id?: string) => {
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.token?.token);
-  const { sendHttpRequest, loading } = useHttp();
+  const { sendHttpRequest, loading, error, setError } = useHttp();
   const [success, setsuccess] = useState(false);
   const [activated, setActivated]= useState(false)
   const [isActive, setIsActive] = useState(false);
@@ -205,10 +205,14 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
     activateProduct,
     cancelProductRequest,
     success,
+    setSuccess: setsuccess,
     request,
     setRequest,
     successMessage,
     loading,
-    activated
+    activated,
+    setActivated,
+    error,
+    setError
   };
 };

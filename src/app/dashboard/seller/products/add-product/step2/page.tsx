@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export interface VariantForm {
   id: string;
@@ -38,8 +39,14 @@ export default function AddProductStep1Page() {
   const token = useSelector((state: RootState) => state.token?.token);
   const router = useRouter();
 
-  const { sendHttpRequest: savingToDraftReq, loading: savingDraft } = useHttp();
-  const { sendHttpRequest, loading: nexting } = useHttp();
+  const { sendHttpRequest: savingToDraftReq, loading: savingDraft, error: saveDraftError, setError: setSaveDraftError } = useHttp();
+  const { sendHttpRequest, loading: nexting, error: nextingError, setError: setNextingError } = useHttp();
+
+  const anyError = saveDraftError || nextingError;
+  const clearError = () => {
+    setSaveDraftError(null);
+    setNextingError(null);
+  };
 
   // const [category, setCategory] = useState<Category | undefined>();
   // const [subCategory, setSubCategory] = useState<SubCategory | undefined>();
@@ -57,6 +64,8 @@ export default function AddProductStep1Page() {
       images: [null, null, null, null],
     },
   ]);
+
+  const [showDraftSuccess, setShowDraftSuccess] = useState(false);
 
   console.log("step1Data in step2", step1Data);
   /* ---------------- ATTRIBUTE DISPLAY ---------------- */
@@ -216,7 +225,7 @@ export default function AddProductStep1Page() {
     return attributesFilled && hasImage && hasPrice && hasStock;
   })();
   const handleSaveDraft = () => {
-    if (!isFirstVariantValid || !token) return;
+    if (!token) return;
 
     const formData = buildFormData();
     savingToDraftReq({
@@ -238,7 +247,9 @@ export default function AddProductStep1Page() {
             isAuth: true,
             userType: "seller",
           },
-          successRes: (responseData: any) => {},
+          successRes: (responseData: any) => {
+            setShowDraftSuccess(true);
+          },
         });
       },
     });
@@ -418,7 +429,7 @@ export default function AddProductStep1Page() {
         <div className="mt-c48 flex justify-end gap-6 items-center">
           <Button
             type="button"
-            disabled={!isFirstVariantValid || savingDraft}
+            disabled={savingDraft}
             onClick={handleSaveDraft}
             variant="secondary"
             className="max-w-32.5"
@@ -439,6 +450,30 @@ export default function AddProductStep1Page() {
           </Button>
         </div>
       </form>
+
+      <ResultModal
+        title="Product Saved to Draft"
+        message="Your product has been securely saved as a draft."
+        discRescription="You can continue editing now, or view your drafts from the products dashboard."
+        buttenText="Continue"
+        secondaryButtonText="Go back to products"
+        isOpen={showDraftSuccess}
+        onConfirm={() => setShowDraftSuccess(false)}
+        onCancel={() => setShowDraftSuccess(false)}
+        onSecondaryAction={() => router.push("/dashboard/seller/products")}
+      />
+
+      {/* ERROR MODAL */}
+      <ResultModal
+        result="error"
+        title="Action Failed"
+        message={anyError || "An unexpected error occurred."}
+        discRescription="Please review the error and try again."
+        buttenText="Close"
+        isOpen={!!anyError}
+        onConfirm={clearError}
+        onCancel={clearError}
+      />
     </AddProductLayout>
   );
 }

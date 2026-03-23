@@ -18,26 +18,57 @@ import Pagination from "./pignation-button";
 import FullFilterButton from "../../tables/Filters/full-filterButton";
 import FilterModal from "../../tables/Filters/filter-modal";
 import uploadIcon from "@/assets/icons/uploadIcon.svg";
-import RichTextEditor from "@/components/ui/seller-product-form/RichTextEditor";
 import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
-import { setStep1Data } from "@/store/sellers/addProductSlice";
 import { RootState } from "@/store";
+import { useDispatch, useSelector } from "react-redux";
+import { useHttp } from "@/hooks/use-http";
+import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
+import { setStep1Data } from "@/store/sellers/addProductSlice";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export default function ProductInventoryPage() {
   const [filters, setFilters] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [description, setDescription] = useState("");
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [showToggleModal, setShowToggleModal] = useState(false);
   const dispatch = useDispatch();
+  const token = useSelector((state: RootState) => state.token?.token);
+  const { sendHttpRequest } = useHttp();
+  const { fetchProducts } = useFetchProducts();
+
+  const handleToggleActive = (id: string, isActive: boolean) => {
+    if (!token) return;
+    setTogglingId(id);
+    const url = isActive
+      ? `/products/manufacturer/products/${id}/request-deactivation/`
+      : `/products/manufacturer/products/${id}/request-activation/`;
+      
+    sendHttpRequest({
+      requestConfig: {
+        url,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: () => {
+        setTogglingId(null);
+        setShowToggleModal(true);
+        fetchProducts(); // refresh the list
+      }
+    });
+  };
 
   const product = useSelector(
     (state: RootState) => state.sellerProduct.product,
   );
   const draft = useSelector((state: RootState) => state.draft.draft);
 
-  const liveproduct = product?.filter((prod) => prod.is_active === true);
-  const inactiveproduct = product?.filter((prod) => prod.is_active === false);
+  const liveproduct = product?.filter((prod: any) => prod.is_active === true);
+  const inactiveproduct = product?.filter((prod: any) => prod.is_active === false);
 
   const router = useRouter();
   const handleAddNewProduct = () => {
@@ -55,7 +86,7 @@ export default function ProductInventoryPage() {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const rowsPerPage = 10;
-  const totalRows = product?.length || 0;
+  const totalRows = filteredCount !== null ? filteredCount : (product?.length || 0);
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
   // 🔴 optional: close dropdown when clicking outside
@@ -364,6 +395,9 @@ export default function ProductInventoryPage() {
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
         filters={filters}
+        onFilteredCount={setFilteredCount}
+        onToggleActive={handleToggleActive}
+        togglingId={togglingId}
       />
 
       <div className="w-full  pt-13 ">
@@ -375,6 +409,15 @@ export default function ProductInventoryPage() {
           />
         </div>
       </div>
+
+      <ResultModal
+        title="Status Updated Successfully"
+        message="The product status update request was submitted successfully."
+        discRescription="Your action has been processed."
+        buttenText="Got it"
+        isOpen={showToggleModal}
+        onConfirm={() => setShowToggleModal(false)}
+      />
     </div>
   );
 }

@@ -17,6 +17,8 @@ type ResultModalProps = {
   buttenText?: string;
   discRescription?: string;
   loading?: boolean;
+  secondaryButtonText?: string;
+  onSecondaryAction?: () => void;
 };
 
 export default function ResultModal({
@@ -29,6 +31,8 @@ export default function ResultModal({
   buttenText,
   discRescription,
   loading,
+  secondaryButtonText,
+  onSecondaryAction,
 }: ResultModalProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -160,13 +164,13 @@ export default function ResultModal({
             <div
               className={`h-38.25 w-full ${active.bg} relative flex items-center justify-center overflow-hidden`}
             >
-              <button className="h-6 w-6" onClick={onCancel}>
+              <button className="h-6 w-6 absolute z-50 right-4 top-13.25" onClick={onCancel}>
                 <Image
                   src={Xicon}
                   alt="X"
                   height={24}
                   width={24}
-                  className="absolute z-50 right-4 top-13.25"
+                  className=" "
                 />
               </button>
               <motion.div
@@ -223,15 +227,21 @@ export default function ResultModal({
 
               {/* BUTTONS */}
               <div className="flex justify-center gap-2 mt-c24 ">
-                {onCancel && (
+                {onCancel && result === "warning" && (
                   <Button variant="primary" onClick={onCancel}>
-                    No Cancel
+                    Cancel
+                  </Button>
+                )}
+
+                {onSecondaryAction && secondaryButtonText && (
+                  <Button variant="secondary" onClick={onSecondaryAction} disabled={loading}>
+                    {secondaryButtonText}
                   </Button>
                 )}
 
                 {onConfirm && (
                   <Button
-                    variant={result === "warning" ? "secondary" : "primary"}
+                    variant="primary"
                     onClick={onConfirm}
                     disabled={loading}
                   >

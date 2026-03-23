@@ -15,18 +15,21 @@ import { useFetchOrders } from "@/helpers/fetchOrders";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
+import ProductsSkeleton from "@/components/reloadSpinner/ProductsSkeleton";
 
 export default function ProductBody() {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-     const { fetchdDraft } = useFetchProducts();
-     const { fetchProducts, fetchOrders } = useFetchProducts();
-     const token = useSelector((state:RootState)=>state.token?.token)
+  const { fetchdDraft, fetchProducts, loading } = useFetchProducts();
+  const token = useSelector((state:RootState)=>state.token?.token);
+  const product = useSelector((state:RootState)=>state.sellerProduct.product);
   
       useEffect(() => {
         fetchdDraft();
         fetchProducts();
-        // fetchOrders();
+        const timer = setTimeout(() => setInitialLoading(false), 800);
+        return () => clearTimeout(timer);
       }, [ token]);
 
 
@@ -86,6 +89,9 @@ export default function ProductBody() {
 
       <AnimatePresence mode="wait">
         {!showAddForm ? (
+          initialLoading || (loading && (!product || product.length === 0)) ? (
+            <ProductsSkeleton />
+          ) : (
           <motion.div
             key="tables"
             initial={{ opacity: 0, y: 20 }}
@@ -94,7 +100,6 @@ export default function ProductBody() {
             transition={{ duration: 0.4 }}
             className="space-y-c32"
           >
-            
             <motion.div
               initial={{ opacity: 0, x: 60 }}
               animate={{ opacity: 1, x: 0 }}
@@ -112,6 +117,7 @@ export default function ProductBody() {
               <DraftProduct />
             </motion.div>
           </motion.div>
+          )
         ) : (
           <motion.div
             key="form"

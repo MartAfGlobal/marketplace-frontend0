@@ -16,7 +16,8 @@ import { filterOptions } from "./Filter-components/filterOptions";
 import InventoryTable from "../../tables/inventory-table";
 import FilterModal from "../../tables/Filters/filter-modal"; // we'll reuse it as dropdown content
 import Pagination from "../products/pignation-button";
-import { useSelector} from "react-redux";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function ProductInventory() {
    const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
@@ -24,11 +25,13 @@ export default function ProductInventory() {
   const [filters, setFilters] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const product = useSelector((state: RootState) => state.sellerProduct.product);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const rowsPerPage = 10;
-  const totalRows = 7;
+  const totalRows = filteredCount !== null ? filteredCount : (product?.length || 0);
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
   // 🔴 optional: close dropdown when clicking outside
@@ -107,10 +110,17 @@ export default function ProductInventory() {
                 </span>
               )}
               {key === "perc" && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 w-fit justify-center">
                   <Image src={PercentageIcon} alt="%" width={13} height={13} />
-                  <span>
-                    {">"} {value}%
+                  <span className="flex gap-1">
+                    {value.from ?? 0}%
+                    <Image
+                      src={ArrowRightIcon}
+                      alt="TO"
+                      width={16}
+                      height={16}
+                    />
+                    {value.to ?? 100}%
                   </span>
                 </span>
               )}
@@ -137,6 +147,7 @@ export default function ProductInventory() {
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
         filters={filters}
+        onFilteredCount={setFilteredCount}
       />
 
         {totalRows > 10 && (
