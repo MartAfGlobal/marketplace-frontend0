@@ -322,7 +322,7 @@ if (filters.perc) {
                           More Details
                         </button>
                         {/* Edit */}
-                        <button
+                       { row.is_approved === "approved" && <button
                           className="flex items-center gap-3 w-full  hover:bg-gray-100 "
                         onClick={() => handleEditDetails(row.id)}
                         >
@@ -333,12 +333,12 @@ if (filters.perc) {
                             height={12.5}
                           />
                           Edit Product
-                        </button>
+                        </button>}
   
                         {/* Toggle Active status */}
                         {row.is_approved?.toLowerCase() === "approved" && (
                           <button
-                            className={`flex items-center gap-3 w-full ${row.is_active ? "hover:bg-red-50 text-ca0202" : "hover:bg-green-50 text-2d7565"}`}
+                            className={`flex items-center justify-center gap-3 w-full ${row.is_active ? "hover:bg-red-50 text-ca0202" : "hover:bg-green-50 text-2d7565"}`}
                             disabled={togglingId === row.id}
                             onClick={() => {
                               if (togglingId !== row.id) {

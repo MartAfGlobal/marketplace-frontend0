@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useHttp } from "@/hooks/use-http";
@@ -62,6 +62,21 @@ export function Dropdown<
   placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   const handleClick = () => {
     fetchItems();
@@ -69,12 +84,12 @@ export function Dropdown<
   };
 
   return (
-    <div className="relative w-full">
+    <div ref={dropdownRef} className="relative w-full">
       {label && <Label>{label}</Label>}
       <button
         type="button"
         onClick={handleClick}
-        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-c12 font-MontserratMedium text-gray-900 focus:outline-none focus:border-ff715b"
+        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-c12 font-MontserratMedium text-gray-900 focus:outline-none focus:border-ff715b hover:scale-100"
       >
         <span className={selected ? "text-gray-900" : "text-black/60"}>
           {selected || placeholder}
@@ -107,7 +122,7 @@ export function Dropdown<
                     onSelect(item);
                     setOpen(false);
                   }}
-                  className="block w-full px-3 py-2 text-left text-c12 font-MontserratMedium text-gray-700 hover:bg-gray-100"
+                  className="block w-full pl-6 pr-3 py-2 text-left text-c12 font-MontserratMedium text-gray-700 hover:bg-gray-100 hover:scale-100"
                 >
                   {item.name || item.title}
                 </button>
@@ -222,7 +237,7 @@ export function SubCategoryDropdown({
       <Label>Subcategory</Label>
       <button
         disabled
-        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-gray-50 px-4 py-2.5 text-c12 font-MontserratMedium text-gray-400 cursor-not-allowed"
+        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-gray-50 px-4 py-2.5 text-c12 font-MontserratMedium text-gray-400 cursor-not-allowed hover:scale-100"
       >
         Please select a category first
         <ChevronDown size={18} className="text-gray-400" />

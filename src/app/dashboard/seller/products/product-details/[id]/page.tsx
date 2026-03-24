@@ -10,12 +10,14 @@ import { useHttp } from "@/hooks/use-http";
 import ProductDetailsSkeleton from "@/components/reloadSpinner/ProductDetailsSkeleton";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
+import navBack from "@/assets/icons/navBacksmall.png";
 
 // Extracted Components
 import ProductImageGallery from "./components/ProductImageGallery";
 import ProductInfo from "./components/ProductInfo";
 import ProductActions from "./components/ProductActions";
 import ProductVariants from "./components/ProductVariants";
+import Image from "next/image";
 
 export default function SellerProductDetailsPage() {
   /* ------------------------- CORE HOOKS ------------------------- */
@@ -29,19 +31,41 @@ export default function SellerProductDetailsPage() {
   const token = useSelector((state: RootState) => state.token?.token);
 
   /* ------------------------- LOCAL STATE ------------------------- */
-  const [productDetails, setProductDetails] = useState<SellerProductDetails | null>(null);
+  const [productDetails, setProductDetails] =
+    useState<SellerProductDetails | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
 
   const [successful, setSuccessful] = useState(false);
   const [DeleteDraftSuccess, setDeleteDraftSuccess] = useState(false);
   const [showIncompleteModal, setShowIncompleteModal] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<"activate" | "deactivate" | "cancel activation" | "cancel deactivation" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    | "activate"
+    | "deactivate"
+    | "cancel activation"
+    | "cancel deactivation"
+    | null
+  >(null);
 
   /* ------------------------- HTTP HOOKS & ERRORS ------------------------- */
-  const { sendHttpRequest: fetchReq, loading: fetchLoading, error: fetchError, setError: setFetchError } = useHttp();
-  const { sendHttpRequest: deleteReq, loading: deleteLoading, error: deleteError, setError: setDeleteError } = useHttp();
-  const { sendHttpRequest: submitReq, loading: submiting, error: submitError, setError: setSubmitError } = useHttp();
+  const {
+    sendHttpRequest: fetchReq,
+    loading: fetchLoading,
+    error: fetchError,
+    setError: setFetchError,
+  } = useHttp();
+  const {
+    sendHttpRequest: deleteReq,
+    loading: deleteLoading,
+    error: deleteError,
+    setError: setDeleteError,
+  } = useHttp();
+  const {
+    sendHttpRequest: submitReq,
+    loading: submiting,
+    error: submitError,
+    setError: setSubmitError,
+  } = useHttp();
 
   /* ------------------------- CUSTOM HOOK ------------------------- */
   const {
@@ -61,21 +85,25 @@ export default function SellerProductDetailsPage() {
   /* ------------------------- DERIVED VALUES ------------------------- */
   const isDeactivation = successMessage === "Deactivation request cancelled.";
 
-  const url = published === "true"
-    ? `/products/manufacturer/products/${id}/`
-    : `/products/manufacturer/drafts/${id}/`;
+  const url =
+    published === "true"
+      ? `/products/manufacturer/products/${id}/`
+      : `/products/manufacturer/drafts/${id}/`;
 
   const images = productDetails?.images?.length
     ? productDetails.images
-    : productDetails?.draft_data?.product_images?.map((img: any, index: number) => ({
-        id: img.cloudinary_id || index.toString(),
-        thumbnail: img.url,
-        medium: img.url,
-        large: img.url,
-        alt_text: img.alt_text || productDetails?.name,
-      })) || [];
+    : productDetails?.draft_data?.product_images?.map(
+        (img: any, index: number) => ({
+          id: img.cloudinary_id || index.toString(),
+          thumbnail: img.url,
+          medium: img.url,
+          large: img.url,
+          alt_text: img.alt_text || productDetails?.name,
+        }),
+      ) || [];
 
-  const variations = productDetails?.variations || productDetails?.draft_data?.variations || [];
+  const variations =
+    productDetails?.variations || productDetails?.draft_data?.variations || [];
 
   // Centralized Error Handling
   const anyError = fetchError || deleteError || submitError || activateError;
@@ -170,23 +198,40 @@ export default function SellerProductDetailsPage() {
 
   const isDraftComplete = () => {
     if (!productDetails) return false;
-    
+
     // Core fields
     const hasName = !!productDetails.name;
     const hasPrice = !!productDetails.base_price;
-    const hasCategory = !!(productDetails.category?.id || productDetails.category_info?.category?.id);
-    const hasDesc = !!(productDetails.description || productDetails.description_html);
-    
+    const hasCategory = !!(
+      productDetails.category?.id || productDetails.category_info?.category?.id
+    );
+    const hasDesc = !!(
+      productDetails.description || productDetails.description_html
+    );
+
     // Images
-    const imagesCount = productDetails.images?.length || productDetails.draft_data?.product_images?.length || 0;
+    const imagesCount =
+      productDetails.images?.length ||
+      productDetails.draft_data?.product_images?.length ||
+      0;
     const hasImages = imagesCount > 0;
 
     // Variants or specs
-    const variantsCount = productDetails.variations?.length || productDetails.draft_data?.variations?.length || 0;
-    const hasInventory = !!(productDetails.inventory);
+    const variantsCount =
+      productDetails.variations?.length ||
+      productDetails.draft_data?.variations?.length ||
+      0;
+    const hasInventory = !!productDetails.inventory;
     const hasVariantsOrInventory = variantsCount > 0 || hasInventory;
 
-    return hasName && hasPrice && hasCategory && hasDesc && hasImages && hasVariantsOrInventory;
+    return (
+      hasName &&
+      hasPrice &&
+      hasCategory &&
+      hasDesc &&
+      hasImages &&
+      hasVariantsOrInventory
+    );
   };
 
   const handleSubmitDraftProduct = () => {
@@ -218,124 +263,139 @@ export default function SellerProductDetailsPage() {
 
   /* ------------------------- UI ------------------------- */
   return (
-    <div className="w-full flex justify-center gap-c48 bg-ffffff circle-shadow rounded-c16 py-6 px-8 relative">
-      <div className="w-full">
-        <ProductImageGallery
-          images={images}
-          selectedImageId={selectedImageId}
-          activeSlide={activeSlide}
-          setSelectedImageId={setSelectedImageId}
-          setActiveSlide={setActiveSlide}
+    <div>
+      <button onClick={() => router.back()} className="flex items-center mb-c32">
+        <span className="h-6 w-6 flex items-center justify-center mr-4">
+          <Image src={navBack} width={9} height={16.5} alt="Back" />
+        </span>
+      
+        <span className="text-base font-MontserratSemiBold">
+            Add New Product
+          </span>
+      </button>
+      <div className="w-full flex justify-center gap-c48 bg-ffffff circle-shadow rounded-c16 py-6 px-8 relative">
+        <div className="w-full">
+          <ProductImageGallery
+            images={images}
+            selectedImageId={selectedImageId}
+            activeSlide={activeSlide}
+            setSelectedImageId={setSelectedImageId}
+            setActiveSlide={setActiveSlide}
+          />
+          <ProductInfo productDetails={productDetails} published={published} />
+        </div>
+
+        <div className="w-full mb-c32">
+          <ProductActions
+            published={published}
+            productDetails={productDetails}
+            id={id}
+            ActivatingLoading={ActivatingLoading}
+            submiting={submiting}
+            deleteLoading={deleteLoading}
+            setConfirmAction={setConfirmAction}
+            handleCancelRequest={handleCancelRequest}
+            handleSubmitDraftProduct={handleSubmitDraftProduct}
+            handleDeleteDraft={handleDeleteDraft}
+          />
+
+          <ProductVariants variations={variations} />
+        </div>
+
+        {/* SUCCESS MODALS */}
+        <ResultModal
+          title="Product deleted from draft"
+          message="Your product has been deleted from the draft."
+          discRescription="Your product has been successfully deleted from the draft."
+          buttenText="Go to Products"
+          isOpen={DeleteDraftSuccess}
+          onConfirm={() => router.push("/dashboard/seller/products")}
         />
-        <ProductInfo
-          productDetails={productDetails}
-          published={published}
-        />
-      </div>
 
-      <div className="w-full mb-c32">
-        <ProductActions
-          published={published}
-          productDetails={productDetails}
-          id={id}
-          ActivatingLoading={ActivatingLoading}
-          submiting={submiting}
-          deleteLoading={deleteLoading}
-          setConfirmAction={setConfirmAction}
-          handleCancelRequest={handleCancelRequest}
-          handleSubmitDraftProduct={handleSubmitDraftProduct}
-          handleDeleteDraft={handleDeleteDraft}
+        <ResultModal
+          title="Product Submitted Successfully"
+          message="Your product has been submitted and is now pending approval."
+          discRescription="Once approved by the admin, it will be visible on the marketplace."
+          buttenText="Go to Products"
+          isOpen={successful}
+          onConfirm={() => router.push("/dashboard/seller/products")}
         />
 
-        <ProductVariants variations={variations} />
-      </div>
+        <ResultModal
+          title={successMessage || "Request Cancelled"}
+          message="The action has been cancelled."
+          discRescription="Your cancellation request was successful and the product details are refreshed."
+          buttenText="Ok"
+          isOpen={activated}
+          onConfirm={() => setActivated(false)}
+          onCancel={() => setActivated(false)}
+        />
 
-      {/* SUCCESS MODALS */}
-      <ResultModal
-        title="Product deleted from draft"
-        message="Your product has been deleted from the draft."
-        discRescription="Your product has been successfully deleted from the draft."
-        buttenText="Go to Products"
-        isOpen={DeleteDraftSuccess}
-        onConfirm={() => router.push("/dashboard/seller/products")}
-      />
-
-      <ResultModal
-        title="Product Submitted Successfully"
-        message="Your product has been submitted and is now pending approval."
-        discRescription="Once approved by the admin, it will be visible on the marketplace."
-        buttenText="Go to Products"
-        isOpen={successful}
-        onConfirm={() => router.push("/dashboard/seller/products")}
-      />
-
-      <ResultModal
-        title={successMessage || "Request Cancelled"}
-        message="The action has been cancelled."
-        discRescription="Your cancellation request was successful and the product details are refreshed."
-        buttenText="Ok"
-        isOpen={activated}
-        onConfirm={() => setActivated(false)}
-        onCancel={() => setActivated(false)}
-      />
-
-      <ResultModal
-        title="Incomplete Draft"
-        message="Please complete all required fields before submitting."
-        discRescription="Your product is missing required details like images, category, price, or variations."
-        buttenText="Continue"
-        secondaryButtonText="Close"
-        isOpen={showIncompleteModal}
-        onConfirm={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}?isPublish=false`)}
-        onCancel={() => setShowIncompleteModal(false)}
-        onSecondaryAction={() => setShowIncompleteModal(false)}
-      />
-
-      <ResultModal
-        title="Status Updated Successfully"
-        message="The product has been successfully updated."
-        discRescription="Your changes have been applied and the product details are refreshed."
-        buttenText="Ok"
-        isOpen={ActivationSuccess}
-        onConfirm={() => setActivationSuccess(false)}
-        onCancel={() => setActivationSuccess(false)}
-      />
-
-      {/* CONFIRMATION MODAL */}
-      <ResultModal
-        result="warning"
-        title={`Are you sure you want to ${confirmAction}?`}
-        discRescription={
-          confirmAction === "activate"
-            ? "Activating this product will make it live and available for viewing and ordering."
-            : confirmAction === "deactivate"
-            ? "Deactivating this product will remove it from live viewing and ordering."
-            : "This will cancel your pending request and revert the product's status."
-        }
-        onCancel={() => setConfirmAction(null)}
-        loading={ActivatingLoading}
-        buttenText="Yes, I accept"
-        isOpen={!!confirmAction}
-        onConfirm={() => {
-          if (confirmAction === "activate" || confirmAction === "deactivate") {
-            handleActivateToggle();
-          } else {
-            handleCancelRequest();
+        <ResultModal
+          title="Incomplete Draft"
+          message="Please complete all required fields before submitting."
+          discRescription="Your product is missing required details like images, category, price, or variations."
+          buttenText="Continue"
+          secondaryButtonText="Close"
+          isOpen={showIncompleteModal}
+          onConfirm={() =>
+            router.push(
+              `/dashboard/seller/products/add-product/updateProduct/${id}?isPublish=false`,
+            )
           }
-        }}
-      />
+          onCancel={() => setShowIncompleteModal(false)}
+          onSecondaryAction={() => setShowIncompleteModal(false)}
+        />
 
-      {/* ERROR MODAL (NEW) */}
-      <ResultModal
-        result="error"
-        title="Action Failed"
-        message={anyError || "An unexpected error occurred."}
-        discRescription="Please review your network connection and try again."
-        buttenText="Close"
-        isOpen={!!anyError}
-        onConfirm={clearError}
-        onCancel={clearError}
-      />
+        <ResultModal
+          title="Status Updated Successfully"
+          message="The product has been successfully updated."
+          discRescription="Your changes have been applied and the product details are refreshed."
+          buttenText="Ok"
+          isOpen={ActivationSuccess}
+          onConfirm={() => setActivationSuccess(false)}
+          onCancel={() => setActivationSuccess(false)}
+        />
+
+        {/* CONFIRMATION MODAL */}
+        <ResultModal
+          result="warning"
+          title={`Are you sure you want to ${confirmAction}?`}
+          discRescription={
+            confirmAction === "activate"
+              ? "Activating this product will make it live and available for viewing and ordering."
+              : confirmAction === "deactivate"
+                ? "Deactivating this product will remove it from live viewing and ordering."
+                : "This will cancel your pending request and revert the product's status."
+          }
+          onCancel={() => setConfirmAction(null)}
+          loading={ActivatingLoading}
+          buttenText="Yes, I accept"
+          isOpen={!!confirmAction}
+          onConfirm={() => {
+            if (
+              confirmAction === "activate" ||
+              confirmAction === "deactivate"
+            ) {
+              handleActivateToggle();
+            } else {
+              handleCancelRequest();
+            }
+          }}
+        />
+
+        {/* ERROR MODAL (NEW) */}
+        <ResultModal
+          result="error"
+          title="Action Failed"
+          message={anyError || "An unexpected error occurred."}
+          discRescription="Please review your network connection and try again."
+          buttenText="Close"
+          isOpen={!!anyError}
+          onConfirm={clearError}
+          onCancel={clearError}
+        />
+      </div>
     </div>
   );
 }

@@ -122,9 +122,9 @@ export default function UpdateProductPage() {
         if (!draft) return;
 
         setProductName(draft.name ?? "");
-        setDescription(draft.description || draft.description_html || "");
+        setDescription(draft.description_html || draft.description || draft.draft_data?.description || "");
         setBasePrice(draft.base_price ?? undefined);
-        setSpecificationsText(draft.specifications_text || draft.specifications_html || draft.draft_data?.specifications_text || "");
+        setSpecificationsText(draft.specifications_html || draft.specifications_text || draft.draft_data?.specifications_text || "");
 
         const cat = draft.category_info?.category || draft.category;
         if (cat) setCategory(cat);
@@ -132,11 +132,25 @@ export default function UpdateProductPage() {
         const subCat = draft.category_info?.subcategory || draft.subcategory || draft.sub_category || draft.category?.subcategory;
         if (subCat) setSubCategory(subCat);
 
-        const draftImages = draft.draft_data?.product_images || draft.images || [];
+        let draftImages = draft.draft_data?.product_images || draft.product_images || draft.images || [];
+        if (!Array.isArray(draftImages)) draftImages = [draftImages];
+        
+        if (draftImages.length === 0) {
+           if (draft.main_image_url) draftImages.push(draft.main_image_url);
+           else if (draft.main_image) draftImages.push(
+               typeof draft.main_image === 'string' 
+                   ? draft.main_image 
+                   : (draft.main_image.original || draft.main_image.url || draft.main_image.medium || draft.main_image.thumbnail)
+           );
+        }
+
         if (draftImages.length > 0) {
           const newImages: (File | string | null)[] = [null, null, null, null];
           draftImages.forEach((img: any, idx: number) => {
-            if (idx < 4) newImages[idx] = img.thumbnail || img.url || img;
+            if (idx < 4) {
+               if (typeof img === 'string') newImages[idx] = img;
+               else if (img) newImages[idx] = img.original || img.image || img.image_url || img.url || img.thumbnail || null;
+            }
           });
           setImages(newImages);
         }
@@ -145,17 +159,55 @@ export default function UpdateProductPage() {
         if (draftVariants.length > 0) {
           const mappedVariants = draftVariants.map((v: any) => {
             const variantImages: (File | string | null)[] = [null, null, null, null];
-            const vImgs = v.images || v.product_images || [];
+            let vImgs = v.images || v.product_images || v.variation_images || [];
+            if (!Array.isArray(vImgs)) vImgs = [vImgs];
+            
+            // fallback if arrays are empty
+            if (vImgs.length === 0) {
+               if (v.main_image_url) vImgs.push(v.main_image_url);
+               else if (v.main_image?.image_urls) vImgs.push(v.main_image.image_urls.original || v.main_image.image_urls.thumbnail);
+               else if (v.image) vImgs.push(v.image);
+            }
+
             vImgs.forEach((img: any, idx: number) => {
-              if (idx < 4) variantImages[idx] = img.thumbnail || img.url || img;
+              if (idx < 4) {
+                 if (typeof img === 'string') variantImages[idx] = img;
+                 else if (img) variantImages[idx] = img.original || img.image || img.image_url || img.url || img.thumbnail || null;
+              }
             });
             const attrValues: Record<string, string> = {};
             const attrIds: Record<string, string> = {};
-            if (v.attribute_summary) {
-              Object.entries(v.attribute_summary).forEach(([slug, val]: [string, any]) => {
-                attrValues[slug] = val.value || val.name || val;
-                if (val.id) attrIds[slug] = val.id;
-                else if (val.value_id) attrIds[slug] = val.value_id;
+            const summary = v.attribute_summary || v.attribute_values || v.attributes || [];
+            
+            if (summary && !Array.isArray(summary)) {
+              Object.entries(summary).forEach(([key, val]: [string, any]) => {
+                const valStr = val.value || val.name || val;
+                attrValues[key] = valStr;
+                attrValues[key.toLowerCase()] = valStr;
+                attrValues[key.replace(/[\s_]+/g, '-').toLowerCase()] = valStr;
+                
+                const idVal = val.id || val.value_id;
+                if (idVal) {
+                   attrIds[key] = idVal;
+                   attrIds[key.toLowerCase()] = idVal;
+                   attrIds[key.replace(/[\s_]+/g, '-').toLowerCase()] = idVal;
+                }
+              });
+            } else if (Array.isArray(summary)) {
+              summary.forEach((val: any) => {
+                 const key = val.attribute?.slug || val.slug || val.name || val.attribute_name || val.attribute?.name;
+                 const valStr = val.value?.name || val.value || val.attribute_value;
+                 if (key && valStr) {
+                    attrValues[key] = valStr;
+                    attrValues[key.toLowerCase()] = valStr;
+                    attrValues[key.replace(/[\s_]+/g, '-').toLowerCase()] = valStr;
+                 }
+                 const idVal = val.id || val.value?.id;
+                 if (key && idVal) {
+                    attrIds[key] = idVal;
+                    attrIds[key.toLowerCase()] = idVal;
+                    attrIds[key.replace(/[\s_]+/g, '-').toLowerCase()] = idVal;
+                 }
               });
             }
             return {
@@ -163,8 +215,8 @@ export default function UpdateProductPage() {
               name: v.variation_name || v.name || "",
               attributesValues: attrValues,
               attributeValueIds: attrIds,
-              price: v.base_price || draft.base_price,
-              stock: v.stock || v.inventory || draft.inventory || 0,
+              price: v.base_price || v.price || draft.base_price,
+              stock: v.stock || v.inventory || v.quantity || draft.inventory || draft.quantity || 0,
               images: variantImages,
             };
           });

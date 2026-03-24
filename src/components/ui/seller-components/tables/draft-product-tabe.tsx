@@ -314,7 +314,7 @@ const router = useRouter()
   
                         {/* Delete */}
                         <button
-                          className="flex items-center gap-3 w-full text-ca0202 hover:bg-red-50"
+                          className="flex items-center gap-3 justify-center w-full text-ca0202 hover:bg-red-50"
                           disabled={deletingId === row.id}
                           onClick={() => {
                             if (deletingId !== row.id) {
@@ -324,7 +324,7 @@ const router = useRouter()
                           }}
                         >
                           {deletingId === row.id ? (
-                            <LoadingSpinner  color="border-ff715b "/>
+                            <LoadingSpinner  color="border-ca0202 "/>
                           ) : (
                             <>
                               <Image
