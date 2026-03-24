@@ -16,7 +16,7 @@ import EyeIcon from "@/assets/icons/eye.png";
 import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-// ✅ helper for approval badge
+//  helper for approval badge
 const getApprovalClass = (approval: string) => {
   switch (approval.toLowerCase()) {
     case "approved":
@@ -26,11 +26,11 @@ const getApprovalClass = (approval: string) => {
     case "rejected":
       return "bg-[#CA0202]/10 text-[#CA0202] px-3 py-1 rounded-full text-xs font-semibold";
     default:
-      return "";
+      return "bg-[#FFAC06]/10 text-[#FFAC06] px-3 py-1 rounded-full text-xs font-semibold";
   }
 };
 
-// ✅ props from parent
+//  props from parent
  export type InventoryFullTableProps = {
   currentPage: number;
   rowsPerPage: number;
@@ -56,7 +56,7 @@ export default function InventoryFullTable({
 }: InventoryFullTableProps) {
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
 
-  // ✅ dataset (95 rows)
+  //  dataset (95 rows)
     const allRows = useSelector(
       (state: RootState) => state.sellerProduct.product,
     ) || [];
@@ -135,16 +135,16 @@ if (filters.perc) {
     });
   }
 
-  // ✅ report filtered count to parent
+  //  report filtered count to parent
   useEffect(() => {
     onFilteredCount?.(filteredRows.length);
   }, [filteredRows.length, onFilteredCount]);
 
-  // ✅ page slice logic
+  //  page slice logic
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);
 
-  // ✅ selected row state (per table, not pagination)
+  //  selected row state (per table, not pagination)
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   const toggleRow = (id: string) => {
@@ -277,7 +277,7 @@ if (filters.perc) {
                 </td>
                 <td className="px-4 text-center">
                   <span className={getApprovalClass(row.is_approved)}>
-                    {row.is_approved}
+                    {row.is_approved === "pending" || row.is_approved ==="approved" || row.is_approved ==="rejected"? row.is_approved: "pending"}
                   </span>
                 </td>
                 <td className="px-4 text-center">₦{row.base_price}</td>

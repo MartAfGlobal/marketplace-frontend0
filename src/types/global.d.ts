@@ -1427,7 +1427,7 @@ export interface SellerProductDetails {
   images: sellerImage[];
 
   is_active: boolean;
-  is_approved: "approved" | "pending" | "rejected";
+  is_approved: "approved" | "pending" | "rejected" | "pending_update";
   is_published: boolean;
 
   created_at: string;

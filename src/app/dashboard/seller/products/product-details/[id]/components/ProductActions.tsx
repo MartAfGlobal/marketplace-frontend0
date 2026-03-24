@@ -95,7 +95,21 @@ export default function ProductActions({
         <p className="text-ff715b font-MontserratSemiBold text-sm">
           Pending approval
         </p>
-      ) : (
+      )
+      : published &&
+        !productDetails.activation_requested &&
+        !productDetails.deactivation_requested &&
+        productDetails.is_approved === "pending_update" ? (
+        <p className="text-ff715b font-MontserratSemiBold text-sm">
+          Pending update
+        </p>)
+        : published &&
+        !productDetails.activation_requested &&
+        !productDetails.deactivation_requested &&
+        productDetails.is_approved === "rejected" ? (
+        <p className="text-ca0202 font-MontserratSemiBold text-sm">
+          Rejected
+        </p>): (
         !published && (
           <Button
             disabled={submiting || !id}
