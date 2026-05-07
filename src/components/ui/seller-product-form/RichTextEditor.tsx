@@ -40,7 +40,7 @@ export default function RichTextEditor({ value, onChange, label }: Props) {
     editorProps: {
       attributes: {
         class:
-          "min-h-[220px] px-4  overflow-y-auto text-sm text-gray-700 focus:outline-none " +
+          "min-h-[150px] p-4 w-full max-w-full text-sm text-gray-700 focus:outline-none break-all [&_*:first-child]:mt-0 " +
           "[&_strong]:font-bold [&_b]:font-bold " +
           "[&_em]:italic [&_i]:italic " +
           "[&_u]:underline " +
@@ -146,7 +146,7 @@ export default function RichTextEditor({ value, onChange, label }: Props) {
       {/* Black Title Bar */}
       <Label> {label}</Label>
 
-      <div className="w-full border rounded-md mt-2 bg-ffffff/18 h-69.25">
+      <div className="w-full border rounded-md mt-2 bg-ffffff/18 h-auto overflow-hidden">
         <div className="flex items-center gap-3 px-3 py-2 h-11  border-b text-gray-600">
           <button type="button" onClick={addImage} title="Add Image">
             <ImageIcon size={16} />
@@ -196,10 +196,10 @@ export default function RichTextEditor({ value, onChange, label }: Props) {
             <ListOrdered size={16} />
           </button>
         </div>
-        <div className="w-full h-[220px] p-4 overflow-y-auto">
+        <div className="w-full">
           <EditorContent
             editor={editor}
-            className="prose prose-sm max-w-full"
+            className="prose prose-sm max-w-full min-h-[150px] w-full break-all"
           />
         </div>
       </div>

@@ -10,9 +10,11 @@ import { useRouter } from "next/navigation";
 import EditIcon from "@/assets/icons/edit.svg";
 import DeleteIcon from "@/assets/icons/deleteREd.svg";
 import EyeIcon from "@/assets/icons/eye.png";
+import { ChevronRight } from "lucide-react";
 export type InventoryTableProps = {
   currentPage: number;
   rowsPerPage: number;
+  filterValue?: string;
   filters?: {
     date?: { start: string; end: string };
     perc?: { from?: number; to?: number };
@@ -25,6 +27,7 @@ export type InventoryTableProps = {
 export default function InventoryTable({
   currentPage,
   rowsPerPage,
+  filterValue = "all",
   filters = {},
   onFilteredCount,
 }: InventoryTableProps) {
@@ -88,9 +91,43 @@ const router = useRouter();
 
   return (
     <div className="w-full mt-c32">
-      <table className="w-full border-collapse">
+      {/* Mobile View */}
+      <div className="lg:hidden flex flex-col gap-6">
+        {currentRows.length > 0 && !isIncomplete ? (
+          currentRows.map((row) => (
+            <div key={row.id} className="py-3 flex flex-col gap-3 justify-center    border-b border-gray-100  last:border-0">
+              <div className="flex pl-4 items-center">
+                <h3 className="font-MontserratSemiBold text-sm text-[#000000] ">{row.name}</h3>
+              </div>
+              
+              <div className="flex flex-col gap-0.5 ">
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Quantity sold</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">{row.sold}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Quantity in stock</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">{row.inventory}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Sales</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">{row.sales_percentag}%</span>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col justify-center items-center gap-3 py-10">
+            <Image src={Empty} height={18} width={18} alt="empty" />
+            <p className="text-base font-MontserratNormal text-000000/10">No data available</p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View */}
+      <table className="hidden lg:table w-full border-collapse">
         {/* Table Head */}
-        <thead className="text-ffffff font-MontserratSemiBold text-base bg-947fff h-12">
+        <thead className="text-ffffff font-MontserratSemiBold text-nowrap text-base bg-947fff h-12">
           <tr>
             <th className="px-4 text-center">Stock code</th>
             <th className="px-4 text-left">Product name</th>
@@ -109,93 +146,69 @@ const router = useRouter();
                 key={row.id}
                 className="h-c48 border-b border-b-000000/10 text-sm font-MontserratNormal"
               >
-                <td className="px-4 text-center">{row.stockcode}</td>
+                <td className="px-4 ">{row.stockcode}</td>
                 <td className="px-4 text-left">{row.name}</td>
                 <td className="px-4 text-center">{row.sold}</td>
                 <td className="px-4 text-center">{row.inventory}</td>
                 <td className="px-4 text-center">{row.sales_percentag}%</td>
-               <td className="px-4 text-center relative">
-                              <button
-                                className="w-6 h-6 flex-shrink-0"
-                                onClick={() =>
-                                  setActiveRowId((prev) => (prev === row.id ? null : row.id))
-                                }
-                              >
-                                <Image
-                                  src={HandBug}
-                                  alt="side button"
-                                  width={24}
-                                  height={24}
-                                />
-                              </button>
-                              <AnimatePresence>
-                                {activeRowId === row.id && (
-                                  <motion.div
-                                    key="dropdown"
-                                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                                    transition={{ duration: 0.2, ease: "easeOut" }}
-                                    className="absolute -right-12 mt-2 w-37.75 text-nowrap text-000000/65 text-c12 flex flex-col gap-3 py-2.5 px-4 font-MontserratNormal bg-white rounded-xl shadow-lg border z-40 "
-                                  >
-                                    {/* More Details */}
-                                    <button
-                                      className="flex items-center gap-3 w-full  text-ff715b hover:bg-gray-100 "
-                                      onClick={() => handleViewDetails(row.id)}
-                                    >
-                                      <Image
-                                        src={EyeIcon}
-                                        alt="view details"
-                                        width={15}
-                                        height={10}
-                                      />
-                                      More Details
-                                    </button>
-                                    {/* Edit */}
-                                    <button
-                                      className="flex items-center gap-3 w-full  hover:bg-gray-100 "
-                                      onClick={() => {
-                                        console.log("Edit", row.id);
-                                        setActiveRowId(null);
-                                      }}
-                                    >
-                                      <Image
-                                        src={EditIcon}
-                                        alt="edit"
-                                        width={12.5}
-                                        height={12.5}
-                                      />
-                                      Edit Product
-                                    </button>
-              
-                                    {/* Delete */}
-                                    <button
-                                      className="flex items-center gap-3 w-full  hover:bg-red-50 "
-                                      onClick={() => {
-                                        console.log("Delete", row.id);
-                                        setActiveRowId(null);
-                                      }}
-                                    >
-                                      <Image
-                                        src={DeleteIcon}
-                                        alt="edit"
-                                        width={12}
-                                        height={13}
-                                      />
-                                      Delete Product
-                                    </button>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </td>
+                <td className="px-4 text-center relative">
+                  <button
+                    className="w-6 h-6 flex-shrink-0"
+                    onClick={() =>
+                      setActiveRowId((prev) => (prev === row.id ? null : row.id))
+                    }
+                  >
+                    <Image src={HandBug} alt="side button" width={24} height={24} />
+                  </button>
+                  <AnimatePresence>
+                    {activeRowId === row.id && (
+                      <motion.div
+                        key="dropdown"
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="absolute -right-12 mt-2 w-37.75 text-nowrap text-000000/65 text-c12 flex flex-col gap-3 py-2.5 px-4 font-MontserratNormal bg-white rounded-xl shadow-lg border z-40 "
+                      >
+                        {/* More Details */}
+                        <button
+                          className="flex items-center gap-3 w-full  text-ff715b hover:bg-gray-100 "
+                          onClick={() => handleViewDetails(row.id)}
+                        >
+                          <Image src={EyeIcon} alt="view details" width={15} height={10} />
+                          More Details
+                        </button>
+                        {/* Edit */}
+                        <button
+                          className="flex items-center gap-3 w-full  hover:bg-gray-100 "
+                          onClick={() => {
+                            console.log("Edit", row.id);
+                            setActiveRowId(null);
+                          }}
+                        >
+                          <Image src={EditIcon} alt="edit" width={12.5} height={12.5} />
+                          Edit Product
+                        </button>
+                        {/* Delete */}
+                        <button
+                          className="flex items-center gap-3 w-full  hover:bg-red-50 "
+                          onClick={() => {
+                            console.log("Delete", row.id);
+                            setActiveRowId(null);
+                          }}
+                        >
+                          <Image src={DeleteIcon} alt="edit" width={12} height={13} />
+                          Delete Product
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </td>
               </tr>
             ))
           ) : (
             <tr className="h-64.5 ">
-              <td
-                colSpan={6}
-                className="text-center py-6 text-gray-500 text-sm"
-              >
+              <td colSpan={6} className="text-center py-6 text-gray-500 text-sm">
                 <div className="flex flex-col justify-center items-center gap-3">
                   <Image src={Empty} height={18} width={18} alt="empty" />
                   <p className="text-base font-MontserratNormal text-000000/10">No data available</p>

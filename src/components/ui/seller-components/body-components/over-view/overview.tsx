@@ -17,12 +17,13 @@ import { useState } from "react";
 export default function OverviewBody() {
   const [initialLoading, setInitialLoading] = useState(true);
   
-       const { fetchProducts, fetchdDraft, loading } = useFetchProducts();
+       const { fetchProducts, fetchdDraft, fetchBalance, loading } = useFetchProducts();
        const product = useSelector((state:RootState)=>state.sellerProduct.product)
     
         useEffect(() => {
           fetchdDraft();
           fetchProducts();
+          fetchBalance();
           const timer = setTimeout(() => setInitialLoading(false), 800);
           return () => clearTimeout(timer);
         }, []);
@@ -39,11 +40,15 @@ export default function OverviewBody() {
       <div className="w-full">
         <Charts />
       </div>
-      <div className="flex gap-c32">
-        <ProductInventory />
-        <CategoryRanking />
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-c32">
+        <div className="w-full lg:flex-1 order-2 lg:order-1">
+          <ProductInventory />
+        </div>
+        <div className="w-full lg:flex-1 order-1 lg:order-2 overflow-x-hidden">
+          <CategoryRanking />
+        </div>
       </div>
-      <div>
+      <div className="hidden lg:block">
         <OverviewOder />
       </div>
     </div>

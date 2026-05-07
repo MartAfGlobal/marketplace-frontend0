@@ -22,16 +22,41 @@ export default function OverviewHeader() {
   console.log("checking-seller data:....", isIncomplete);
 
   return (
-    <div className="flex h-c48 items-center justify-between w-full px-3 relative">
-      {/* Left: Overview + Search */}
-      <div className="flex items-center gap-c48 w-full max-w-160">
+    <div className="flex flex-col md:flex-row md:h-c48 items-center justify-between w-full px-3 gap-4 md:gap-0 relative">
+      {/* Top row on mobile: Overview + Filter (if not incomplete) */}
+      <div className="w-full lg:hidden md:max-w-87">
+        <SearchInput placeholder="Search for anything" />
+      </div>
+      <div className="flex items-center justify-between w-full md:hidden">
         <p className="text-c18 font-MontserratMedium">Overview</p>
-        <div className="w-full max-w-87">
+
+        <FilterDropdown
+          options={filterOptions}
+          onChange={(value) => console.log("Selected:", value)}
+        />
+      </div>
+
+      <div className="flex items-center justify-between w-full">
+        <div className="w-full hidden gap-12 md:max-w-87 md:flex items-center">
+          <p className="text-c18 font-MontserratMedium">Overview</p>
           <SearchInput placeholder="Search for anything" />
+        </div>
+
+        {/* Desktop View Title (hidden on mobile) */}
+
+        {/* Desktop Filter */}
+        <div className="">
+           <FilterDropdown
+              options={filterOptions}
+              onChange={(value) => console.log("Selected:", value)}
+            />
+          {/* {!isIncomplete && (
+           
+          )} */}
         </div>
       </div>
 
-      {isIncomplete && (
+      {/* {isIncomplete && (
         <motion.div
           className="w-full max-w-108.25 flex gap-2.5 absolute right-0 z-40 bg-[#0070e9]/60 text-white py-3 px-2.5 text-c12 font-MontserratNormal  shadow-lg"
           animate={{
@@ -72,14 +97,7 @@ export default function OverviewHeader() {
             </div>
           </div>
         </motion.div>
-      )}
-
-      {!isIncomplete && (
-        <FilterDropdown
-          options={filterOptions}
-          onChange={(value) => console.log("Selected:", value)}
-        />
-      )}
+      )} */}
     </div>
   );
 }

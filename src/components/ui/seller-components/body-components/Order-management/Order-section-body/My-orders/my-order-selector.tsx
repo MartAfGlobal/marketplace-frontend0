@@ -15,7 +15,7 @@ export default function FilteredOrders({
   setActiveTab,
 }: NavigationBarProps) {
   return (
-    <nav className=" font-MontserratSemiBold text-sm flex gap-6 relative border-b border-b-000000/10">
+    <nav className=" font-MontserratSemiBold text-sm flex gap-6 relative border-b border-b-000000/10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       {navItems.map((item) => (
         <button
           key={item.id}

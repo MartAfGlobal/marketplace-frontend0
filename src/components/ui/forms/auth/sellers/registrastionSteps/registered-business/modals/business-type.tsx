@@ -14,6 +14,7 @@ interface DropdownInputProps {
   disabled?: boolean;
 
   loading?: boolean;
+  emptyState?: string;
 }
 
 export function DropdownInput({
@@ -22,7 +23,8 @@ export function DropdownInput({
   value: propValue = "",
   onChange,
   disabled = false,
-  loading
+  loading,
+  emptyState = "No options available"
 }: DropdownInputProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(propValue);
@@ -85,18 +87,23 @@ export function DropdownInput({
         
         </button>
       </div>
-
       {open && (
         <div className="absolute bottom-10 left-0 w-full bg-white border border-gray-200 max-h-60 overflow-y-auto py-2 px-3 rounded-lg shadow-lg mt-1 z-50">
-          {options.map((opt, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSelect(opt)}
-              className="w-full text-left px-3 py-2 font-MontserratNormal text-c12 hover:bg-[#F4E7FD]"
-            >
-              {opt}
-            </button>
-          ))}
+          {options.length > 0 ? (
+            options.map((opt, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSelect(opt)}
+                className="w-full text-left px-3 py-2 font-MontserratNormal text-c12 hover:bg-[#F4E7FD]"
+              >
+                {opt}
+              </button>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-gray-400 font-MontserratNormal text-c12 italic text-center">
+              {emptyState}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -3,7 +3,9 @@
 import { RootState } from "@/store";
 import {
   fetchDisputeDetails,
-
+  fetchOrdersFailure,
+  fetchOrdersStart,
+  fetchOrdersSuccess,
   setShippingAddress,
 } from "@/store/orders/order-slice";
 import { useHttp } from "@/hooks/use-http";
@@ -12,6 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { setSellerProduct } from "@/store/sellers/productSlice";
 import { setDraft } from "@/store/sellers/draftSlice";
+import { setBalance, setFinanceLoading, setFinanceError } from "@/store/finance/financeSlice";
 import { useState } from "react";
 import { RequestType } from "@/types/global";
 
@@ -174,22 +177,221 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
     });
   };
 
+  const fetchBalance = () => {
+    if (!token) return;
+
+    dispatch(setFinanceLoading(true));
+    sendHttpRequest({
+      requestConfig: {
+        url: "commission/manufacturer/wallet/balance/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (responseData: any) => {
+        console.log("Balance data fetched successfully:", responseData.data);
+        dispatch(setBalance(responseData.data));
+        dispatch(setFinanceLoading(false));
+      },
+      errorRes: (err: any) => {
+        console.error("Error fetching balance:", err);
+        dispatch(setFinanceError(err.message || "Failed to fetch balance"));
+        dispatch(setFinanceLoading(false));
+      }
+    });
+  };
+
   const fetchOrders = () => {
-   
+    if (!token) return;
+
+    dispatch(fetchOrdersStart());
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "orders/manufacturer/orders/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (res) => {
+        console.log("User orders:", res);
+        const orders = res?.data?.results || res?.data || [];
+        dispatch(fetchOrdersSuccess(orders));
+      },
+    });
+  };
+
+  const fetchOrderById = (orderId: string, callback?: (data: any) => void) => {
     if (!token) return;
 
     sendHttpRequest({
       requestConfig: {
-        url: "order/manufacturer/order/",
+        url: `orders/manufacturer/orders/${orderId}/`,
         method: "GET",
         token,
         isAuth: true,
-        userType: "buyer",
+        userType: "seller",
       },
       successRes: (res) => {
-       
-        console.log("User orders:", res);
+        console.log("Single order fetched:", res);
+        if (callback) callback(res.data);
+      },
+    });
+  };
 
+  const acceptOrder = (orderId: string, payload: { warehouse_id: string, delivery_partner: string }, callback?: (data: any) => void, errorCallback?: (err: any) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `order/manufacturer/orders/${orderId}/accept/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "seller",
+        body: payload,
+      },
+      successRes: (res) => {
+        console.log("Order accepted:", res);
+        if (callback) callback(res.data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      }
+    });
+  };
+
+  const fulfillOrder = (orderId: string, payload: { parcel_id: string }, callback?: (data: any) => void, errorCallback?: (err: any) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `orders/manufacturer/orders/${orderId}/fulfill/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "seller",
+        body: payload,
+      },
+      successRes: (res: any) => {
+        console.log("Order fulfilled:", res);
+        if (callback) callback(res.data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      }
+    });
+  };
+
+  const fetchWarehouses = (callback?: (data: any) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/orders/manufacturer/warehouses/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (res) => {
+        console.log("Warehouses fetched:", res);
+        if (callback) callback(res.data?.results || res.data || []);
+      },
+    });
+  };
+
+  const fetchDeliveryPartners = (callback?: (data: any) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/orders/manufacturer/delivery-partners/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (res) => {
+        console.log("Delivery partners fetched:", res);
+        if (callback) callback(res.data?.results || res.data || []);
+      },
+    });
+  };
+
+  const rejectOrder = (
+    orderId: string,
+    payload: { rejection_reason_id: string; rejection_note: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `order/manufacturer/orders/${orderId}/reject/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "seller",
+        body: payload,
+      },
+      successRes: (res) => {
+        console.log("Order rejected:", res);
+        if (callback) callback(res.data);
+      },
+      errorRes: (err) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const partialAcceptOrder = (
+    orderId: string,
+    payload: any,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `order/manufacturer/orders/${orderId}/partial-reject/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "seller",
+        body: payload,
+      },
+      successRes: (res: any) => {
+        console.log("Partial acceptance success:", res);
+        if (callback) callback(res.data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const fetchRejectionReasons = (callback?: (data: any) => void, errorCallback?: (err: any) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/cancellation/reasons/for_seller/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (res: any) => {
+        console.log("Rejection reasons fetched:", res);
+        if (callback) callback(res.data?.results || res.data || []);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
       },
     });
   };
@@ -199,9 +401,18 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
     setIsActive,
     fetchdDraft,
     fetchProducts,
+    fetchBalance,
     fetchOrders,
     fetchLogs,
     fetchOrderDetails,
+    fetchOrderById,
+    acceptOrder,
+    rejectOrder,
+    fulfillOrder,
+    fetchWarehouses,
+    fetchDeliveryPartners,
+    fetchRejectionReasons,
+    partialAcceptOrder,
     activateProduct,
     cancelProductRequest,
     success,

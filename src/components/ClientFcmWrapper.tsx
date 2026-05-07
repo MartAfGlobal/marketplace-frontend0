@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import FcmInit from "@/components/FcmInit";
 
 export default function ClientFcmWrapper() {
-  const isLoggedIn = localStorage.getItem("accessToken")
+  const [isLoggedIn, setIsLoggedIn] = useState<string | null>(null);
 
   useEffect(() => {
+    setIsLoggedIn(localStorage.getItem("accessToken"));
+    
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/firebase-messaging-sw.js")

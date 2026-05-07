@@ -197,7 +197,7 @@ export default function ItemAddToCart({
   return (
     <>
       {isModal && (
-        <div className="absolute bottom-24 right-0 w-full max-w-76 bg-ffffff flex gap-6">
+        <div className="w-full flex justify-end gap-4 mt-8">
           {existingCartItem ? (
             <QuantitySelector
               quantity={localQty}

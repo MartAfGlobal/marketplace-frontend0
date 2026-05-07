@@ -5,6 +5,7 @@ import LayoutWrapper from "@/components/ui/LayoutWrappers/LayoutWrapper";
 import { Toaster } from "sonner";
 import InstallButton from "@/components/ui/InstallButton";
 import ClientFcmWrapper from "@/components/ClientFcmWrapper";
+import AxiosInterceptor from "@/components/auth/AxiosInterceptor";
 
 export const metadata: Metadata = {
   title: "market Africa",
@@ -79,12 +80,14 @@ export default function RootLayout({
       </head>
       <body>
         <ClientProvider>
-          <LayoutWrapper>
-            {/* <InstallButton /> */}
-            <Toaster richColors position="top-right" duration={2000} />
-            {children}
-            <ClientFcmWrapper />
-          </LayoutWrapper>
+          <AxiosInterceptor>
+            <LayoutWrapper>
+              {/* <InstallButton /> */}
+              <Toaster richColors position="top-right" duration={2000} />
+              {children}
+              <ClientFcmWrapper />
+            </LayoutWrapper>
+          </AxiosInterceptor>
         </ClientProvider>
       </body>
     </html>

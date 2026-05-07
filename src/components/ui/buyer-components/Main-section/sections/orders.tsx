@@ -269,7 +269,7 @@ export default function Orders() {
                         </p>
                         <div className="w-fit p-2 justify-center rounded-c12 bg-black/3 flex items-center">
                           <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
-                            {item.order_items.length}PC,{" "}
+                            {item.order_items?.length}PC,{" "}
                             {item.order_items?.[0]?.variation_name}
                           </span>
                         </div>

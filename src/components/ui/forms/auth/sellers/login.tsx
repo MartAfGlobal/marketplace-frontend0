@@ -66,7 +66,13 @@ export default function SellerLogin() {
 
     dispatch(tokenActions.setToken(accessToken));
 
-    router.push("/dashboard/seller");
+    const redirectUrl = localStorage.getItem("sellerRedirectUrl");
+    if (redirectUrl) {
+      localStorage.removeItem("sellerRedirectUrl");
+      router.push(redirectUrl);
+    } else {
+      router.push("/dashboard/seller/overview");
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

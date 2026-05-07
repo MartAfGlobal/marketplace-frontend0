@@ -26,13 +26,13 @@ export default function OrderSectionSelector({
         duration: 0.6,
         ease: "easeOut",
       }}
-      className={`transform w-full  max-w-66.25 rounded-2xl p-c24 circle-shadow z-40 bg-ffffff
+      className={`transform w-full md:max-w-66.25 md:rounded-2xl md:p-c24 md:circle-shadow z-40 md:bg-ffffff overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
          ${
         hideOnMobile ? "hidden sm:block" : ""
       }`}
     >
   
-      <ul>
+      <ul className="flex flex-row md:flex-col border-b md:border-b-0 border-gray-200 md:border-transparent gap-2 md:gap-0 w-full md:w-full  md:px-0">
         {sections.map((s) => {
           const isActive = activeId === s.id;
           return (
@@ -40,9 +40,9 @@ export default function OrderSectionSelector({
               <button
                 onClick={() => handleClick(s.id)}
                 aria-current={isActive ? "true" : undefined}
-                className={`flex items-center gap-2 text-161616 font-MontserratMedium text-c12 h-c32 w-full transition-all justify-start border-r-4 ${
+                className={`flex items-center gap-2 font-MontserratNormal text-sm md:h-c32 w-full transition-all justify-center md:justify-start  p-4 md:p-0 whitespace-nowrap md:border-r-4 border-b-2 md:border-b-0 ${
                   isActive
-                    ? "border-r-ff715b"
+                    ? "md:border-r-ff715b md:border-b-transparent border-b-[#6a0dad] text-[#6a0dad] md:text-161616"
                     : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
@@ -50,7 +50,7 @@ export default function OrderSectionSelector({
                   <Image
                     src={s.icon}
                     alt={`${s.label} icon`}
-                    className="w-2.5 h-2.5 object-contain"
+                    className="w-2.5 h-2.5 object-contain hidden md:block"
                     width={16}
                     height={16}
                   />

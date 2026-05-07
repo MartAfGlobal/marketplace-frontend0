@@ -30,144 +30,154 @@ export default function MultiLineZigZagChart() {
     <>
     {isIncomplete ? (
 
-      <div className="w-full h-38.5  mt-c32  ">
-      <ResponsiveContainer width="100%" height="100%" className="">
-        <LineChart
-          data={data}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 0,
-            bottom: 20,
-          }}
-        >
-          <CartesianGrid
-            horizontal={true}
-            vertical={false}
-            stroke="#e5e7eb"
-            strokeWidth={1}
-          />
-          <XAxis
-            dataKey="month"
-            axisLine={false}
-            tickLine={false}
-            tick={{
-              fontSize: 12,
-              fill: "#6b7280",
-              fontFamily: "system-ui, -apple-system, sans-serif",
-            }}
-            tickMargin={10}
-            interval={0}
-          />
-          <YAxis
-            domain={[490, 515]}
-            axisLine={false}
-            tickLine={false}
-            tickMargin={30}
-            tick={{
-              fontSize: 12,
-              fill: "#6b7280",
-              fontFamily: "system-ui, -apple-system, sans-serif",
-            }}
-            tickFormatter={(value) => `${value}`}
-          />
-          <Line
-            type="linear"
-            dataKey="line1"
-            stroke="#c084fc"
-            strokeWidth={0}
-            dot={false}
-            activeDot={false}
-          />
-          <Line
-            type="linear"
-            dataKey="line2"
-            stroke="#a855f7"
-            strokeWidth={0}
-            dot={false}
-            activeDot={false}
-          />
-          <Line
-            type="linear"
-            dataKey="line3"
-            stroke="#9333ea"
-            strokeWidth={0}
-            dot={false}
-            activeDot={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+      <div className="w-full h-[230px] mt-4 lg:mt-c32 overflow-x-auto scrollbar-hide">
+        <div className="min-w-[700px] h-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{
+                top: 20,
+                right: 30,
+                left: -20,
+                bottom: 10,
+              }}
+            >
+              <CartesianGrid
+                horizontal={true}
+                vertical={false}
+                stroke="#e5e7eb"
+                strokeWidth={1}
+              />
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fontSize: 12,
+                  fill: "rgba(0, 0, 0, 0.56)",
+                  fontFamily: "Montserrat-SemiBold",
+                }}
+                tickMargin={10}
+                interval={0}
+                padding={{ left: 20, right: 20 }}
+              />
+              <YAxis
+                domain={[485, 515]}
+                ticks={[485, 490, 495, 500, 505, 510, 515]}
+                interval={0}
+                axisLine={false}
+                tickLine={false}
+                tickMargin={20}
+                tick={{
+                  fontSize: 12,
+                  fill: "rgba(0, 0, 0, 0.56)",
+                  fontFamily: "Montserrat-SemiBold",
+                }}
+                tickFormatter={(_, index) => (index % 2 === 0 ? "500" : "")}
+              />
+              <Line
+                type="linear"
+                dataKey="line1"
+                stroke="#947FFF"
+                strokeWidth={2}
+                dot={false}
+                activeDot={false}
+              />
+              <Line
+                type="linear"
+                dataKey="line2"
+                stroke="#6A0DAD"
+                strokeWidth={2}
+                dot={false}
+                activeDot={false}
+              />
+              <Line
+                type="linear"
+                dataKey="line3"
+                stroke="#947FFF80"
+                strokeWidth={2}
+                dot={false}
+                activeDot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     ):(
 
-      <div className="w-full h-38.5  mt-c32  ">
-      <ResponsiveContainer width="100%" height="100%" className="">
-        <LineChart
-          data={data}
-          margin={{
-            top: 20,
-            right: 30,
-            left: 0,
-            bottom: 20,
-          }}
-        >
-          <CartesianGrid
-            horizontal={true}
-            vertical={false}
-            stroke="#e5e7eb"
-            strokeWidth={1}
-          />
-          <XAxis
-            dataKey="month"
-            axisLine={false}
-            tickLine={false}
-            tick={{
-              fontSize: 12,
-              fill: "#6b7280",
-              fontFamily: "system-ui, -apple-system, sans-serif",
-            }}
-            tickMargin={10}
-            interval={0}
-          />
-          <YAxis
-            domain={[490, 515]}
-            axisLine={false}
-            tickLine={false}
-            tickMargin={30}
-            tick={{
-              fontSize: 12,
-              fill: "#6b7280",
-              fontFamily: "system-ui, -apple-system, sans-serif",
-            }}
-            tickFormatter={(value) => `${value}`}
-          />
-          <Line
-            type="linear"
-            dataKey="line1"
-            stroke="#c084fc"
-            strokeWidth={2}
-            dot={false}
-            activeDot={false}
-          />
-          <Line
-            type="linear"
-            dataKey="line2"
-            stroke="#a855f7"
-            strokeWidth={1}
-            dot={false}
-            activeDot={false}
-          />
-          <Line
-            type="linear"
-            dataKey="line3"
-            stroke="#9333ea"
-            strokeWidth={1}
-            dot={false}
-            activeDot={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
+      <div className="w-full  h-[158px] mt-8 bg-ffffff  overflow-x-auto scrollbar-hide">
+        <div className="W-full h-full  min-w-113.75">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{
+                top: 20,
+                right: 30,
+                left: -10,
+                bottom: 10,
+              }}
+            >
+              <CartesianGrid
+                horizontal={true}
+                vertical={false}
+                stroke="#e5e7eb"
+                strokeWidth={1}
+              />
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                tick={{
+                  fontSize: 12,
+                  fill: "rgba(0, 0, 0, 0.56)",
+                  fontFamily: "Montserrat-SemiBold",
+                }}
+                tickMargin={10}
+                interval={0}
+                padding={{ left: 20, right: 20 }}
+              />
+              <YAxis
+                domain={[485, 515]}
+                ticks={[485, 490, 495, 500, 505, 510, 515]}
+                interval={0}
+                axisLine={false}
+                tickLine={false}
+                tickMargin={20}
+                tick={{
+                  fontSize: 12,
+                  fill: "rgba(0, 0, 0, 0.56)",
+                  fontFamily: "Montserrat-SemiBold",
+                }}
+                tickFormatter={(_, index) => (index % 2 === 0 ? "500" : "")}
+              />
+              <Line
+                type="linear"
+                dataKey="line1"
+                stroke="#947FFF"
+                strokeWidth={2}
+                dot={false}
+                activeDot={false}
+              />
+              <Line
+                type="linear"
+                dataKey="line2"
+                stroke="#6A0DAD"
+                strokeWidth={2}
+                dot={false}
+                activeDot={false}
+              />
+              <Line
+                type="linear"
+                dataKey="line3"
+                stroke="#947FFF80"
+                strokeWidth={2}
+                dot={false}
+                activeDot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
     )}
     </>
   );

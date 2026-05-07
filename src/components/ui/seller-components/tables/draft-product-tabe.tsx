@@ -16,6 +16,7 @@ import DeleteIcon from "@/assets/icons/deleteREd.svg";
 import EyeIcon from "@/assets/icons/eye.png";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronRight } from "lucide-react";
 
 export type DraftProductDataTableProps = {
   currentPage: number;
@@ -155,9 +156,107 @@ const router = useRouter()
     }
   };
 
+  const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+
   return (
     <div className="mt-c32 w-full">
-      <table className="w-full">
+      {/* Mobile View */}
+      <div className="lg:hidden flex flex-col gap-6">
+        {currentRows.length > 0 && !isIncomplete ? (
+          currentRows.map((row) => (
+            <div key={row.id} className="py-3 flex flex-col gap-3 justify-center border-b border-gray-100 last:border-0">
+              <div 
+                className="flex pl-4 items-center justify-between cursor-pointer"
+                onClick={() => setActiveRowId(activeRowId === row.id ? null : row.id)}
+              >
+                <h3 className="font-MontserratSemiBold text-sm text-[#000000]">{row.name}</h3>
+                <ChevronRight 
+                  size={18} 
+                  className={`text-000000/40 transition-transform duration-200 ${activeRowId === row.id ? "rotate-90" : ""}`} 
+                />
+              </div>
+
+              <AnimatePresence>
+                {activeRowId === row.id && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="relative z-50 px-4"
+                  >
+                    <div className="flex flex-col gap-3 py-2.5 px-4 font-MontserratNormal bg-white rounded-xl shadow-lg border border-gray-100 mb-4">
+                      {/* More Details */}
+                      <button
+                        className="flex items-center gap-3 w-full text-000000/65 text-c12"
+                        onClick={() => handleViewDetails(row.id)}
+                      >
+                        <Image src={EyeIcon} alt="view details" width={15} height={10} />
+                        More Details
+                      </button>
+                      
+                      {/* Edit */}
+                      <button
+                        className="flex items-center gap-3 w-full text-000000/65 text-c12"
+                        onClick={() => handleEditDetails(row.id)}
+                      >
+                        <Image src={EditIcon} alt="edit" width={12.5} height={12.5} />
+                        Edit Product
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        className="flex items-center gap-3 w-full text-ca0202 text-c12"
+                        disabled={deletingId === row.id}
+                        onClick={() => onDelete?.(row.id)}
+                      >
+                        {deletingId === row.id ? (
+                          <LoadingSpinner size={16} color="border-ca0202" />
+                        ) : (
+                          <>
+                            <Image src={DeleteIcon} alt="delete" width={12} height={13} />
+                            Delete Product
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              <div className="flex flex-col gap-0.5">
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Stock</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">{row.quantity || 0}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Price</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">₦{row.base_price || 0}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Category</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">
+                    {row.category_info?.category?.name || "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Subcategory</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">
+                    {row.category_info?.subcategory?.name || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col justify-center items-center gap-3 py-10">
+            <Image src={Empty} height={18} width={18} alt="empty" />
+            <p className="text-base font-MontserratNormal text-000000/10">No data available</p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View */}
+      <table className="hidden lg:table w-full">
         <thead className="text-ffffff font-MontserratSemiBold text-base bg-947fff w-full h-12">
           <tr>
             <th className="w-8 text-center">

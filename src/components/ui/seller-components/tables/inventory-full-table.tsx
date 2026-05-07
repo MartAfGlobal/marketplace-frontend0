@@ -15,19 +15,28 @@ import DeleteIcon from "@/assets/icons/deleteREd.svg";
 import EyeIcon from "@/assets/icons/eye.png";
 import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ChevronRight } from "lucide-react";
 
 //  helper for approval badge
 const getApprovalClass = (approval: string) => {
-  switch (approval.toLowerCase()) {
-    case "approved":
-      return "bg-[#2D7565]/10 text-[#2D7565] px-3 py-1 rounded-full text-xs font-semibold";
-    case "pending":
-      return "bg-[#FFAC06]/10 text-[#FFAC06] px-3 py-1 rounded-full text-xs font-semibold";
-    case "rejected":
-      return "bg-[#CA0202]/10 text-[#CA0202] px-3 py-1 rounded-full text-xs font-semibold";
-    default:
-      return "bg-[#FFAC06]/10 text-[#FFAC06] px-3 py-1 rounded-full text-xs font-semibold";
+  const status = approval?.toLowerCase() || "";
+  if (status.includes("approved")) {
+    return "bg-[#2D7565]/10 text-[#2D7565] px-3 py-1 rounded-full text-xs font-semibold";
   }
+  if (status.includes("pending")) {
+    return "bg-[#FFAC06]/10 text-[#FFAC06] px-3 py-1 rounded-full text-xs font-semibold";
+  }
+  if (status.includes("rejected")) {
+    return "bg-[#CA0202]/10 text-[#CA0202] px-3 py-1 rounded-full text-xs font-semibold";
+  }
+  return "bg-[#FFAC06]/10 text-[#FFAC06] px-3 py-1 rounded-full text-xs font-semibold";
+};
+
+const formatApprovalText = (approval: string) => {
+  if (!approval) return "Pending";
+  const status = approval.toLowerCase();
+  if (status.includes("pending")) return "Pending";
+  return approval.charAt(0).toUpperCase() + approval.slice(1);
 };
 
 //  props from parent
@@ -168,9 +177,125 @@ if (filters.perc) {
     }
   };
 
+  const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+
   return (
     <div className="mt-c32 w-full">
-      <table className="w-full">
+      {/* Mobile View */}
+      <div className="lg:hidden flex flex-col gap-6">
+        {currentRows.length > 0 && !isIncomplete ? (
+          currentRows.map((row) => (
+            <div key={row.id} className="py-3 flex flex-col gap-3 justify-center border-b border-gray-100 last:border-0">
+              <div 
+                className="flex pl-4 items-center justify-between cursor-pointer"
+                onClick={() => setActiveRowId(activeRowId === row.id ? null : row.id)}
+              >
+                <h3 className="font-MontserratSemiBold text-sm text-[#000000]">{row.name}</h3>
+                <ChevronRight 
+                  size={18} 
+                  className={`text-000000/40 transition-transform duration-200 ${activeRowId === row.id ? "rotate-90" : ""}`} 
+                />
+              </div>
+              
+              <AnimatePresence>
+                {activeRowId === row.id && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="relative z-50 px-4"
+                  >
+                    <div className="flex flex-col gap-3 py-2.5 px-4 font-MontserratNormal bg-white rounded-xl shadow-lg border border-gray-100 mb-4">
+                      {/* More Details */}
+                      <button
+                        className="flex items-center gap-3 w-full text-000000/65 text-c12"
+                        onClick={() => handleViewDetails(row.id)}
+                      >
+                        <Image src={EyeIcon} alt="view details" width={15} height={10} />
+                        More Details
+                      </button>
+                      
+                      {/* Edit */}
+                      {row.is_approved === "approved" && (
+                        <button
+                          className="flex items-center gap-3 w-full text-000000/65 text-c12"
+                          onClick={() => handleEditDetails(row.id)}
+                        >
+                          <Image src={EditIcon} alt="edit" width={12.5} height={12.5} />
+                          Edit Product
+                        </button>
+                      )}
+
+                      {/* Deactivate/Activate */}
+                      {row.is_approved?.toLowerCase() === "approved" && (
+                        <button
+                          className={`flex items-center gap-3 w-full text-c12 ${row.is_active ? "text-ca0202" : "text-2d7565"}`}
+                          disabled={togglingId === row.id}
+                          onClick={() => onToggleActive?.(row.id, row.is_active)}
+                        >
+                          {togglingId === row.id ? (
+                            <LoadingSpinner size={16} color="border-ff715b" />
+                          ) : (
+                            <>
+                              <div className={`w-2.5 h-2.5 rounded-full ${row.is_active ? "bg-ca0202" : "bg-2d7565"}`} />
+                              {row.is_active ? "Deactivate Product" : "Activate Product"}
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex flex-col gap-0.5">
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Quantity sold</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">{row.sold}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Quantity in stock</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">{row.inventory}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Status</span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-MontserratMedium ${
+                      row.is_active
+                        ? "bg-[#2D7565]/10 text-[#2D7565]"
+                        : "bg-[#FF715B]/10 text-[#FF715B]"
+                    }`}
+                  >
+                    {row.is_active ? "Live" : "Inactive"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Approval</span>
+                  <span className={getApprovalClass(row.is_approved || "pending")}>
+                    {formatApprovalText(row.is_approved || "pending")}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Price</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">₦{row.base_price}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal text-c12">Sales</span>
+                  <span className="font-MontserratSemiBold text-000000 text-sm">{row.sales_percentag > 0 ? row.sales_percentag : 0}%</span>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col justify-center items-center gap-3 py-10">
+            <Image src={Empty} height={18} width={18} alt="empty" />
+            <p className="text-base font-MontserratNormal text-000000/10">No data available</p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View */}
+      <table className="hidden lg:table w-full">
         <thead className="text-ffffff font-MontserratSemiBold text-base bg-947fff w-full h-12">
           <tr>
             <th className="w-8 text-center">
@@ -277,7 +402,7 @@ if (filters.perc) {
                 </td>
                 <td className="px-4 text-center">
                   <span className={getApprovalClass(row.is_approved)}>
-                    {row.is_approved === "pending" || row.is_approved ==="approved" || row.is_approved ==="rejected"? row.is_approved: "pending"}
+                    {formatApprovalText(row.is_approved)}
                   </span>
                 </td>
                 <td className="px-4 text-center">₦{row.base_price}</td>
@@ -334,7 +459,7 @@ if (filters.perc) {
                           />
                           Edit Product
                         </button>}
-  
+   
                         {/* Toggle Active status */}
                         {row.is_approved?.toLowerCase() === "approved" && (
                           <button

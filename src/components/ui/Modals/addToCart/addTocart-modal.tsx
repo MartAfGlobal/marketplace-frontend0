@@ -118,7 +118,7 @@ export default function AddCartModal({
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
                 onClick={(e) => e.stopPropagation()}
-                className=" bg-white shadow-xl flex flex-col items-center gap-8 w-full max-w-md md:max-w-fit rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-[90vh] overflow-y-auto"
+                className=" bg-white shadow-xl flex flex-col items-center gap-8 w-full max-w-md md:max-w-4xl rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-[90vh] overflow-y-auto"
               >
                 {loadingDetails ? (
                   <div className="h-fullw-full flex justify-center items-center">
@@ -143,7 +143,7 @@ export default function AddCartModal({
                     </div>
 
                     <div className="flex w-full flex-col md:flex-row gap-6 h-fit overflow-y-auto  md:overflow-x-auto md:overflow-y-hidden p-4 custom-scrollrailes">
-                      <div className="h-fit max-h-c55">
+                      <div className="w-full h-fit max-h-c55">
                         <ProductVariation isModal={true} />
                       </div>
                     </div>

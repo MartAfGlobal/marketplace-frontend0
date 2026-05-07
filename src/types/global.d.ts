@@ -28,12 +28,13 @@ type HttpRequestConfigType = {
   params?: any;
   body?: any;
   isAuth?: boolean;
-  userType?: "seller" | "buyer"; // 👈 added
+  userType?: "seller" | "buyer" | "admin"; // 👈 added
 };
 
 export interface HttpRequestConfigProps {
   requestConfig: HttpRequestConfigType;
   successRes: (data: any) => void;
+  errorRes?: (err: any) => void;
 }
 
 export interface Option {
@@ -816,7 +817,7 @@ export interface AuthenticationLayoutProps {
   title: string;
   description: string;
   children: ReactNode;
-  userType: "seller" | "buyer";
+  userType: "seller" | "buyer" | "admin";
   stage?: 1 | 2 | 3;
   className?: string;
 }
@@ -1494,3 +1495,82 @@ export interface ProductDraftPayload {
 export type RequestType = {
   requestType: "activation" | "deactivation" | "submit" | null;
 };
+
+export interface OrderVariationAttribute {
+  slug: string;
+  value: string;
+  extra_data?: any;
+}
+
+export interface OrderItemAttributes {
+  Size?: OrderVariationAttribute;
+  Color?: OrderVariationAttribute;
+  Material?: OrderVariationAttribute;
+  [key: string]: OrderVariationAttribute | undefined;
+}
+
+export interface SellerOrderItemPayload {
+  attributes: OrderItemAttributes;
+  can_cancel: boolean;
+  can_raise_dispute: boolean;
+  cancellation_reason: string | null;
+  category_name: string;
+  category_slug: string;
+  fulfilled_quantity: number;
+  has_dispute: boolean;
+  id: string;
+  manufacturer_email: string;
+  manufacturer_id: string;
+  manufacturer_name: string;
+  price_at_purchase: number;
+  product: string;
+  product_image: string;
+  product_name: string;
+  product_sku: string;
+  product_slug: string;
+  quantity: number;
+  refundable_amount: string;
+  seller_order_status: string;
+  shipping_share: number;
+  status: string;
+  total_price: string;
+  variation: string;
+  variation_name: string;
+  variation_sku: string;
+  weight_kg: number;
+  accepted_quantity?: number;
+  rejected_quantity?: number;
+}
+
+export interface SellerOrderResult {
+  acceptance_deadline: string;
+  accepted_at: string | null;
+  can_accept: boolean;
+  commission_fee: number;
+  created_at: string;
+  fulfilled_at: string | null;
+  fulfillment_deadline: string | null;
+  hub_delivery_status: string;
+  id: string;
+  is_acceptance_deadline_passed: boolean;
+  is_fulfillment_deadline_passed: boolean;
+  items: SellerOrderItemPayload[];
+  parcel_id: string | null;
+  payment: string;
+  payout_status: string;
+  received_at_hub_at: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+  seller: number;
+  seller_earnings: number;
+  seller_name: string;
+  shipping_cost: number;
+  shipping_address?: OrderShippingAddress;
+  status: string;
+  subtotal: number;
+  accepted_quantity: number;
+  rejected_quantity: number;
+  time_remaining_to_accept: number;
+  time_remaining_to_fulfill: number | null;
+  updated_at: string;
+}

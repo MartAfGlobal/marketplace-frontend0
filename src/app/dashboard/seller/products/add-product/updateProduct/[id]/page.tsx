@@ -539,7 +539,7 @@ export default function UpdateProductPage() {
   return (
     <AddProductLayout stage={4} title="Upload Image">
       <form>
-        <p className="text-c12 font-MontserratNormal mt-3">
+        <p className="text-c12 font-MontserratNormal lg:mt-3 mt-2">
           Images need to be between 500x500 and 1080x1080. White backgrounds are
           advised.
         </p>
@@ -547,11 +547,11 @@ export default function UpdateProductPage() {
         <fieldset
           disabled={loading || updating || fetchingDraftDetails || savingDraft}
         >
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-8 flex items-center flex-wrap gap-4">
             {images.map((img, i) => (
               <div
                 key={i}
-                className="relative h-24 w-24 rounded-c8 border border-ff715b overflow-hidden"
+                className="relative lg:h-24 lg:w-24 w-20 h-20 rounded-c8 border border-ff715b overflow-hidden"
               >
                 {img ? (
                   <>
@@ -601,7 +601,7 @@ export default function UpdateProductPage() {
               General product information
             </h1>
 
-            <div className="flex items-center gap-8 justify-center">
+            <div className="flex items-center md:flex-row flex-col  gap-8 justify-center">
               <div className="w-full">
                 <Label>Name of Product</Label>
                 <Input
@@ -668,7 +668,7 @@ export default function UpdateProductPage() {
               {/* Images */}
               <div className="flex gap-4 mt-4">
                 {variant.images.filter(Boolean).length < 4 && (
-                  <label className="relative h-24 w-24 rounded-c8 border flex flex-col items-center justify-center cursor-pointer overflow-hidden">
+                  <label className="relative lg:h-24 lg:w-24 w-20 h-20 rounded-c8 border flex flex-col items-center justify-center cursor-pointer overflow-hidden">
                     <input
                       type="file"
                       className="absolute inset-0 opacity-0 cursor-pointer"
@@ -727,7 +727,7 @@ export default function UpdateProductPage() {
                   value={variant.name}
                   readOnly
                 />
-                <div className="w-full max-w-198 border h-0.25 border-000000/18" />
+                <div className="w-full max-w-198 hidden lg:block border h-0.25 border-000000/18" />
                 <button
                   type="button"
                   onClick={() => handleDeleteVariant(variant.id)}
@@ -738,7 +738,7 @@ export default function UpdateProductPage() {
               </div>
 
               {/* Attributes, price, stock */}
-              <div className="flex w-full gap-6 mt-6">
+              <div className="flex w-full gap-6 mt-6 md:flex-row flex-col">
                 <div className="w-full">
                   {step1Data?.step1.attributes?.length ? (
                     <AttributesSection

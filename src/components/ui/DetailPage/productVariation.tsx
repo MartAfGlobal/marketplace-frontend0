@@ -78,7 +78,7 @@ const dispatch = useDispatch() as AppDispatch;
   const [pendingRequests, setPendingRequests] = useState(2); // 2 API calls
   const { sendHttpRequest } = useHttp();
 
-  const subCategorySlug = productDetails?.category.subcategory.slug;
+  const subCategorySlug = productDetails?.category?.subcategory?.slug;
 
 useEffect(() => {
   if (!selectedVariaton || !productDetails?.variations) return;
@@ -206,7 +206,8 @@ useEffect(() => {
 
   /* ---------------- ADD TO CART HANDLER ---------------- */
   const handleIncompleteVariation = () => {
-    if (!productDetails?.has_variations) return;
+    const hasVars = productDetails?.has_variations || (productDetails?.variations && productDetails.variations.length > 0);
+    if (!hasVars) return;
 
     setHasTriedAddToCart(true);
 
@@ -256,15 +257,15 @@ useEffect(() => {
 
   return (
     <div
-      className={`flex w-full md:gap-23 flex-col md:flex-row justify-center  ${
+      className={`flex w-full md:gap-10 lg:gap-23 flex-col md:flex-row justify-center  ${
         !isModal ? "mt-c32" : "mt-0"
       }`}
     >
-      <div className="max-w-205.5 w-full ">
-        <div className="w-full flex md:flex-row gap-c32   flex-col  h-fit max-w-205.5 md:gap-c48 relative">
+      <div className="md:flex-1 w-full">
+        <div className="w-full flex md:flex-row gap-c32 flex-col h-fit md:gap-c48 relative">
           {/* IMAGES */}
           <div
-            className={`w-full md:max-w-94.75 md:pb-12 ${
+            className={`w-full md:max-w-xs lg:max-w-94.75 md:pb-12 ${
               isModal ? "h-127.25 overflow-scroll no-scrollbar" : ""
             }`}
           >
@@ -273,7 +274,7 @@ useEffect(() => {
               alt={productDetails?.name || ""}
               height={410}
               width={397}
-              className="w-full h-92.25 md:max-w-92.25"
+              className={`w-full  md:max-w-full lg:max-w-92.25 ${isModal ? "h-60" : "h-92.25"} rounded-c12`}
             />
 
             <div className="flex gap-2 mt-4">
@@ -325,8 +326,8 @@ useEffect(() => {
           {/* DETAILS */}
           <div
             ref={detailsContainerRef}
-            className={`w-full md:max-w-94 md:pb-40 relative ${
-              isModal ? "h-c557-39 overflow-y-auto no-scrollbar" : ""
+            className={`w-full  md:pb-40 relative ${
+              isModal ? "h-c557-39 w-full  overflow-y-auto no-scrollbar" : "md:flex-1"
             }`}
           >
             <div className="flex justify-between">
@@ -353,7 +354,7 @@ useEffect(() => {
             </div>
 
             <p className="text-c20 font-MontserratSemiBold">
-              {productDetails?.price_range.currency}
+              {productDetails?.price_range?.currency}
               {selectedVariation?.base_price ?? productDetails?.base_price}
             </p>
 
@@ -402,7 +403,7 @@ useEffect(() => {
                 className="h-5.25 w-4.5"
               />{" "}
             </div>
-            {productDetails?.has_variations && (
+            {(productDetails?.has_variations || (productDetails?.variations && productDetails.variations.length > 0)) && (
 
               <div ref={variationSectionRef} className="flex flex-col gap-6 mt-6">
                 <h2 className="font-MontserratSemiBold">
@@ -487,18 +488,20 @@ useEffect(() => {
                 </button>
               </div>
             )}
-          </div>
 
-          {isModal && (
-            <ItemAddToCart
-              selectedVariation={selectedVariation}
-              productId={productDetails?.id || ""}
-              isModal={isModal}
-              product_slug={productDetails?.slug || ""}
-              product_name={productDetails?.name || ""}
-              onIncompleteVariation={handleIncompleteVariation}
-            />
-          )}
+            {isModal && (
+              <div className="mt-8">
+                <ItemAddToCart
+                  selectedVariation={selectedVariation}
+                  productId={productDetails?.id || ""}
+                  isModal={isModal}
+                  product_slug={productDetails?.slug || ""}
+                  product_name={productDetails?.name || ""}
+                  onIncompleteVariation={handleIncompleteVariation}
+                />
+              </div>
+            )}
+          </div>
 
           <SizeGuideModal
             isOpen={isModalOpen}
@@ -520,7 +523,7 @@ useEffect(() => {
       </div>
       {!isModal && (
         <>
-          <div className="w-full max-w-110.5 hidden md:block  h-screen sticky top-24 ">
+          <div className="w-full md:max-w-[280px] lg:max-w-110.5 hidden md:block  h-screen sticky top-24 ">
             <div className="">
               <div className=" flex flex-col mt-c32 m  gap-c24 pb-4 md:border-b md:border-gray-100">
                 <div className="w-full flex justify-between items-start">

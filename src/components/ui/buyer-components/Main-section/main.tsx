@@ -112,12 +112,12 @@ export default function UserMain() {
 
   return (
     <div
-      className="hidden md:flex xl:px-35 lg:pl-35 lg:pr-10 justify-center  gap-8 -full "
+      className="hidden md:flex md:px-10 lg:pl-35 lg:pr-10 xl:px-35 justify-center gap-8 w-full"
       style={{ paddingTop: "2rem" }}
     >
       {/* Sidebar with slide-in */}
       <motion.nav
-        className="w-60 flex-shrink-0 sticky top-[7rem] overflow-y-auto"
+        className="md:w-48 lg:w-60 flex-shrink-0 sticky top-[7rem] overflow-y-auto"
         style={{ maxHeight: "calc(100vh - 6rem)" }}
         variants={sidebarVariants}
         initial="hidden"

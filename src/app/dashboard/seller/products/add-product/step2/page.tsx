@@ -290,13 +290,13 @@ export default function AddProductStep1Page() {
 
   return (
     <AddProductLayout stage={2} title="Variants">
-      <form className="mt-8.5">
+      <form className="lg:mt-8.5">
         {variants.map((variant) => (
           <div key={variant.id} className="mb-10">
             {/* Images */}
-            <div className="flex gap-4 mt-4">
+            <div className="flex flex-wrap gap-4 mt-8 lg:mt-4">
               {variant.images.filter(Boolean).length < 4 && (
-                <label className="relative h-24 w-24 rounded-c8 border flex flex-col items-center justify-center cursor-pointer overflow-hidden">
+                <label className="relative lg:h-24 lg:w-24 h-20 w-20 rounded-c8 border flex flex-col items-center justify-center cursor-pointer overflow-hidden">
                   <input
                     type="file"
                     className="absolute inset-0 opacity-0 cursor-pointer"
@@ -353,7 +353,7 @@ export default function AddProductStep1Page() {
                 value={variant.name}
                 readOnly
               />
-              <div className="w-full max-w-198 border h-0.25 border-000000/18" />
+              <div className="w-full hidden lg:block max-w-198 border h-0.25 border-000000/18" />
               <button
                 type="button"
                 onClick={() => handleDeleteVariant(variant.id)}
@@ -364,7 +364,7 @@ export default function AddProductStep1Page() {
             </div>
 
             {/* Attributes, price, stock */}
-            <div className="flex w-full gap-6 mt-6">
+            <div className="flex w-full gap-6 mt-6 lg:flex-row  flex-col">
               <div className="w-full">
                 {step1Data?.step1.attributes?.length ? (
                   <AttributesSection

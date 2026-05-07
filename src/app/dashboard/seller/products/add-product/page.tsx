@@ -251,7 +251,7 @@ export default function AddProductStep1Page() {
   return (
     <AddProductLayout stage={1} title="Upload Image">
       <form>
-        <p className="text-c12 font-MontserratNormal mt-3">
+        <p className="text-c12 font-MontserratNormal lg:mt-3 mt-2">
           Images need to be between 500x500 and 1080x1080. White backgrounds are
           advised.
         </p>
@@ -259,11 +259,11 @@ export default function AddProductStep1Page() {
         <fieldset
           disabled={loading || updating || fetchingDraftDetails || savingDraft}
         >
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-8 flex items-center gap-4 w-full flex-wrap">
             {images.map((img, i) => (
               <div
                 key={i}
-                className="relative h-24 w-24 rounded-c8 border border-ff715b overflow-hidden"
+                className="relative lg:h-24 lg:w-24 h-20 w-20 rounded-c8 border border-ff715b overflow-hidden"
               >
                 {img ? (
                   <>
@@ -308,13 +308,13 @@ export default function AddProductStep1Page() {
             ))}
           </div>
 
-          <div className="mt-c48 space-y-6">
+          <div className="lg:mt-c48 mt-8 space-y-6">
             <h1 className="font-MontserratSemiBold text-c18">
               General product information
             </h1>
 
-            <div className="flex items-center gap-8 justify-center">
-              <div className="w-full">
+            <div className="md:flex-row flex flex-col items-center  md:gap-8 justify-center">
+              <div className="w-full mb-6 md:mb-0 ">
                 <Label>Name of Product</Label>
                 <Input
                   className="mt-2"

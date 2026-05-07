@@ -12,6 +12,7 @@ export type InventoryFullTableProps = {
     perc?: number;
     sku?: string;
     qty?: { min?: number; max?: number };
+    search?: string;
   };
 };
 
@@ -54,6 +55,16 @@ export default function PayOutTable({
 
   // apply filters
   let filteredRows = allRows;
+
+  if (filters.search) {
+    const term = filters.search.toLowerCase();
+    filteredRows = filteredRows.filter(
+      (row) =>
+        row.transactionid.toLowerCase().includes(term) ||
+        row.status.toLowerCase().includes(term) ||
+        row.description.toLowerCase().includes(term)
+    );
+  }
 
   if (filters.date?.start && filters.date?.end) {
     filteredRows = filteredRows.filter((row) => {

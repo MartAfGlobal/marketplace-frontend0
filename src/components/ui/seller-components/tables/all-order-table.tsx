@@ -1,23 +1,39 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import HandBug from "@/assets/Seller/handBug.png";
+import { useSelector } from "react-redux";
+import { SellerOrderResult } from "@/types/global";
+import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import EyeIcon from "@/assets/icons/eye.png";
+import downloadIcon from "@/assets/Seller/colourDownload.svg";
+import Empty from "@/assets/Seller/Empty.svg";
 
 const getStatusClass = (status: string) => {
   switch (status.toLowerCase()) {
     case "fulfilled":
-      return "text-[#0070E9] bg-[#0070E9]/10 p-1 rounded-c16";
+      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "unprocessed":
-      return "text-[#FFAC06] bg-[#FFAC06]/10 p-1 rounded-c16";
+    case "pending":
+    case "awaiting acceptance":
+      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "processed":
-      return "text-[#FFAC06] bg-[#FFAC06]/10 p-1 rounded-c16";
+    case "processing":
+      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    case "partially_accepted":
+      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "cancelled":
-      return "text-[#CA0202] bg-[#CA0202]/10 p-1 rounded-c16";
+    case "rejected":
+      return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "delivered":
-      return "text-[#2D7565] bg-[#2D7565]/20 p-1 rounded-c16";
+      return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
+    case "shipped":
+    case "in transit":
+      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
     default:
-      return "";
+      return "text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-fit mx-auto";
   }
 };
 
@@ -30,7 +46,10 @@ export type InventoryFullTableProps = {
     perc?: number;
     sku?: string;
     qty?: number;
+    search?: string;
   };
+  onFilteredCount?: (count: number) => void;
+  onSelectionChange?: (data: any[]) => void;
 };
 
 export default function AllOrderTable({
@@ -38,37 +57,39 @@ export default function AllOrderTable({
   rowsPerPage,
   statusFilter: externalFilter = "all",
   filters = {},
+  onFilteredCount,
+  onSelectionChange,
 }: InventoryFullTableProps) {
-  // dataset
-  const allRows = Array.from({ length: 95 }, (_, i) => {
-    const sold = Math.floor(Math.random() * 50) + 1;
-    const stock = Math.floor(Math.random() * 100) + 20;
-    const perc = Math.floor((sold / stock) * 100);
+  const router = useRouter();
+  const [activeRowId, setActiveRowId] = useState<string | null>(null);
 
+  const handleExport = (row: any) => {
+    localStorage.setItem("exported_order", JSON.stringify(row));
+    alert("Order exported to local storage");
+  };
+
+  const handleViewDetails = (orderId: string) => {
+    router.push(`/dashboard/seller/orders/order-details/${orderId}`);
+  };
+
+  // dataset
+  const ordersFromStore = useSelector((state: any) => state.orders.orders);
+
+  const allRows = ordersFromStore.map((order: SellerOrderResult, i: number) => {
     return {
       id: i + 1,
-      orderId: `ORD-${1000 + i}`,
-      date: `15/08/201${i % 10}`,
-      sku: i % 2 === 0 ? "Multiple SKU" : "AP-51270",
-      items: i % 2 === 0 ? "Multiple items" : "Fedora hat",
-      amount: "#3200",
-      perc,
-      stock, // ✅ added so qty filter works
-      status: (() => {
-        switch (i % 5) {
-          case 0:
-            return "fulfilled";
-          case 1:
-            return "processed";
-          case 2:
-            return "cancelled";
-          case 3:
-            return "delivered";
-          default:
-            return "unprocessed";
-        }
-      })(),
-      country: i % 2 === 0 ? "Nigeria" : "Ghana",
+      orderId: order.id,
+      date: order.created_at ? new Date(order.created_at).toLocaleDateString() : "N/A",
+      sku: order.items?.length > 1 ? "Multiple SKU" : (order.items?.[0]?.variation_sku || "N/A"),
+      items: order.items?.length > 1 ? "Multiple items" : (order.items?.[0]?.product_name || "N/A"),
+      amount: order.subtotal ? `#${order.subtotal}` : "N/A",
+      perc: 0,
+      stock: order.items?.reduce((acc, item) => acc + (item.quantity || 0), 0) || 0,
+      status: (order as any).order_timeline_stage?.toLowerCase() || 
+              (order.status?.toLowerCase() === "pending" ? "unprocessed" : order.status),
+      country: order.shipping_address?.country || "N/A",
+      accepted_quantity: order.accepted_quantity || 0,
+      rejected_quantity: order.rejected_quantity || 0,
     };
   });
 
@@ -77,26 +98,41 @@ export default function AllOrderTable({
     externalFilter === "all"
       ? allRows
       : allRows.filter(
-          (row) => row.status.toLowerCase() === externalFilter.toLowerCase()
+          (row: any) => row.status.toLowerCase() === externalFilter.toLowerCase()
         );
 
   // ✅ other filters
+  if (filters.search) {
+    const term = filters.search.toLowerCase();
+    filteredRows = filteredRows.filter(
+      (row: any) =>
+        row.orderId.toLowerCase().includes(term) ||
+        row.items.toLowerCase().includes(term) ||
+        row.date.toLowerCase().includes(term)
+    );
+  }
+
   if (filters.date?.start && filters.date?.end) {
     filteredRows = filteredRows.filter(
-      (row) => row.date >= filters.date!.start && row.date <= filters.date!.end
+      (row: any) => row.date >= filters.date!.start && row.date <= filters.date!.end
     );
   }
   if (filters.perc) {
-    filteredRows = filteredRows.filter((row) => row.perc >= filters.perc!);
+    filteredRows = filteredRows.filter((row: any) => row.perc >= filters.perc!);
   }
   if (filters.sku) {
-    filteredRows = filteredRows.filter((row) =>
+    filteredRows = filteredRows.filter((row: any) =>
       row.sku.toLowerCase().includes(filters.sku!.toLowerCase())
     );
   }
   if (filters.qty) {
-    filteredRows = filteredRows.filter((row) => row.stock >= filters.qty!);
+    filteredRows = filteredRows.filter((row: any) => row.stock >= filters.qty!);
   }
+
+  // ✅ report filtered count to parent
+  useEffect(() => {
+    onFilteredCount?.(filteredRows.length);
+  }, [filteredRows.length, onFilteredCount]);
 
   // ✅ pagination
   const startIndex = (currentPage - 1) * rowsPerPage;
@@ -106,25 +142,31 @@ export default function AllOrderTable({
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
   const toggleRow = (id: number) => {
-    setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
+    setSelectedRows((prev: number[]) =>
+      prev.includes(id) ? prev.filter((r: number) => r !== id) : [...prev, id]
     );
   };
 
-  const allPageSelected = currentRows.every((r) => selectedRows.includes(r.id));
+  const allPageSelected = currentRows.every((r: any) => selectedRows.includes(r.id));
 
   const togglePage = () => {
     if (allPageSelected) {
-      setSelectedRows((prev) =>
-        prev.filter((id) => !currentRows.some((r) => r.id === id))
+      setSelectedRows((prev: number[]) =>
+        prev.filter((id: number) => !currentRows.some((r: any) => r.id === id))
       );
     } else {
-      setSelectedRows((prev) => [
+      setSelectedRows((prev: number[]) => [
         ...prev,
-        ...currentRows.map((r) => r.id).filter((id) => !prev.includes(id)),
+        ...currentRows.map((r: any) => r.id).filter((id: number) => !prev.includes(id)),
       ]);
     }
   };
+
+  // ✅ Notify parent of selection changes
+  useEffect(() => {
+    const selectedObjects = allRows.filter((r: any) => selectedRows.includes(r.id));
+    onSelectionChange?.(selectedObjects);
+  }, [selectedRows, onSelectionChange]);
 
   return (
     <div className="w-full">
@@ -165,8 +207,8 @@ export default function AllOrderTable({
             <th className="px-3 text-left">Order ID</th>
             <th className="px-3 text-left">Date</th>
             <th className="px-3 text-left">Items</th>
-            <th className="px-3 text-left">SKU</th>
-            <th className="px-3 text-left">Country</th>
+            <th className="px-3 text-left hidden md:table-cell">SKU</th>
+            <th className="px-3 text-left hidden md:table-cell">Country</th>
             <th className="px-3 text-left">Amount</th>
             <th className="px-3 text-left">Status</th>
             <th className="px-3 text-left">Action</th>
@@ -174,60 +216,127 @@ export default function AllOrderTable({
         </thead>
 
         <tbody>
-          {currentRows.map((row) => (
-            <tr
-              key={row.id}
-              className="h-10 text-c12 font-MontserratSemiBold text-000000/60"
-            >
-              <td className="text-center">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.includes(row.id)}
-                    onChange={() => toggleRow(row.id)}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-4 h-4 border rounded flex items-center justify-center ${
-                      selectedRows.includes(row.id)
-                        ? "bg-ff715b border-0"
-                        : "bg-white"
-                    }`}
-                  >
-                    {selectedRows.includes(row.id) && (
-                      <svg
-                        className="w-3 h-3 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
+          {currentRows.length > 0 ? (
+            currentRows.map((row: any) => (
+              <tr
+                key={row.id}
+                className="h-10 text-c12 font-MontserratSemiBold text-000000/60"
+              >
+                <td className="text-center">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(row.id)}
+                      onChange={() => toggleRow(row.id)}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`w-4 h-4 border rounded flex items-center justify-center ${
+                        selectedRows.includes(row.id)
+                          ? "bg-ff715b border-0"
+                          : "bg-white"
+                      }`}
+                    >
+                      {selectedRows.includes(row.id) && (
+                        <svg
+                          className="w-3 h-3 text-white"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                  </label>
+                </td>
+                <td className="px-3 text-left">{row.orderId}</td>
+                <td className="px-3 text-left">{row.date}</td>
+                <td className="px-3 text-left">
+                  <div className="flex flex-col">
+                    <span>{row.items}</span>
+                    {row.status.toLowerCase() === "partially_accepted" && (
+                      <span className="text-[10px] text-gray-400">
+                        (Acc: {row.accepted_quantity}, Rej: {row.rejected_quantity})
+                      </span>
                     )}
                   </div>
-                </label>
-              </td>
-              <td className="px-3 text-left">{row.orderId}</td>
-              <td className="px-3 text-left">{row.date}</td>
-              <td className="px-3 text-left">{row.items}</td>
-              <td className="px-3 text-left">{row.sku}</td>
-              <td className="px-3 text-left">{row.country}</td>
-              <td className="px-3 text-left">{row.amount}</td>
-              <td className="px-3 w-36">
-                <p className={`text-center ${getStatusClass(row.status)}`}>
-                  {row.status}
-                </p>
-              </td>
-              <td className="px-3 text-center">
-                <button className="w-6 h-6 flex-shrink-0">
-                  <Image src={HandBug} alt="actions" width={24} height={24} />
-                </button>
+                </td>
+                <td className="px-3 text-left hidden md:table-cell">{row.sku}</td>
+                <td className="px-3 text-left hidden md:table-cell">{row.country}</td>
+                <td className="px-3 text-left">{row.amount}</td>
+                <td className="px-3">
+                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize ${getStatusClass(row.status)}`}>
+                    {row.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : row.status}
+                  </div>
+                </td>
+                <td className="px-3 text-center relative">
+                  <button
+                    className="w-6 h-6 flex-shrink-0"
+                    onClick={() =>
+                      setActiveRowId((prev) => (prev === row.orderId ? null : row.orderId))
+                    }
+                  >
+                    <Image src={HandBug} alt="actions" width={24} height={24} />
+                  </button>
+                  <AnimatePresence>
+                    {activeRowId === row.orderId && (
+                      <motion.div
+                        key="dropdown"
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="absolute right-0 mt-2 w-40 text-nowrap text-000000/65 text-c12 flex flex-col gap-3 py-2.5 px-4 font-MontserratNormal bg-white rounded-xl shadow-lg border z-40"
+                      >
+                        {/* More Details */}
+                        <button
+                          className="flex items-center gap-3 w-full text-ff715b hover:bg-gray-100"
+                          onClick={() => handleViewDetails(row.orderId)}
+                        >
+                          <Image
+                            src={EyeIcon}
+                            alt="view details"
+                            width={15}
+                            height={10}
+                          />
+                          More Details
+                        </button>
+
+                        {/* Export */}
+                        <button
+                          className="flex items-center gap-3 w-full hover:bg-gray-100"
+                          onClick={() => handleExport(row)}
+                        >
+                          <Image
+                            src={downloadIcon}
+                            alt="export"
+                            width={14}
+                            height={14}
+                          />
+                          Export Order
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr className="h-64.5">
+              <td colSpan={9} className="text-center py-10">
+                <div className="flex flex-col justify-center items-center gap-3">
+                  <Image src={Empty} height={48} width={48} alt="empty" />
+                  <p className="text-base font-MontserratNormal text-000000/20">
+                    No orders found
+                  </p>
+                </div>
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>

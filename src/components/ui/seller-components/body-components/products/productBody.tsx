@@ -45,7 +45,7 @@ export default function ProductBody() {
 
 
   return (
-    <div className="w-full space-y-c32 pb-c32">
+    <div className="w-full space-y-6 lg:space-y-c32 pb-c32">
       {/* Header */}
       <motion.div
         ref={headerRef}
@@ -70,22 +70,22 @@ export default function ProductBody() {
       </motion.div>
 
       {/* Add Product Header */}
-      <motion.div
+      {/* <motion.div
         ref={addRef}
         initial={{ opacity: 0, y: 30 }}
         animate={addInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
         transition={{ duration: 0.5 }}
         className="flex justify-between items-center"
       >
-        {/* <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <Image src={AddIcon} width={24} height={24} alt="adding" />
           <p className="text-c18 font-MontserratSemiBold">
             Add New Product
           </p>
-        </div> */}
+        </div>
 
        
-      </motion.div>
+      </motion.div> */}
 
       <AnimatePresence mode="wait">
         {!showAddForm ? (
@@ -109,13 +109,13 @@ export default function ProductBody() {
             </motion.div>
 
             {/* Drafts */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
               <DraftProduct />
-            </motion.div>
+            </motion.div> */}
           </motion.div>
           )
         ) : (

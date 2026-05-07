@@ -143,7 +143,7 @@ export default function Header() {
               {token ? (
                 <div className="h-7.5 w-7.5 border-1 border-fffff rounded-full flex justify-center items-center overflow-hidden">
                   <Image
-                    src={buyer.profile.profile_picture || User}
+                    src={buyer?.profile?.profile_picture || User}
                     alt="User"
                     width={30}
                     height={30}
@@ -157,7 +157,7 @@ export default function Header() {
                 <span className="lg:text-base md:text-sm font-MontserratSemiBold hidden text-nowrap lg:flex  text-ffffff">
                   Hi,{" "}
                   {`${
-                    buyer.first_name
+                    buyer?.first_name
                       ? buyer.first_name.charAt(0).toUpperCase() +
                         buyer.first_name.slice(1)
                       : "Not set"
@@ -228,7 +228,7 @@ export default function Header() {
             {token ? (
               <div className="h-5 w-5 border-1 border-ffffff rounded-full flex justify-center items-center overflow-hidden">
                 <Image
-                  src={buyer.profile.profile_picture || User}
+                  src={buyer?.profile?.profile_picture || User}
                   alt="User"
                   width={20}
                   height={20}

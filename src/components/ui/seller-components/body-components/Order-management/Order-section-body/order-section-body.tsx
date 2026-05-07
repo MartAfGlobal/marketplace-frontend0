@@ -15,28 +15,30 @@ import DisputeBody from "./dispute-returns/disput-body";
 // import OrdersSection from "./OrdersSection";
 // import SettingsSection from "./SettingsSection";
 
-export default function OrderSecions() {
+export default function OrderSecions({ 
+  searchQuery 
+}: { 
+  searchQuery: string;
+}) {
   const [activeId, setActiveId] = useState("analytics");
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const sections = [
     { id: "analytics", label: "Analytics", icon: AnalyticsIcon, content: <Analytics/>},
-    { id: "myorders", label: "My orders", icon: OrderIcon, content:<MyOrders />},
-    { id: "dispute/Returns", label: "Dispute/Returns", icon: DisputIcon , content:< DisputeBody/> },
+    { id: "myorders", label: "My orders", icon: OrderIcon, content:<MyOrders externalSearchQuery={searchQuery} />},
+    { id: "dispute/Returns", label: "Dispute/Returns", icon: DisputIcon , content:< DisputeBody externalSearchQuery={searchQuery} /> },
   ];
 
   return (
-    <div className="flex gap-8 mt-6 pb-8" ref={containerRef}>
-   
-    <div className="w-full max-w-66.25 ">
-          <OrderSectionSelector
-        sections={sections}
-        onSectionClick={setActiveId}
-        hideOnMobile={false}
-       
-      />
-    </div>
-      <div className="flex-1 h-[70vh] overflow-y-auto custom-scroll /">
+    <div className="flex flex-col md:flex-row gap-6 md:gap-8 mt-6 pb-8  relative" ref={containerRef}>
+      <div className="w-full md:max-w-66.25 sticky top-20 self-start z-10">
+        <OrderSectionSelector
+          sections={sections}
+          onSectionClick={setActiveId}
+          hideOnMobile={false}
+        />
+      </div>
+      <div className="flex-1 w-full min-w-0">
         {sections.find((s) => s.id === activeId)?.content}
       </div>
     </div>

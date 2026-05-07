@@ -187,7 +187,7 @@ export default function BuyerDashBoardPage() {
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="pl-c56 pt-c20 z-40 md:flex items-center w-full hidden"
+        className="md:pl-10 lg:pl-c56 pt-c20 z-40 md:flex items-center w-full hidden"
         style={{ top: "5rem" }}
       >
         <nav aria-label="breadcrumb" className="flex items-center gap-2">

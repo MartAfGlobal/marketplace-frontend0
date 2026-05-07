@@ -8,12 +8,21 @@ const axios = Axios.create({
   },
 });
 
-// ✅ CRITICAL FIX
+// Attach token from localStorage on every request
 axios.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers = config.headers ?? {};
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
   if (config.data instanceof FormData) {
     // Let the browser set multipart boundary
     delete config.headers?.["Content-Type"];
   }
+
   return config;
 });
 

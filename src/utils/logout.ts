@@ -3,7 +3,7 @@
 
 import { AppDispatch } from "@/store";
 import { tokenActions } from "@/store/token/token-slice";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 
 // ✅ Plain logout function (no hooks here)
@@ -17,17 +17,15 @@ export const logout = (
   try {
     // Remove token from localStorage
     localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
        Cookies.remove("userAuthId");
-
+       
     // Clear redux token
     dispatch(tokenActions.deleteToken());
     
-    // Save current url before redirecting to login
+    // Clear redirect URL on manual logout so next login goes to overview
     if (typeof window !== "undefined") {
-      const currentUrl = window.location.pathname + window.location.search;
-      if (currentUrl.startsWith("/dashboard/seller")) {
-         localStorage.setItem("sellerRedirectUrl", currentUrl);
-      }
+      localStorage.removeItem("sellerRedirectUrl");
     }
 
     // Redirect based on role
@@ -50,10 +48,10 @@ export const logout = (
 // ✅ Hook wrapper for React components
 export const useLogout = (dispatch: AppDispatch) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   // detect seller from URL
-  const isSeller = searchParams.get("seller") !== null;
+  const isSeller = pathname.startsWith("/dashboard/seller");
 
   return () => logout(dispatch, router, isSeller);
 };

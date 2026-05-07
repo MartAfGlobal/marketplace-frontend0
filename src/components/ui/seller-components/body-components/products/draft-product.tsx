@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 
 import downloadIcon from "@/assets/Seller/downloadIcon.svg";
-import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
 
 import FilterDropdown from "../over-view/Filter-components/filterButton";
 import { filterOptions } from "../over-view/Filter-components/filterOptions";
@@ -12,6 +11,7 @@ import DraftProductDataTable from "../../tables/draft-product-tabe";
 import FullFilterButton from "../../tables/Filters/full-filterButton";
 import FilterModal from "../../tables/Filters/filter-modal";
 import Pagination from "./pignation-button";
+import SellerSearch from "../over-view/Filter-components/SellerSearch";
 
 import ArrowRightIcon from "@/assets/Seller/ArrowRight2.png";
 import CalenderIcon from "@/assets/Seller/calender2.png";
@@ -24,7 +24,7 @@ import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 import ResultModal from "@/components/ui/forms/resultModal";
 
 export default function DraftProduct() {
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<Record<string, any>>({});
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
@@ -58,9 +58,11 @@ export default function DraftProduct() {
     });
   };
 
-  const rowsPerPage = 10;
-  const totalRows = filteredCount !== null ? filteredCount : (draft?.length || 0);
-  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const [resultsPerPage, setResultsPerPage] = useState(10);
+  const totalRowsCount = filteredCount !== null ? filteredCount : (draft?.length || 0);
+  const totalPages = Math.ceil(totalRowsCount / resultsPerPage);
+  const startIndex = (currentPage - 1) * resultsPerPage + 1;
+  const endIndex = Math.min(currentPage * resultsPerPage, totalRowsCount);
 
   // 🔴 optional: close dropdown when clicking outside
   useEffect(() => {
@@ -77,120 +79,148 @@ export default function DraftProduct() {
   }, []);
 
   return (
-    <div className="w-full max-w-250  bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8 relative" ref={topRef}>
-      <p className="text-c18 font-MontserratSemiBold">Products in Draft</p>
-      <div className="flex justify-between mt-6">
-        <div className="w-full max-w-87.5">
-          <SearchInput placeholder="" className="w-full max-w-87.5" />
-        </div>
-        <div className="flex gap-3 relative" ref={dropdownRef}>
-          <FullFilterButton
-            onOpenFilter={() => setFilterOpen((prev) => !prev)}
-          />
-
-          {/* Dropdown Panel */}
-          {filterOpen && (
-            <div className="absolute top-full left-0 mt-2 z-50   w-fit">
-              <FilterModal
-                onFiltersChange={(newFilters) => setFilters(newFilters)}
-                onClose={() => setFilterOpen(false)}
-              />
-            </div>
-          )}
-
-          <FilterDropdown
-            options={filterOptions}
-            onChange={(value) => setFilters((prev) => ({ ...prev, timeFilter: value }))}
-          />
-
-          <button className="w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8">
-            <Image
-              src={downloadIcon}
-              alt="download"
-              width={10.67}
-              height={10.67}
+    <div className="w-full max-w-250 md:bg-ffffff h-fit md:circle-shadow md:rounded-c16 lg:py-6 lg:px-8 relative" ref={topRef}>
+      <div className="bg-ffffff p-6 lg:p-0 rounded-c16 lg:rounded-none">
+        <p className="text-c18 font-MontserratSemiBold">Products in Draft</p>
+        <div className="flex justify-between mt-6">
+          <div className="w-full max-w-87.5">
+            <SellerSearch 
+              value={filters.sku || ""}
+              onChange={(val) => setFilters(prev => ({ ...prev, sku: val }))}
+              placeholder="Search draft products..."
             />
-          </button>
-        </div>
-      </div>
-      {Object.keys(filters).length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {(Object.entries(filters) as [string, any][]).map(([key, value]) => (
-            <span
-              key={key}
-              className="flex items-center gap-2 bg-ff715b/60 h-c32 px-3 py-2 text-white text-c12 font-MontserratNormal rounded-c8 circle-shadow"
-            >
-              {key === "date" && (
-                <span className="flex items-center gap-1">
-                  <Image
-                    src={CalenderIcon}
-                    alt="calender"
-                    width={12}
-                    height={13}
-                  />
+          </div>
+          <div className="flex gap-3 relative" ref={dropdownRef}>
+            <FullFilterButton
+              onOpenFilter={() => setFilterOpen((prev) => !prev)}
+            />
 
-                  {value.start}
-                  <Image src={ArrowRightIcon} alt="TO" width={16} height={16} />
-                  {value.end}
-                </span>
-              )}
-              {key === "perc" && (
-                <span className="flex items-center gap-1 w-fit justify-center">
-                  <Image src={PercentageIcon} alt="%" width={13} height={13} />
-                  <span className="flex gap-1">
-                    {value.from ?? 0}%
+            {/* Dropdown Panel */}
+            {filterOpen && (
+              <div className="absolute top-full left-0 mt-2 z-50 w-fit">
+                <FilterModal
+                  onFiltersChange={(newFilters) => setFilters(newFilters)}
+                  onClose={() => setFilterOpen(false)}
+                />
+              </div>
+            )}
+
+            <FilterDropdown
+              options={filterOptions}
+              onChange={(value) => setFilters((prev) => ({ ...prev, timeFilter: value }))}
+            />
+
+            <button className="w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8">
+              <Image
+                src={downloadIcon}
+                alt="download"
+                width={10.67}
+                height={10.67}
+              />
+            </button>
+          </div>
+        </div>
+        {Object.keys(filters).length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {(Object.entries(filters) as [string, any][]).map(([key, value]) => (
+              <span
+                key={key}
+                className="flex items-center gap-2 bg-ff715b/60 h-c32 px-3 py-2 text-white text-c12 font-MontserratNormal rounded-c8 circle-shadow"
+              >
+                {key === "date" && (
+                  <span className="flex items-center gap-1">
+                    <Image
+                      src={CalenderIcon}
+                      alt="calender"
+                      width={12}
+                      height={13}
+                    />
+
+                    {value.start}
+                    <Image src={ArrowRightIcon} alt="TO" width={16} height={16} />
+                    {value.end}
+                  </span>
+                )}
+                {key === "perc" && (
+                  <span className="flex items-center gap-1 w-fit justify-center">
+                    <Image src={PercentageIcon} alt="%" width={13} height={13} />
+                    <span className="flex gap-1">
+                      {value.from ?? 0}%
+                      <Image
+                        src={ArrowRightIcon}
+                        alt="TO"
+                        width={16}
+                        height={16}
+                      />
+                      {value.to ?? 100}%
+                    </span>
+                  </span>
+                )}
+                {key === "sku" && `SKU: ${value}`}
+                {key === "qty" && (
+                  <span className="flex justify-center items-center gap-1">
+                    <Image src={Quantity} alt="%" width={12} height={7} />
+                    {value.min ?? ""}
                     <Image
                       src={ArrowRightIcon}
                       alt="TO"
                       width={16}
                       height={16}
-                    />
-                    {value.to ?? 100}%
+                    />{" "}
+                    {value.max ?? ""}
                   </span>
-                </span>
-              )}
-              {key === "sku" && `SKU: ${value}`}
-              {key === "qty" && (
-                <span className="flex justify-center items-center gap-1">
-                  <Image src={Quantity} alt="%" width={12} height={7} />
-                  {value.min ?? ""}
-                  <Image
-                    src={ArrowRightIcon}
-                    alt="TO"
-                    width={16}
-                    height={16}
-                  />{" "}
-                  {value.max ?? ""}
-                </span>
-              )}
-            </span>
-          ))}
-        </div>
-      )}
-      <DraftProductDataTable
-        rowsPerPage={rowsPerPage}
-        currentPage={currentPage}
-        filters={filters}
-        onFilteredCount={setFilteredCount}
-        onDelete={handleDeleteDraft}
-        deletingId={deletingId}
-      />
-
-      <div className="w-full mt-c32">
-        {totalRows > 10 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(page: number) => {
-              setCurrentPage(page);
-              if (topRef.current) {
-                topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              } else {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }
-            }}
-          />
+                )}
+              </span>
+            ))}
+          </div>
         )}
+
+        {/* Pagination Status Row (Mobile Only) */}
+        <div className="flex items-center justify-between mt-6 md:hidden">
+          <p className="text-sm font-MontserratNormal text-000000/40">
+            {startIndex}-{endIndex} of {totalRowsCount} results
+          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm font-MontserratNormal text-000000/40">
+              Results per page
+            </p>
+            <FilterDropdown 
+              options={["4", "8", "10", "15", "20"]}
+              defaultValue={String(resultsPerPage)}
+              onChange={(value) => {
+                setResultsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+              className="w-10 rounded-c8"
+            />
+          </div>
+        </div>
+
+        <DraftProductDataTable
+          rowsPerPage={resultsPerPage}
+          currentPage={currentPage}
+          filters={filters}
+          onFilteredCount={setFilteredCount}
+          onDelete={handleDeleteDraft}
+          deletingId={deletingId}
+        />
+
+        <div className="w-full mt-c32">
+          {totalRowsCount > resultsPerPage && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page: number) => {
+                setCurrentPage(page);
+                if (topRef.current) {
+                  topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+            />
+          )}
+        </div>
       </div>
 
       <ResultModal

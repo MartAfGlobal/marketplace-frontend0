@@ -1,0 +1,84 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useAppDispatch } from "@/store/Provider";
+import { tokenActions } from "@/store/token/token-slice";
+import axios from "@/lib/axios";
+import { toast } from "sonner";
+
+export default function AxiosInterceptor({ children }: { children: React.ReactNode }) {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          // Token expired or unauthorized
+          dispatch(tokenActions.deleteToken());
+          localStorage.removeItem("token");
+          localStorage.removeItem("accessToken");
+
+          const currentPath = window.location.pathname;
+          const isManagerPage = currentPath.startsWith("/info/manager");
+          
+          if (isManagerPage) {
+            return Promise.reject(error);
+          }
+
+          const isSeller = currentPath.startsWith("/dashboard/seller");
+          
+          if (currentPath.startsWith("/dashboard/seller")) {
+            const currentUrl = currentPath + window.location.search;
+            localStorage.setItem("sellerRedirectUrl", currentUrl);
+          }
+
+          // Extract error message if available
+          let errorMessage = "Session expired. Please login again.";
+          const data = error.response?.data;
+          
+          if (data) {
+            const extractFirstString = (obj: any): string | null => {
+              if (typeof obj === "string") return obj;
+              if (Array.isArray(obj)) {
+                for (const item of obj) {
+                  const res = extractFirstString(item);
+                  if (res) return res;
+                }
+              } else if (typeof obj === "object" && obj !== null) {
+                for (const key of Object.keys(obj)) {
+                  const res = extractFirstString(obj[key]);
+                  if (res) return res;
+                }
+              }
+              return null;
+            };
+
+            const foundMessage = extractFirstString(data);
+            if (foundMessage) {
+              errorMessage = foundMessage;
+            }
+          }
+
+          toast.error(errorMessage);
+
+          if (isSeller) {
+            router.replace("/auth/seller/login");
+          } else {
+            router.replace("/auth/login");
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [dispatch, router]);
+
+  return <>{children}</>;
+}

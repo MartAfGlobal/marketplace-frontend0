@@ -27,6 +27,7 @@ import registrationReducer from "@/store/auth/registration-slice";
 import registrationsReducer from "./slices/registration-slice";
 import AddProductReducer from "@/store/sellers/addProductSlice";
 import SellerProductReducer from "@/store/sellers/productSlice";
+import financeReducer from "@/store/finance/financeSlice";
 
 const SellerPersistConfig = {
   key: "sellerProduct",
@@ -111,6 +112,11 @@ const registrationPersistConfig = {
   storage,
 };
 
+const financePersistConfig = {
+  key: "finance",
+  storage,
+};
+
 const rootReducer = combineReducers({
   productDetails: persistReducer(
     productDetailsPersistConfig,
@@ -150,6 +156,7 @@ const rootReducer = combineReducers({
   topDeals: topDealsReducer,
 
   ui: uiSliceReducer,
+  finance: persistReducer(financePersistConfig, financeReducer),
 });
 
 const store = configureStore({

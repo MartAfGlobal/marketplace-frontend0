@@ -73,6 +73,12 @@ export default function LoginForm({ userType }: RegProps) {
 
     dispatch(tokenActions.setToken(accessToken));
 
+    // ⭐ Admin redirect
+    if (userType === "admin") {
+      router.push("/info/manager/update");
+      return;
+    }
+
     // ⭐ If user comes from sign-up → go to home
     if (fromPage === "/auth/register") {
       router.push("/");
@@ -91,7 +97,7 @@ export default function LoginForm({ userType }: RegProps) {
         localStorage.removeItem("sellerRedirectUrl");
         router.push(redirectUrl);
       } else {
-        router.push("/dashboard/seller");
+        router.push("/dashboard/seller/overview");
       }
       return;
     }
@@ -103,6 +109,8 @@ export default function LoginForm({ userType }: RegProps) {
   const url =
     userType === "seller"
       ? "/accounts/manufacturer/login/"
+      : userType === "admin"
+      ? "/accounts/admin/login/"
       : "/accounts/login";
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -211,38 +219,43 @@ export default function LoginForm({ userType }: RegProps) {
         </Button>
       </form>
 
-      <div className="flex justify-between items-center gap-c24 mt-c8 mb-c8 h-c24">
-        <p className="h-c1 w-full bg-efefef"></p>
-        <p className="text-base font-MontserratNormal">or</p>
-        <p className="h-c1 w-full bg-efefef"></p>
-      </div>
+      {/* Google sign-in & sign-up — hidden for admin */}
+      {userType !== "admin" && (
+        <>
+          <div className="flex justify-between items-center gap-c24 mt-c8 mb-c8 h-c24">
+            <p className="h-c1 w-full bg-efefef"></p>
+            <p className="text-base font-MontserratNormal">or</p>
+            <p className="h-c1 w-full bg-efefef"></p>
+          </div>
 
-      <div>
-        <button className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8">
-          <Image
-            src={Google}
-            width={24}
-            height={24}
-            alt="google sign in"
-            className="md:h-c24 md:w-24 h-c32 w-c32"
-          />
-          Sign in with Google
-        </button>
-      </div>
+          <div>
+            <button className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8">
+              <Image
+                src={Google}
+                width={24}
+                height={24}
+                alt="google sign in"
+                className="md:h-c24 md:w-24 h-c32 w-c32"
+              />
+              Sign in with Google
+            </button>
+          </div>
 
-      <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
-        <p className="text-161616"> have an account?</p>
+          <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
+            <p className="text-161616"> have an account?</p>
 
-        {userType === "seller" ? (
-          <Link href="/auth/seller/sign-up" className="text-ff715b">
-            Sign up
-          </Link>
-        ) : (
-          <Link href="/auth/register" className="text-ff715b">
-            Sign up
-          </Link>
-        )}
-      </div>
+            {userType === "seller" ? (
+              <Link href="/auth/seller/sign-up" className="text-ff715b">
+                Sign up
+              </Link>
+            ) : (
+              <Link href="/auth/register" className="text-ff715b">
+                Sign up
+              </Link>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
 import CaretDown from "@/assets/Seller/caretDown.png";
 
-
-const filterOptions = ["This Week", "This Month", "This Year"]
+const filterOptions = ["This Week", "This Month", "This Year"];
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
@@ -25,7 +25,7 @@ function RateChart({ value, label }: RateChartProps) {
   ];
 
   return (
-    <div className="flex flex-col items-center w-full bg-[#]  max-w-xs gap-2 ">
+    <div className="flex flex-col items-center w-full max-w-xs gap-2">
       <div className="h-42 w-42 flex items-center">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -61,59 +61,99 @@ function RateChart({ value, label }: RateChartProps) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <p>{label}</p>
+      <p className="text-c12 font-MontserratMedium text-000000/50">{label}</p>
     </div>
   );
 }
 
 export default function FulfilmentRates() {
-  const [selected, setSelected] = useState(filterOptions[0]);
+  const [selected, setSelected] = useState(filterOptions[2]);
   const [isOpen, setIsOpen] = useState(false);
 
+  const orders = useSelector((state: any) => state.orders.orders);
+
+  const { fulfillmentRate, disputeRate } = useMemo(() => {
+    const now = new Date();
+
+    const filtered = orders.filter((order: any) => {
+      const d = new Date(order.created_at);
+      if (selected === "This Week") {
+        const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
+        return diffDays <= 7;
+      }
+      if (selected === "This Month") {
+        return (
+          d.getMonth() === now.getMonth() &&
+          d.getFullYear() === now.getFullYear()
+        );
+      }
+      return d.getFullYear() === now.getFullYear();
+    });
+
+    const total = filtered.length;
+    if (total === 0) return { fulfillmentRate: 0, disputeRate: 0 };
+
+    const fulfilled = filtered.filter((o: any) => {
+      const s = (o.order_timeline_stage || o.status || "").toLowerCase();
+      return s === "delivered" || s === "fulfilled" || s === "shipped";
+    }).length;
+
+    const disputed = filtered.filter((o: any) => {
+      const s = (o.order_timeline_stage || o.status || "").toLowerCase();
+      return s === "cancelled" || s === "returned" || s === "rejected" || s === "refunded";
+    }).length;
+
+    return {
+      fulfillmentRate: Math.round((fulfilled / total) * 100),
+      disputeRate: Math.round((disputed / total) * 100),
+    };
+  }, [orders, selected]);
+
   return (
-   <div className="w-full max-w-c495-72 py-4 px-c32 h-83 bg-ffffff rounded-c16">
-    <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-MontserratSemiBold">Fulfilment rates</h2>
-    
-            <div className="relative">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex circle-shadow text-c12 font-MontserratNormal text-ff715b bg-ffffff items-center w-full max-w-fit p-3 rounded-xl justify-center flex-shrink-0 gap-4.5 h-10"
+    <div className="w-full max-w-c495-72 py-4 px-c32 h-83 bg-ffffff rounded-c16">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-lg font-MontserratSemiBold">Fulfilment rates</h2>
+
+        <div className="relative">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex circle-shadow text-c12 font-MontserratNormal text-ff715b bg-ffffff items-center w-full max-w-fit p-3 rounded-xl justify-center flex-shrink-0 gap-4.5 h-10"
+          >
+            <span>{selected}</span>
+            <Image src={CaretDown} alt="filter" width={11} height={6} />
+          </button>
+
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.2 }}
+                className="absolute z-40 right-0 mt-2 w-39 py-3 px-6 space-y-2.5 text-c12 font-MontserratNormal text-000000/50 bg-white rounded circle-shadow h-29"
               >
-                <span>{selected}</span>
-                <Image src={CaretDown} alt="filter" width={11} height={6} />
-              </button>
-    
-              <AnimatePresence>
-                {isOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute z-40 right-0 mt-2 w-39 py-3 px-6 space-y-2.5 text-c12 font-MontserratNormal text-000000/50 bg-white rounded circle-shadow h-29"
+                {filterOptions.map((option) => (
+                  <div
+                    key={option}
+                    onClick={() => {
+                      setSelected(option);
+                      setIsOpen(false);
+                    }}
+                    className="h-6 cursor-pointer hover:text-ff715b"
                   >
-                    {filterOptions.map((option) => (
-                      <div
-                        key={option}
-                        onClick={() => {
-                          setSelected(option);
-                          setIsOpen(false);
-                        }}
-                        className="h-6 cursor-pointer hover:text-ff715b"
-                      >
-                        {option}
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-     <div className="w-full flex">
-      <RateChart value={85} label="Return rate" />
-      <RateChart value={35} label="Dispute rate" />
+                    {option}
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <div className="w-full flex">
+        <RateChart value={fulfillmentRate} label="Fulfilment rate" />
+        <RateChart value={disputeRate} label="Cancellation rate" />
+      </div>
     </div>
-   </div>
   );
 }

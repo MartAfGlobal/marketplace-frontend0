@@ -10,15 +10,17 @@ export type TabProps = {
   setCurrentPage: (page: number) => void;
   rowsPerPage: number;
   totalPages: number;
+  onFilteredCount: (count: number) => void;
+  onSelectionChange?: (data: any[]) => void;
 };
 
 // ✅ All Orders
 export function All({
   filters,
   currentPage,
-  setCurrentPage,
   rowsPerPage,
-  totalPages,
+  onFilteredCount,
+  onSelectionChange,
 }: TabProps) {
   return (
     <div>
@@ -26,16 +28,9 @@ export function All({
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
         filters={filters}
+        onFilteredCount={onFilteredCount}
+        onSelectionChange={onSelectionChange}
       />
-      <div className="w-full mt-c32">
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
-      </div>
     </div>
   );
 }
@@ -44,9 +39,9 @@ export function All({
 export function Unprocessed({
   filters,
   currentPage,
-  setCurrentPage,
   rowsPerPage,
-  totalPages,
+  onFilteredCount,
+  onSelectionChange,
 }: TabProps) {
   return (
     <div>
@@ -55,16 +50,9 @@ export function Unprocessed({
         rowsPerPage={rowsPerPage}
         statusFilter="unprocessed"
         filters={filters}
+        onFilteredCount={onFilteredCount}
+        onSelectionChange={onSelectionChange}
       />
-      <div className="w-full mt-c32">
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
-      </div>
     </div>
   );
 }
@@ -73,9 +61,9 @@ export function Unprocessed({
 export function Processed({
   filters,
   currentPage,
-  setCurrentPage,
   rowsPerPage,
-  totalPages,
+  onFilteredCount,
+  onSelectionChange,
 }: TabProps) {
   return (
     <div>
@@ -84,16 +72,9 @@ export function Processed({
         rowsPerPage={rowsPerPage}
         statusFilter="processed"
         filters={filters}
+        onFilteredCount={onFilteredCount}
+        onSelectionChange={onSelectionChange}
       />
-      <div className="w-full mt-c32">
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
-      </div>
     </div>
   );
 }
@@ -102,9 +83,9 @@ export function Processed({
 export function Fulfilled({
   filters,
   currentPage,
-  setCurrentPage,
   rowsPerPage,
-  totalPages,
+  onFilteredCount,
+  onSelectionChange,
 }: TabProps) {
   return (
     <div>
@@ -113,16 +94,9 @@ export function Fulfilled({
         rowsPerPage={rowsPerPage}
         statusFilter="fulfilled"
         filters={filters}
+        onFilteredCount={onFilteredCount}
+        onSelectionChange={onSelectionChange}
       />
-      <div className="w-full mt-c32">
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
-      </div>
     </div>
   );
 }
@@ -131,9 +105,9 @@ export function Fulfilled({
 export function Delivered({
   filters,
   currentPage,
-  setCurrentPage,
   rowsPerPage,
-  totalPages,
+  onFilteredCount,
+  onSelectionChange,
 }: TabProps) {
   return (
     <div>
@@ -142,16 +116,9 @@ export function Delivered({
         rowsPerPage={rowsPerPage}
         statusFilter="delivered"
         filters={filters}
+        onFilteredCount={onFilteredCount}
+        onSelectionChange={onSelectionChange}
       />
-      <div className="w-full mt-c32">
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
-      </div>
     </div>
   );
 }
@@ -160,9 +127,9 @@ export function Delivered({
 export function Cancelled({
   filters,
   currentPage,
-  setCurrentPage,
   rowsPerPage,
-  totalPages,
+  onFilteredCount,
+  onSelectionChange,
 }: TabProps) {
   return (
     <div>
@@ -171,16 +138,9 @@ export function Cancelled({
         rowsPerPage={rowsPerPage}
         statusFilter="cancelled"
         filters={filters}
+        onFilteredCount={onFilteredCount}
+        onSelectionChange={onSelectionChange}
       />
-      <div className="w-full mt-c32">
-        {totalPages > 1 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
-      </div>
     </div>
   );
 }

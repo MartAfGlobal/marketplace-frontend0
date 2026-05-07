@@ -20,7 +20,7 @@ import { registrationActions } from "@/store/auth/registration-slice";
 import { useDispatch } from "react-redux";
 
 export interface RegProps {
-  userType: "seller" | "buyer";
+  userType: "seller" | "buyer" | "admin";
   token?: string;
   businessType?: "registered" | "individual";
 }

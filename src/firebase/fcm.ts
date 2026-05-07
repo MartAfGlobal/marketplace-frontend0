@@ -13,7 +13,11 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
 export async function generateFcmToken(vapidKey: string): Promise<string | null> {
   try {
-    const token = await getToken(messaging, { vapidKey });
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const token = await getToken(messaging, { 
+      vapidKey,
+      serviceWorkerRegistration: registration 
+    });
     if (!token) {
       console.warn("No FCM token received");
       return null;

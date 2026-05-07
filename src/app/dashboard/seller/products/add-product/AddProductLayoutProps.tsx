@@ -26,19 +26,19 @@ export default function AddProductLayout({
           <span className="h-6 w-6 flex items-center justify-center mr-4">
             <Image src={navBack} width={9} height={16.5} alt="Back" />
           </span>
-          <span className="h-6 w-6 flex items-center justify-center mr-3">
+          <span className="h-6 w-6 hidden md:flex items-center justify-center mr-3">
             <Image src={stackPlus} width={20.25} height={21} alt="Add" />
           </span>
-         { stage !==4 ? <span className="text-base font-MontserratSemiBold">
+         { stage !==4 ? <span className="md:text-base text-c18 font-MontserratSemiBold">
             Add New Product
-          </span> :  <span className="text-base font-MontserratSemiBold">
+          </span> :  <span className="md:text-base text-c18 font-MontserratSemiBold">
             Update Product
           </span>}
         </button>
       </div>
 
       {/* Body */}
-      <div className="w-full mt-c48 bg-ffffff p-c32 pb-c48 rounded-c12">
+      <div className="w-full mt-6 lg:mt-c48 bg-ffffff lg:p-c32 py-8 px-6 md:pb-c48 rounded-c12">
         {/* Progress Indicator */}
         { stage !==4 && stage !==5 && <div className="flex  w-full items-center mb-c48">
           <div className="flex justify-center items-center w-full max-w-60.75 h-c32 gap-3">
@@ -72,7 +72,7 @@ export default function AddProductLayout({
             </div>
           </div>
         </div>}
-        <div className="text-c18 font-MontserratSemiBold">{title}</div>
+        <div className="md:text-c18 text-c16 font-MontserratSemiBold">{title}</div>
         <div>{children}</div>
       </div>
     </main>

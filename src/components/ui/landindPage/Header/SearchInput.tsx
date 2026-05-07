@@ -107,7 +107,7 @@ export default function SearchInput({
   return (
     <div
       ref={inputRef}
-      className={`relative md:static  w-full   ${className}`}
+      className={`relative md:static md:min-w-90  w-full   ${className}`}
     >
       {/* Input */}
       <div className="relative w-full h-12 bg-ffffff shadow-customW rounded-c8">
@@ -116,7 +116,7 @@ export default function SearchInput({
           width={20}
           height={20}
           alt="SearchIcon"
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+          className="absolute left-4 top-1/2 -translate-y-1/2 "
         />
         <input
           type="text"

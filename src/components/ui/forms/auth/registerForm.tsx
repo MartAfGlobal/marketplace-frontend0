@@ -235,7 +235,6 @@ export default function RegisterForm({ userType, token }: RegProps) {
               </Button>
             )}
           </form>
-          {userType === "buyer" && (
             <>
               <div className="flex justify-between items-center gap-c24 mt-c8 mb-c8 h-c24">
                 <p className="h-c1 w-full bg-efefef"></p>
@@ -248,20 +247,19 @@ export default function RegisterForm({ userType, token }: RegProps) {
                     src={Google}
                     width={20}
                     height={20}
-                    alt="google sign in"
-                    className="h-c20 w-20"
+                    alt="google sign up"
+                    className="h-c20 w-c20"
                   />
-                  Sign in with Google
+                  Sign up with Google
                 </button>
               </div>
               <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
-                <p className="text-161616"> have an account?</p>
+                <p className="text-161616">Already have an account?</p>
                 <Link href="/auth/login" className="text-ff715b">
                   Sign in
                 </Link>
               </div>
             </>
-          )}
         </div>
       </div>
     </>

@@ -89,7 +89,7 @@ export function Dropdown<
       <button
         type="button"
         onClick={handleClick}
-        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-c12 font-MontserratMedium text-gray-900 focus:outline-none focus:border-ff715b hover:scale-100"
+        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-[12px] font-MontserratMedium text-gray-900 focus:outline-none focus:border-ff715b hover:scale-100"
       >
         <span className={selected ? "text-gray-900" : "text-black/60"}>
           {selected || placeholder}
@@ -122,13 +122,13 @@ export function Dropdown<
                     onSelect(item);
                     setOpen(false);
                   }}
-                  className="block w-full pl-6 pr-3 py-2 text-left text-c12 font-MontserratMedium text-gray-700 hover:bg-gray-100 hover:scale-100"
+                  className="block w-full pl-6 pr-3 py-2 text-left text-[12px] font-MontserratMedium text-gray-700 hover:bg-gray-100 hover:scale-100"
                 >
                   {item.name || item.title}
                 </button>
               ))
             ) : loading ? null : (
-              <div className="p-3 text-gray-400 text-c12 text-center">
+              <div className="p-3 text-gray-400 text-[12px] text-center">
                 No items found
               </div>
             )}
@@ -161,7 +161,12 @@ export function CategoryDropdown({
         method: "GET",
       },
       successRes: (res: any) => {
-        setCategories(res.data?.results || []);
+        const rawItems = res.data?.results || [];
+        const processedItems = rawItems.map((item: any) => ({
+          ...item,
+          id: item.id || item._id || item.uuid,
+        }));
+        setCategories(processedItems);
         setLoading(false);
       },
     });
@@ -198,7 +203,12 @@ export function SubCategoryDropdown({
 
   // ✅ Fetch subcategories automatically when category changes
   useEffect(() => {
-    if (!category || !token) {
+    const catId = category?.id || (category as any)?._id || (category as any)?.uuid;
+    console.log("SubCategoryDropdown useEffect fired. Category ID:", catId, "Token exists:", !!token);
+    
+    if (!catId || !token) {
+      if (!catId) console.log("SubCategoryDropdown: No category ID found (check API response)");
+      if (!token) console.log("SubCategoryDropdown: No token found in store");
       setSubs([]);
       return;
     }
@@ -206,15 +216,19 @@ export function SubCategoryDropdown({
     setLoading(true);
     sendHttpRequest({
       requestConfig: {
-        url: `/products/manufacturer/categories/${category.id}/subcategories/`,
+        url: `/products/manufacturer/categories/${catId}/subcategories/`,
         method: "GET",
         token,
       },
       successRes: (res: any) => {
+        console.log("Subcategory API Success:", res);
         setSubs(res.data?.subcategories || []);
-        console.log("Fetched subcategories:", res.data?.subcategories);
         setLoading(false);
       },
+      errorRes: (err: any) => {
+        console.error("Subcategory API Error:", err);
+        setLoading(false);
+      }
     });
 
     // We removed the automatic onSelect(null as any) because the parent (CategoryDropdown) 
@@ -237,7 +251,7 @@ export function SubCategoryDropdown({
       <Label>Subcategory</Label>
       <button
         disabled
-        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-gray-50 px-4 py-2.5 text-c12 font-MontserratMedium text-gray-400 cursor-not-allowed hover:scale-100"
+        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-gray-50 px-4 py-2.5 text-[12px] font-MontserratMedium text-gray-400 cursor-not-allowed hover:scale-100"
       >
         Please select a category first
         <ChevronDown size={18} className="text-gray-400" />
@@ -276,7 +290,7 @@ export function AttributesSection({
           ) : (
             <input
               type="text"
-              className="w-full rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-c12 font-MontserratMedium focus:outline-none focus:border-ff715b"
+              className="w-full rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-[12px] font-MontserratMedium focus:outline-none focus:border-ff715b"
               placeholder={`Enter ${attr.attribute_name}`}
               value={values[attr.attribute_slug] || ""}
               onChange={(e) => onChange(attr.attribute_slug, e.target.value)}
@@ -287,7 +301,7 @@ export function AttributesSection({
             <div key={extra.name} className="mt-6">
               <Label>{extra.label}</Label>
               <input
-                className="w-full rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-c12 font-MontserratMedium focus:outline-none focus:border-ff715b mt-2"
+                className="w-full rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-[12px] font-MontserratMedium focus:outline-none focus:border-ff715b mt-2"
                 defaultValue={extra.default}
                 onChange={(e) => onChange(extra.name, e.target.value)}
               />

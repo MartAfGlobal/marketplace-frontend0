@@ -6,6 +6,7 @@ import Header from "../landindPage/Header/Header";
 import FooterPage from "../Footer/Footer";
 import { ReactNode } from "react";
 import WireframeLoader from "../WireframeLoader";
+import { useTokenExpiration } from "@/hooks/useTokenExpiration";
 
 interface LayoutWrapperProps {
   children: ReactNode;
@@ -13,19 +14,18 @@ interface LayoutWrapperProps {
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
+  useTokenExpiration();
 
-   const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
   
       useEffect(() => {
-      // Simulate data fetching
-      const timer = setTimeout(() => setLoading(false), 2000);
-      return () => clearTimeout(timer);
+      setLoading(false);
     }, []);
   
     if (loading) return <WireframeLoader/>;
 
-  const hideLayout = ["/auth", "/dashboard/seller"].some((path) =>
-    pathname?.startsWith(path)
+  const hideLayout = ["/auth", "/dashboard/seller", "/informative", "/info"].some((path) =>
+    pathname?.includes(path)
   );
 
 

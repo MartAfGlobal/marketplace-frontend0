@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 
 import UsableCard from "./cardUse";
@@ -11,30 +11,53 @@ import whitePointeruP from "@/assets/Seller/WhitePointer.png";
 import whitePlane from "@/assets/Seller/whitePlane.png";
 import { useSelector } from "react-redux";
 
-const ProgressChat = [
-  { label: "Mon", progress: 27 },
-  { label: "Tue", progress: 44 },
-  { label: "Wed", progress: 14 },
-  { label: "Thus", progress: 30 },
-  { label: "Fri", progress: 11 },
-  { label: "Sat", progress: 39 },
-  { label: "Sun", progress: 4 },
-];
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function OrderCard() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
-  const [chartProgress, setChartProgress] = useState(
-    ProgressChat.map(() => 0) // start at 0
-  );
+  const orders = useSelector((state: any) => state.orders.orders);
+
+  // Real stats derived from orders
+  const { total, fulfilled, cancelled, weeklyData } = useMemo(() => {
+    const total = orders.length;
+    const fulfilled = orders.filter((o: any) => {
+      const s = (o.order_timeline_stage || o.status || "").toLowerCase();
+      return s === "delivered" || s === "fulfilled" || s === "shipped";
+    }).length;
+    const cancelled = orders.filter((o: any) => {
+      const s = (o.order_timeline_stage || o.status || "").toLowerCase();
+      return s === "cancelled" || s === "rejected" || s === "returned";
+    }).length;
+
+    // Count orders per weekday (Mon=0…Sun=6) for the last 7 days
+    const counts = Array(7).fill(0);
+    const now = new Date();
+    orders.forEach((o: any) => {
+      const d = new Date(o.created_at);
+      const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays <= 7) {
+        // getDay(): 0=Sun,1=Mon…6=Sat → map to Mon-Sun index
+        const idx = (d.getDay() + 6) % 7;
+        counts[idx]++;
+      }
+    });
+    const maxCount = Math.max(...counts, 1);
+    // Scale to max 60px
+    const weeklyData = DAY_LABELS.map((label, i) => ({
+      label,
+      progress: Math.round((counts[i] / maxCount) * 60),
+    }));
+    return { total, fulfilled, cancelled, weeklyData };
+  }, [orders]);
+
+  const [chartProgress, setChartProgress] = useState(weeklyData.map(() => 0));
 
   useEffect(() => {
-    // trigger animation after mount
     const timeout = setTimeout(() => {
-      setChartProgress(ProgressChat.map((item) => item.progress));
+      setChartProgress(weeklyData.map((item) => item.progress));
     }, 100);
-
     return () => clearTimeout(timeout);
-  }, []);
+  }, [weeklyData]);
 
   return (
     <>
@@ -72,17 +95,17 @@ export default function OrderCard() {
 
           {/* Chart */}
           <div className="flex gap-3 mt-12 items-end">
-            {ProgressChat.map((progresses, index) => (
+            {DAY_LABELS.map((label) => (
               <div
-                key={progresses.label}
+                key={label}
                 className="w-6 flex flex-col items-center justify-end"
               >
                 <div
                   className="w-6 bg-000000/10 transition-all duration-1000 ease-out"
-                  style={{ height: `2px` }}
+                  style={{ height: "2px" }}
                 ></div>
                 <p className="text-c10 font-MontserratNormal h-4 text-000000/10">
-                  {progresses.label}
+                  {label}
                 </p>
               </div>
             ))}
@@ -96,11 +119,11 @@ export default function OrderCard() {
           <div className="flex gap-2.75 items-center">
             <div className="flex gap-2.5 items-center">
               <Image src={PlanIcon} alt="order" width={18.75} height={18.75} />
-              <span className="text-c32 font-MontserratSemiBold">400</span>
+              <span className="text-c32 font-MontserratSemiBold">{total}</span>
             </div>
             <div className="w-full max-w-c46">
               <div className="flex justify-between items-center w-full h-4">
-                <span className="font-MontserratMedium text-c12">350</span>
+                <span className="font-MontserratMedium text-c12">{fulfilled}</span>
                 <Image
                   src={greenPointerIcon}
                   alt="good"
@@ -109,7 +132,7 @@ export default function OrderCard() {
                 />
               </div>
               <div className="flex items-center justify-between w-full h-4">
-                <span className="font-MontserratMedium text-c12">50</span>
+                <span className="font-MontserratMedium text-c12">{cancelled}</span>
                 <Image src={redPointerIcon} alt="bad" width={16.5} height={9} />
               </div>
             </div>
@@ -117,9 +140,9 @@ export default function OrderCard() {
 
           {/* Chart */}
           <div className="flex gap-3 mt-10 items-end">
-            {ProgressChat.map((progresses, index) => (
+            {weeklyData.map((item, index) => (
               <div
-                key={progresses.label}
+                key={item.label}
                 className="w-6 flex flex-col items-center justify-end"
               >
                 <div
@@ -127,7 +150,7 @@ export default function OrderCard() {
                   style={{ height: `${chartProgress[index]}px` }}
                 ></div>
                 <p className="text-c10 font-MontserratNormal h-4">
-                  {progresses.label}
+                  {item.label}
                 </p>
               </div>
             ))}

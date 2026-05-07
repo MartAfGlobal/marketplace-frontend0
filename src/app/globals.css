@@ -4,6 +4,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Scrollbar utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @font-face {
   font-family: "Montserrat-Regular";
   src: url("/assets/fonts/Montserrat-VariableFont_wght.ttf") format("opentype");
@@ -217,9 +226,9 @@
   animation: spin 0.3s linear infinite;
 }
 
+select,
 select option {
-  max-width: 20%;
-  background-color: yellow;
+  font-size: var(--font-size-c12);
 }
 
 /* Slide up animation */
@@ -396,6 +405,15 @@ select option {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+  }
+
+  .text-custom-black {
+    background: linear-gradient(0deg, #000000, #000000),
+      linear-gradient(0deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
   }
 
   .bg-dual-gradient {

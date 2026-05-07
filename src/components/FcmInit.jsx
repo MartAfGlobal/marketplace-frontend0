@@ -8,7 +8,14 @@ export default function FcmInit({ isLoggedIn }) { // pass this from your auth st
     if (!VAPID_KEY) return console.error("Missing VAPID key");
 
     const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken || !isLoggedIn) {
+    if (
+      !accessToken ||
+      accessToken === "undefined" ||
+      accessToken === "null" ||
+      !isLoggedIn ||
+      isLoggedIn === "undefined" ||
+      isLoggedIn === "null"
+    ) {
       console.log("No token or user not logged in, skipping FCM registration");
       return; // stop here
     }

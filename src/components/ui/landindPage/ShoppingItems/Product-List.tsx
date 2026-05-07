@@ -28,7 +28,10 @@ export default function ProductListPage() {
           url,
           method: "GET",
         },
-        successRes: (res) => resolve(res),
+        successRes: (res) => {
+          console.log(`📡 Fetched data from ${url}:`, res);
+          resolve(res);
+        },
       });
     });
   };
@@ -36,6 +39,7 @@ export default function ProductListPage() {
   
 
   const fetchProducts = async (updateCache = true) => {
+    console.log("🛒 fetchProducts: Starting to fetch data from API...");
     setIsLoading(true);
 
     try {
@@ -65,6 +69,9 @@ export default function ProductListPage() {
         allProduct: allRes?.data?.results ?? [],
       };
 
+      console.log("📦 Final combined products payload:", payload);
+      console.log("🌐 [NETWORK] All products response:", payload.allProduct);
+
       setTodayProduct(payload.todayProduct);
       setTrending(payload.trending);
       setTopSelling(payload.topSelling);
@@ -82,9 +89,11 @@ export default function ProductListPage() {
   };
 
   useEffect(() => {
+    console.log("🛒 ProductListPage Mounted! Checking for cached products...");
     const cached = sessionStorage.getItem(CACHE_KEY);
 
     if (cached) {
+      console.log("🛒 Found cached products in sessionStorage!");
       const data = JSON.parse(cached);
       const isExpired = Date.now() - data.timestamp > CACHE_TTL;
 
@@ -95,6 +104,8 @@ export default function ProductListPage() {
       setDiscount(data.discount);
       setAllProduct(data.allProduct);
       setIsLoading(false);
+
+      console.log("📦 [CACHE] All products response:", data.allProduct);
 
       
       if (isExpired) {
@@ -141,8 +152,10 @@ export default function ProductListPage() {
     );
   }
 
+  
+
   return (
-    <div className="w-full px-4.75 pt-12">
+    <div className="w-full px-4.75 md:px-10 lg:px-4.75 pt-12">
       {isLoading ? (
         <>
           <ProductSectionSkeleton />

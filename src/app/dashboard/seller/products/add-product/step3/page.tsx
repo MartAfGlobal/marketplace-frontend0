@@ -187,7 +187,7 @@ export default function AddProductStep1Page() {
         <fieldset
           disabled={loading || updating || fetchingDraftDetails || savingDraft}
         >
-          <div className="mt-6">
+          <div className="lg:mt-6 mt-8">
             <RichTextEditor
               label="Product Specifications"
               value={specificationsText}

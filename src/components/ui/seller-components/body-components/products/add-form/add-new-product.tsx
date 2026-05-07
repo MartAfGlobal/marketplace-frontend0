@@ -94,7 +94,7 @@ export default function AddProductForm() {
               <label>Product Description</label>
               <Textarea
                 placeholder="Product description"
-                className="mt-2 rounded-lg h-30"
+                className="mt-2 rounded-lg"
               />
             </div>
 

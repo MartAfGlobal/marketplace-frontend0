@@ -323,14 +323,24 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                 {token ? (
                   <Button
                     onClick={handleCheckout}
-                    disabled={loading || !selectedAddressId}
+                    disabled={
+                      loading ||
+                      !selectedAddressId ||
+                      TotalItems === 0 ||
+                      !checkoutSummary
+                    }
                   >
                     {loading ? <LoadingSpinner /> : ` Checkout (${TotalItems})`}
                   </Button>
                 ) : (
                   <Button
                     onClick={handleGuestCheckout}
-                    disabled={guestchecking || !selectedAddressId}
+                    disabled={
+                      guestchecking ||
+                      !checkoutSummary?.guest_address ||
+                      TotalItems === 0 ||
+                      !checkoutSummary
+                    }
                   >
                     {guestchecking ? (
                       <LoadingSpinner />

@@ -15,16 +15,16 @@ export const useHttp = () => {
   const dispatch = useDispatch();
 
   const sendHttpRequest = useCallback(
-    async ({ successRes, requestConfig }: HttpRequestConfigProps) => {
+    async ({ successRes, requestConfig, errorRes }: HttpRequestConfigProps) => {
       setError(null);
 
       if (!requestConfig.token && requestConfig.isAuth) {
         // Clear any stored token
         dispatch(tokenActions.deleteToken());
 
-        if (requestConfig.userType === "seller") {
-          router.replace("/auth/seller/login");
-        }
+        // if (requestConfig.userType === "seller") {
+        //   router.replace("/auth/seller/login");
+        // }
 
         setError("Please login!");
         toast.error("Please login!");
@@ -60,6 +60,7 @@ export const useHttp = () => {
           successRes(res);
         }
       } catch (error: any) {
+        await errorRes?.(error);
         console.log("Error in HTTP request:", error);
         console.log("Full error response:", error?.response);
 
@@ -72,27 +73,33 @@ export const useHttp = () => {
           errorMessage = "Request timed out. Please try again.";
         } else if (error?.response?.data) {
           const data = error.response.data;
+          const contentType = error.response.headers?.['content-type'];
 
-          // Extract the first message dynamically regardless of nesting depth
-          const extractFirstString = (obj: any): string | null => {
-            if (typeof obj === "string") return obj;
-            if (Array.isArray(obj)) {
-              for (const item of obj) {
-                const res = extractFirstString(item);
-                if (res) return res;
+          // Check if data is HTML and should be ignored as a message
+          const isHtml = typeof data === "string" && (data.trim().startsWith("<!DOCTYPE") || data.trim().startsWith("<html") || contentType?.includes("text/html"));
+
+          if (!isHtml) {
+            // Extract the first message dynamically regardless of nesting depth
+            const extractFirstString = (obj: any): string | null => {
+              if (typeof obj === "string") return obj;
+              if (Array.isArray(obj)) {
+                for (const item of obj) {
+                  const res = extractFirstString(item);
+                  if (res) return res;
+                }
+              } else if (typeof obj === "object" && obj !== null) {
+                for (const key of Object.keys(obj)) {
+                  const res = extractFirstString(obj[key]);
+                  if (res) return res;
+                }
               }
-            } else if (typeof obj === "object" && obj !== null) {
-              for (const key of Object.keys(obj)) {
-                const res = extractFirstString(obj[key]);
-                if (res) return res;
-              }
+              return null;
+            };
+
+            const foundMessage = extractFirstString(data);
+            if (foundMessage) {
+              errorMessage = foundMessage;
             }
-            return null;
-          };
-
-          const foundMessage = extractFirstString(data);
-          if (foundMessage) {
-            errorMessage = foundMessage;
           }
         }
         if (
@@ -101,6 +108,8 @@ export const useHttp = () => {
         ) {
           errorMessage = "Token expired, please login.";
           dispatch(tokenActions.deleteToken());
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("token");
           console.log("Unauthorized access - redirecting to login", errorMessage);
 
           const userType = requestConfig.userType ?? "seller"; // default buyer

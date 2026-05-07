@@ -153,6 +153,30 @@ export const useFetchOrders = (id?: string) => {
   };
 
 
+  // sellers ordrs payloads
+
+//  const sellerOrders = () => {
+   
+//     if (!token) return;
+
+//     sendHttpRequest({
+//       requestConfig: {
+//         url: "/order/manufacturer/order",
+//         method: "GET",
+//         token,
+//         isAuth: true,
+//         userType: "seller",
+//       },
+//       successRes: (res) => {
+       
+//         console.log("seller orders:", res);
+
+   
+//       },
+//     });
+//   };
+
+
   return {
     fetchOrders,
     fetchAddress,
@@ -161,5 +185,6 @@ export const useFetchOrders = (id?: string) => {
     fetchOrderDetails,
     fetchDisputerDetails,
     loading,
+    // sellerOrders,
   };
 };

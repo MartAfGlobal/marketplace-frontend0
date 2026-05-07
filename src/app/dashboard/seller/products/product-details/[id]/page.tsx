@@ -114,6 +114,8 @@ export default function SellerProductDetailsPage() {
     if (activateError) setActivateError(null);
   };
 
+  const [activeTab, setActiveTab] = useState<"main" | "variants">("main");
+
   /* ------------------------- EFFECTS ------------------------- */
   useEffect(() => {
     if (!id || !token) return;
@@ -127,6 +129,7 @@ export default function SellerProductDetailsPage() {
         userType: "seller",
       },
       successRes: (responseData: any) => {
+        console.log("=== FETCHED PRODUCT DETAILS ===", responseData?.data);
         setProductDetails(responseData?.data);
       },
     });
@@ -264,17 +267,19 @@ export default function SellerProductDetailsPage() {
   /* ------------------------- UI ------------------------- */
   return (
     <div>
-      <button onClick={() => router.back()} className="flex items-center mb-c32">
+      <button onClick={() => router.back()} className="flex items-center  mb-6 lg:mb-c32">
         <span className="h-6 w-6 flex items-center justify-center mr-4">
           <Image src={navBack} width={9} height={16.5} alt="Back" />
         </span>
       
-        <span className="text-base font-MontserratSemiBold">
-            Add New Product
+        <span className="lg:text-base text-c18 font-MontserratSemiBold">
+            {productDetails.name || "Product Details"}
           </span>
       </button>
-      <div className="w-full flex justify-center gap-c48 bg-ffffff circle-shadow rounded-c16 py-6 px-8 relative">
-        <div className="w-full">
+
+      <div className="w-full flex lg:flex-row flex-col justify-center gap-c48  bg-ffffff circle-shadow rounded-c16 py-6 px-6 lg:px-8 relative overflow-hidden">
+        {/* Mobile View Layout (reorganized) */}
+        <div className="lg:hidden w-full flex flex-col  gap-8">
           <ProductImageGallery
             images={images}
             selectedImageId={selectedImageId}
@@ -282,10 +287,7 @@ export default function SellerProductDetailsPage() {
             setSelectedImageId={setSelectedImageId}
             setActiveSlide={setActiveSlide}
           />
-          <ProductInfo productDetails={productDetails} published={published} />
-        </div>
 
-        <div className="w-full mb-c32">
           <ProductActions
             published={published}
             productDetails={productDetails}
@@ -299,7 +301,70 @@ export default function SellerProductDetailsPage() {
             handleDeleteDraft={handleDeleteDraft}
           />
 
-          <ProductVariants variations={variations} />
+          {/* Switcher Tab */}
+          <div className="flex border-b border-gray-200 ">
+            <button
+              onClick={() => setActiveTab("main")}
+              className={`pb-4 px-6 text-sm font-MontserratNormal transition-all relative ${
+                activeTab === "main" ? "text-ff715b" : "text-gray-500"
+              }`}
+            >
+              Main product
+              {activeTab === "main" && (
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-ff715b" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("variants")}
+              className={`pb-4 px-6 text-sm font-MontserratMedium transition-all relative ${
+                activeTab === "variants" ? "text-ff715b" : "text-gray-500"
+              }`}
+            >
+              Variants
+              {activeTab === "variants" && (
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-ff715b" />
+              )}
+            </button>
+          </div>
+
+          <div className="">
+            {activeTab === "main" ? (
+              <ProductInfo productDetails={productDetails} published={published} />
+            ) : (
+              <ProductVariants variations={variations} />
+            )}
+          </div>
+        </div>
+
+        {/* Desktop View Layout (Keeping existing structure) */}
+        <div className="hidden lg:flex w-full lg:flex-row flex-col gap-c48">
+          <div className="lg:flex-1 min-w-0 lg:w-full max-w-[616px]">
+            <ProductImageGallery
+              images={images}
+              selectedImageId={selectedImageId}
+              activeSlide={activeSlide}
+              setSelectedImageId={setSelectedImageId}
+              setActiveSlide={setActiveSlide}
+            />
+            <ProductInfo productDetails={productDetails} published={published} />
+          </div>
+
+          <div className="lg:flex-1 min-w-0 mb-c32">
+            <ProductActions
+              published={published}
+              productDetails={productDetails}
+              id={id}
+              ActivatingLoading={ActivatingLoading}
+              submiting={submiting}
+              deleteLoading={deleteLoading}
+              setConfirmAction={setConfirmAction}
+              handleCancelRequest={handleCancelRequest}
+              handleSubmitDraftProduct={handleSubmitDraftProduct}
+              handleDeleteDraft={handleDeleteDraft}
+            />
+
+            <ProductVariants variations={variations} />
+          </div>
         </div>
 
         {/* SUCCESS MODALS */}

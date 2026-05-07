@@ -6,9 +6,28 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, valid = true, ...props }, ref) => {
+  ({ className, valid = true, onChange, ...props }, ref) => {
+    const innerRef = React.useRef<HTMLTextAreaElement>(null);
+    React.useImperativeHandle(ref, () => innerRef.current!);
+
+    const adjustHeight = () => {
+      if (innerRef.current) {
+        innerRef.current.style.height = "auto";
+        innerRef.current.style.height = `${innerRef.current.scrollHeight}px`;
+      }
+    };
+
+    React.useEffect(() => {
+      adjustHeight();
+    }, []);
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      adjustHeight();
+      onChange?.(e);
+    };
+
     const textareaClasses = cn(
-      "h-c120 p-4 w-full rounded-c12 border outline-none resize-none md:text-sm",
+      "p-4 w-full max-w-full box-border rounded-c12 border outline-none md:text-sm resize-none whitespace-pre-wrap break-words",
       valid
         ? "border-efefef focus:border-ff715b focus:ring-1 focus:ring-ff715b"
         : "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500",
@@ -19,7 +38,9 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <textarea
         className={textareaClasses}
-        ref={ref}
+        ref={innerRef}
+        onChange={handleChange}
+        rows={1}
         {...props}
       />
     );

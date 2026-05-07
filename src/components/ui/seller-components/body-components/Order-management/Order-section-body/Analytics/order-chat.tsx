@@ -52,7 +52,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function OrderQuantityChart() {
+export default function OrderQuantityChart({ externalPeriod }: { externalPeriod?: string }) {
   const [filters, setFilters] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
 

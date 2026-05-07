@@ -18,6 +18,8 @@ type OrderFilteredProps = {
   setCurrentPage: (page: number) => void;
   rowsPerPage: number;
   totalPages: number;
+  onFilteredCount: (count: number) => void;
+  onSelectionChange?: (data: any[]) => void;
 };
 
 export default function OrderFiltered({
@@ -26,6 +28,8 @@ export default function OrderFiltered({
   setCurrentPage,
   rowsPerPage,
   totalPages,
+  onFilteredCount,
+  onSelectionChange,
 }: OrderFilteredProps) {
   const [activeTab, setActiveTab] = useState("all");
 
@@ -35,6 +39,8 @@ export default function OrderFiltered({
     setCurrentPage,
     rowsPerPage,
     totalPages,
+    onFilteredCount,
+    onSelectionChange,
   };
 
   const renderSection = () => {

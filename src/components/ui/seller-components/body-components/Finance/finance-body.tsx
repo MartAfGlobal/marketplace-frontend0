@@ -1,8 +1,7 @@
-"use client"
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import OrderSectionSelector from "../side-selector";
-
 import AnalyticsIcon from "@/assets/Seller/analytics.png";
 import TransactionIcon from "@/assets/Seller/Transaction.png";
 import PayeOutIon from "@/assets/Seller/payout.png";
@@ -18,7 +17,7 @@ export default function FinanceSecions() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
+    const timer = setTimeout(() => setLoading(false), 600);
     return () => clearTimeout(timer);
   }, []);
 
@@ -46,25 +45,37 @@ export default function FinanceSecions() {
   if (loading) return <DashboardTableSkeleton />;
 
   return (
-    <div>
-      <div className="flex items-center gap-c48 w-full justify-between">
-        <p className="text-c18 font-MontserratMedium">Finance</p>
-        <div className="w-full max-w-87">
-          <SearchInput placeholder="Search by order ID, items, date..." />
+    <div className="max-w-[1600px] mx-auto">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
+        <div>
+           <h1 className="text-c18 font-MontserratMedium">Finance </h1>
+           </div>
+        <div className="w-full md:w-[400px]">
+          <SearchInput placeholder="Search transactions, payout ID..." />
         </div>
       </div>
-      <div className="flex gap-8 mt-6 pb-8" ref={containerRef}>
-        <div className="w-full max-w-66.25 ">
-          <OrderSectionSelector
-            sections={sections}
-            onSectionClick={setActiveId}
-            hideOnMobile={false}
-          />
+
+      <div className="flex flex-col lg:flex-row gap-8" ref={containerRef}>
+        {/* Sidebar Navigation */}
+        <div className="w-full lg:w-64 flex-shrink-0">
+          <div className=" h-fit sticky top-20 ">
+            <OrderSectionSelector
+              sections={sections}
+              onSectionClick={setActiveId}
+              hideOnMobile={false}
+            />
+          </div>
         </div>
-        <div className="flex-1 h-[70vh] overflow-y-auto custom-scroll /">
-          {sections.find((s) => s.id === activeId)?.content}
+
+        {/* Main Content Area */}
+        <div className="flex-1 min-h-[70vh]">
+          <div className="bg-white rounded-2xl  p-6 transition-all duration-300">
+            {sections.find((s) => s.id === activeId)?.content}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+

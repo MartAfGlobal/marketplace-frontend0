@@ -28,6 +28,7 @@ export type DisputeTableProps = {
     perc?: number;
     sku?: string;
     qty?: { min?: number; max?: number }; // ✅ support range
+    search?: string;
   };
   onFilteredCountChange: (count: number) => void;
 };
@@ -68,6 +69,16 @@ export default function DisputeTable({
 
   // ✅ apply filters
   let filteredRows = allRows;
+
+  if (filters.search) {
+    const term = filters.search.toLowerCase();
+    filteredRows = filteredRows.filter(
+      (row) =>
+        row.orderid.toLowerCase().includes(term) ||
+        row.status.toLowerCase().includes(term) ||
+        row.date.toLowerCase().includes(term)
+    );
+  }
 
   if (filters.date?.start && filters.date?.end) {
     filteredRows = filteredRows.filter(
@@ -133,11 +144,35 @@ export default function DisputeTable({
         <thead className="text-white font-MontserratSemiBold text-c12 bg-947fff h-10">
           <tr>
             <th className="w-8 text-center">
-              <input
-                type="checkbox"
-                checked={allPageSelected}
-                onChange={togglePage}
-              />
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={allPageSelected}
+                  onChange={togglePage}
+                  className="sr-only"
+                />
+                <div
+                  className={`w-4 h-4 border rounded flex items-center justify-center ${
+                    allPageSelected
+                      ? "bg-[#FF715B] border-0"
+                      : "bg-white border-gray-300"
+                  }`}
+                >
+                  {allPageSelected && (
+                    <svg
+                      className="w-3 h-3 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </div>
+              </label>
             </th>
             <th className="px-3 text-left">Order ID</th>
             <th className="px-3 text-left">Date</th>
@@ -156,11 +191,35 @@ export default function DisputeTable({
               className="h-10 text-c12 font-MontserratBold  text-000000/40"
             >
               <td className="text-center">
-                <input
-                  type="checkbox"
-                  checked={selectedRows.includes(row.id)}
-                  onChange={() => toggleRow(row.id)}
-                />
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.includes(row.id)}
+                    onChange={() => toggleRow(row.id)}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-4 h-4 border rounded flex items-center justify-center ${
+                      selectedRows.includes(row.id)
+                        ? "bg-[#FF715B] border-0"
+                        : "bg-white"
+                    }`}
+                  >
+                    {selectedRows.includes(row.id) && (
+                      <svg
+                        className="w-3 h-3 text-white"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </div>
+                </label>
               </td>
               <td className="px-4 text-center">{row.orderid}</td>
               <td className="px-4 text-center">{row.date}</td>
