@@ -6,7 +6,7 @@ export default function LoginPage() {
     <AuthenticationLayout
       userType="buyer"
       title="Sign in"
-      description="Sign in to start working in our services"
+      description="Sign in to start enjoying our services"
     >
       <div>
         <>

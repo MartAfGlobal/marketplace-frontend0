@@ -133,11 +133,11 @@ export default function OrderTable({
       <table className="w-full border-collapse">
         <thead className="text-ffffff font-MontserratSemiBold text-base bg-947fff w-full h-12">
           <tr>
-            <th className="text-center w-21">ID</th>
+            <th className="text-center max-w-21">ID</th>
             <th className="w-18">Date</th>
             <th className="w-24 hidden md:table-cell">Country</th>
-            <th className="px-4 w-69.25 text-left">Product</th>
-            <th className="w-37.75 text-center">Order status</th>
+            <th className="px-4 w-fit max-w-69.25 text-left">Product</th>
+            <th className="w-37.75 text-center ">Order status</th>
             <th className="w-33.5">Payment status</th>
             <th></th>
           </tr>
@@ -149,10 +149,10 @@ export default function OrderTable({
                 key={i}
                 className="h-c48 border-b text-sm font-MontserratNormal text-nowrap border-b-000000/10"
               >
-                <td className="text-center">{order.id}</td>
+                <td className="text-center max-w-40 px-4 text-wrap">{order.id}</td>
                 <td className="px-2 text-center">{order.date}</td>
                 <td className="px-2 text-center hidden md:table-cell">{order.country}</td>
-                <td className="px-4">
+                <td className="px-4 w-fit max-w-69.25">
                   <div className="w-full h-full  flex items-center gap-2">
                     <div className="flex flex-col">
                       <span>{order.product}</span>

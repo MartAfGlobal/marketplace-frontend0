@@ -61,14 +61,14 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && resetAndClose()}>
-      <DialogContent className="max-w-[1100px] p-0 overflow-hidden border-none bg-white rounded-[40px] shadow-[0_32px_80px_rgba(106,13,173,0.12)]">
-        <div className="relative flex flex-col lg:flex-row h-full max-h-[95vh] lg:h-[700px]">
+      <DialogContent className="w-[95vw] md:w-full max-w-[1100px] p-0 overflow-hidden border-none bg-white rounded-[24px] md:rounded-[40px] shadow-[0_32px_80px_rgba(106,13,173,0.12)]">
+        <div className="relative flex flex-col lg:flex-row h-full max-h-[90vh] md:max-h-[95vh] lg:h-[700px] min-h-0">
           {/* Close Button */}
           <button 
             onClick={resetAndClose}
-            className="absolute top-8 right-8 z-50 p-2.5 bg-white/10 backdrop-blur-xl lg:bg-fafafa hover:bg-efefef rounded-full transition-all duration-300 group"
+            className="absolute top-4 right-4 md:top-8 md:right-8 z-50 p-2.5 bg-fafafa/80 md:bg-white/10 backdrop-blur-xl lg:bg-fafafa hover:bg-efefef rounded-full transition-all duration-300 group"
           >
-            <X size={18} className="text-gray-400 group-hover:text-6a0dad" />
+            <X size={18} className="text-gray-600 md:text-gray-400 group-hover:text-6a0dad" />
           </button>
 
           {/* Left Visual Section (Desktop) */}
@@ -119,23 +119,23 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
           </div>
 
           {/* Right Form Section */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white relative">
-            <div className="flex-1 overflow-y-auto custom-scroll p-10 md:p-14">
-              <DialogHeader className="p-0 text-left mb-12">
-                <DialogTitle className="text-3xl md:text-4xl font-MontserratBold text-161616 mb-4 tracking-tight">
+          <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white relative">
+            <div className="flex-1 overflow-y-auto custom-scroll p-6 pb-12 md:p-14">
+              <DialogHeader className="p-0 text-left mb-8 md:mb-12 mt-6 md:mt-0">
+                <DialogTitle className="text-2xl md:text-4xl font-MontserratBold text-161616 mb-2 md:mb-4 tracking-tight pr-8">
                   {isSuccess ? "You're on the list!" : "Step into the Future"}
                 </DialogTitle>
-                <p className="text-gray-400 font-MontserratMedium">
+                <p className="text-gray-400 text-sm md:text-base font-MontserratMedium">
                   Join Martaf's exclusive waitlist and be the first to know when we launch globally.
                 </p>
                 
                 {!isSuccess && (
-                  <div className="mt-10 flex p-1.5 bg-fafafa rounded-2xl border border-efefef w-fit">
+                  <div className="mt-6 md:mt-10 flex w-full md:w-fit overflow-x-auto no-scrollbar p-1.5 bg-fafafa rounded-2xl border border-efefef">
                     {tabs.map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setSelectedType(tab)}
-                        className={`px-8 py-3 rounded-xl font-MontserratBold text-xs uppercase tracking-wider transition-all duration-300 ${
+                        className={`flex-1 md:flex-none px-4 md:px-8 py-2 md:py-3 rounded-xl font-MontserratBold text-[10px] md:text-xs uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${
                           selectedType === tab
                             ? "bg-white text-6a0dad shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-efefef"
                             : "text-gray-400 hover:text-gray-600"
