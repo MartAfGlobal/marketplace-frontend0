@@ -52,7 +52,11 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function OrderQuantityChart({ externalPeriod }: { externalPeriod?: string }) {
+export default function OrderQuantityChart({
+  externalPeriod,
+}: {
+  externalPeriod?: string;
+}) {
   const [filters, setFilters] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
 
@@ -72,7 +76,7 @@ export default function OrderQuantityChart({ externalPeriod }: { externalPeriod?
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   return (
-    <div className="px-8 py-6 w-full  h-fit bg-white rounded-2xl circle-shadow">
+    <div className="lg:px-8 py-6 w-full  h-fit lg:bg-white lg:rounded-2xl lg:circle-shadow">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-MontserratSemiBold">Sales</h2>
@@ -147,7 +151,63 @@ export default function OrderQuantityChart({ externalPeriod }: { externalPeriod?
         </div>
       )}
       {/* Chart */}
-      <div className="w-full h-83  text-c12 font-MontserratNormal cursor-pointer">
+      <div className="w-full overflow-y-auto rounded-c16">
+        <div className="w-98 bg-ffffff h-51.5 lg:h-83 p-6 lg:p-0  text-c12 font-MontserratNormal  cursor-pointer">
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            className="cursor-pointer outline-none focus:outline-none focus:ring-0"
+          >
+            <AreaChart
+              data={data}
+              margin={{ top: 0, left: 0, right: 0, bottom: 0 }}
+            >
+              {/* gradient */}
+              <defs>
+                <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="10%" stopColor="#FFAC06A3" stopOpacity={0.4} />
+                  <stop offset="90%" stopColor="#FFAC06" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid stroke="#E6E6E6" vertical={false} />
+
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                tickMargin={10}
+                scale="band"
+                padding={{ left: -30, right: 0 }}
+                interval={0}
+              />
+
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                domain={[0, "dataMax + 50"]}
+                tickMargin={30}
+                tickCount={10}
+              />
+
+              <Tooltip content={<CustomTooltip />} cursor={false} />
+
+              <Area
+                type="monotone"
+                dataKey="sales"
+                stroke="#FF9B73"
+                strokeWidth={1}
+                dot={false}
+                activeDot={false}
+                fill="url(#colorSales)"
+                fillOpacity={1}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="w-full hidden md:block bg-ffffff h-51.5 lg:h-83 p-6 lg:p-0  text-c12 font-MontserratNormal  cursor-pointer">
         <ResponsiveContainer
           width="100%"
           height="100%"

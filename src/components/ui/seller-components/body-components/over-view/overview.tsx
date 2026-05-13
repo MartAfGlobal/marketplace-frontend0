@@ -44,7 +44,7 @@ export default function OverviewBody() {
         <div className="w-full lg:flex-1 order-2 lg:order-1">
           <ProductInventory />
         </div>
-        <div className="w-full lg:flex-1 order-1 lg:order-2 overflow-x-hidden">
+        <div className="w-full  md:max-w-137.25 lg:flex-1 order-1 lg:order-2 overflow-x-hidden">
           <CategoryRanking />
         </div>
       </div>

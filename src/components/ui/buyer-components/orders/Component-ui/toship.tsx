@@ -141,7 +141,8 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                 className="space-y-c24"
               >
                 {filteredOrders.map((item: OrderItem) => {
-                  const isSingleItemOrder = item.order_items?.length === 1;
+                  const orderItems = item.order_items || (item as any).items || [];
+                  const isSingleItemOrder = orderItems.length === 1;
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex md:hidden mt-4 space-y-4">
                       {/* <Button
@@ -208,7 +209,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                               href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
-                              {item.order_items?.map((prod) => (
+                              {orderItems.map((prod) => (
                                 <div
                                   key={prod.id}
                                   className="flex gap-4 items-start  w-full"
@@ -228,11 +229,11 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                                       {item.manufacturer}
                                     </p>
                                     <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
-                                      {prod.quantity}Pc,
+                                      {prod.fulfilled_quantity ?? prod.quantity}Pc,
                                       {prod.variation_name || prod.product_name}
                                     </p>
                                     <p className="font-MontserratSemiBold text-c16 pt-3">
-                                      ₦{item.total_price}
+                                      ₦{(prod.price_at_purchase * (prod.fulfilled_quantity ?? prod.quantity ?? 0)).toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
@@ -250,14 +251,14 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                               <div className="hidden sm:flex gap-4">
                                 <div
                                   className={`grid gap-4 ${
-                                    item.order_items.length === 1
+                                    orderItems.length === 1
                                       ? "grid-cols-1"
-                                      : item.order_items.length === 2
+                                      : orderItems.length === 2
                                         ? "grid-cols-2"
                                         : "grid-cols-3"
                                   }`}
                                 >
-                                  {item.order_items?.slice(0, 3).map((prod) => (
+                                  {orderItems?.slice(0, 3).map((prod) => (
                                     <div
                                       key={prod.id}
                                       className="flex flex-col items-center"
@@ -276,7 +277,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                                           className="w-24 h-24 object-cover"
                                         />
                                         <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                          x{prod.quantity}
+                                          x{prod.fulfilled_quantity ?? prod.quantity}
                                         </p>
                                       </div>
                                     </div>
@@ -285,7 +286,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
 
                                 <div>
                                   <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                    {item.order_items
+                                    {orderItems
                                       ?.slice(0, 3)
                                       .map((prod, index) => (
                                         <span
@@ -300,13 +301,13 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                                           </span>
                                           {index <
                                             Math.min(
-                                              item.order_items.length,
+                                              orderItems.length,
                                               3,
                                             ) -
                                               1 && <span>,&nbsp;</span>}
                                         </span>
                                       ))}
-                                    {item.order_items.length > 3 && (
+                                    {orderItems.length > 3 && (
                                       <span>...</span>
                                     )}
                                   </p>
@@ -316,28 +317,25 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                                   </p>
 
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {item.order_items?.reduce(
-                                      (sum, i) => sum + (i.quantity || 0),
-                                      0,
-                                    )}{" "}
+                                    {orderItems.length}{" "}
                                     <span className="pl-0.5">Items</span>
                                   </p>
 
                                   <p className="font-MontserratSemiBold text-c16 pt-3">
-                                    ₦{item.total_price}
+                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
                                   </p>
                                 </div>
                               </div>
 
                               <div className="flex sm:hidden w-full items-start gap-4">
-                                {item.order_items?.[0] && (
+                                {orderItems[0] && (
                                   <Image
                                     src={
-                                      item.order_items[0].product_image ||
+                                      orderItems[0].product_image ||
                                       "/placeholder.png"
                                     }
                                     alt={
-                                      item.order_items[0].product_name ||
+                                      orderItems[0].product_name ||
                                       "Product Image"
                                     }
                                     width={96}
@@ -348,7 +346,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
 
                                 <div className="w-full ">
                                   <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
-                                    {item.order_items?.[0]?.product_name}
+                                    {orderItems[0]?.product_name}
                                   </p>
 
                                   <p className="text-c12 font-MontserratMedium mb-2">
@@ -356,12 +354,12 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                                   </p>
 
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {item.order_items?.length}{" "}
+                                    {orderItems.length}{" "}
                                     <span className="pl-0.5">Items</span>
                                   </p>
 
                                   <p className="font-MontserratSemiBold text-c16 pt-2">
-                                    ₦{item.total_price}
+                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
                                   </p>
                                 </div>
                               </div>

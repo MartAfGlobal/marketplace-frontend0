@@ -72,7 +72,7 @@ export default function ProductInventory() {
 
             {/* Dropdown Panel */}
             {filterOpen && (
-              <div className="absolute top-full left-0 mt-2 z-50 w-fit">
+              <div className="absolute top-full left-0 mt-2 z-50 w-full">
                 <FilterModal
                   onFiltersChange={(newFilters) => setFilters(newFilters)}
                   onClose={() => setFilterOpen(false)}

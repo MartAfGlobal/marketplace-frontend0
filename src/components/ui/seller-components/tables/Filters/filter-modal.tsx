@@ -421,7 +421,7 @@ const formatDateRange = (range: DateRange) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -50 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="rounded-c8 bg-white circle-shadow py-3 px-4 w-full max-w-44 h-fit2"
+          className="rounded-c8 bg-white circle-shadow py-3 px-4 w-full max-w-76 md:max-w-44 h-fit2"
         >
           {/* Applied date range */}
           {filters.date && (

@@ -26,7 +26,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
   const { orders, loading } = useSelector((state: any) => state.orders);
 
   const shipped = orders.filter(
-    (order: OrderItem) => order.status === "SHIPPED",
+    (order: OrderItem) => ["SHIPPED", "shipped-buyer"].includes(order.status),
   );
 
   const filteredOrders = shipped.filter((order: OrderItem) => {
@@ -130,7 +130,8 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                 className="space-y-c24"
               >
                 {filteredOrders.map((item: OrderItem) => {
-                  const isSingleItemOrder = item.order_items?.length === 1;
+                  const orderItems = item.order_items || (item as any).items || [];
+                  const isSingleItemOrder = orderItems.length === 1;
 
                   return (
                     <motion.div
@@ -178,7 +179,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                               href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
-                              {item.order_items?.map((prod) => (
+                              {orderItems.map((prod: any) => (
                                 <div
                                   key={prod.id}
                                   className="flex gap-4 items-start  w-full"
@@ -195,29 +196,27 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                       {prod.product_name}
                                     </p>
                                     <p className=" text-c12 font-MontserratMedium mb-3">
-                                      {item.manufacturer}
+                                      {item.seller_name || item.manufacturer}
                                     </p>
                                     <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
-                                      {prod.quantity}Pc,
+                                      {prod.fulfilled_quantity ?? prod.quantity}Pc,
                                       {prod.variation_name || prod.product_name}
                                     </p>
                                     <p className="font-MontserratSemiBold text-c16 pt-3">
-                                      ₦{item.total_price}
+                                      ₦{(prod.price_at_purchase * (prod.fulfilled_quantity ?? prod.quantity ?? 0)).toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
                               ))}
                             </Link>
                             <div className="w-full gap-4 pl md:hidden flex  md:max-w-70 ">
+                              <div className="w-full"></div>
                               <Button
                                 variant="secondary"
                                 key={item.id}
                                 onClick={() => handleTrackOrder(item.id)}
                               >
                                 Track order
-                              </Button>
-                              <Button onClick={() => setOpen(true)}>
-                                Confirm delivery
                               </Button>
                             </div>
                           </>
@@ -230,14 +229,14 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                               <div className="hidden sm:flex gap-4">
                                 <div
                                   className={`grid gap-4 ${
-                                    item.order_items.length === 1
+                                    orderItems.length === 1
                                       ? "grid-cols-1"
-                                      : item.order_items.length === 2
+                                      : orderItems.length === 2
                                         ? "grid-cols-2"
                                         : "grid-cols-3"
                                   }`}
                                 >
-                                  {item.order_items?.slice(0, 3).map((prod) => (
+                                  {orderItems.slice(0, 3).map((prod: any) => (
                                     <div
                                       key={prod.id}
                                       className="flex flex-col items-center"
@@ -256,7 +255,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                           className="w-24 h-24 object-cover"
                                         />
                                         <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                          x{prod.quantity}
+                                          x{prod.fulfilled_quantity ?? prod.quantity}
                                         </p>
                                       </div>
                                     </div>
@@ -265,7 +264,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
 
                                 <div>
                                   <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                    {item.order_items
+                                    {orderItems
                                       ?.slice(0, 3)
                                       .map((prod, index) => (
                                         <span
@@ -280,44 +279,44 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                           </span>
                                           {index <
                                             Math.min(
-                                              item.order_items.length,
+                                              orderItems.length,
                                               3,
                                             ) -
                                               1 && <span>,&nbsp;</span>}
                                         </span>
                                       ))}
-                                    {item.order_items.length > 3 && (
+                                    {orderItems.length > 3 && (
                                       <span>...</span>
                                     )}
                                   </p>
 
                                   <p className="text-c12 font-MontserratMedium mb-3">
-                                    {item.manufacturer}
+                                    {item.seller_name || item.manufacturer}
                                   </p>
 
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {item.order_items?.reduce(
-                                      (sum, i) => sum + (i.quantity || 0),
+                                    {orderItems.reduce(
+                                      (sum: number, i: any) => sum + (i.fulfilled_quantity ?? i.quantity ?? 0),
                                       0,
                                     )}{" "}
                                     <span className="pl-0.5">Items</span>
                                   </p>
 
                                   <p className="font-MontserratSemiBold text-c16 pt-3">
-                                    ₦{item.total_price}
+                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
                                   </p>
                                 </div>
                               </div>
 
                               <div className="flex sm:hidden w-full items-start gap-4">
-                                {item.order_items?.[0] && (
+                                {orderItems[0] && (
                                   <Image
                                     src={
-                                      item.order_items[0].product_image ||
+                                      orderItems[0].product_image ||
                                       "/placeholder.png"
                                     }
                                     alt={
-                                      item.order_items[0].product_name ||
+                                      orderItems[0].product_name ||
                                       "Product Image"
                                     }
                                     width={96}
@@ -328,25 +327,26 @@ export default function Shipped({ searchTerm }: OrdersProps) {
 
                                 <div className="w-full ">
                                   <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
-                                    {item.order_items?.[0]?.product_name}
+                                    {orderItems[0]?.product_name}
                                   </p>
 
                                   <p className="text-c12 font-MontserratMedium mb-2">
-                                    {item.manufacturer}
+                                    {item.seller_name || item.manufacturer}
                                   </p>
 
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {item.order_items?.length}{" "}
+                                    {orderItems.length}{" "}
                                     <span className="pl-0.5">Items</span>
                                   </p>
 
                                   <p className="font-MontserratSemiBold text-c16 pt-2">
-                                    ₦{item.total_price}
+                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
                                   </p>
                                 </div>
                               </div>
                             </Link>
                             <div className="w-full gap-4 pl md:hidden flex  md:max-w-70 ">
+                              <div className="w-full"></div>
                               <Button
                                 variant="secondary"
                                 key={item.id}
@@ -354,23 +354,18 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                               >
                                 Track order
                               </Button>
-                              <Button onClick={() => setOpen(true)}>
-                                Confirm delivery
-                              </Button>
                             </div>
                           </>
                         )}
 
                         <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
+                           <div className="w-full"></div>
                           <Button
                             variant="secondary"
                             key={item.id}
                             onClick={() => handleTrackOrder(item.id)}
                           >
                             Track order
-                          </Button>
-                          <Button onClick={() => setOpen(true)}>
-                            Confirm delivery
                           </Button>
                         </div>
                       </div>

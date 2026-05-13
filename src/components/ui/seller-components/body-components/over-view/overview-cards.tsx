@@ -12,10 +12,13 @@ export default function OverviewCards() {
       <div className="hidden lg:block lg:flex-1 ">
         <OrderCard />
       </div>
+       <div className="col-span-1 lg:flex-1 lg:hidden">
+        <CustomerCard />
+      </div>
       <div className="col-span-1 lg:flex-1">
         <ProductStockCard />
       </div>
-      <div className="col-span-1 lg:flex-1">
+      <div className="col-span-1 lg:flex-1 hidden md:block">
         <CustomerCard />
       </div>
     </div>

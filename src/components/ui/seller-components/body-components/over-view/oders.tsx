@@ -54,7 +54,7 @@ export default function OverviewOder() {
   }, [searchQuery]);
 
   return (
-    <div className="w-full max-w-fit  bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8">
+    <div className="w-full max-w-214.5 bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8">
       <p className="text-c18 font-MontserratSemiBold">Orders</p>
       <div className="flex justify-between mt-6">
           <SellerSearch 

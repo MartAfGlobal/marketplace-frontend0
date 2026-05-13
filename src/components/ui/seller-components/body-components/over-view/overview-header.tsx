@@ -45,7 +45,7 @@ export default function OverviewHeader() {
         {/* Desktop View Title (hidden on mobile) */}
 
         {/* Desktop Filter */}
-        <div className="">
+        <div className=" bg-1a1a1a hidden lg:block">
            <FilterDropdown
               options={filterOptions}
               onChange={(value) => console.log("Selected:", value)}

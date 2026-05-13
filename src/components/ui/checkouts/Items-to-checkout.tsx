@@ -75,23 +75,26 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
   const { sendHttpRequest, loading } = useHttp();
 
   const handleCheckout = () => {
+    const shipping_method_id = checkoutSummary?.shipping_methods?.[0]?.id || "";
+
     sendHttpRequest({
       requestConfig: {
         url: "/checkout/",
         method: "POST",
-        body: { shipping_address_id: selectedAddressId },
+        body: {
+          shipping_address_id: selectedAddressId,
+          shipping_method_id: shipping_method_id,
+          discount_amount: checkoutSummary?.discount_amount || "0.00",
+        },
         token: token ?? undefined,
         isAuth: true,
-        successMessage: "Checkout successful!",
         userType: "buyer",
+        successMessage: "Order placed successfully! Redirecting to payment...",
       },
       successRes: (res) => {
-        console.log("respons data:", res.data);
-
+        console.log("Checkout response:", res.data);
         if (res.data?.paystack_payment_url) {
           window.location.href = res.data.paystack_payment_url;
-        } else {
-          return;
         }
       },
     });

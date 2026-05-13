@@ -34,7 +34,7 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
 
   const { orders } = useSelector((state: any) => state.orders);
   const { fetchOrderDetails, loading } = useFetchOrders(id);
-  const order = orders.find((o: OrderItem) => o.id === id);
+  const order = orders?.find((o: OrderItem) => o.id === id);
   const router = useRouter();
   const orderid = order.order_no;
   const [visible, setVisible] = useState(10);
@@ -60,7 +60,7 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
   }, [id]);
   const [isMobile, setIsMobile] = useState(false);
 
-  const orderItems = order.order_items;
+  const orderItems = order?.order_items || (order as any).items || [];
 
   console.log("order item", order);
 
@@ -288,15 +288,15 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
                           >
                             <div className="flex gap-4 items-center md:items-start">
                               <Image
-                                src={item.product_image}
-                                alt={item.product_name}
+                                src={item.product_image || "/placeholder.png"}
+                                alt={item.product_name || "Product"}
                                 width={100}
                                 height={100}
                                 className="hidden md:flex"
                               />
                               <Image
-                                src={item.product_image}
-                                alt={item.product_name}
+                                src={item.product_image || "/placeholder.png"}
+                                alt={item.product_name || "Product"}
                                 width={64}
                                 height={64}
                                 className="md:hidden"
@@ -308,16 +308,23 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
 
                                 <div className="w-fit p-2 justify-center md:text-nowrap rounded-c12 bg-black/3 flex items-center">
                                   <span className="text-black opacity-32 font-MontserratSemiBold text-c12">
-                                    {item.quantity}PC,{" "}
+                                    {item.fulfilled_quantity ?? item.quantity}PC,{" "}
                                     {item.variation_name || item.product_name}
                                   </span>
                                 </div>
                                 <p className="font-MontserratSemiBold text-sm flex md:text-c18 pt-3 leading-6.5">
-                                  ₦{item.total_price}
+                                  ₦{(item.price_at_purchase * (item.fulfilled_quantity ?? item.quantity ?? 0)).toLocaleString()}
                                 </p>
                               </div>
                             </div>
                           </Link>
+                          <Button
+                              onClick={() => handleReturnAndRefund(item.id)}
+                              variant="secondary"
+                              className="max-w-47.5"
+                            >
+                              Raise Dispute
+                            </Button>
                         </motion.div>
                       ))}
                     </motion.div>

@@ -469,6 +469,7 @@ export interface OrderProduct {
   images: [];
 }
 export interface OrderItem {
+  seller_name?: string;
   can_cancel?: boolean;
   id: string;
   items_count: number;

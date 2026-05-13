@@ -63,11 +63,12 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
     const term = searchTerm.toLowerCase();
 
-    const matchesOrderId = order.order_no?.toLowerCase().includes(term);
+    const matchesOrderId = (order.order_no || order.id || "").toLowerCase().includes(term);
 
-    const matchesStore = order.manufacturer?.toLowerCase().includes(term);
+    const matchesStore = (  order.manufacturer || "").toLowerCase().includes(term);
 
-    const matchesProduct = order.order_items?.some((item) =>
+    const orderItems = order.order_items || (order as any).items || [];
+    const matchesProduct = orderItems.some((item: any) =>
       item.product_name?.toLowerCase().includes(term),
     );
 
@@ -224,24 +225,35 @@ export default function Orders({ searchTerm }: OrdersProps) {
                 className="space-y-c24"
               >
                 {filteredOrders.map((item: OrderItem) => {
-                  const isSingleItemOrder = item.order_items?.length === 1;
+                  const orderItems = item.order_items || (item as any).items || [];
+                  const isSingleItemOrder = orderItems.length === 1;
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
-                      {item.status === "SHIPPED" && (
+                      {(item.status?.toLowerCase() === "shipped" || item.status?.toLowerCase() === "shipped_to_buyer") && (
                         <>
+                          <div className="w-full"></div>
+                          <Button
+                            
+                            onClick={() => handleTrackOrder(item.id)}
+                          >
+                            Track order
+                          </Button>
+                        </>
+                      )}
+                      {item.status === "DELIVERED" && (
+                        <>
+                          <Button onClick={() => handleClick(item.id)}>
+                            Confirm delivery
+                          </Button>
                           <Button
                             variant="secondary"
                             onClick={() => handleTrackOrder(item.id)}
                           >
                             Track order
                           </Button>
-
-                          <Button onClick={() => handleClick(item.id)}>
-                            Confirm delivery
-                          </Button>
                         </>
                       )}
-                      {item.status === "TO_SHIP" && (
+                      {item.status === "TO_SHIP"   && (
                         <>
                           <div className="w-full"></div>
                           <Button
@@ -255,15 +267,13 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                       {item.status === "PENDING" && (
                         <>
-                          {/* <Button
+                          <Button
                             onClick={() => handleEditAddress(item.id)}
-                            variant="secondary"
                           >
                             Edit address
-                          </Button> */}
-                          <div className="w-full"></div>
-
+                          </Button>
                           <Button
+                            variant="secondary"
                             onClick={() => {
                               setSelectedOrderId(item.id);
                               setOpenCancelModal(true);
@@ -276,14 +286,6 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                       {item.status === "AWAITING_PAYMENT" && (
                         <>
-                          {/* <Button
-                            onClick={() => handleEditAddress(item.id)}
-                            variant="secondary"
-                          >
-                            Edit address
-                          </Button> */}
-                          <div className="w-full"></div>
-
                           <Button
                             disabled={repaying}
                             onClick={() =>
@@ -292,10 +294,16 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           >
                             {repaying ? <LoadingSpinner /> : "Confirm & pay"}
                           </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleEditAddress(item.id)}
+                          >
+                            Edit address
+                          </Button>
                         </>
                       )}
 
-                      {item.status === "DELIVERED" && (
+                      {item.status === "Confirmed" && (
                         <>
                           <Button>Add to cart</Button>
                           <Button variant="secondary">Leave a review</Button>
@@ -324,9 +332,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                   : "text-161616"
                             }`}
                           >
-                            {item.status === "TO_SHIP"
+                            {item.status === "TO_SHIP"  
                               ? "Received at Central hub"
-                              : item.status === "SHIPPED"
+                              : item.status === "SHIPPED" || item.status === "SHIPPED_TO_BUYER"
                                 ? "Order on its way"
                                 : item.status === "DELIVERED"
                                   ? "Delivered"
@@ -342,7 +350,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </p>
                           <div className="md:flex hidden gap-2 mt-2">
                             <p className="text-c12  font-MontserratNormal">
-                              Order ID: {item.order_no || "Not available"}
+                              Order ID: {item.order_no || item.id || "Not available"}
                             </p>
                             <button
                               key={item.id}
@@ -377,13 +385,13 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
-                              {item.order_items?.map((prod) => (
+                              {orderItems.map((prod: any) => (
                                 <div
                                   key={prod.id}
                                   className="flex gap-4 items-start  w-full"
                                 >
                                   <Image
-                                    src={prod?.product_image}
+                                    src={prod?.product_image || "/placeholder.png"}
                                     alt={prod.product_name || "Product Image"}
                                     width={96}
                                     height={96}
@@ -394,14 +402,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                       {prod.product_name}
                                     </p>
                                     <p className=" text-c12 font-MontserratMedium mb-3">
-                                      {item.manufacturer}
+                                       {item.manufacturer}
                                     </p>
                                     <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
-                                      {prod.quantity}Pc,
+                                      {prod.fulfilled_quantity ?? prod.quantity}Pc,
                                       {prod.variation_name || prod.product_name}
                                     </p>
                                     <p className="font-MontserratSemiBold text-c16 pt-3">
-                                      ₦{item.total_price}
+                                      ₦{(prod.price_at_purchase * (prod.fulfilled_quantity ?? prod.quantity ?? 0)).toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
@@ -419,21 +427,21 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               <div className="hidden sm:flex gap-4">
                                 <div
                                   className={`grid gap-4 ${
-                                    item.order_items.length === 1
+                                    orderItems.length === 1
                                       ? "grid-cols-1"
-                                      : item.order_items.length === 2
+                                      : orderItems.length === 2
                                         ? "grid-cols-2"
                                         : "grid-cols-3"
                                   }`}
                                 >
-                                  {item.order_items?.slice(0, 3).map((prod) => (
+                                  {orderItems.slice(0, 3).map((prod: any) => (
                                     <div
                                       key={prod.id}
                                       className="flex flex-col items-center"
                                     >
                                       <div className="w-24 h-24 relative">
                                         <Image
-                                          src={prod.product_image}
+                                          src={prod.product_image || "/placeholder.png"}
                                           alt={
                                             prod.product_name || "Product Image"
                                           }
@@ -442,7 +450,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                           className="w-24 h-24 object-cover"
                                         />
                                         <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                          x{prod.quantity}
+                                          x{prod.fulfilled_quantity ?? prod.quantity}
                                         </p>
                                       </div>
                                     </div>
@@ -451,9 +459,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                                 <div>
                                   <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                    {item.order_items
+                                    {orderItems
                                       ?.slice(0, 3)
-                                      .map((prod, index) => (
+                                      .map((prod: any, index: number) => (
                                         <span
                                           key={prod.id}
                                           className="flex items-center"
@@ -466,13 +474,13 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                           </span>
                                           {index <
                                             Math.min(
-                                              item.order_items.length,
+                                              orderItems.length,
                                               3,
                                             ) -
                                               1 && <span>,&nbsp;</span>}
                                         </span>
                                       ))}
-                                    {item.order_items.length > 3 && (
+                                    {orderItems.length > 3 && (
                                       <span>...</span>
                                     )}
                                   </p>
@@ -482,28 +490,28 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                   </p>
 
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {item.order_items?.reduce(
-                                      (sum, i) => sum + (i.quantity || 0),
+                                    {orderItems.reduce(
+                                      (sum, i) => sum + (i.fulfilled_quantity ?? i.quantity ?? 0),
                                       0,
                                     )}{" "}
                                     <span className="pl-0.5">Items</span>
                                   </p>
 
                                   <p className="font-MontserratSemiBold text-c16 pt-3">
-                                    ₦{item.total_price}
+                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
                                   </p>
                                 </div>
                               </div>
 
                               <div className="flex sm:hidden w-full items-start gap-4">
-                                {item.order_items?.[0] && (
+                                {orderItems[0] && (
                                   <Image
                                     src={
-                                      item.order_items[0].product_image ||
+                                      orderItems[0].product_image ||
                                       "/placeholder.png"
                                     }
                                     alt={
-                                      item.order_items[0].product_name ||
+                                      orderItems[0].product_name ||
                                       "Product Image"
                                     }
                                     width={96}
@@ -514,7 +522,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                                 <div className="w-full ">
                                   <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
-                                    {item.order_items?.[0]?.product_name}
+                                    {orderItems[0]?.product_name}
                                   </p>
 
                                   <p className="text-c12 font-MontserratMedium mb-2">
@@ -522,12 +530,12 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                   </p>
 
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {item.order_items?.length}{" "}
+                                    {orderItems.length}{" "}
                                     <span className="pl-0.5">Items</span>
                                   </p>
 
                                   <p className="font-MontserratSemiBold text-c16 pt-2">
-                                    ₦{item.total_price}
+                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
                                   </p>
                                 </div>
                               </div>
@@ -536,8 +544,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </>
                         )}
                         <div className="hidden w-full gap-4 pl-4 md:flex md:flex-col md:max-w-70 space-y-4">
-                          {item.status === "SHIPPED" && (
+                          {(item.status?.toLowerCase() === "shipped" || item.status?.toLowerCase() === "shipped_to_buyer") && (
                             <>
+                               <div className="w-full"></div>
                               <Button
                                 variant="secondary"
                                 key={item.id}
@@ -545,14 +554,25 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               >
                                 Track order
                               </Button>
+                            </>
+                          )}
 
+                          {item.status === "DELIVERED" && (
+                            <>
                               <Button onClick={() => handleClick(item.id)}>
                                 Confirm delivery
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                key={item.id}
+                                onClick={() => handleTrackOrder(item.id)}
+                              >
+                                Track order
                               </Button>
                             </>
                           )}
 
-                          {item.status === "TO_SHIP" && (
+                          {item.status === "TO_SHIP"   && (
                             <>
                               <Button
                                 variant="secondary"
@@ -566,26 +586,24 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                           {item.status === "PENDING" && (
                             <>
-                              {/* <Button
+                              <Button
                                 onClick={() => handleEditAddress(item.id)}
-                                variant="secondary"
-                                className=""
                               >
                                 Edit address
-                              </Button> */}
+                              </Button>
                               <Button
+                                variant="secondary"
                                 onClick={() => {
                                   setSelectedOrderId(item.id);
                                   setOpenCancelModal(true);
                                 }}
-                                variant="primary"
                               >
                                 Cancel order
                               </Button>
                             </>
                           )}
 
-                          {item.status === "DELIVERED" && (
+                          {item.status === "Confirmed" && (
                             <>
                               <Button className="">Add to cart</Button>
                               <Button variant="secondary" className="">
@@ -596,19 +614,17 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                           {item.status === "AWAITING_PAYMENT" && (
                             <>
-                              {/* <Button
-                                onClick={() => handleEditAddress(item.id)}
+                              <Button
                                 variant="secondary"
-                                className=""
+                                onClick={() => handleEditAddress(item.id)}
                               >
                                 Edit address
-                              </Button> */}
+                              </Button>
                               <Button
                                 disabled={repaying}
                                 onClick={() => {
                                   handleRepay(item.id, item.total_price);
                                 }}
-                                className=""
                               >
                                 {repaying ? (
                                   <LoadingSpinner />

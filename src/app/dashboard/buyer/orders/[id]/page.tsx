@@ -47,7 +47,7 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const processingMode = mode === "pending";
   const processedMode = mode === "delivered";
   const awaitingPaymentMode = mode === "awaiting_payment";
-  const shippedMode = mode === "shipped";
+  const shippedMode = mode === "shipped" || mode === "shipped_to_buyer";
   const toShipMode = mode === "to_ship";
   const cancelledMode = mode ==="cancelled"
 

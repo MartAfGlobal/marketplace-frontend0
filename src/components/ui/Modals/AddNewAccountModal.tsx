@@ -16,6 +16,7 @@ interface AddNewAccountModalProps {
 
 export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNewAccountModalProps) {
   const [banks, setBanks] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedBank, setSelectedBank] = useState("");
   const [showBankDropdown, setShowBankDropdown] = useState(false);
   const [accountNumber, setAccountNumber] = useState("");
@@ -25,6 +26,10 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
   const { loading: fetchingBanks, sendHttpRequest: fetchBanksReq } = useHttp();
   const { loading: submitting, sendHttpRequest: submitReq } = useHttp();
 
+  const filteredBanks = banks.filter(bank => 
+    bank.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -33,6 +38,7 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
       document.body.style.overflow = "";
       // Reset state
       setSelectedBank("");
+      setSearchQuery("");
       setShowBankDropdown(false);
       setAccountNumber("");
       setBvn("");
@@ -45,17 +51,17 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
   const fetchBanks = () => {
     fetchBanksReq({
       requestConfig: {
-        url: "/accounts/manufacturer/bank/list/",
+        url: "https://api.paystack.co/bank",
         method: "GET",
-        token: token ?? undefined,
-        isAuth: true,
-        userType: "seller",
+        isAuth: false,
       },
       successRes: (res: any) => {
-        setBanks(res.data || []);
+        // Paystack returns { status: true, message: "...", data: [...] }
+        const bankData = res.data?.data || res.data || [];
+        setBanks(Array.isArray(bankData) ? bankData : []);
       },
       errorRes: (err: any) => {
-        toast.error("Failed to fetch bank list");
+        toast.error("Failed to fetch bank list from Paystack");
       }
     });
   };
@@ -69,10 +75,10 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
     // Assuming POST to /accounts/manufacturer/bank/
     submitReq({
       requestConfig: {
-        url: "/accounts/manufacturer/bank/",
+        url: "/accounts/manufacturer/bank/add/",
         method: "POST",
         body: {
-          bank_code: selectedBank,
+          bank_name: selectedBank,
           account_number: accountNumber,
           bvn: bvn
         },
@@ -134,29 +140,48 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
                     className="w-full flex items-center justify-between h-12 border border-[#e5e5e5] rounded-xl px-4 text-[13px] text-[#161616] font-MontserratMedium appearance-none outline-none focus:border-[#ff6b6b] bg-transparent"
                   >
                     <span className={selectedBank ? "" : "text-gray-400"}>
-                      {banks.find(b => (b.code || b.id) === selectedBank)?.name || "Select bank"}
+                      {selectedBank || "Select bank"}
                     </span>
                     <ChevronDown size={18} className={`text-[#666666] transition-transform ${showBankDropdown ? "rotate-180" : ""}`} />
                   </button>
 
                   {showBankDropdown && (
-                    <div className="absolute top-13 left-0 w-full max-h-48 overflow-y-auto bg-white border border-[#f0f0f0] rounded-xl shadow-lg z-20 flex flex-col py-1">
-                      {banks.length === 0 ? (
-                        <div className="px-4 py-2 text-[12px] text-gray-500 text-center">Loading banks...</div>
-                      ) : (
-                        banks.map((bank: any, idx: number) => (
-                          <button 
-                            key={idx} 
-                            onClick={() => {
-                              setSelectedBank(bank.code || bank.id);
-                              setShowBankDropdown(false);
-                            }}
-                            className={`w-full text-left px-4 py-2.5 text-[12px] font-MontserratMedium hover:bg-gray-50 transition-colors ${selectedBank === (bank.code || bank.id) ? "bg-[#fff5f5] text-[#ff6b6b]" : "text-[#666666]"}`}
-                          >
-                            {bank.name}
-                          </button>
-                        ))
-                      )}
+                    <div className="absolute top-13 left-0 w-full max-h-56 overflow-hidden bg-white border border-[#f0f0f0] rounded-xl shadow-lg z-20 flex flex-col">
+                      {/* Search Input */}
+                      <div className="p-2 border-b border-[#f0f0f0] bg-white sticky top-0">
+                        <input
+                          type="text"
+                          autoFocus
+                          placeholder="Search bank..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full h-9 px-3 text-[12px] font-MontserratMedium bg-gray-50 border border-[#e5e5e5] rounded-lg outline-none focus:border-[#ff6b6b] transition-colors"
+                        />
+                      </div>
+
+                      {/* Bank List */}
+                      <div className="overflow-y-auto max-h-40 py-1">
+                        {fetchingBanks ? (
+                          <div className="px-4 py-2 text-[12px] text-gray-500 text-center">Loading banks...</div>
+                        ) : filteredBanks.length === 0 ? (
+                          <div className="px-4 py-3 text-[12px] text-gray-500 text-center">No banks found</div>
+                        ) : (
+                          filteredBanks.map((bank: any, idx: number) => (
+                            <button 
+                              key={idx} 
+                              onClick={() => {
+                                setSelectedBank(bank.name);
+                                setShowBankDropdown(false);
+                                setSearchQuery("");
+                              }}
+                              className={`w-full text-left px-4 py-2.5 text-[12px] font-MontserratMedium hover:bg-gray-50 transition-colors ${selectedBank === bank.name ? "bg-[#fff5f5] text-[#ff6b6b]" : "text-[#666666]"}`}
+                            >
+                              {bank.name}
+                            </button>
+                          ))
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

@@ -193,7 +193,7 @@ export default function DisputeDetailsPage({ params }: OrderDetailsPageProps) {
                           {disputeDetails?.seller_name}
                         </p>
                         <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
-                          {/* {prod.}Pc, */}
+                          {disputeDetails?.affected_quantity ?? disputeDetails?.item_quantity}Pc,
                           {disputeDetails?.variant_name ||
                             disputeDetails?.product_name}
                         </p>

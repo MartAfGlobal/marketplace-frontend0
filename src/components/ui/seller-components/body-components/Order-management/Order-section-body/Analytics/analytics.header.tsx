@@ -152,7 +152,7 @@ export default function AnalyticsHeader({
         ))}
       </div>
       <div className="md:hidden  ">
-        <div className="w-full relative bg-ffffff h-69.25 rounded-c16 p-6 md:hidden">
+        <div className="w-full relative overflow-hidden  bg-ffffff h-69.25 rounded-c16 p-6 md:hidden">
           <div>
             <p
               className="font-MontserratNormal text-base text-000000/12

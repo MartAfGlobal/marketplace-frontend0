@@ -30,8 +30,8 @@ export default function OrderOnTheWayPage() {
   const { id } = useParams();
   const { orders } = useSelector((state: any) => state.orders);
 
-  const order = orders.find((o: any) => o.id === id);
-  const orderId = order.id;
+  const order = orders?.find((o: any) => o.id === id);
+  const orderId = order?.id;
 
   const isoDate = order.created_at;
   const formattedDate = new Date(isoDate).toLocaleDateString("en-US", {
@@ -49,7 +49,7 @@ export default function OrderOnTheWayPage() {
 
  
 
-  const orderItems = order.items;
+  const orderItems = order?.items || order?.order_items || [];
 
 
   const handleCopy = () => {
@@ -207,11 +207,11 @@ export default function OrderOnTheWayPage() {
 
                       <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                         <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                          {item.quantity}PC, {item.variant?.color}
+                          {item.fulfilled_quantity ?? item.quantity}PC, {item.variant?.color}
                         </span>
                       </div>
                       <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
-                        ₦{item.total_price}
+                        ₦{(item.price_at_purchase * (item.fulfilled_quantity ?? item.quantity ?? 0)).toLocaleString()}
                       </p>
                     </div>
                   </div>

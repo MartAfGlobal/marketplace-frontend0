@@ -82,7 +82,7 @@ export default function CheckoutPage() {
         url: "/checkout/summary/",
         method: "POST",
         body: {
-          shipping_address_id: selectedAddressId,
+          address_id: selectedAddressId,
           discount_amount: "0.00",
         },
         token,
@@ -95,6 +95,7 @@ export default function CheckoutPage() {
 
         if (backendCart) {
           const mappedItems = (backendCart.items || []).map((item: any) => ({
+            id: item.product_id,
             product_id: item.product_id,
             product_name: item.product_name,
             product_image: item.product_image,

@@ -60,7 +60,7 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { sendHttpRequest, loading } = useHttp();
   const [success, setSucess] = useState(false);
   const { orders } = useSelector((state: any) => state.orders);
-  const selectedOrder = orders.find((order: OrderItem) => order.id === id);
+  const selectedOrder = orders?.find((order: OrderItem) => order.id === id);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<
@@ -190,7 +190,7 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
             </button>
             <div className="md:pt-c32  pt-7 md:pb-c64 md:px-62.5 ">
               <div className="md:p-c32  md:rounded-2xl md:border border-000000/10">
-                {selectedOrder.order_items.map((item: OrderLineItem) => (
+                {(selectedOrder?.order_items || (selectedOrder as any)?.items || []).map((item: OrderLineItem) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: -10 }}
@@ -231,12 +231,12 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
 
                           <div className="w-fit p-2 justify-center md:text-nowrap rounded-c12 bg-black/3 flex items-center">
                             <span className="text-black opacity-32 font-MontserratSemiBold text-c12">
-                              {item.quantity}PC,{" "}
-                              {item.variation_name || item.product_name}
+                               {item.fulfilled_quantity ?? item.quantity}PC,{" "}
+                               {item.variation_name || item.product_name}
                             </span>
                           </div>
                           <p className="font-MontserratSemiBold text-sm flex md:text-c18 pt-3 leading-6.5">
-                            ₦{item.total_price}
+                            ₦{(item.price_at_purchase * (item.fulfilled_quantity ?? item.quantity ?? 0)).toLocaleString()}
                           </p>
                         </div>
                       </div>

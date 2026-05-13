@@ -204,6 +204,8 @@
   --text-c56-55: 56.55px;
 
   --text-c40: 40px;
+
+  --spacing-74: calc(var(--spacing) * 74);
 }
 
 @keyframes slideDown {

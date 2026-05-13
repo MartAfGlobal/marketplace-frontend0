@@ -83,6 +83,14 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { orders } = useSelector((state: any) => state.orders);
   const [additionalNote, setAdditionalNote] = useState("");
   const [discription, setDiscription] = useState("");
+  const isFormValid = Boolean(
+    selectedReason &&
+      selectedMethod &&
+      selectedQuantity &&
+      discription.trim() &&
+      images.length > 0 &&
+      (!selectedReason.requires_additional_info || additionalNote.trim()),
+  );
   const handleClick = () => {
     if (reasons.length) {
       setOpen((p) => !p);
@@ -98,10 +106,16 @@ export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
       setQuantitysOpen((p) => !p);
     }
   };
-const selectedorder = orders.find((item:OrderItem)=>item.order_items.find((item:OrderLineItem)=>item.id === returnid))
-const selectedItem = selectedorder.order_items.find(
-  (item:OrderLineItem) => item.id === returnid
-);
+  const selectedorder = orders?.find((item: OrderItem) => {
+    const items = item.order_items || (item as any).items || [];
+    return items.find((lineItem: OrderLineItem) => lineItem.id === returnid);
+  });
+
+  const selectedItem = selectedorder
+    ? (selectedorder.order_items || (selectedorder as any).items || []).find(
+        (item: OrderLineItem) => item.id === returnid,
+      )
+    : null;
 
   const handleConfirm = () => {
     router.push("/#production-section");
@@ -117,8 +131,8 @@ const selectedItem = selectedorder.order_items.find(
       code: "PICK_UP",
     },
   ];
-  const itemQuantity = selectedItem.quantity;
-  console.log("checking my quantity", itemQuantity  , selectedItem)
+  const itemQuantity = selectedItem?.fulfilled_quantity ?? selectedItem?.quantity ?? 0;
+  console.log("checking my quantity", itemQuantity, selectedItem);
 
   const quantity = Array.from({ length: itemQuantity }, (_, i) => ({
     title: String(i + 1),
@@ -426,7 +440,7 @@ const selectedItem = selectedorder.order_items.find(
                               : "text-black/64 font-MontserratMedium text-left text-c12"
                           }
                         >
-                          {selectedQuantity?.title || "Select a return method"}
+                          {selectedQuantity?.title || "Select quantity"}
                         </span>
 
                         <ChevronDown
@@ -579,7 +593,7 @@ const selectedItem = selectedorder.order_items.find(
                 </div>
 
                 <Button
-                  disabled={loading}
+                  disabled={loading || !isFormValid}
                   onClick={handleReturnItem}
                   className="mt-8"
                 >

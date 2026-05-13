@@ -47,10 +47,10 @@ export default function Editaddreess() {
   );
   const { orders } = useSelector((state: any) => state.orders);
 
-  const order = orders.find((o: any) => o.id === id);
-  const addressId = order.shipping_address;
+  const order = orders?.find((o: any) => o.id === id);
+  const addressId = order?.shipping_address;
 
-  console.log ("oorder id", order.id)
+  console.log("oorder id", order?.id);
 
   const address = buyerAddresses.find((ad: any) => ad.id === addressId);
 

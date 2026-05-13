@@ -331,7 +331,7 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
 
     sendHttpRequest({
       requestConfig: {
-        url: `order/manufacturer/orders/${orderId}/reject/`,
+        url: `orders/manufacturer/orders/${orderId}/reject/`,
         method: "POST",
         token,
         isAuth: true,
@@ -358,7 +358,7 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
 
     sendHttpRequest({
       requestConfig: {
-        url: `order/manufacturer/orders/${orderId}/partial-reject/`,
+        url: `orders/manufacturer/orders/${orderId}/partial-reject/`,
         method: "POST",
         token,
         isAuth: true,

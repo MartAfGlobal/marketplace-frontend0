@@ -36,9 +36,9 @@ export default function TrackingDetail() {
 
   const { orders, loading } = useSelector((state: any) => state.orders);
 
-  const OrderDetails = orders.find((item: any) => item.id === trackingid);
+  const OrderDetails = orders?.find((item: any) => item.id === trackingid);
 
-  const oderItems = OrderDetails.items;
+  const oderItems = OrderDetails?.items || OrderDetails?.order_items || [];
 
   console.log("checking order items", oderItems);
 
@@ -372,11 +372,11 @@ console.log(formattedDate);
 
                                 <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                                   <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                                    {item.quantity}PC, {item.variant?.color}
+                                    {item.fulfilled_quantity ?? item.quantity}PC, {item.variant?.color}
                                   </span>
                                 </div>
                                 <p className="font-MontserratSemiBold hidden md:flex text-c18 pt-3 leading-6.5">
-                                  ₦{item.total_price}
+                                  ₦{(item.price_at_purchase * (item.fulfilled_quantity ?? item.quantity ?? 0)).toLocaleString()}
                                 </p>
                               </div>
                             </div>
