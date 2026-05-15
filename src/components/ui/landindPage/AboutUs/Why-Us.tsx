@@ -9,17 +9,17 @@ import keyImage from "@/assets/images/key.svg"
 
 export default function WhyChooseUs() {
   return (
-   <div className="text-center md:pt-c64 px-5 ">
-  <h1 className="font-MontserratSemiBold text-base md:text-c32 m-auto">
+   <div className="text-center lg:pt-c64 px-5 ">
+  <h1 className="font-MontserratSemiBold text-base lg:text-c32 m-auto">
     Why Choose Martaf?
   </h1>
-  <p className="font-MontserratNormal text-sm md:text-base mb-8">
+  <p className="font-MontserratNormal text-sm lg:text-base mb-8">
     Connecting you to the heart of African Commerce
   </p>
 
   
 
-  <div className=" w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 md:gap-[56px] gap-c24 md:mx-auto">
+  <div className=" w-full grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 lg:gap-[56px] gap-c24 lg:mx-auto">
     <ChooseCard
       image={Globe}
       title="Pan-African Reach"

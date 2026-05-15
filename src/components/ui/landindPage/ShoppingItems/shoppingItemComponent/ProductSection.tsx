@@ -60,7 +60,7 @@ export default function ProductSection({
       </div>
 
       <div className="w-full flex justify-center items-center">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-c28 w-full md:mx-auto">
+        <div className="grid grid-cols-2 lg:grid-cols-5 xl:grid-cols-6 gap-2 lg:gap-c28 w-full lg:mx-auto">
           {previewProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

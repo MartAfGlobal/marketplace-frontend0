@@ -69,12 +69,12 @@ useEffect(() => {
 
   return (
     <main>
-      <div className="md:px-15 pt-6">
+        <div className="px-4.75 lg:px-15 pt-6">
         <HeroPage />
-      <div className="md:hidden">
+      <div className="lg:hidden">
           <MobileCategory />
         </div>
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <Gallary />
         </div>
         <section className="w-full" id="production-section">

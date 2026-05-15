@@ -9,12 +9,12 @@ export default function ChooseCard({ image, title, description }: ChooseCardProp
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-    className="md:w-[312px] w-full">
+    className="lg:w-[312px] w-full">
       <div className="flex justify-center ">
-        <Image src={image} alt={title} width={64} height={64} className="w-c48 h-c48 md:w-c64 md:h-c64" />
+        <Image src={image} alt={title} width={64} height={64} className="w-c48 h-c48 lg:w-c64 lg:h-c64" />
       </div>
-      <h2 className="fontN-MontserratMedium md:text-c18 text-3 md:pb-2  pb-2 mt-4 md:pt-6 ">{title}</h2>
-      <p className="text-c12 md:text-base font-MontserratNormal">{description}</p>
+      <h2 className="font-MontserratMedium lg:text-c18 text-sm lg:pb-2  pb-2 mt-4 lg:pt-6 ">{title}</h2>
+      <p className="text-c12 lg:text-base font-MontserratNormal">{description}</p>
     </motion.div>
   );
 }

@@ -155,7 +155,7 @@ export default function ProductListPage() {
   
 
   return (
-    <div className="w-full px-4.75 md:px-10 lg:px-4.75 pt-12">
+    <div className="w-full px-4.75 pt-12">
       {isLoading ? (
         <>
           <ProductSectionSkeleton />

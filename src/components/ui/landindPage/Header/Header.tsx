@@ -106,7 +106,7 @@ export default function Header() {
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full bg-6a0dad hidden h-20 px-8 justify-center lg:px-14 md:flex gap-4 items-center md:justify-between"
+          className="w-full bg-6a0dad hidden h-20 px-8 justify-center lg:px-14 lg:flex gap-4 items-center lg:justify-between"
         >
           <Link href="/" className="flex items-center gap-3">
             <Image src={Logo} alt="Logo" width={40} height={33} />
@@ -175,34 +175,12 @@ export default function Header() {
           </div>
         </motion.header>
 
-        {/* mobile screen */}
-        <div className="w-full md:hidden">
-          <DropdownModal
-            open={openDropdown}
-            onClose={() => dispatch(closeMobileMenu())}
-            onOpenAuth={(step) => {
-              setAuthStep(step);
-              setAuthOpen(true);
-              dispatch(closeMobileMenu());
-            }}
-          />
 
-          <AuthModal
-            open={authOpen || showModal}
-            onClose={() => {
-              setAuthOpen(false);
-              setShowModal(false);
-            }}
-            defaultStep={
-              authStep ? authStep : showLogin === "true" ? "signin" : "signup"
-            }
-          />
-        </div>
         <motion.header
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full bg-[#6A0DAD] md:hidden h-[56px]  px-4 flex items-center justify-between"
+          className="w-full bg-[#6A0DAD] lg:hidden h-[56px]  px-4 flex items-center justify-between"
         >
           <div className="flex gap-3 items-center">
             <button
@@ -308,6 +286,30 @@ export default function Header() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* mobile screen modals */}
+        <div className="w-full">
+          <DropdownModal
+            open={openDropdown}
+            onClose={() => dispatch(closeMobileMenu())}
+            onOpenAuth={(step) => {
+              setAuthStep(step);
+              setAuthOpen(true);
+              dispatch(closeMobileMenu());
+            }}
+          />
+
+          <AuthModal
+            open={authOpen || showModal}
+            onClose={() => {
+              setAuthOpen(false);
+              setShowModal(false);
+            }}
+            defaultStep={
+              authStep ? authStep : showLogin === "true" ? "signin" : "signup"
+            }
+          />
+        </div>
       </div>
     </div>
   );

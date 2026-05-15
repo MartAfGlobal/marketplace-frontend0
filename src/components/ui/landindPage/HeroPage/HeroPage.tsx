@@ -9,13 +9,13 @@ import SearchInput from "../Header/SearchInput";
 export default function HeroPage() {
   return (
     <motion.div
-      className="md:flex gap-6 pb-6  w-full justify-center relative"
+      className="lg:flex  gap-6 pb-6  w-full justify-center relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <motion.div
-        className="w-full  md:max-w-80 hidden md:flex"
+        className="w-full  md:max-w-80 hidden lg:flex"
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
@@ -29,13 +29,13 @@ export default function HeroPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
       >
-        <div className="w-full md:hidden px-6">
+        <div className="w-full lg:hidden px-6">
           <SearchInput  className="w-full"/>
         </div>
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <MobileHeroBaground />
         </div>
-        <div className="hidden md:flex" >
+        <div className="hidden lg:flex" >
           <HeroBaground />
         </div>
       </motion.div>
