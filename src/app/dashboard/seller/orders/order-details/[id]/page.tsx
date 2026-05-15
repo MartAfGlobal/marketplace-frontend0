@@ -305,7 +305,7 @@ export default function OrderDetailsPage() {
   };
 
   return (
-    <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen  py-6 lg:py-4 space-y-6">
+    <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen   lg:py-4 space-y-6">
       <OrderHeader onDownload={handleDownload} isDownloading={isDownloading} />
 
       <div ref={pdfRef} className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none">

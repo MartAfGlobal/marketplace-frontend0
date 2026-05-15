@@ -12,10 +12,10 @@ export const OrderHeader = ({ onDownload, isDownloading }: OrderHeaderProps) => 
   const router = useRouter();
 
   return (
-    <div className="flex items-start h-c64 lg:border-b lg:border-000000/10 justify-between">
+    <div className="flex items-start lg:h-c64 lg:border-b lg:border-000000/10 justify-between">
       <button
         onClick={() => router.back()}
-        className="flex items-center mt-1.75"
+        className="flex items-center lg:mt-1.75"
       >
         <span className="h-6 w-6 flex items-center justify-center mr-4 ">
           <Image src={navBack} width={9} height={16.5} alt="Back" />
