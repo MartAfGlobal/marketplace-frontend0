@@ -10,7 +10,7 @@ import { useHttp } from "@/hooks/use-http";
 import ProductDetailsSkeleton from "@/components/reloadSpinner/ProductDetailsSkeleton";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
-import navBack from "@/assets/icons/navBacksmall.png";
+import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
 
 // Extracted Components
 import ProductImageGallery from "./components/ProductImageGallery";
@@ -267,17 +267,11 @@ export default function SellerProductDetailsPage() {
   /* ------------------------- UI ------------------------- */
   return (
     <div>
-      <button onClick={() => router.back()} className="flex items-center  mb-6 lg:mb-c32">
-        <span className="h-6 w-6 flex items-center justify-center mr-4">
-          <Image src={navBack} width={9} height={16.5} alt="Back" />
-        </span>
-      
-        <span className="lg:text-base text-c18 font-MontserratSemiBold">
-            {productDetails.name || "Product Details"}
-          </span>
-      </button>
+      <SellerMobileHeader 
+        title={productDetails.name || "Product Details"} 
+      />
 
-      <div className="w-full flex lg:flex-row flex-col justify-center gap-c48  bg-ffffff circle-shadow rounded-c16 py-6 px-6 lg:px-8 relative overflow-hidden">
+      <div className="w-full flex lg:flex-row flex-col justify-center gap-c48  bg-ffffff circle-shadow rounded-c16 py-6 px-6 lg:px-8 relative overflow-hidden mt-6 lg:mt-0">
         {/* Mobile View Layout (reorganized) */}
         <div className="lg:hidden w-full flex flex-col  gap-8">
           <ProductImageGallery

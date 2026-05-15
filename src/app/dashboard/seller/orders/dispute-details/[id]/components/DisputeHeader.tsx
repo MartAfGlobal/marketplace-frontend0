@@ -7,7 +7,7 @@ export const DisputeHeader = () => {
   const router = useRouter();
 
   return (
-    <div className="flex items-center justify-between pb-6 lg:border-b lg:border-gray-100">
+    <div className="flex items-center justify-between  lg:border-b lg:border-gray-100">
       <button onClick={() => router.back()} className="flex items-center gap-4 group">
         <div className="w-9 h-9 flex items-center justify-center rounded-full group-hover:bg-gray-50 transition-colors">
           <Image src={navBack} width={9} height={16.5} alt="Back" />

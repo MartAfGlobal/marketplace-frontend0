@@ -236,7 +236,7 @@ export default function AllOrderTable({
                   <span className="text-00000 font-MontserratNormal">Amount</span>
                   <span className="font-MontserratSemiBold text-000000">{row.amount}</span>
                 </div>
-                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5 rounded">
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
                   <span className="text-00000 font-MontserratNormal">Status</span>
                   <span className="font-MontserratSemiBold text-000000 flex items-center gap-2 capitalize">
                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor(row.status) }}></span>

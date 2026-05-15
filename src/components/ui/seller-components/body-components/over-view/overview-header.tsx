@@ -37,7 +37,7 @@ export default function OverviewHeader() {
       </div>
 
       <div className="flex items-center lg:justify-between  w-full">
-        <div className="w-full hidden gap-12 ld::max-w-87 md:flex items-center justify-between">
+        <div className="w-full hidden gap-12 lg:max-w-87 md:flex items-center justify-between">
           <p className="text-c18 font-MontserratMedium">Overview</p>
           <SearchInput placeholder="Search for anything" />
         </div>
@@ -45,7 +45,7 @@ export default function OverviewHeader() {
         {/* Desktop View Title (hidden on mobile) */}
 
         {/* Desktop Filter */}
-        <div className=" bg-1a1a1a hidden lg:block">
+        <div className="  hidden lg:block">
            <FilterDropdown
               options={filterOptions}
               onChange={(value) => console.log("Selected:", value)}

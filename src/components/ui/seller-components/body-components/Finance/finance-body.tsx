@@ -7,6 +7,7 @@ import TransactionIcon from "@/assets/Seller/Transaction.png";
 import PayeOutIon from "@/assets/Seller/payout.png";
 import FinanceOverview from "./Finance-Overview/finance-overview";
 import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
+import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
 import FinanceTransaction from "./finance-transactions";
 import Payout from "./payout";
 import DashboardTableSkeleton from "@/components/reloadSpinner/DashboardTableSkeleton";
@@ -47,16 +48,22 @@ export default function FinanceSecions() {
   return (
     <div className="max-w-[1600px] mx-auto">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
-        <div>
-           <h1 className="text-c18 font-MontserratMedium">Finance </h1>
-           </div>
-        <div className="w-full md:w-[400px]">
-          <SearchInput placeholder="Search transactions, payout ID..." />
-        </div>
+      <SellerMobileHeader 
+        title="Finance"
+        showBackButton={false}
+        rightElement={
+          <div className="hidden md:block w-[400px]">
+            <SearchInput placeholder="Search transactions, payout ID..." />
+          </div>
+        }
+      />
+
+      {/* Mobile Search Area */}
+      <div className="md:hidden px-4 mt-4">
+        <SearchInput placeholder="Search transactions, payout ID..." />
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8" ref={containerRef}>
+      <div className="flex flex-col lg:flex-row gap-8 mt-6" ref={containerRef}>
         {/* Sidebar Navigation */}
         <div className="w-full lg:w-64 flex-shrink-0">
           <div className=" h-fit sticky top-20 ">

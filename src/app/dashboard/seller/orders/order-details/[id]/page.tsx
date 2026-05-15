@@ -19,6 +19,9 @@ import { OrderProgress } from "./components/OrderProgress";
 import { OrderItemsList } from "./components/OrderItemsList";
 import { AcceptOrderModal } from "./components/AcceptOrderModal";
 import { FulfillOrderModal } from "./components/FulfillOrderModal";
+import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
+import downloadIcon from "@/assets/Seller/colourDownload.svg";
+import Image from "next/image";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -305,8 +308,26 @@ export default function OrderDetailsPage() {
   };
 
   return (
-    <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen   lg:py-4 space-y-6">
-      <OrderHeader onDownload={handleDownload} isDownloading={isDownloading} />
+    <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen  lg:py-4 space-y-6">
+      <SellerMobileHeader 
+        title="Order details"
+        
+        rightElement={
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="hidden lg:block p-2 border border-ff715b h-10 w-10 rounded-lg hover:bg-ff715b/5 disabled:opacity-50"
+          >
+            <Image
+              src={downloadIcon}
+              alt="download"
+              width={10.67}
+              height={10.67}
+              className="w-5 h-5"
+            />
+          </button>
+        }
+      />
 
       <div ref={pdfRef} className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none">
         {/* Mobile Layout (lg:hidden) */}

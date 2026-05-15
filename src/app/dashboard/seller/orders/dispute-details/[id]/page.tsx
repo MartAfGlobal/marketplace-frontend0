@@ -9,9 +9,11 @@ import DisputeDetailsSkeleton from "@/components/reloadSpinner/disputeDetails-sk
 import { toast } from "sonner";
 import EscalateDisputeModal from "@/components/ui/Modals/EscalateDisputeModal";
 import { Button } from "@/components/ui/Button/Button";
-import { DisputeHeader } from "./components/DisputeHeader";
 import { DisputeInfo } from "./components/DisputeInfo";
 import { DisputeEvidence } from "./components/DisputeEvidence";
+import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
+import downloadIcon from "@/assets/Seller/colourDownload.svg";
+import Image from "next/image";
 
 const getStatusClass = (status: string) => {
   switch (status?.toLowerCase()) {
@@ -89,8 +91,15 @@ export default function DisputeDetailsPage() {
   }
 
   return (
-    <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen  py-6 lg:py-4 space-y-6">
-      <DisputeHeader />
+    <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen py-6 lg:py-4 space-y-6">
+      <SellerMobileHeader 
+        title="Dispute details"
+        rightElement={
+          <button className="hidden lg:block p-2.5 border border-ff715b/20 rounded-lg hover:bg-ff715b/5 transition-colors">
+            <Image src={downloadIcon} alt="download" width={20} height={20} />
+          </button>
+        }
+      />
 
       <div className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none">
         <DisputeInfo 

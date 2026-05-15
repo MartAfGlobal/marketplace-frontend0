@@ -29,10 +29,13 @@ export default function SalesCard() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
   const orders = useSelector((state: any) => state.orders.orders);
 
+  console.log("sales-card orders:....", orders);
+
     const { totalRevenue, targets, labels, chartData } = useMemo(() => {
       const productMap: Record<string, { qty: number; revenue: number }> = {};
       const monthBuckets: Record<string, number> = {};
       let totalRevenue = 0;
+
   
       orders.forEach((order: any) => {
         const date = new Date(order.created_at || order.date || "");

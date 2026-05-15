@@ -8,7 +8,6 @@ import { RootState } from "@/store";
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 import ProductSkeleton from "@/components/reloadSpinner/ProductsSkeleton";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import navBack from "@/assets/icons/navBacksmall.png";
 import { Button } from "@/components/ui/Button/Button";
 import { Dropdown } from "@/components/ui/seller-components/body-components/products/add-form/categorySelector";
 import ResultModal from "@/components/ui/forms/resultModal";
@@ -16,6 +15,7 @@ import productIcon from "@/assets/Seller/proccessed.svg";
 import XIcon from "@/assets/icons/X.svg";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
 
 export default function RejectOrderPage() {
   const { id } = useParams();
@@ -266,19 +266,7 @@ export default function RejectOrderPage() {
   return (
     <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen py-6 lg:py-4 space-y-6">
       {/* Header */}
-      <div className="px-4 lg:px-0 flex items-center h-c64 lg:border-b lg:border-000000/10">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center lg:mt-1.75"
-        >
-          <span className="h-6 w-6 flex items-center justify-center mr-4">
-            <Image src={navBack} width={9} height={16.5} alt="Back" />
-          </span>
-          <span className="text-base font-MontserratMedium">
-            Reject order
-          </span>
-        </button>
-      </div>
+      <SellerMobileHeader title="Reject order" />
 
       <div className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none space-y-8">
         <div className="flex flex-col lg:flex-row gap-8 pt-4">

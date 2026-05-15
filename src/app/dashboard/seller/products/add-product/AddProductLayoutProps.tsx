@@ -1,7 +1,6 @@
 "use client";
 
 import stackPlus from "@/assets/icons/StackPlus.svg";
-import navBack from "@/assets/icons/navBacksmall.png";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +10,8 @@ export interface AddProductLayoutProps {
   title: string;
 }
 
+import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
+
 export default function AddProductLayout({
   children,
   stage,
@@ -19,23 +20,11 @@ export default function AddProductLayout({
   const router = useRouter();
 
   return (
-    <main className="w-full pb-c56">
+    <main className="w-full pb-c56 py-6 lg:py-0">
       {/* Header */}
-      <div className="w-full">
-        <button onClick={() => router.back()} className="flex items-center">
-          <span className="h-6 w-6 flex items-center justify-center mr-4">
-            <Image src={navBack} width={9} height={16.5} alt="Back" />
-          </span>
-          <span className="h-6 w-6 hidden md:flex items-center justify-center mr-3">
-            <Image src={stackPlus} width={20.25} height={21} alt="Add" />
-          </span>
-         { stage !==4 ? <span className="md:text-base text-c18 font-MontserratSemiBold">
-            Add New Product
-          </span> :  <span className="md:text-base text-c18 font-MontserratSemiBold">
-            Update Product
-          </span>}
-        </button>
-      </div>
+      <SellerMobileHeader 
+        title={stage !== 4 ? "Add New Product" : "Update Product"} 
+      />
 
       {/* Body */}
       <div className="w-full mt-6 lg:mt-c48 bg-ffffff lg:p-c32 py-8 px-6 md:pb-c48 rounded-c12">

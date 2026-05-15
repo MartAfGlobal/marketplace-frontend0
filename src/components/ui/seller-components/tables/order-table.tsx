@@ -23,6 +23,25 @@ export type InventoryTableProps = {
   };
 };
 
+const getPayoutStatusClass = (status: string) => {
+  switch (status?.toLowerCase()) {
+    case "escrowed":
+      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    case "paid":
+    case "payout_completed":
+    case "completed":
+      return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
+    case "pending":
+    case "processing":
+      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    case "failed":
+    case "refunded":
+      return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    default:
+      return "text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-fit mx-auto";
+  }
+};
+
 export default function OrderTable({
   currentPage,
   rowsPerPage,
@@ -53,7 +72,7 @@ export default function OrderTable({
       date: order.created_at ? new Date(order.created_at).toLocaleDateString() : "N/A",
       status: (order as any).order_timeline_stage?.toLowerCase() || 
               (order.status?.toLowerCase() === "pending" ? "unprocessed" : order.status),
-      payment: order.payment_status,
+      payment: order.payout_status || "N/A",
       country: order.shipping_address?.country || "N/A",
       accepted_quantity: order.accepted_quantity || 0,
       rejected_quantity: order.rejected_quantity || 0,
@@ -178,7 +197,7 @@ export default function OrderTable({
                   </div>
                 </td>
                 <td className="px-4">
-                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize ${getStatusClass(order.payment)}`}>
+                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize ${getPayoutStatusClass(order.payment)}`}>
                     {order.payment}
                   </div>
                 </td>
