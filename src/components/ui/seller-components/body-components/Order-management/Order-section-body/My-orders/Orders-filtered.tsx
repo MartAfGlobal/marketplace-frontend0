@@ -65,7 +65,9 @@ export default function OrderFiltered({
   return (
     <div className="h-fit  flex flex-col">
       {/* 🔹 Tabs */}
-      <FilteredOrders activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className="hidden lg:block">
+        <FilteredOrders activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
 
       {/* 🔹 Main content with animation */}
       <main className="flex-1 pt-c32">

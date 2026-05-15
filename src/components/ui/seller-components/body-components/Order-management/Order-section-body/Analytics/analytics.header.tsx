@@ -105,21 +105,21 @@ export default function AnalyticsHeader({
 
   return (
     <>
-      <div className="w-full hidden   md:flex md:items-center md:bg-ffffff md:p-6 md:gap-c32 md:justify-center md:rounded-c16">
+      <div className="w-full hidden   lg:flex lg:items-center lg:bg-ffffff lg:p-6 lg:gap-c32 lg:justify-center lg:rounded-c16">
         {items.map((item, index) => (
           <div
             key={item.title}
             className={`
-            bg-ffffff md:bg-transparent rounded-2xl md:rounded-none p-4 md:p-0 flex flex-col justify-between relative min-h-[120px] md:min-h-0
-            ${index === 0 ? "col-span-2 max-md:min-h-[160px] max-md:p-5 max-md:circle-shadow overflow-hidden md:overflow-visible" : "col-span-1 max-md:min-h-[130px] max-md:p-4 max-md:circle-shadow overflow-hidden md:overflow-visible"}
-            ${index !== items.length - 1 ? "md:border-r md:border-r-000000/20 md:pr-c32" : ""}
+            bg-ffffff lg:bg-transparent rounded-2xl lg:rounded-none p-4 lg:p-0 flex flex-col justify-between relative min-h-[120px] lg:min-h-0
+            ${index === 0 ? "col-span-2 max-lg:min-h-[160px] max-lg:p-5 max-lg:circle-shadow overflow-hidden lg:overflow-visible" : "col-span-1 max-lg:min-h-[130px] max-lg:p-4 max-lg:circle-shadow overflow-hidden lg:overflow-visible"}
+            ${index !== items.length - 1 ? "lg:border-r lg:border-r-000000/20 lg:pr-c32" : ""}
           `}
           >
-            <p className="font-MontserratNormal text-000000/32 text-sm max-md:text-[#161616]/30 max-md:text-[11px] z-10">
+            <p className="font-MontserratNormal text-000000/32 text-sm max-lg:text-[#161616]/30 max-lg:text-[11px] z-10">
               {item.title}
             </p>
-            <div className="flex md:items-center gap-2 mt-4 md:mt-2 z-10 max-md:mt-0">
-              <div className="hidden md:block">
+            <div className="flex lg:items-center gap-2 mt-4 lg:mt-2 z-10 max-lg:mt-0">
+              <div className="hidden lg:block">
                 <Image
                   src={item.icon}
                   width={24}
@@ -129,17 +129,17 @@ export default function AnalyticsHeader({
               </div>
               <div className="flex items-center gap-1">
                 <p
-                  className={`font-MontserratNormal text-c32 max-md:text-[#161616]/80 ${index === 0 ? "max-md:text-4xl" : "max-md:text-3xl"}`}
+                  className={`font-MontserratNormal text-c32 max-lg:text-[#161616]/80 ${index === 0 ? "max-lg:text-4xl" : "max-lg:text-3xl"}`}
                 >
                   {item.price}
                 </p>
-                <span className="md:hidden flex flex-col leading-none text-[#161616]/15 text-xl ml-1">
+                <span className="lg:hidden flex flex-col leading-none text-[#161616]/15 text-xl ml-1">
                   <span style={{ fontSize: "10px" }}>▲</span>
                   <span style={{ fontSize: "10px" }}>▼</span>
                 </span>
               </div>
             </div>
-            <div className="md:hidden absolute right-3 top-1/2 -translate-y-1/2 opacity-10 z-0 pointer-events-none">
+            <div className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 opacity-10 z-0 pointer-events-none">
               <Image
                 src={item.icon}
                 width={index === 0 ? 100 : 72}
@@ -151,8 +151,8 @@ export default function AnalyticsHeader({
           </div>
         ))}
       </div>
-      <div className="md:hidden  ">
-        <div className="w-full relative overflow-hidden  bg-ffffff h-69.25 rounded-c16 p-6 md:hidden">
+      <div className="lg:hidden  ">
+        <div className="w-full relative overflow-hidden  bg-ffffff h-69.25 rounded-c16 p-6 lg:hidden">
           <div>
             <p
               className="font-MontserratNormal text-base text-000000/12
@@ -185,8 +185,8 @@ export default function AnalyticsHeader({
             />
           </div>
         </div>
-        <div className ="flex gap-4 mt-6 items-center h-fit ">
-          <div className=" w-full relative bg-ffffff h-42 rounded-c16 p-6 md:hidden">
+        <div className ="flex gap-4  mt-6 items-center justify-center h-fit ">
+          <div className=" w-full relative bg-ffffff h-42 rounded-c16 p-6 lg:hidden">
             <div className="">
               <p
                 className="font-MontserratNormal text-base text-000000/12
@@ -225,7 +225,7 @@ export default function AnalyticsHeader({
               />
             </div>
           </div>
-          <div className=" mt-6 w-full relative bg-ffffff h-42 rounded-c16 p-6 md:hidden">
+          <div className=" w-full relative bg-ffffff h-42 rounded-c16 p-6 lg:hidden">
             <div className="">
               <p
                 className="font-MontserratNormal text-base text-000000/12
@@ -252,8 +252,8 @@ export default function AnalyticsHeader({
             </div>
           </div>
         </div>
-        <div className ="flex gap-4 mt-6items-center h-fit">
-          <div className=" w-full relative bg-ffffff h-42 rounded-c16 p-6 md:hidden">
+        <div className ="flex gap-4 mt-6 justify-center items-center h-fit">
+          <div className=" w-full relative bg-ffffff h-42 rounded-c16 p-6 lg:hidden">
             <div className="">
               <p
                 className="font-MontserratNormal text-base text-000000/12
@@ -292,7 +292,7 @@ export default function AnalyticsHeader({
               />
             </div>
           </div>
-          <div className=" mt-6 w-full relative bg-ffffff h-42 rounded-c16 p-6 md:hidden">
+          <div className=" mt-6 w-full relative bg-ffffff h-42 rounded-c16 p-6 lg:hidden">
             <div className="">
               <p
                 className="font-MontserratNormal text-base text-000000/12

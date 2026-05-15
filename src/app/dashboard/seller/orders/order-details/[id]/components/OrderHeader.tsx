@@ -12,7 +12,7 @@ export const OrderHeader = ({ onDownload, isDownloading }: OrderHeaderProps) => 
   const router = useRouter();
 
   return (
-    <div className="flex items-start h-c64 border-b border-000000/10 justify-between">
+    <div className="flex items-start h-c64 lg:border-b lg:border-000000/10 justify-between">
       <button
         onClick={() => router.back()}
         className="flex items-center mt-1.75"
@@ -27,7 +27,7 @@ export const OrderHeader = ({ onDownload, isDownloading }: OrderHeaderProps) => 
       <button
         onClick={onDownload}
         disabled={isDownloading}
-        className="p-2 border border-ff715b h-10 w-10 rounded-lg hover:bg-ff715b/5 disabled:opacity-50"
+        className="hidden lg:block p-2 border border-ff715b h-10 w-10 rounded-lg hover:bg-ff715b/5 disabled:opacity-50"
       >
         <Image
           src={downloadIcon}

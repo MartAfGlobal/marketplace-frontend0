@@ -11,7 +11,7 @@ export default function Analytics(){
     return(
         <div className="w-full space-y-c32">
            {/* Mobile Header: Overview + Filter */}
-           <div className="flex md:hidden justify-between items-center">
+           <div className="flex lg:hidden justify-between items-center">
               <p className="text-c18 font-MontserratMedium text-000000">Overview</p>
               <FilterDropdown 
                 options={filterOptions}

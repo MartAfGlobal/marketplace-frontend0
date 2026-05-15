@@ -177,7 +177,7 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-134.75 lg:bg-ffffff md:rounded-c16">
+        <div className="w-full lg:max-w-134.75 lg:bg-ffffff md:rounded-c16">
           <div className="flex justify-between items-center mb-4 lg:mb-6 px-1 lg:px-8 lg:pt-6 ">
             <h2 className="text-c18 lg:text-lg font-MontserratMedium md:font-MontserratSemiBold text-000000">{title}</h2>
 

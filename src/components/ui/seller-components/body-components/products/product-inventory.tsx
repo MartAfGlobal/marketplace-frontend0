@@ -353,7 +353,7 @@ export default function ProductInventoryPage() {
           </div>
 
           {/* Pagination Status Row (Mobile Only) */}
-          <div className="flex items-center justify-between mt-6 md:hidden">
+          <div className="flex items-center justify-between mt-6 lg:hidden">
             <p className="text-sm font-MontserratNormal text-000000/40">
               {startIndex}-{endIndex} of {totalRowsCount} results
             </p>
@@ -383,7 +383,7 @@ export default function ProductInventoryPage() {
           />
 
           {/* Desktop Pagination */}
-          <div className="hidden md:block w-full pt-13">
+          <div className="hidden lg:block w-full pt-13">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -399,7 +399,7 @@ export default function ProductInventoryPage() {
           </div>
 
           {/* Mobile Pagination (Next/Previous) */}
-          <div className="flex justify-end items-center mt-6 gap-4 md:hidden">
+          <div className="flex justify-end items-center mt-6 gap-4 lg:hidden">
             {currentPage > 1 && (
               <button 
                 onClick={() => {
@@ -440,7 +440,7 @@ export default function ProductInventoryPage() {
         <div className="bg-ffffff p-6 lg:p-0 rounded-c16 lg:rounded-none">
           <p className="text-c18 font-MontserratSemiBold">Products in Draft</p>
           
-          <div className="flex items-center justify-between mt-6 md:hidden">
+          <div className="flex items-center justify-between mt-6 lg:hidden">
             <p className="text-sm font-MontserratNormal text-000000/40">
               {Math.min((currentDraftPage - 1) * resultsPerPage + 1, totalDraftRowsCount)}-{Math.min(currentDraftPage * resultsPerPage, totalDraftRowsCount)} of {totalDraftRowsCount} results
             </p>
@@ -470,7 +470,7 @@ export default function ProductInventoryPage() {
           />
 
           {/* Desktop Pagination */}
-          <div className="hidden md:block w-full pt-13">
+          <div className="hidden lg:block w-full pt-13">
             <Pagination
               currentPage={currentDraftPage}
               totalPages={totalDraftPages}
@@ -479,7 +479,7 @@ export default function ProductInventoryPage() {
           </div>
 
           {/* Mobile Pagination (Next/Previous) */}
-          <div className="flex justify-end items-center mt-6 gap-4 md:hidden">
+          <div className="flex justify-end items-center mt-6 gap-4 lg:hidden">
             {currentDraftPage > 1 && (
               <button 
                 onClick={() => setCurrentDraftPage(currentDraftPage - 1)}

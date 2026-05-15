@@ -38,7 +38,7 @@ export default function CategoryChat({title="Orders"}:SecondChatProps) {
   ];
 
   return (
-    <div className="w-full max-w-134.75 h-c460-69 py-6 px-8 bg-ffffff circle-shadow rounded-c16">
+    <div className="w-full lg:max-w-134.75 h-auto lg:h-c460-69 py-6 px-4 lg:px-8 bg-ffffff circle-shadow rounded-c16">
       
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-MontserratSemiBold">{title}</h2>
@@ -80,7 +80,7 @@ export default function CategoryChat({title="Orders"}:SecondChatProps) {
       </div>
 
      
-      <div className="flex w-full max-w-87.5 p-0 m-0   h-fit items-start gap-9">
+      <div className="flex w-full lg:max-w-87.5 p-0 m-0   h-fit items-start gap-9">
         <div className="flex-1 h-c176-69 w-c176-69  flex items-center ">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

@@ -35,7 +35,7 @@ export default function DisputeBody({
     if (!token) return;
     sendHttpRequest({
       requestConfig: {
-        url: "disputes/seller/",
+        url: "/disputes/seller/",
         method: "GET",
         token: token,
         isAuth: true,

@@ -1,5 +1,5 @@
 "use client"
-
+import React from "react";
 import { useSelector } from "react-redux";
 import CategoryRanking from "./category-ranking";
 import Charts from "./chat-section/chat-section";
@@ -37,14 +37,14 @@ export default function OverviewBody() {
       <div>
         <OverviewCards />
       </div>
-      <div className="w-full">
+      <div className="w-full ">
         <Charts />
       </div>
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-c32">
-        <div className="w-full lg:flex-1 order-2 lg:order-1">
+      <div className="flex flex-col  lg:flex-row gap-6 lg:gap-c32">
+        <div className="w-full lg:flex-1 order-2 lg:order-1 ">
           <ProductInventory />
         </div>
-        <div className="w-full  md:max-w-137.25 lg:flex-1 order-1 lg:order-2 overflow-x-hidden">
+        <div className="w-full  lg:max-w-137.25  lg:flex-1 order-1 lg:order-2 overflow-x-hidden">
           <CategoryRanking />
         </div>
       </div>

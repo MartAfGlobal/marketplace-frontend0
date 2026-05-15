@@ -151,8 +151,8 @@ export default function OrderQuantityChart({
         </div>
       )}
       {/* Chart */}
-      <div className="w-full overflow-y-auto rounded-c16">
-        <div className="w-98 bg-ffffff h-51.5 lg:h-83 p-6 lg:p-0  text-c12 font-MontserratNormal  cursor-pointer">
+      <div className="w-full overflow-y-auto rounded-c16 lg:hidden">
+        <div className="w-full bg-ffffff h-83 p-6 lg:p-0  text-c12 font-MontserratNormal  cursor-pointer">
           <ResponsiveContainer
             width="100%"
             height="100%"
@@ -185,9 +185,10 @@ export default function OrderQuantityChart({
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                domain={[0, "dataMax + 50"]}
+                domain={[0, "dataMax + 5"]}
                 tickMargin={30}
-                tickCount={10}
+                tickCount={6}
+                allowDecimals={false}
               />
 
               <Tooltip content={<CustomTooltip />} cursor={false} />
@@ -207,7 +208,7 @@ export default function OrderQuantityChart({
         </div>
       </div>
 
-      <div className="w-full hidden md:block bg-ffffff h-51.5 lg:h-83 p-6 lg:p-0  text-c12 font-MontserratNormal  cursor-pointer">
+      <div className="w-full hidden lg:block bg-ffffff h-83 p-6 lg:p-0  text-c12 font-MontserratNormal  cursor-pointer">
         <ResponsiveContainer
           width="100%"
           height="100%"
@@ -240,9 +241,10 @@ export default function OrderQuantityChart({
             <YAxis
               axisLine={false}
               tickLine={false}
-              domain={[0, "dataMax + 50"]}
+              domain={[0, "dataMax + 5"]}
               tickMargin={30}
-              tickCount={10}
+              tickCount={6}
+              allowDecimals={false}
             />
 
             <Tooltip content={<CustomTooltip />} cursor={false} />

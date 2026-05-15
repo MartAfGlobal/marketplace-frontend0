@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import downloadIcon from "@/assets/Seller/colourDownload.svg";
+import downloadIcon from "@/assets/Seller/downloadIcon.svg";
 import DeleteIcon from "@/assets/Seller/Trash.svg";
 import SearchIcon from "@/assets/Seller/searchBtn.svg";
 import Pagination from "../../../products/pignation-button";
 import { useSelector } from "react-redux";
+import { ChevronRight } from "lucide-react";
 
 import FilterDropdown from "../../../over-view/Filter-components/filterButton";
 import { filterOptions } from "../../../over-view/Filter-components/filterOptions";
@@ -30,6 +31,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(4);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [selectedData, setSelectedData] = useState<any[]>([]);
   const topRef = useRef<HTMLDivElement>(null);
@@ -37,9 +39,11 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const rowsPerPage = 10;
   const totalRows = filteredCount !== null ? filteredCount : (orders?.length || 0);
   const totalPages = Math.ceil(totalRows / rowsPerPage);
+  
+  const startIndex = (currentPage - 1) * rowsPerPage + 1;
+  const endIndex = Math.min(currentPage * rowsPerPage, totalRows);
   const PaginationComponent = (totalPages: number) => (
     <div className="w-full px-8 absolute bottom-4 left-0">
           <Pagination
@@ -114,51 +118,50 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
   };
 
   return (
-    <div className="w-full bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-4 md:px-8 relative pb-20" ref={topRef}>
+    <div className="w-full bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-4 lg:px-8 relative pb-20" ref={topRef}>
       <div>
-        <p className="text-c18 font-MontserratSemiBold hidden md:block">Orders</p>
-        <div className="flex flex-col-reverse md:flex-row justify-between mt-6 gap-4 md:gap-0">
-          <div className="hidden md:block w-full md:w-auto">
-            <SellerSearch 
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search by order ID, items, date..."
-              alwaysOpen={true}
-            />
-          </div>
-          <div className="flex justify-between items-center w-full md:w-auto gap-4">
-            <p className="text-c18 font-MontserratSemiBold hidden">Orders</p>
-            <div className="flex gap-3 relative" ref={dropdownRef}>
+        {/* Mobile Title */}
+        {/* Orders Title */}
+        <div className="mb-6">
+          <p className="text-c18 font-MontserratSemiBold text-000000">Orders</p>
+        </div>
+
+        {/* Search & Filters Row */}
+        <div className="flex justify-between items-center gap-3 w-full">
+          {/* Search Input */}
+          <SellerSearch 
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search by order ID..."
+          />
+
+          <div className="flex gap-2 lg:gap-3 relative" ref={dropdownRef}>
+            <div className="hidden lg:block">
               <FullFilterButton onOpenFilter={() => setFilterOpen((prev) => !prev)} />
-
-              {/* Dropdown Panel */}
-              {filterOpen && (
-                <div className="absolute top-full left-0 mt-2 z-50 w-fit">
-                  <FilterModal
-                    onFiltersChange={(newFilters) => setFilters(newFilters)}
-                    onClose={() => setFilterOpen(false)}
-                  />
-                </div>
-              )}
-
-              <FilterDropdown
-                options={filterOptions}
-                onChange={(value) => console.log("Selected:", value)}
-              />
-
-              {selectedData.length > 0 && (
-                <button 
-                  className="w-10 h-10 flex items-center justify-center border border-ff715b rounded-c8 bg-ff715b/10 animate-in fade-in zoom-in duration-300"
-                  onClick={handleExportPDF}
-                  title="Export selected as PDF"
-                >
-                  <Image src={downloadIcon} alt="download" width={16} height={16} />
-                </button>
-              )}
-              {/* <button className="w-10 h-10 flex items-center justify-center border border-ff715b rounded-c8">
-                <Image src={DeleteIcon} alt="delete" width={16} height={16} />
-              </button> */}
             </div>
+
+            {/* Dropdown Panel */}
+            {filterOpen && (
+              <div className="absolute top-full right-0 lg:left-0 mt-2 z-50 w-[300px] lg:w-fit">
+                <FilterModal
+                  onFiltersChange={(newFilters) => setFilters(newFilters)}
+                  onClose={() => setFilterOpen(false)}
+                />
+              </div>
+            )}
+
+            <FilterDropdown
+              options={filterOptions}
+              onChange={(value) => console.log("Selected:", value)}
+            />
+
+            <button 
+              className="w-10 h-10 flex shrink-0 items-center justify-center bg-ff715b rounded-c8 animate-in fade-in zoom-in duration-300 cursor-pointer"
+              onClick={handleExportPDF}
+              title="Export selected as PDF"
+            >
+              <Image src={downloadIcon} alt="download" width={10.67} height={10.67} />
+            </button>
           </div>
         </div>
       </div>
@@ -203,7 +206,31 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
         </div>
       )}
 
-      <div className="w-full pt-c32 ">
+      {/* Mobile Pagination Info */}
+      <div className="flex items-center justify-between mt-6 lg:hidden">
+        <p className="text-[10px] sm:text-c12 font-MontserratNormal text-000000/40">
+          {totalRows > 0 ? `${startIndex}-${endIndex} of ${totalRows} results` : "0 results"}
+        </p>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <p className="text-[10px] sm:text-c12 font-MontserratNormal text-000000/40">
+            Results per page
+          </p>
+          <FilterDropdown 
+            options={Array.from(new Set([4, 8, 12, totalRows]))
+              .filter(n => n > 0 && n <= totalRows)
+              .sort((a, b) => a - b)
+              .map(String)}
+            defaultValue={String(rowsPerPage)}
+            onChange={(value) => {
+              setRowsPerPage(Number(value));
+              setCurrentPage(1);
+            }}
+            className="w-10 rounded-c8 !py-1 !px-2 text-[10px]"
+          />
+        </div>
+      </div>
+
+      <div className="w-full pt-6 lg:pt-c32 ">
         <OrderFiltered
           filters={filters}
           currentPage={currentPage}
@@ -216,17 +243,46 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
       </div>
 
        {totalPages > 1 && (
-        <div className="w-full px-8 absolute bottom-4 left-0">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(page: number) => {
-              setCurrentPage(page);
-              if (topRef.current) {
-                 topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-              }
-            }}
-          />
+        <div className="w-full absolute bottom-4 left-0">
+          {/* Desktop Pagination */}
+          <div className="hidden lg:block px-8">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page: number) => {
+                setCurrentPage(page);
+                if (topRef.current) {
+                   topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+            />
+          </div>
+
+          {/* Mobile Pagination */}
+          <div className="flex lg:hidden justify-end items-center px-4 gap-4">
+            {currentPage > 1 && (
+              <button 
+                onClick={() => {
+                  setCurrentPage(currentPage - 1);
+                  if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="text-ff715b text-xs font-MontserratBold flex items-center gap-1"
+              >
+                <ChevronRight size={14} className="rotate-180" /> previous
+              </button>
+            )}
+            {currentPage < totalPages && (
+              <button 
+                onClick={() => {
+                  setCurrentPage(currentPage + 1);
+                  if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="text-ff715b text-xs font-MontserratBold flex items-center gap-1"
+              >
+                next <ChevronRight size={14} />
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

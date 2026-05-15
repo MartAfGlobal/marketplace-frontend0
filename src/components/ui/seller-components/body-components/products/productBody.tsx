@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import AddIcon from "@/assets/Seller/addIcon.png";
 import backIcon from "@/assets/Seller/red-caret-left.png";

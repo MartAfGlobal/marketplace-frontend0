@@ -9,20 +9,37 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import HandBug from "@/assets/Seller/handBug.png";
 import EyeIcon from "@/assets/icons/eye.png";
+import { ChevronRight } from "lucide-react";
 
 const getStatusClass = (status: string) => {
   switch (status?.toLowerCase()) {
     case "open":
-      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      return "text-[#0070E9] bg-[#0070E9]/10 px-8 py-2 rounded-c16 w-fit mx-auto";
     case "resolved":
-      return "text-[#2D7565] bg-[#2D7565]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      return "text-[#2D7565] bg-[#2D7565]/10 px-8 py-2 rounded-c16 w-fit mx-auto";
     case "escalated":
-      return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      return "text-[#CA0202] bg-[#CA0202]/10 px-8 py-2 rounded-c16 w-fit mx-auto";
     case "pending":
     case "requested":
-      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      return "text-[#FFAC06] bg-[#FFAC06]/10 px-8 py-2 rounded-c16 w-fit mx-auto";
     default:
-      return "text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-fit mx-auto";
+      return "text-gray-500 bg-gray-100 px-8 py-2 rounded-c16 w-fit mx-auto";
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status?.toLowerCase()) {
+    case "open":
+      return "#0070E9";
+    case "resolved":
+      return "#2D7565";
+    case "escalated":
+      return "#CA0202";
+    case "pending":
+    case "requested":
+      return "#FFAC06";
+    default:
+      return "#6B7280";
   }
 };
 
@@ -110,7 +127,64 @@ export default function DisputeTable({
 
   return (
     <div className="mt-c32 w-full min-h-[400px] overflow-x-auto">
-      <table className="w-full min-w-[800px]">
+      {/* Mobile View */}
+      <div className="lg:hidden flex flex-col gap-4">
+        {currentRows.length > 0 ? (
+          currentRows.map((row: any) => (
+            <div key={row.id} className="flex flex-col border-b border-gray-100 pb-6 mb-2">
+              <div 
+                className="flex justify-between items-start mb-4 cursor-pointer"
+                onClick={() => router.push(`/dashboard/seller/orders/dispute-details/${row.id}`)}
+              >
+                <div className="flex flex-col">
+                  <span className="font-MontserratSemiBold text-sm text-[#000000]">{row.orderid}</span>
+                  <span className="font-MontserratNormal text-[10px] text-000000/50 mt-1">{new Date(row.date).toLocaleDateString("en-GB")}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`font-MontserratMedium text-[10px] sm:text-c12 capitalize ${getStatusClass(row.status).replace('px-8', 'px-3').replace('py-2', 'py-1').replace('rounded-c16', 'rounded-full')}`}>
+                    {row.status}
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-000000/50" />
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-0.5 text-c12">
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal">Items</span>
+                  <span className="font-MontserratSemiBold text-000000">{row.items}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5 rounded">
+                  <span className="text-00000 font-MontserratNormal">Type</span>
+                  <span className="font-MontserratSemiBold text-000000">{row.type}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal">Amount</span>
+                  <span className="font-MontserratSemiBold text-000000">{row.amount}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5 rounded">
+                  <span className="text-00000 font-MontserratNormal">Initiated by</span>
+                  <span className="font-MontserratSemiBold text-000000">{row.initiatedBy}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5 rounded">
+                  <span className="text-00000 font-MontserratNormal">Status</span>
+                  <span className="font-MontserratSemiBold text-000000 flex items-center gap-2 capitalize">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor(row.status) }}></span>
+                    {row.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col justify-center items-center gap-3 py-10">
+            <Image src={Empty} height={48} width={48} alt="empty" />
+            <p className="text-base font-MontserratNormal text-000000/20">No disputes found</p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View */}
+      <table className="hidden lg:table w-full min-w-[800px]">
         <thead className="text-white font-MontserratSemiBold text-c12 bg-947fff h-10">
           <tr>
             <th className="w-12 text-center">
@@ -198,7 +272,7 @@ export default function DisputeTable({
                   {new Date(row.date).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-3">{row.items}</td>
-                <td className="px-3 text-center">
+                <td className=" text-center">
                   <div className={getStatusClass(row.status)}>{row.status}</div>
                 </td>
                 <td className="px-3">{row.country}</td>

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import EyeIcon from "@/assets/icons/eye.png";
 import downloadIcon from "@/assets/Seller/colourDownload.svg";
 import Empty from "@/assets/Seller/Empty.svg";
+import { ChevronRight } from "lucide-react";
 
 const getStatusClass = (status: string) => {
   switch (status.toLowerCase()) {
@@ -34,6 +35,30 @@ const getStatusClass = (status: string) => {
       return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
     default:
       return "text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-fit mx-auto";
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "fulfilled":
+      return "#0070E9";
+    case "unprocessed":
+    case "pending":
+    case "awaiting acceptance":
+    case "processed":
+    case "processing":
+      return "#FFAC06";
+    case "partially_accepted":
+    case "shipped":
+    case "in transit":
+      return "#0070E9";
+    case "cancelled":
+    case "rejected":
+      return "#CA0202";
+    case "delivered":
+      return "#2D7565";
+    default:
+      return "#6B7280";
   }
 };
 
@@ -170,7 +195,67 @@ export default function AllOrderTable({
 
   return (
     <div className="w-full">
-      <table className="w-full border-collapse">
+      {/* Mobile View */}
+      <div className="lg:hidden flex flex-col gap-4">
+        {currentRows.length > 0 ? (
+          currentRows.map((row: any) => (
+            <div key={row.id} className="flex flex-col border-b border-gray-100 pb-6 mb-2">
+              <div 
+                className="flex justify-between items-start mb-4 cursor-pointer"
+                onClick={() => handleViewDetails(row.orderId)}
+              >
+                <div className="flex flex-col">
+                  <span className="font-MontserratSemiBold text-sm text-[#000000]">{row.orderId}</span>
+                  <span className="font-MontserratNormal text-[10px] text-000000/50 mt-1">{row.date}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`font-MontserratMedium text-[10px] sm:text-c12 capitalize ${getStatusClass(row.status)}`}>
+                    {row.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : row.status}
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-000000/50" />
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-0.5 text-c12">
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal">Items</span>
+                  <div className="flex flex-col items-end">
+                    <span className="font-MontserratSemiBold text-000000">{row.items}</span>
+                    {row.status.toLowerCase() === "partially_accepted" && (
+                      <span className="text-[10px] text-gray-400">
+                        (Acc: {row.accepted_quantity}, Rej: {row.rejected_quantity})
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5 rounded">
+                  <span className="text-00000 font-MontserratNormal">Country</span>
+                  <span className="font-MontserratSemiBold text-000000">{row.country}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-00000 font-MontserratNormal">Amount</span>
+                  <span className="font-MontserratSemiBold text-000000">{row.amount}</span>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5 rounded">
+                  <span className="text-00000 font-MontserratNormal">Status</span>
+                  <span className="font-MontserratSemiBold text-000000 flex items-center gap-2 capitalize">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor(row.status) }}></span>
+                    {row.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : row.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col justify-center items-center gap-3 py-10">
+            <Image src={Empty} height={48} width={48} alt="empty" />
+            <p className="text-base font-MontserratNormal text-000000/20">No orders found</p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View */}
+      <table className="hidden lg:table w-full border-collapse">
         <thead className="text-white font-MontserratSemiBold text-c12 bg-947fff h-10">
           <tr>
             <th className="w-8 text-center">

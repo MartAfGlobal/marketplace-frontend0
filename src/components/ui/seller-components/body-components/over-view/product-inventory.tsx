@@ -115,7 +115,7 @@ export default function ProductInventory() {
         )}
 
         {/* Pagination Status Row */}
-        <div className="flex items-center justify-between mt-6 md:hidden">
+        <div className="flex items-center justify-between mt-6 lg:hidden">
           <p className="text-sm font-MontserratNormal text-000000/40">
             {startIndex}-{endIndex} of {filteredDataCount} results
           </p>

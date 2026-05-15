@@ -303,40 +303,76 @@ export default function OrderDetailsPage() {
   };
 
   return (
-    <div className="w-full rounded-c16 mx-auto p-4 md:p-8 space-y-8 bg-white min-h-screen">
+    <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen  py-6 lg:py-4 space-y-6">
       <OrderHeader onDownload={handleDownload} isDownloading={isDownloading} />
 
-      <div ref={pdfRef} className="space-y-8 bg-white">
-        <OrderSummary
-          order={order}
-          timeLeft={timeLeft}
-          formatTime={formatTime}
-          getStatusBadgeClass={getStatusBadgeClass}
-          getMappedStatus={getMappedStatus}
-        />
+      <div ref={pdfRef} className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none">
+        {/* Mobile Layout (lg:hidden) */}
+        <div className="lg:hidden flex flex-col gap-6">
+          {/* Time Left */}
+          <div className="w-full flex justify-between items-center mb-2">
+            <p className="font-MontserratSemiBold text-sm text-[#161616]">
+              Time left for processing:
+            </p>
+            <span
+              className={`font-MontserratSemiBold text-sm px-3 py-1 rounded-md ${timeLeft > 0 ? "bg-[#2D75651A] text-2d7565" : "bg-red-50 text-ca0202"}`}
+            >
+              {formatTime(timeLeft)}
+            </span>
+          </div>
 
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
-          <OrderInfoSections order={order} />
+          <OrderProgress order={order} getMappedStatus={getMappedStatus} />
 
-          <OrderActions
+          <OrderSummary
             order={order}
-            getMappedStatus={getMappedStatus}
-            onAcceptClick={() => setShowAcceptModal(true)}
-            onRejectClick={handleReject}
-            onFulfillClick={() => setShowFulfillModal(true)}
             timeLeft={timeLeft}
             formatTime={formatTime}
-            isDesktop={true}
+            getStatusBadgeClass={getStatusBadgeClass}
+            getMappedStatus={getMappedStatus}
+          />
+
+          <OrderInfoSections order={order} />
+
+          <OrderItemsList
+            order={order}
+            mobileTab={mobileTab}
+            setMobileTab={setMobileTab}
           />
         </div>
 
-        <OrderProgress order={order} getMappedStatus={getMappedStatus} />
+        {/* Desktop Layout (hidden lg:block) */}
+        <div className="hidden lg:block space-y-8">
+          <OrderSummary
+            order={order}
+            timeLeft={timeLeft}
+            formatTime={formatTime}
+            getStatusBadgeClass={getStatusBadgeClass}
+            getMappedStatus={getMappedStatus}
+          />
 
-        <OrderItemsList
-          order={order}
-          mobileTab={mobileTab}
-          setMobileTab={setMobileTab}
-        />
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+            <OrderInfoSections order={order} />
+
+            <OrderActions
+              order={order}
+              getMappedStatus={getMappedStatus}
+              onAcceptClick={() => setShowAcceptModal(true)}
+              onRejectClick={handleReject}
+              onFulfillClick={() => setShowFulfillModal(true)}
+              timeLeft={timeLeft}
+              formatTime={formatTime}
+              isDesktop={true}
+            />
+          </div>
+
+          <OrderProgress order={order} getMappedStatus={getMappedStatus} />
+
+          <OrderItemsList
+            order={order}
+            mobileTab={mobileTab}
+            setMobileTab={setMobileTab}
+          />
+        </div>
       </div>
 
       {/* Mobile Sticky Actions */}

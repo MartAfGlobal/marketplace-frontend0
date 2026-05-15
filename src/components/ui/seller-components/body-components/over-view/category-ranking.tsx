@@ -27,7 +27,7 @@ export default function CategoryRanking() {
   const endIndex = Math.min(currentPage * resultsPerPage, filteredDataCount);
 
   return (
-    <div className="w-full max-w-137.25 mb-4 lg:mb-6 p-6 lg:px-8 lg:pt-6 bg-ffffff rounded-c16">
+    <div className="w-full lg:max-w-137.25 mb-4 lg:mb-6 p-6 lg:px-8 lg:pt-6 bg-ffffff rounded-c16">
       <div className=" mb-6">
         <p className="text-c18 font-MontserratMedium text-000000">Category ranking</p>
       </div>
@@ -65,7 +65,7 @@ export default function CategoryRanking() {
         </div>
 
         {/* Pagination Status Row */}
-        <div className="flex items-center justify-between py-3 mt-6  lg:hidden">
+        <div className="flex items-center justify-between py-3 mt-6   lg:hidden">
           <p className="text-sm  font-MontserratNormal text-000000/40">
             {startIndex}-{endIndex} of {filteredDataCount} results
           </p>

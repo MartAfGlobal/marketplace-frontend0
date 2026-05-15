@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react";
 import OverviewBody from "./over-view/overview";
 import ProductBody from "./products/productBody";
 import SelleOrderspage from "./Order-management/seller-orders";

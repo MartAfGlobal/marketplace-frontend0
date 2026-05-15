@@ -38,7 +38,72 @@ export const OrderItemsList = ({
           <h3 className="font-MontserratSemiBold text-sm hidden lg:block">
             Order items
           </h3>
-          <div className="overflow-x-auto">
+          
+          {/* Mobile View: Cards */}
+          <div className="lg:hidden flex flex-col gap-6">
+            {order.items?.map((item: any, idx: number) => {
+              const inStock = (item.product_stock || 0) >= item.quantity;
+              const isLow = (item.product_stock || 0) > 0 && (item.product_stock || 0) < 5;
+              
+              return (
+                <div key={idx} className="flex gap-4">
+                  <div className="flex flex-col gap-3 w-[100px] flex-shrink-0">
+                    <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-50 border border-gray-100">
+                      <Image
+                        src={item.product_image || productIcon}
+                        alt="item"
+                        width={100}
+                        height={100}
+                        unoptimized={true}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span
+                      className={`text-center text-[10px] py-1.5 rounded font-MontserratMedium whitespace-nowrap ${
+                        inStock
+                          ? "bg-[#2D75651A] text-[#2d7565]"
+                          : isLow
+                            ? "bg-[#FFAC061A] text-[#FFAC06]"
+                            : "bg-red-50 text-ca0202"
+                      }`}
+                    >
+                      {inStock ? "In stock" : isLow ? "Low stock" : "Out of stock"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex-1 flex flex-col text-c12 font-MontserratNormal bg-white rounded-lg overflow-hidden">
+                    <div className="flex justify-between items-center bg-[#ffffff] px-3 py-2 border-b border-gray-50">
+                      <span className="text-[#161616]">SKU</span>
+                      <span className="font-MontserratSemiBold text-[#161616]">
+                        {item.variation_sku || item.product_sku || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center bg-[#F8F8F8] px-3 py-2 border-b border-white">
+                      <span className="text-[#161616]">Unit price</span>
+                      <span className="font-MontserratSemiBold text-[#161616]">
+                        ₦{Number(item.price_at_purchase || item.price).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center bg-[#ffffff] px-3 py-2 border-b border-gray-50">
+                      <span className="text-[#161616]">Quantity</span>
+                      <span className="font-MontserratSemiBold text-[#161616]">
+                        {item.quantity}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center bg-[#F8F8F8] px-3 py-2">
+                      <span className="text-[#161616]">Total price</span>
+                      <span className="font-MontserratSemiBold text-[#161616]">
+                        ₦{(Number(item.price_at_purchase || item.price) * item.quantity).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop View: Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-[#947fff] text-white font-MontserratSemiBold text-sm uppercase">
                 <tr>

@@ -7,7 +7,7 @@ import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 
 import SellerSearch from "../over-view/Filter-components/SellerSearch";
 
-export default function SelleOrderspage() {
+export default function  SelleOrderspage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const { fetchOrders } = useFetchProducts();
@@ -23,7 +23,7 @@ export default function SelleOrderspage() {
 
   return (
     <div className="w-full ">
-      <div className="w-full flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 md:gap-0">
+      <div className="w-full flex flex-col md:flex-row md:justify-between items-start md:items-center gap-6 md:gap-c48 px-3">
         <div className="flex items-center gap-2">
           {/* Back button visible only on mobile */}
           <button className="md:hidden block" onClick={() => window.history.back()}>
@@ -34,7 +34,7 @@ export default function SelleOrderspage() {
           <p className="text-c18 font-MontserratSemiBold">Orders</p>
         </div>
 
-        <div className="w-full md:w-auto">
+        <div className="w-full md:w-auto ">
           <SellerSearch 
             value={searchQuery}
             onChange={setSearchQuery}

@@ -26,7 +26,7 @@ function RateChart({ value, label }: RateChartProps) {
 
   return (
     <div className="flex flex-col items-center w-full max-w-xs gap-2">
-      <div className="h-42 w-42 flex items-center">
+      <div className="h-28 w-28 md:h-42 md:w-42 flex items-center">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -61,7 +61,7 @@ function RateChart({ value, label }: RateChartProps) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-c12 font-MontserratMedium text-000000/50">{label}</p>
+      <p className="text-[10px] md:text-c12 font-MontserratMedium text-000000/50 text-center">{label}</p>
     </div>
   );
 }
@@ -110,7 +110,7 @@ export default function FulfilmentRates() {
   }, [orders, selected]);
 
   return (
-    <div className="w-full max-w-c495-72 py-4 px-c32 h-83 bg-ffffff rounded-c16">
+    <div className="w-full lg:max-w-c495-72 py-4 px-4 md:px-c32 h-auto md:h-83 bg-ffffff rounded-c16">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-MontserratSemiBold">Fulfilment rates</h2>
 
@@ -150,7 +150,7 @@ export default function FulfilmentRates() {
         </div>
       </div>
 
-      <div className="w-full flex">
+      <div className="w-full flex justify-between gap-2 mt-4 md:mt-0">
         <RateChart value={fulfillmentRate} label="Fulfilment rate" />
         <RateChart value={disputeRate} label="Cancellation rate" />
       </div>

@@ -24,7 +24,7 @@ export default function OverviewHeader() {
   return (
     <div className="flex flex-col md:flex-row md:h-c48 items-center justify-between w-full px-3 gap-4 md:gap-0 relative">
       {/* Top row on mobile: Overview + Filter (if not incomplete) */}
-      <div className="w-full lg:hidden md:max-w-87">
+      <div className="w-full md:hidden md:max-w-87">
         <SearchInput placeholder="Search for anything" />
       </div>
       <div className="flex items-center justify-between w-full md:hidden">
@@ -36,8 +36,8 @@ export default function OverviewHeader() {
         />
       </div>
 
-      <div className="flex items-center justify-between w-full">
-        <div className="w-full hidden gap-12 md:max-w-87 md:flex items-center">
+      <div className="flex items-center lg:justify-between  w-full">
+        <div className="w-full hidden gap-12 ld::max-w-87 md:flex items-center justify-between">
           <p className="text-c18 font-MontserratMedium">Overview</p>
           <SearchInput placeholder="Search for anything" />
         </div>
