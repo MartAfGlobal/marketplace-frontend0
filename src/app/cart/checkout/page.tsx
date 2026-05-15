@@ -22,6 +22,7 @@ import UserAddress from "@/components/ui/buyer-components/Main-section/sections/
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 import GuestUserAddress from "@/components/ui/buyer-components/guest/address_selector";
 import { toast } from "sonner";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 
 export default function CheckoutPage() {
   const [visible, setVisible] = useState(10);
@@ -35,16 +36,24 @@ export default function CheckoutPage() {
   const token = useSelector((state: RootState) => state.token.token);
 
   const { loading, sendHttpRequest } = useHttp();
+  const { fetchAddress } = useFetchOrders();
 
   const selectedAddressId = useSelector(
     (state: RootState) => state.buyer.selectedAddressId,
   );
 
+  // 1. Fetch addresses if they don't exist
+  useEffect(() => {
+    if (token && buyerAddresses.length === 0) {
+      fetchAddress();
+    }
+  }, [token, buyerAddresses.length, fetchAddress]);
+
+  // 2. Select default address
   useEffect(() => {
     if (!buyerAddresses.length) return;
 
-    
-    if (!selectedAddressId || buyerAddresses.length === 1) {
+    if (!selectedAddressId) {
       const defaultAddr = buyerAddresses.find((a) => a.is_default);
       dispatch(
         buyerActions.setSelectedAddress(
@@ -58,24 +67,9 @@ export default function CheckoutPage() {
     dispatch(buyerActions.setSelectedAddress(addressId));
   };
 
+  // 3. Fetch summary when address is selected
   useEffect(() => {
-    if (!token) return;
-    if (buyerAddresses.length === 0) {
-      toast.warning("Please add an address to get summary");
-      dispatch(
-        setCheckoutSummary({
-          all_addresses: [],
-          applied_coupon: null,
-          discount_amount: "0.00",
-          shipping_address: null,
-          shipping_cost: "0.00",
-          shipping_methods: [],
-          subtotal: "0.00",
-          total: "0.00",
-        }),
-      );
-      return;
-    }
+    if (!token || !selectedAddressId) return;
 
     sendHttpRequest({
       requestConfig: {
@@ -100,17 +94,15 @@ export default function CheckoutPage() {
             product_name: item.product_name,
             product_image: item.product_image,
             quantity: item.quantity,
-            subtotal: Number(item.total_price), // numeric subtotal
+            subtotal: Number(item.total_price),
             unit_price: Number(item.unit_price),
-
             total_price: Number(item.total_price),
             variation_display: item.variation_name,
             variation_id: item.variation_id,
           }));
-          // Store items for checkout
+          
           dispatch(setCheckoutItems(mappedItems));
 
-          // Store full cart summary
           dispatch(
             setCheckoutSummary({
               all_addresses: backendCart.all_addresses || [],
@@ -126,7 +118,7 @@ export default function CheckoutPage() {
         }
       },
     });
-  }, [token, sendHttpRequest, dispatch, selectedAddressId, buyerAddresses.length]);
+  }, [token, sendHttpRequest, dispatch, selectedAddressId]);
 
   return (
     <>

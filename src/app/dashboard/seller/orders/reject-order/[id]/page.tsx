@@ -264,61 +264,64 @@ export default function RejectOrderPage() {
   }
 
   return (
-    <div className="w-full rounded-c16 mx-auto p-4 md:p-8 space-y-8 bg-white min-h-screen">
+    <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen py-6 lg:py-4 space-y-6">
       {/* Header */}
-      <div className="flex items-start h-c64 border-b border-000000/10 justify-between">
+      <div className="px-4 lg:px-0 flex items-center h-c64 lg:border-b lg:border-000000/10">
         <button
           onClick={() => router.back()}
-          className="flex items-center mt-1.75"
+          className="flex items-center lg:mt-1.75"
         >
           <span className="h-6 w-6 flex items-center justify-center mr-4">
             <Image src={navBack} width={9} height={16.5} alt="Back" />
           </span>
-          <span className="text-base font-MontserratSemiBold">
+          <span className="text-base font-MontserratMedium">
             Reject order
           </span>
         </button>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 pt-4">
-        {/* Left Section */}
-        <div className="flex-1 space-y-10">
-          <div className="max-w-md space-y-6">
-            <Dropdown
-              label="Select a reason"
-              selected={reason?.name}
-              onSelect={(item) => setReason(item)}
-              fetchItems={() => {}}
-              items={rejectionReasons}
-              loading={loadingReasons}
-              placeholder="Select a reason"
-            />
-          </div>
+      <div className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none space-y-8">
+        <div className="flex flex-col lg:flex-row gap-8 pt-4">
+          {/* Left Section */}
+          <div className="flex-1 space-y-10">
+            <div className="max-w-md space-y-6">
+              <Dropdown
+                label="Select a reason"
+                selected={reason?.name}
+                onSelect={(item) => setReason(item)}
+                fetchItems={() => {}}
+                items={rejectionReasons}
+                loading={loadingReasons}
+                placeholder="Select a reason"
+              />
+            </div>
 
-          <div className="space-y-4">
-            <h3 className="font-MontserratSemiBold text-sm text-000000">
-              Select item(s) that are not available for order fulfilment
-            </h3>
+            <div className="space-y-4">
+              <h3 className="font-MontserratSemiBold text-sm text-000000">
+                Select item(s) that are not available for order fulfilment
+              </h3>
 
-            <div className="w-full overflow-hidden rounded-lg">
-              <table className="w-full text-left">
-                <thead className="bg-[#947fff] text-white font-MontserratNormal text-sm">
-                  <tr>
-                    <th className="p-4 rounded-tl-lg font-MontserratNormal">items</th>
-                    <th className="p-4 text-center rounded-tr-lg font-MontserratNormal">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {order.items?.map((item: any, idx: number) => {
-                    const itemId = item.id || idx.toString();
-                    const isChecked = selectedItems[itemId];
-                    return (
-                      <tr key={idx} className="bg-white">
-                        <td className="p-4 items-center flex gap-4">
+              {/* Mobile View: Card-based items */}
+              <div className="lg:hidden flex flex-col gap-6">
+                {order.items?.map((item: any, idx: number) => {
+                  const itemId = item.id || idx.toString();
+                  const isChecked = selectedItems[itemId];
+                  return (
+                    <div key={idx} className="flex gap-3">
+                      <div className="flex flex-col gap-3 w-20 flex-shrink-0">
+                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-50 border border-gray-100 relative">
+                          <Image
+                            src={item.product_image || productIcon}
+                            alt="item"
+                            width={80}
+                            height={80}
+                            unoptimized={true}
+                            className="w-full h-full object-cover"
+                          />
                           <button
                             type="button"
                             onClick={() => handleCheckboxChange(itemId)}
-                            className={`w-5 h-5 rounded flex items-center justify-center border transition-all flex-shrink-0 ${isChecked ? "bg-ff715b border-ff715b" : "border-ff715b bg-transparent"}`}
+                            className={`absolute top-1 left-1 w-5 h-5 rounded flex items-center justify-center border shadow-sm transition-all ${isChecked ? "bg-ff715b border-ff715b" : "bg-white/90 border-ff715b"}`}
                           >
                             {isChecked && (
                               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -326,65 +329,144 @@ export default function RejectOrderPage() {
                               </svg>
                             )}
                           </button>
-                          
-                          <div className="w-16 h-16 rounded bg-gray-50 flex-shrink-0 overflow-hidden">
-                            <Image
-                              src={item.product_image || productIcon}
-                              alt="item"
-                              width={64}
-                              height={64}
-                              unoptimized={true}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <span className="text-sm font-MontserratNormal">
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex flex-col text-[11px] font-MontserratNormal bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
+                        <div className="flex justify-between items-center bg-[#ffffff] px-2.5 py-2 border-b border-gray-50">
+                          <span className="text-gray-500">Item</span>
+                          <span className="font-MontserratSemiBold text-[#161616] truncate max-w-[100px]">
                             {item.product_name}
                           </span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-3">
+                        </div>
+                        
+                        <div className="flex justify-between items-center bg-[#F8F8F8] px-2.5 py-2 border-b border-white">
+                          <span className="text-gray-500">SKU</span>
+                          <span className="font-MontserratSemiBold text-[#161616] truncate max-w-[100px]">
+                            {item.variation_sku || item.product_sku || "N/A"}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center bg-[#ffffff] px-2.5 py-2 border-b border-gray-50">
+                          <span className="text-gray-500">Order Qty</span>
+                          <span className="font-MontserratSemiBold text-[#161616]">
+                            {item.quantity}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center bg-[#F8F8F8] px-2.5 py-2">
+                          <span className="text-[#161616] font-MontserratSemiBold">Reject Qty</span>
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleQuantityChange(itemId, false, item.quantity)}
-                              className="w-8 h-8 flex items-center justify-center border border-ff715b rounded text-ff715b hover:bg-ff715b/10 transition-colors"
+                              className="w-6 h-6 flex items-center justify-center border border-ff715b rounded text-ff715b bg-white"
                             >
                               -
                             </button>
-                            <span className="min-w-[20px] text-center font-MontserratMedium">
+                            <span className="min-w-[14px] text-center font-MontserratSemiBold text-sm text-[#161616]">
                               {itemQuantities[itemId]}
                             </span>
                             <button
                               onClick={() => handleQuantityChange(itemId, true, item.quantity)}
-                              className="w-8 h-8 flex items-center justify-center border border-ff715b rounded text-ff715b hover:bg-ff715b/10 transition-colors"
+                              className="w-6 h-6 flex items-center justify-center border border-ff715b rounded text-ff715b bg-white"
                             >
                               +
                             </button>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop View: Table */}
+              <div className="hidden lg:block w-full overflow-x-auto custom-scroll rounded-lg border border-gray-100">
+                <table className="w-full text-left min-w-[500px]">
+                  <thead className="bg-[#947fff] text-white font-MontserratNormal text-sm">
+                    <tr>
+                      <th className="p-4 rounded-tl-lg font-MontserratNormal">items</th>
+                      <th className="p-4 text-center rounded-tr-lg font-MontserratNormal">Quantity</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {order.items?.map((item: any, idx: number) => {
+                      const itemId = item.id || idx.toString();
+                      const isChecked = selectedItems[itemId];
+                      return (
+                        <tr key={idx} className="bg-white">
+                          <td className="p-4 flex items-center gap-4">
+                            <button
+                              type="button"
+                              onClick={() => handleCheckboxChange(itemId)}
+                              className={`w-5 h-5 rounded flex items-center justify-center border transition-all flex-shrink-0 ${isChecked ? "bg-ff715b border-ff715b" : "border-ff715b bg-transparent"}`}
+                            >
+                              {isChecked && (
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                            
+                            <div className="w-16 h-16 rounded bg-gray-50 flex-shrink-0 overflow-hidden">
+                              <Image
+                                src={item.product_image || productIcon}
+                                alt="item"
+                                width={64}
+                                height={64}
+                                unoptimized={true}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <span className="text-sm font-MontserratNormal line-clamp-2">
+                              {item.product_name}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center justify-center gap-3">
+                              <button
+                                onClick={() => handleQuantityChange(itemId, false, item.quantity)}
+                                className="w-8 h-8 flex items-center justify-center border border-ff715b rounded text-ff715b hover:bg-ff715b/10 transition-colors"
+                              >
+                                -
+                              </button>
+                              <span className="min-w-[20px] text-center font-MontserratMedium">
+                                {itemQuantities[itemId]}
+                              </span>
+                              <button
+                                onClick={() => handleQuantityChange(itemId, true, item.quantity)}
+                                className="w-8 h-8 flex items-center justify-center border border-ff715b rounded text-ff715b hover:bg-ff715b/10 transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Section / Buttons */}
-        <div className="w-full lg:w-[320px] flex flex-col gap-4">
-          <Button
-            onClick={handleActionTrigger}
-            disabled={rejecting || !reason?.id}
-            className="w-full py-4 bg-ff715b hover:bg-ff715b/90 text-white rounded-xl font-MontserratMedium shadow-sm transition-all h-[56px] disabled:opacity-50"
-          >
-            {rejecting ? <LoadingSpinner /> : (isAllSelected ? "Reject all" : "Proceed")}
-          </Button>
-          <Button
-            onClick={() => router.back()}
-            disabled={rejecting}
-            className="w-full py-4 bg-transparent border border-ff715b text-ff715b hover:bg-ff715b/5 rounded-xl font-MontserratMedium transition-all h-[56px]"
-          >
-            Cancel
-          </Button>
+          {/* Right Section / Buttons */}
+          <div className="w-full lg:w-[320px] flex flex-col gap-4">
+            <Button
+              onClick={handleActionTrigger}
+              disabled={rejecting || !reason?.id}
+              className="w-full py-4 bg-ff715b hover:bg-ff715b/90 text-white rounded-xl font-MontserratMedium shadow-sm transition-all h-[56px] disabled:opacity-50"
+            >
+              {rejecting ? <LoadingSpinner /> : (isAllSelected ? "Reject all" : "Proceed")}
+            </Button>
+            <Button
+              onClick={() => router.back()}
+              disabled={rejecting}
+              className="w-full py-4 bg-transparent border border-ff715b text-ff715b hover:bg-ff715b/5 rounded-xl font-MontserratMedium transition-all h-[56px]"
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       </div>
 

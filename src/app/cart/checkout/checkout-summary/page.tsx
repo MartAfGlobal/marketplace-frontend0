@@ -21,6 +21,7 @@ import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import CheckoutModal from "@/components/ui/cart/CheckoutModal";
 import GuestCheckoutModal from "@/components/ui/Modals/guestCheckoutModal";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 
 export default function CheckoutSummary() {
   const router = useRouter();
@@ -53,63 +54,66 @@ export default function CheckoutSummary() {
 
   const { sendHttpRequest, loading } = useHttp();
   const { sendHttpRequest: saveRequest, loading: saving } = useHttp();
+  const { fetchAddress } = useFetchOrders();
 
-  const [hasFetched, setHasFetched] = useState(false);
+  // 1. Fetch addresses if they don't exist
   useEffect(() => {
-    if (!hasFetched && token) {
-      sendHttpRequest({
-        requestConfig: {
-          url: "/cart/summary/",
-          method: "GET",
-          token,
-          isAuth: true,
-          userType: "buyer",
-        },
-        successRes: (res: any) => {
-          const backendCart = res?.data;
-
-          if (!backendCart) return;
-
-          // const uniqueMap = new Map();
-
-          // backendCart.items.forEach((item: any) => {
-          //   const key = `${item.product_id}-${item.variation_name || "no-var"}`;
-          //   if (!uniqueMap.has(key)) {
-          //     uniqueMap.set(key, {
-          //       id: item.product_id,
-          //       name: item.product_name,
-          //       product_image: item.product_image,
-          //       quantity: item.quantity,
-          //       subtotal: Number(item.total_price),
-          //       unit_price: Number(item.unit_price),
-          //       variation_name: item.variation_name,
-          //       variation_id: item.variation_id,
-          //     });
-          //   }
-          // });
-
-          // const mappedItems = Array.from(uniqueMap.values());
-
-          // dispatch(setCheckoutItems(mappedItems));
-          // dispatch(
-          //   setCheckoutSummary({
-          //     all_addresses: backendCart.all_addresses || [],
-          //     applied_coupon: backendCart.applied_coupon || null,
-          //     discount_amount:
-          //       backendCart.discount_amount?.toString() || "0.00",
-          //     shipping_address: backendCart.shipping_address || null,
-          //     shipping_cost: backendCart.shipping_cost?.toString() || "0.00",
-          //     shipping_methods: backendCart.shipping_methods || [],
-          //     subtotal: backendCart.subtotal?.toString() || "0.00",
-          //     total: backendCart.total?.toString() || "0.00",
-          //   })
-          // );
-
-          // setHasFetched(true);
-        },
-      });
+    if (token && buyerAddresses.length === 0) {
+      fetchAddress();
     }
-  }, [token]);
+  }, [token, buyerAddresses.length, fetchAddress]);
+
+  // 2. Fetch summary when address is selected
+  useEffect(() => {
+    if (!token || !selectedAddressId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/checkout/summary/",
+        method: "POST",
+        body: {
+          address_id: selectedAddressId,
+          discount_amount: "0.00",
+        },
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (responseData: any) => {
+        const backendCart = responseData?.data;
+
+        if (backendCart) {
+          const mappedItems = (backendCart.items || []).map((item: any) => ({
+            id: item.product_id,
+            product_id: item.product_id,
+            product_name: item.product_name,
+            product_image: item.product_image,
+            quantity: item.quantity,
+            subtotal: Number(item.total_price),
+            unit_price: Number(item.unit_price),
+            total_price: Number(item.total_price),
+            variation_display: item.variation_name,
+            variation_id: item.variation_id,
+          }));
+          
+          dispatch(setCheckoutItems(mappedItems));
+
+          dispatch(
+            setCheckoutSummary({
+              all_addresses: backendCart.all_addresses || [],
+              applied_coupon: backendCart.applied_coupon || null,
+              discount_amount: backendCart.discount_amount || "0.00",
+              shipping_address: backendCart.shipping_address || null,
+              shipping_cost: backendCart.shipping_cost || "0.00",
+              shipping_methods: backendCart.shipping_methods || [],
+              subtotal: backendCart.subtotal || "0.00",
+              total: backendCart.total || "0.00",
+            }),
+          );
+        }
+      },
+    });
+  }, [token, selectedAddressId, dispatch, sendHttpRequest]);
 
 
 
