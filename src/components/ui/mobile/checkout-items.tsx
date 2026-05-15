@@ -174,19 +174,19 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
         <div className=" space-y-2 text-sm font-MontserratNormal">
           <div className="flex justify-between">
             <p className="">Total items:</p>
-            <p className="">${checkoutSummary?.subtotal}</p>
+            <p className="">₦{checkoutSummary?.subtotal}</p>
           </div>
           <div className="flex justify-between">
             <p className="font-MontserratSemiBold">Subtotal:</p>
-            <p className="">${checkoutSummary?.subtotal}</p>
+            <p className="">₦{checkoutSummary?.subtotal}</p>
           </div>
           <div className="flex justify-between">
             <p className="">Discount:</p>
-            <p className=" text-ca0202">{checkoutSummary?.discount_amount}</p>
+            <p className=" text-ca0202">-₦{checkoutSummary?.discount_amount}</p>
           </div>
           <div className="flex justify-between">
             <p className="">Shipping fee: </p>
-            <p className="">{checkoutSummary?.shipping_cost}</p>
+            <p className="">₦{checkoutSummary?.shipping_cost}</p>
           </div>
           <div className="flex justify-between text-base font-MontserratSemiBold">
             <p className="">Estimated total:</p>
@@ -199,11 +199,11 @@ export default function MobileCheckoutItems({ loadingState }: loadinProps) {
         <div className="flex items-center gap-3 w-full">
           <div>
             <p className="font-MontserratSemiBold text-c20">
-              ₦{checkoutSummary?.subtotal}
+              ₦{checkoutSummary?.total}
             </p>
             {Number(checkoutSummary?.discount_amount) > 0 && (
               <p className="text-c12 font-MontserratNormal text-ca0202 line-through">
-                ₦{discountPrice}
+                ₦{checkoutSummary?.subtotal}
               </p>
             )}
           </div>

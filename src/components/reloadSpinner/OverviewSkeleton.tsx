@@ -15,27 +15,59 @@ export default function OverviewSkeleton() {
       </div>
 
       {/* OverviewCards Skeleton */}
-      <div className="flex w-full gap-c32 justify-center">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="p-6 h-56 w-full max-w-78 rounded-c16 circle-shadow bg-white flex flex-col justify-between">
-            <div className="h-4 w-24 bg-gray-200 rounded" />
-            <div className="flex gap-2.5 items-center mt-4 mb-9">
-              <div className="h-10 w-24 bg-gray-200 rounded" />
-              <div className="h-4 w-8 bg-gray-200 rounded" />
-            </div>
-            <div className="w-full space-y-4">
-              <div className="flex justify-between"><div className="h-2 w-20 bg-gray-200 rounded" /><div className="h-2 w-8 bg-gray-200 rounded" /></div>
-              <div className="h-2 w-full bg-gray-200 rounded-c4" />
-              <div className="flex justify-between"><div className="h-2 w-20 bg-gray-200 rounded" /><div className="h-2 w-8 bg-gray-200 rounded" /></div>
-              <div className="h-2 w-full bg-gray-200 rounded-c4" />
-            </div>
+      <div className="grid grid-cols-2 lg:flex w-full gap-4 lg:gap-c32 justify-center">
+        {/* Sales Card (full width on mobile) */}
+        <div className="col-span-2 lg:col-span-1 lg:flex-1 p-6 h-56 w-full rounded-c16 circle-shadow bg-white flex flex-col justify-between">
+          <div className="h-4 w-24 bg-gray-200 rounded" />
+          <div className="flex gap-2.5 items-center mt-4 mb-9">
+            <div className="h-10 w-24 bg-gray-200 rounded" />
+            <div className="h-4 w-8 bg-gray-200 rounded" />
           </div>
-        ))}
+          <div className="w-full space-y-4">
+            <div className="flex justify-between"><div className="h-2 w-20 bg-gray-200 rounded" /><div className="h-2 w-8 bg-gray-200 rounded" /></div>
+            <div className="h-2 w-full bg-gray-200 rounded-c4" />
+          </div>
+        </div>
+        
+        {/* Order Card (hidden on mobile) */}
+        <div className="hidden lg:flex lg:flex-1 p-6 h-56 w-full rounded-c16 circle-shadow bg-white flex-col justify-between">
+          <div className="h-4 w-24 bg-gray-200 rounded" />
+          <div className="flex gap-2.5 items-center mt-4 mb-9">
+            <div className="h-10 w-24 bg-gray-200 rounded" />
+            <div className="h-4 w-8 bg-gray-200 rounded" />
+          </div>
+          <div className="w-full space-y-4">
+            <div className="flex justify-between"><div className="h-2 w-20 bg-gray-200 rounded" /><div className="h-2 w-8 bg-gray-200 rounded" /></div>
+            <div className="h-2 w-full bg-gray-200 rounded-c4" />
+          </div>
+        </div>
+
+        {/* Customer Card */}
+        <div className="col-span-1 lg:flex-1 p-6 h-56 w-full rounded-c16 circle-shadow bg-white flex flex-col justify-between">
+          <div className="h-4 w-24 bg-gray-200 rounded" />
+          <div className="flex gap-2.5 items-center mt-4 mb-9">
+            <div className="h-10 w-24 bg-gray-200 rounded" />
+          </div>
+          <div className="w-full space-y-4">
+            <div className="h-2 w-full bg-gray-200 rounded-c4" />
+          </div>
+        </div>
+
+        {/* Product Stock Card */}
+        <div className="col-span-1 lg:flex-1 p-6 h-56 w-full rounded-c16 circle-shadow bg-white flex flex-col justify-between">
+          <div className="h-4 w-24 bg-gray-200 rounded" />
+          <div className="flex gap-2.5 items-center mt-4 mb-9">
+            <div className="h-10 w-24 bg-gray-200 rounded" />
+          </div>
+          <div className="w-full space-y-4">
+            <div className="h-2 w-full bg-gray-200 rounded-c4" />
+          </div>
+        </div>
       </div>
 
       {/* Charts Skeleton */}
-      <div className="w-full h-89 bg-ffffff circle-shadow rounded-c16 pt-5 pl-11">
-        <div className="flex gap-6 h-9 mb-6 pr-11">
+      <div className="w-full h-89 bg-ffffff circle-shadow rounded-c16 p-4 lg:pt-5 lg:pl-11 overflow-hidden">
+        <div className="flex gap-6 h-9 mb-6 lg:pr-11">
           <div className="h-6 w-32 bg-gray-200 rounded" />
           <div className="h-6 w-32 bg-gray-200 rounded" />
         </div>
@@ -43,9 +75,9 @@ export default function OverviewSkeleton() {
       </div>
 
       {/* ProductInventory and CategoryRanking Skeleton */}
-      <div className="flex flex-col lg:flex-row gap-c32">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-c32">
         {/* Product Inventory */}
-        <div className="w-full max-w-224.5 bg-ffffff h-99.2 circle-shadow rounded-c16 py-6 px-8 rounded-tr-c64">
+        <div className="w-full lg:flex-1 order-2 lg:order-1 bg-ffffff h-99.2 circle-shadow rounded-c16 p-4 lg:py-6 lg:px-8 lg:rounded-tr-c64 overflow-hidden">
           <div className="flex justify-between items-center mb-6">
              <div className="h-6 w-48 bg-gray-200 rounded" />
              <div className="h-10 w-24 bg-gray-200 rounded-c8" />
@@ -69,7 +101,7 @@ export default function OverviewSkeleton() {
         </div>
 
         {/* Category Ranking */}
-        <div className="w-full max-w-91.25 p-8 bg-ffffff circle-shadow rounded-c16 rounded-tl-c64">
+        <div className="w-full lg:flex-1 order-1 lg:order-2 p-4 lg:p-8 bg-ffffff circle-shadow rounded-c16 lg:rounded-tl-c64 overflow-hidden">
            <div className="h-6 w-48 bg-gray-200 rounded mb-8" />
            <div className="space-y-6">
              {Array.from({ length: 5 }).map((_, i) => (
@@ -87,7 +119,7 @@ export default function OverviewSkeleton() {
       </div>
 
       {/* OverviewOder Skeleton */}
-      <div className="w-full bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8">
+      <div className="hidden lg:block w-full bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8">
          <div className="flex justify-between items-center mb-6">
             <div className="h-6 w-32 bg-gray-200 rounded" />
             <div className="flex gap-4">

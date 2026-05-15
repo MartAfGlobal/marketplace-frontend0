@@ -242,8 +242,10 @@ export default function RejectOrderPage() {
 
   if (loading && !order) {
     return (
-      <div className="p-8">
-        <ProductSkeleton />
+      <div className="w-full rounded-c16 mx-auto p-4 md:p-8 space-y-8 bg-white min-h-screen">
+        <div className="bg-white rounded-[16px] min-h-[60vh] flex flex-col items-center justify-center">
+          <ProductSkeleton />
+        </div>
       </div>
     );
   }

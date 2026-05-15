@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useHttp } from "@/hooks/use-http";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import DisputeDetailsSkeleton from "@/components/reloadSpinner/disputeDetails-skeleton";
 import { toast } from "sonner";
 import EscalateDisputeModal from "@/components/ui/Modals/EscalateDisputeModal";
 import { Button } from "@/components/ui/Button/Button";
@@ -69,8 +69,10 @@ export default function DisputeDetailsPage() {
 
   if (loading && !dispute) {
     return (
-      <div className="flex justify-center items-center h-screen bg-white">
-        <LoadingSpinner />
+      <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen bg-[#F8F8F8] px-4 py-6 lg:py-4 space-y-6">
+        <div className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none min-h-[60vh]">
+          <DisputeDetailsSkeleton />
+        </div>
       </div>
     );
   }

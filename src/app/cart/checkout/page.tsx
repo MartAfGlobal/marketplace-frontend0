@@ -126,7 +126,7 @@ export default function CheckoutPage() {
         }
       },
     });
-  }, [token, sendHttpRequest, dispatch, selectedAddressId]);
+  }, [token, sendHttpRequest, dispatch, selectedAddressId, buyerAddresses.length]);
 
   return (
     <>

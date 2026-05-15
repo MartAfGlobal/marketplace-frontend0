@@ -33,39 +33,39 @@ export default function RootLayout({
           rel="icon"
           type="image/png"
           sizes="16x16"
-          href="/icons/favicon-16x16.png"
+          href="/icon/apple-icon-16x16.png"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href="/icons/favicon-32x32.png"
+          href="/icon/apple-icon-32x32.png"
         />
 
         <link
           rel="apple-touch-icon"
           sizes="76x76"
-          href="/icons/apple-icon-76x76.png"
+          href="/icon/apple-icon-76x76.png"
         />
         <link
           rel="apple-touch-icon"
           sizes="120x120"
-          href="/icons/apple-icon-120x120.png"
+          href="/icon/apple-icon-120x120.png"
         />
         <link
           rel="apple-touch-icon"
           sizes="152x152"
-          href="/icons/apple-icon-152x152.png"
+          href="/icon/apple-icon-152x152.png"
         />
         <link
           rel="apple-touch-icon"
           sizes="167x167"
-          href="/icons/apple-icon-167x167.png"
+          href="/icon/apple-icon-167x167.png"
         />
         <link
           rel="apple-touch-icon"
           sizes="180x180"
-          href="/icons/apple-icon-180x180.png"
+          href="/icon/apple-icon-180x180.png"
         />
 
         <meta name="apple-mobile-web-app-capable" content="yes" />
