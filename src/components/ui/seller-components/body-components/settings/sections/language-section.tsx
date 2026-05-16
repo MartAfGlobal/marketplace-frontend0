@@ -8,7 +8,7 @@ export default function LanguageSection() {
 
   return (
     <div id="Language">
-      <h2 className="text-sm font-MontserratSemiBold text-[#333333] mb-6">Languages & regions</h2>
+      <h2 className="text-sm font-MontserratSemiBold text-[#333333] mb-6 lg:block hidden">Languages & regions</h2>
       
       <div className="flex flex-col md:flex-row gap-6 md:items-center justify-between">
          <div className="flex flex-col gap-1">

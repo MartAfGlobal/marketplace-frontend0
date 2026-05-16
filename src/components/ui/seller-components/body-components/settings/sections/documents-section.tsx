@@ -427,7 +427,7 @@ export default function DocumentsSection() {
         )}
       </AnimatePresence>
 
-      <h2 className="text-c18 font-MontserratMedium text-000000 mb-6">Business details</h2>
+      <h2 className="text-c18 font-MontserratMedium text-000000 mb-6 lg:block hidden">Business details</h2>
 
       {/* Tabs */}
       <div className="flex border-b border-[#f0f0f0] mb-8 overflow-x-auto hcustom-scroll">

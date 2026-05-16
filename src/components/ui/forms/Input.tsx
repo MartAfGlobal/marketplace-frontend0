@@ -9,7 +9,7 @@ interface InputProps extends React.ComponentProps<"input"> {
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, icon, valid = true, ...props }, ref) => {
     const inputClasses = cn(
-      "h-10 px-3.5 w-full rounded-c8 text-gray-700 border outline-none md:text-sm",
+      "h-12 px-3.5 w-full rounded-c8 text-gray-700 border outline-none md:text-sm",
       valid ? "border-efefef focus:border-ff715b focus:ring-1 focus:ring-ff715b" : "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500",
       "focus:ring-offset-0",
       className

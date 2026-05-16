@@ -6,45 +6,44 @@ import { useHttp } from "@/hooks/use-http";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toast } from "sonner";
-import { X, CheckCircle2 } from "lucide-react";
+import { X, CheckCircle2, ChevronDown } from "lucide-react";
 import { LoadingSpinner } from "../loading-spinner";
+import { SellerMobileHeader } from "../seller-components/header-components/SellerMobileHeader";
+import { Input } from "@/components/ui/forms/Input";
+import { Label } from "@/components/ui/forms/Label";
+import { Button } from "@/components/ui/Button/Button";
 
 interface VerifyBankOtpModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  onBack?: () => void;
-  bankDetails: {
+  bankDetails?: {
     bank_name: string;
     account_number: string;
   } | null;
+  onBack?: () => void;
 }
 
-export default function VerifyBankOtpModal({ isOpen, onClose, onSuccess, onBack, bankDetails }: VerifyBankOtpModalProps) {
-  const [step, setStep] = useState(2); // 2: OTP, 3: Success
+const VerifyBankOtpModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  bankDetails,
+  onBack,
+}: VerifyBankOtpModalProps) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [timer, setTimer] = useState(300); // 5 minutes in seconds
+  const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  
+  const [verifying, setVerifying] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [step, setStep] = useState(2); // Start from OTP step
+
   const token = useSelector((state: RootState) => state.token.token);
-  const { loading: verifying, sendHttpRequest: verifyReq } = useHttp();
-  const { loading: submitting, sendHttpRequest: submitReq } = useHttp();
+  const { sendHttpRequest } = useHttp();
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      setStep(2);
-      setTimer(300);
-      setCanResend(false);
-      setOtp(["", "", "", "", "", ""]);
-    } else {
-      document.body.style.overflow = "";
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isOpen && step === 2 && timer > 0) {
+    let interval: any;
+    if (isOpen && timer > 0) {
       interval = setInterval(() => {
         setTimer((prev) => prev - 1);
       }, 1000);
@@ -52,202 +51,219 @@ export default function VerifyBankOtpModal({ isOpen, onClose, onSuccess, onBack,
       setCanResend(true);
     }
     return () => clearInterval(interval);
-  }, [isOpen, step, timer]);
-
-  const formatTimer = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleResendOtp = () => {
-    if (!canResend || !bankDetails) return;
-    
-    submitReq({
-      requestConfig: {
-        url: "/accounts/manufacturer/bank/add/",
-        method: "POST",
-        body: {
-          bank_name: bankDetails.bank_name,
-          account_number: bankDetails.account_number,
-        },
-        token: token ?? undefined,
-        isAuth: true,
-        userType: "seller",
-      },
-      successRes: () => {
-        setTimer(300);
-        setCanResend(false);
-        toast.success("OTP resent successfully");
-      },
-      errorRes: (err: any) => {
-        toast.error(err?.message || "Failed to resend OTP");
-      }
-    });
-  };
-
-  const handleVerifyOtp = () => {
-    const otpValue = otp.join("");
-    if (otpValue.length < 4) {
-      toast.error("Please enter a valid OTP");
-      return;
-    }
-
-    verifyReq({
-      requestConfig: {
-        url: "/accounts/manufacturer/bank/add/verify-otp/", 
-        method: "POST",
-        body: {
-          otp: otpValue,
-          bank_name: bankDetails?.bank_name,
-          account_number: bankDetails?.account_number
-        },
-        token: token ?? undefined,
-        isAuth: true,
-        userType: "seller",
-      },
-      successRes: () => {
-        setStep(3);
-        toast.success("Bank account verified successfully!");
-      },
-      errorRes: (err: any) => {
-        toast.error(err?.message || "OTP verification failed");
-      }
-    });
-  };
+  }, [isOpen, timer]);
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1);
+    if (!/^\d*$/.test(value)) return;
+
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
+    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`bank-otp-${index + 1}`);
       nextInput?.focus();
     }
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+  const handleOtpKeyDown = (index: number, e: any) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       const prevInput = document.getElementById(`bank-otp-${index - 1}`);
       prevInput?.focus();
     }
   };
 
+  const handleVerifyOtp = () => {
+    const otpString = otp.join("");
+    if (otpString.length < 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setVerifying(true);
+    sendHttpRequest({
+      requestConfig: {
+        url: "/accounts/manufacturer/bank/add/verify-otp/",
+        method: "POST",
+        token: token ?? "",
+        isAuth: true,
+        userType: "seller",
+        body: {
+          otp: otpString,
+          is_default: true,
+        },
+      },
+      successRes: () => {
+        setVerifying(false);
+        setStep(3); // Show success
+      },
+      errorRes: (err: any) => {
+        setVerifying(false);
+        toast.error(err?.message || "Invalid OTP");
+      }
+    });
+  };
+
+  const handleResendOtp = () => {
+    if (!canResend) return;
+    setSubmitting(true);
+    sendHttpRequest({
+      requestConfig: {
+        url: "/accounts/manufacturer/bank/add/",
+        method: "POST",
+        token: token ?? "",
+        isAuth: true,
+        userType: "seller",
+        body: {
+          bank_code: "resend", // Adjust based on API
+          account_number: bankDetails?.account_number,
+        },
+      },
+      successRes: () => {
+        setSubmitting(false);
+        setTimer(60);
+        setCanResend(false);
+        toast.success("New OTP sent successfully");
+      },
+      errorRes: (err: any) => {
+        setSubmitting(false);
+        toast.error(err?.message || "Failed to resend OTP");
+      }
+    });
+  };
+
+  const formatTimer = (time: number) => {
+    const mins = Math.floor(time / 60);
+    const secs = time % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.3 } }}
-          exit={{ opacity: 0, transition: { duration: 0.3 } }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[50] md:z-[100] md:flex md:items-center md:justify-center pt-18 md:pt-0"
         >
+          {/* Overlay */}
+          <div 
+            className="absolute inset-0 bg-[#F9F9FB] md:bg-black/50" 
+            onClick={onClose} 
+          />
+
           <motion.div
-            className="bg-white rounded-2xl w-full max-w-[492px]  py-8 px-c48 relative"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1, transition: { duration: 0.3 } }}
-            exit={{ scale: 0.9, opacity: 0, transition: { duration: 0.3 } }}
-            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="relative w-full h-full md:h-auto md:max-w-[426px] flex flex-col bg-white md:bg-white md:rounded-2xl md:shadow-xl"
           >
+            {/* Mobile Header (Same component used in other pages) */}
+            <div className="md:hidden py-6">
+              <SellerMobileHeader 
+                title="Back" 
+                onBack={onBack || onClose} 
+                showBorder={false}
+              />
+            </div>
+
+            {/* Desktop Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 text-[#666666] hover:text-black transition-colors"
+              className="hidden md:block absolute top-6 right-6 text-[#666666] hover:text-black transition-colors z-10"
             >
               <X size={24} />
             </button>
 
-            <AnimatePresence mode="wait">
-              {step === 2 && (
-                <motion.div
-                  key="otp"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="flex flex-col items-center"
-                >
-                  <div className="text-center mb-8 w-full">
-                    <h2 className="text-c18 font-MontserratMedium mb-3">Enter OTP</h2>
-                    <p className="text-c12  font-MontserratMedium leading-4 w-full mx-auto tracking-[0.01em]">
-                      We've sent a 6-digit code to your email. Enter it below to continue.
-                    </p>
-                  </div>
-
-                  <div className="flex justify-center gap-3 mb-8">
-                    {otp.map((digit, idx) => (
-                      <input
-                        key={idx}
-                        id={`bank-otp-${idx}`}
-                        type="text"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => handleOtpChange(idx, e.target.value)}
-                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                        className="w-[56px] h-[64px] border border-[#e5e5e5] rounded-xl text-center text-[20px] font-MontserratBold outline-none focus:border-[#ff6b6b] transition-all bg-white"
-                      />
-                    ))}
-                  </div>
-
-                  <div className="flex gap-4 w-full">
-                    <button
-                      onClick={handleResendOtp}
-                      disabled={!canResend || submitting}
-                      className={`flex-1 h-12 rounded-xl border border-[#ff6b6b] text-[#ff6b6b] font-MontserratSemiBold text-[14px] transition-colors ${(!canResend || submitting) ? "opacity-50 cursor-not-allowed" : "hover:bg-[#fff5f5]"}`}
+            <div className="flex-1 overflow-y-auto pb-10 md:p-8">
+              <div className="bg-white p-6 md:p-0">
+                <AnimatePresence mode="wait">
+                  {step === 2 && (
+                    <motion.div
+                      key="otp"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="flex flex-col items-center"
                     >
-                      {submitting ? <LoadingSpinner size={16} color="border-[#ff6b6b]" /> : `Resend OTP (${formatTimer(timer)})`}
-                    </button>
-                    <button
-                      onClick={handleVerifyOtp}
-                      disabled={verifying}
-                      className="flex-1 h-12 rounded-xl bg-[#ff6b6b] text-white font-MontserratSemiBold text-[14px] hover:bg-[#e55a5a] transition-colors disabled:opacity-50 flex items-center justify-center"
-                    >
-                      {verifying ? <LoadingSpinner size={20} /> : "Verify"}
-                    </button>
-                  </div>
+                      <div className="text-center mb-10 w-full">
+                        <h2 className="text-c18 font-MontserratMedium">Enter OTP</h2>
+                        <p className="text-000000/44 text-c12 font-MontserratMedium">
+                          We've sent a 6-digit code to your email. Enter it below to continue.
+                        </p>
+                      </div>
 
-                  {/* {onBack && (
-                    <button 
-                      onClick={onBack}
-                      className="mt-6 text-[13px] text-[#ff6b6b] font-MontserratMedium hover:underline"
-                    >
-                      Back to details
-                    </button>
-                  )} */}
-                </motion.div>
-              )}
+                      <div className="flex justify-center mb-10 gap-3 w-full">
+                        {otp.map((digit, idx) => (
+                          <Input
+                            key={idx}
+                            id={`bank-otp-${idx}`}
+                            type="text"
+                            maxLength={1}
+                            value={digit}
+                            onChange={(e) => handleOtpChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                            className="w-full  h-13.5 md:h-12 text-center text-xl font-MontserratBold px-0"
+                          />
+                        ))}
+                      </div>
 
-              {step === 3 && (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-4"
-                >
-                  <div className="flex justify-center mb-6">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                      <CheckCircle2 size={40} className="text-green-500" />
-                    </div>
-                  </div>
-                  <h2 className="text-xl font-MontserratBold text-[#161616] mb-2">Successful!</h2>
-                  <p className="text-[12px] text-[#999999] font-MontserratMedium mb-8">
-                    Your bank account has been successfully linked.
-                  </p>
-                  <button
-                    onClick={() => {
-                      if (onSuccess) onSuccess();
-                      onClose();
-                    }}
-                    className="w-full h-12 rounded-xl bg-[#ff6b6b] text-white font-MontserratSemiBold text-[14px] hover:bg-[#e55a5a] transition-colors"
-                  >
-                    Done
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      <div className="flex flex-col gap-4 w-full">
+                        <Button
+                          onClick={handleVerifyOtp}
+                          disabled={verifying || otp.some(d => d === "")}
+
+                        >
+                          {verifying ? <LoadingSpinner /> : "Verify"}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={handleResendOtp}
+                          disabled={!canResend || submitting}
+                        
+                        >
+                          {submitting ? <LoadingSpinner  color="border-ff715b" /> : `Resend OTP (${formatTimer(timer)})`}
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {step === 3 && (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex flex-col items-center py-4"
+                    >
+                      <div className="w-20 h-20 bg-[#ff715b]/10 rounded-full flex items-center justify-center mb-6">
+                        <CheckCircle2 size={40} className="text-ff715b" />
+                      </div>
+                      <h2 className="text-2xl font-MontserratBold mb-2">Success!</h2>
+                      <p className="text-[#999999] font-MontserratMedium text-center mb-10">
+                        Your bank account has been successfully linked.
+                      </p>
+                      <Button
+                        onClick={() => {
+                          if (onSuccess) onSuccess();
+                          onClose();
+                        }}
+                        className="h-14 md:h-12 rounded-xl text-base md:text-[14px]"
+                      >
+                        Done
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   );
-}
+};
+
+export default VerifyBankOtpModal;

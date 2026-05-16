@@ -64,7 +64,7 @@ export default function AccountSection() {
         title="Success!"
         message="Account details updated successfully."
       />
-      <h2 className="text-sm font-MontserratSemiBold text-[#333333] mb-6">Account settings</h2>
+      <h2 className="text-sm font-MontserratSemiBold text-[#333333] mb-6 lg:block hidden">Account settings</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
         <div className="flex flex-col gap-2">
           <Label className="">Email address</Label>

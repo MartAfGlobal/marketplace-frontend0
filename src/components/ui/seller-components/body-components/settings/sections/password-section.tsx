@@ -44,7 +44,7 @@ export default function PasswordSection() {
 
   return (
     <div id="Password">
-      <h2 className="text-sm font-MontserratSemiBold text-[#333333] mb-6">Password & security</h2>
+      <h2 className="text-sm font-MontserratSemiBold text-[#333333] mb-6 lg:block hidden">Password & security</h2>
       
       <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between">

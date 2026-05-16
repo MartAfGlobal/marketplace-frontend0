@@ -48,12 +48,12 @@ export default function PayoutSection() {
         bankDetails={selectedBankDetails}
       />
 
-      <h2 className="text-c18 font-MontserratNormal text-000000 mb-6">Payout settings</h2>
+      <h2 className="text-c18 font-MontserratNormal text-000000 mb-6 lg:block hidden">Payout settings</h2>
       
       <div className="flex flex-col md:flex-row gap-6 md:items-center justify-between">
          <div className="flex flex-col gap-1">
-            <h3 className="text-base font-MontserratSemiBold text-000000/68">Default payout account</h3>
-            <p className="text-c12 text-000000 font-MontserratMedium">Choose where wallet withdrawals are made to</p>
+            <h3 className="text-base font-MontserratSemiBold text-000000">Default payout account</h3>
+            <p className="text-c12 text-000000/44 font-MontserratMedium">Choose where wallet withdrawals are made to</p>
          </div>
          
          <div className="relative w-full md:w-64">

@@ -210,7 +210,7 @@ const router = useRouter()
                         onClick={() => onDelete?.(row.id)}
                       >
                         {deletingId === row.id ? (
-                          <LoadingSpinner size={16} color="border-ca0202" />
+                          <LoadingSpinner  color="border-ca0202" />
                         ) : (
                           <>
                             <Image src={DeleteIcon} alt="delete" width={12} height={13} />

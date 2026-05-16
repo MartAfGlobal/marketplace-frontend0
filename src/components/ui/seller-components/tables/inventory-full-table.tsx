@@ -234,7 +234,7 @@ if (filters.perc) {
                           onClick={() => onToggleActive?.(row.id, row.is_active)}
                         >
                           {togglingId === row.id ? (
-                            <LoadingSpinner size={16} color="border-ff715b" />
+                            <LoadingSpinner  color="border-ff715b" />
                           ) : (
                             <>
                               <div className={`w-2.5 h-2.5 rounded-full ${row.is_active ? "bg-ca0202" : "bg-2d7565"}`} />

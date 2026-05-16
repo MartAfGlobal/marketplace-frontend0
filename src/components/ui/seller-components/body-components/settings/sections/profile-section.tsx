@@ -65,7 +65,7 @@ export default function ProfileSection() {
       />
 
       {/* Profile Picture */}
-      <div className="mb-6">
+      <div className="mb-6 lg:block hidden">
         <div className="relative w-24 h-24">
           <div className="w-full h-full relative rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-[#f0f0f0]">
             {profile?.profile_picture_url ? (
@@ -93,7 +93,7 @@ export default function ProfileSection() {
       </div>
 
       {/* Business Profile Title */}
-      <h2 className="text-c18 font-MontserratNormal text-000000 mb-6">
+      <h2 className="text-c18 font-MontserratNormal text-000000 mb-6 lg:block hidden">
         Business profile
       </h2>
 
@@ -114,26 +114,21 @@ export default function ProfileSection() {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label className="">
-            Business type
-          </Label>
+          <Label className="">Business type</Label>
           <Input
             type="text"
             name="business_type"
-            value={formData.business_type}
-            onChange={handleInputChange}
-            readOnly={!isEditing}
-             className={` transition-all ${
-              isEditing
-                ? " text-[#161616]"
-                : "bg-transparent border-[#e5e5e5] text-000000/44 cursor-not-allowed"
-            }`}
+            value={
+              profile?.is_registered_business
+                ? "Registered business"
+                : "Individual"
+            }
+            readOnly={true}
+            className="bg-transparent border-[#e5e5e5] text-000000/44 cursor-not-allowed transition-all"
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label className="">
-            Registration number
-          </Label>
+          <Label className="">Registration number</Label>
           <Input
             type="text"
             name="business_registration_number"
@@ -151,9 +146,7 @@ export default function ProfileSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-6">
         <div className="flex flex-col gap-2 font-MontserratMedium">
-          <Label className="">
-            Country
-          </Label>
+          <Label className="">Country</Label>
           <Input
             type="text"
             name="company_country"
@@ -168,9 +161,7 @@ export default function ProfileSection() {
           />
         </div>
         <div className="flex flex-col gap-2 font-MontserratMedium">
-          <Label className="">
-            State
-          </Label>
+          <Label className="">State</Label>
           <Input
             type="text"
             name="company_state"
@@ -185,16 +176,14 @@ export default function ProfileSection() {
           />
         </div>
         <div className="flex flex-col gap-2 font-MontserratMedium">
-          <Label className="">
-            City
-          </Label>
+          <Label className="">City</Label>
           <Input
             type="text"
             name="company_city"
             value={formData.company_city}
             onChange={handleInputChange}
             readOnly={!isEditing}
-           className={` transition-all ${
+            className={` transition-all ${
               isEditing
                 ? " text-[#161616]"
                 : "bg-transparent border-[#e5e5e5] text-000000/44 cursor-not-allowed"
@@ -202,9 +191,7 @@ export default function ProfileSection() {
           />
         </div>
         <div className="flex flex-col gap-2 font-MontserratMedium">
-          <Label className="">
-            Postal code
-          </Label>
+          <Label className="">Postal code</Label>
           <Input
             type="text"
             name="company_postal_code"
@@ -221,11 +208,11 @@ export default function ProfileSection() {
       </div>
 
       <div className="flex items-center gap-2 mt-8 text-[#666666] text-xs">
-        <Info size={14} className="text-[#3b82f6]" />
+        {!isEditing && <Info size={24} className="text-[#3b82f6]" />}
         {isEditing ? (
           <button
             onClick={handleApplyChanges}
-            className="text-[#ff6b6b] font-MontserratSemiBold text-[11px] hover:underline"
+            className="text-[#ff6b6b] font-MontserratSemiBold text-[12px] hover:underline"
           >
             Apply changes
           </button>

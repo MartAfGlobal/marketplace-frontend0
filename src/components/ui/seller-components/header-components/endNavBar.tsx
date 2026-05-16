@@ -88,7 +88,7 @@ export default function EndNav() {
                   <li>
                     {token ? (
                       <Link
-                        href="/dashboard/seller/settings"
+                        href="/dashboard/seller/settings?section=Profile"
                         onClick={() => setUserOpen(false)}
                         className="gap-2.5 items-baseline-last text-ff715b px-4 h-6 flex"
                       >

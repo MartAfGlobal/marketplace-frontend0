@@ -43,15 +43,15 @@ const navItems = [
 ];
 
 const settingsItems = [
-  { label: "Profile", Icon: User, href: "/dashboard/seller/settings/profile" },
-  { label: "Account", Icon: Settings, href: "/dashboard/seller/settings/account" },
-  { label: "Payout", Icon: CreditCard, href: "/dashboard/seller/settings/payout" },
-  { label: "Documents", Icon: FileText, href: "/dashboard/seller/settings/documents" },
-  { label: "Notifications", Icon: Bell, href: "/dashboard/seller/settings/notifications" },
-  { label: "Language & regions", Icon: Globe, href: "/dashboard/seller/settings/language" },
-  { label: "Password & security", Icon: Lock, href: "/dashboard/seller/settings/security" },
-  { label: "Privacy policy", Icon: Shield, href: "/dashboard/seller/settings/privacy" },
-  { label: "Legal information", Icon: Info, href: "/dashboard/seller/settings/legal" },
+  { label: "Profile", Icon: User, href: "/dashboard/seller/settings?section=Profile" },
+  { label: "Account", Icon: Settings, href: "/dashboard/seller/settings?section=Account" },
+  { label: "Payout", Icon: CreditCard, href: "/dashboard/seller/settings?section=Payout" },
+  { label: "Documents", Icon: FileText, href: "/dashboard/seller/settings?section=Documents" },
+  { label: "Notifications", Icon: Bell, href: "/dashboard/seller/settings?section=Notifications" },
+  { label: "Language & regions", Icon: Globe, href: "/dashboard/seller/settings?section=Language" },
+  { label: "Password & security", Icon: Lock, href: "/dashboard/seller/settings?section=Password" },
+  { label: "Privacy policy", Icon: Shield, href: "/dashboard/seller/settings?section=Privacy" },
+  { label: "Legal information", Icon: Info, href: "/dashboard/seller/settings?section=Legal" },
 ];
 
 function LogoutButton({ logout, onClose }: { logout: () => void; onClose: () => void }) {

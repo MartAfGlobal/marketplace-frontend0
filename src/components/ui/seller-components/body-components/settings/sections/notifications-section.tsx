@@ -16,7 +16,7 @@ export default function NotificationsSection() {
 
   return (
     <div id="Notifications">
-      <h2 className="text-sm font-MontserratSemiBold text-[#333333] mb-6">Notifications</h2>
+      <h2 className="text-sm font-MontserratSemiBold text-[#333333] mb-6 lg:block hidden">Notifications</h2>
       
       <div className="mb-10">
          <h3 className="text-[11px] font-MontserratSemiBold text-[#333333] mb-4">Notify me about</h3>
