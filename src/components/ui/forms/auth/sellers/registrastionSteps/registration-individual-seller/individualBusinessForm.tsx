@@ -396,7 +396,7 @@ export default function RegisterIndividual3({
       <ResultModal
         isOpen={isOpen}
         title="Registration complete"
-        message="Welcome to the team!"
+        message="Welcome to the team! Your registration is pending admin approval."
         discRescription={emailVerification || ""}
         onConfirm={() => router.push("/auth/seller/login")}
         buttenText="Continue"

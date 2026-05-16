@@ -107,17 +107,21 @@ export default function SellerProfileImageModal({
 
   return (
     <AnimatePresence>
-      <ResultModal
-        isOpen={showSuccessModal}
-        onCancel={handleCloseSuccess}
-        onConfirm={handleCloseSuccess}
-        buttenText="Close"
-        result="success"
-        title="Success!"
-        message="Profile picture updated successfully."
-      />
+      {showSuccessModal && (
+        <ResultModal
+          key="success-result-modal"
+          isOpen={showSuccessModal}
+          onCancel={handleCloseSuccess}
+          onConfirm={handleCloseSuccess}
+          buttenText="Close"
+          result="success"
+          title="Success!"
+          message="Profile picture updated successfully."
+        />
+      )}
       {isOpen && !showSuccessModal && (
         <motion.div
+          key="profile-image-modal"
           className="fixed inset-0 bg-black/50 flex items-center w-full h-full justify-center z-50"
           initial={{ opacity: 0 }}
           animate={{

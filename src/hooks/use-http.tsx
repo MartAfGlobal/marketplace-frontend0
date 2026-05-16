@@ -102,11 +102,14 @@ export const useHttp = () => {
             }
           }
         }
-        if (
-          error?.response?.status === 401 ||
-          error?.response?.status === 403
-        ) {
-          errorMessage = "Token expired, please login.";
+        const isTokenError = 
+          requestConfig.isAuth && (
+            error?.response?.status === 401 || 
+            (error?.response?.status === 403 && errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided"))
+          );
+
+        if (isTokenError) {
+          errorMessage = errorMessage.toLowerCase().includes("token") ? errorMessage : "Token expired, please login.";
           dispatch(tokenActions.deleteToken());
           localStorage.removeItem("accessToken");
           localStorage.removeItem("token");

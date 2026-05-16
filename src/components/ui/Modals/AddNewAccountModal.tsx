@@ -7,17 +7,19 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toast } from "sonner";
 import { X, ChevronDown } from "lucide-react";
+import { LoadingSpinner } from "../loading-spinner";
 
 interface AddNewAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (bankDetails: { bank_name: string; account_number: string }) => void;
 }
 
 export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNewAccountModalProps) {
   const [banks, setBanks] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBank, setSelectedBank] = useState("");
+  const [selectedBankCode, setSelectedBankCode] = useState("");
   const [showBankDropdown, setShowBankDropdown] = useState(false);
   const [accountNumber, setAccountNumber] = useState("");
   const [bvn, setBvn] = useState("");
@@ -36,32 +38,36 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
       fetchBanks();
     } else {
       document.body.style.overflow = "";
-      // Reset state
-      setSelectedBank("");
-      setSearchQuery("");
-      setShowBankDropdown(false);
-      setAccountNumber("");
-      setBvn("");
+      resetForm();
     }
     return () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
 
+  const resetForm = () => {
+    setSelectedBank("");
+    setSelectedBankCode("");
+    setSearchQuery("");
+    setShowBankDropdown(false);
+    setAccountNumber("");
+    setBvn("");
+  };
+
   const fetchBanks = () => {
     fetchBanksReq({
       requestConfig: {
-        url: "https://api.paystack.co/bank",
+        url: "/accounts/banks/",
         method: "GET",
-        isAuth: false,
+        isAuth: true,
+        token: token ?? undefined,
       },
       successRes: (res: any) => {
-        // Paystack returns { status: true, message: "...", data: [...] }
         const bankData = res.data?.data || res.data || [];
         setBanks(Array.isArray(bankData) ? bankData : []);
       },
       errorRes: (err: any) => {
-        toast.error("Failed to fetch bank list from Paystack");
+        toast.error("Failed to fetch bank list");
       }
     });
   };
@@ -72,7 +78,6 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
       return;
     }
     
-    // Assuming POST to /accounts/manufacturer/bank/
     submitReq({
       requestConfig: {
         url: "/accounts/manufacturer/bank/add/",
@@ -87,12 +92,13 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
         userType: "seller",
       },
       successRes: (res: any) => {
-        toast.success("Bank account added successfully!");
-        if (onSuccess) onSuccess();
-        onClose();
+        toast.success("OTP sent to your registered phone number");
+        if (onSuccess) {
+          onSuccess({ bank_name: selectedBank, account_number: accountNumber });
+        }
       },
       errorRes: (err: any) => {
-        toast.error(err?.message || "Failed to add bank account");
+        toast.error(err?.message || "Failed to initiate bank account addition");
       }
     });
   };
@@ -147,7 +153,6 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
 
                   {showBankDropdown && (
                     <div className="absolute top-13 left-0 w-full max-h-56 overflow-hidden bg-white border border-[#f0f0f0] rounded-xl shadow-lg z-20 flex flex-col">
-                      {/* Search Input */}
                       <div className="p-2 border-b border-[#f0f0f0] bg-white sticky top-0">
                         <input
                           type="text"
@@ -160,7 +165,6 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
                         />
                       </div>
 
-                      {/* Bank List */}
                       <div className="overflow-y-auto max-h-40 py-1">
                         {fetchingBanks ? (
                           <div className="px-4 py-2 text-[12px] text-gray-500 text-center">Loading banks...</div>
@@ -172,6 +176,7 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
                               key={idx} 
                               onClick={() => {
                                 setSelectedBank(bank.name);
+                                setSelectedBankCode(bank.code);
                                 setShowBankDropdown(false);
                                 setSearchQuery("");
                               }}
@@ -223,9 +228,9 @@ export default function AddNewAccountModal({ isOpen, onClose, onSuccess }: AddNe
               <button
                 onClick={handleAddAccount}
                 disabled={submitting || fetchingBanks}
-                className="flex-1 h-12 rounded-xl bg-[#ff6b6b] text-white font-MontserratSemiBold text-[14px] hover:bg-[#e55a5a] transition-colors disabled:opacity-50"
+                className="flex-1 h-12 rounded-xl bg-[#ff6b6b] text-white font-MontserratSemiBold text-[14px] hover:bg-[#e55a5a] transition-colors disabled:opacity-50 flex items-center justify-center"
               >
-                {submitting ? "Adding..." : "Add account"}
+                {submitting ? <LoadingSpinner size={20} /> : "Add account"}
               </button>
             </div>
           </motion.div>

@@ -9,25 +9,15 @@ import EyeIcon from "@/assets/icons/eye.png"; // open eye
 import EyeOffIcon from "@/assets/icons/eyeOff.png"; // closed eye
 import { ResetPasswordModalProps } from "@/types/global";
 import Image from "next/image";
-import { useHttp } from "@/hooks/use-http";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
-// token is read from Redux store instead of cookies
 
 export default function ResetPasswordModal({
   isOpen,
   onClose,
   onSave,
-}: ResetPasswordModalProps) {
-  // const tokenSlice = useSelector((state: any) => state.token);
-
-  // const { token } = tokenSlice;
-  const token = useSelector((state: RootState) => state.token.token);
-
-  const { loading, sendHttpRequest: changePasswordUserReq } = useHttp();
-
+  loading = false, // added support for loading state from parent
+}: ResetPasswordModalProps & { loading?: boolean }) {
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -57,35 +47,15 @@ export default function ResetPasswordModal({
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const registerUserRes = (res: any) => {
-    toast.success("Password updated successfully!");
-    onClose();
-  };
-
   const handleSave = () => {
-    const payload = {
-      old_password: passwords.currentPassword,
-      new_password: passwords.newPassword,
-      confirm_password: passwords.confirmPassword,
-    };
-
     if (passwords.newPassword !== passwords.confirmPassword) {
       toast.error("New password and confirm password do not match.");
       return;
     }
 
-    changePasswordUserReq({
-      requestConfig: {
-        url: "/accounts/password/change",
-        method: "POST",
-        token: token ?? undefined,
-        body: payload,
-        isAuth: true, // ✅ r
-        userType: "buyer",
-        successMessage: "Password successfully.",
-      },
-      successRes: registerUserRes,
-    });
+    if (onSave) {
+      onSave(passwords);
+    }
   };
 
   return (

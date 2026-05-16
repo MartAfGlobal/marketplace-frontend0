@@ -153,7 +153,7 @@ export default function ResultModal({
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white rounded-2xl deleteModal-shadow relative overflow-hidden w-full max-w-md mx-auto max-h-[90vh]"
+            className="bg-white rounded-2xl deleteModal-shadow relative overflow-hidden w-full max-w-81 mx-auto max-h-[90vh]"
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.85, opacity: 0 }}

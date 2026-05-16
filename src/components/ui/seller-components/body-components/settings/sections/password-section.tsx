@@ -1,10 +1,46 @@
 "use client";
 
 import React, { useState } from "react";
+import ResetPasswordModal from "@/components/ui/Modals/update-password-modal";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useHttp } from "@/hooks/use-http";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export default function PasswordSection() {
   const [tfa, setTfa] = useState(false);
   const [googleLink, setGoogleLink] = useState(true);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const token = useSelector((state: RootState) => state.token.token);
+  const { loading: updatingPassword, sendHttpRequest: updatePasswordReq } = useHttp();
+
+  const handleSavePassword = (passwords: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
+    updatePasswordReq({
+      requestConfig: {
+        url: "/accounts/manufacturer/profile-update/",
+        method: "PATCH",
+        token: token ?? undefined,
+        isAuth: true,
+        userType: "seller",
+        body: {
+          password: passwords.newPassword,
+          old_password: passwords.currentPassword,
+        },
+      },
+      successRes: (res: any) => {
+        setIsResetModalOpen(false);
+        setShowSuccessModal(true);
+      },
+      errorRes: (err: any) => {
+        setErrorMessage(err.response?.data?.message || err.message || "Failed to update password.");
+        setShowErrorModal(true);
+      }
+    });
+  };
 
   return (
     <div id="Password">
@@ -29,7 +65,12 @@ export default function PasswordSection() {
               <span className="text-[11px] font-MontserratSemiBold text-[#333333]">Change password</span>
               <span className="text-[10px] text-[#999999] font-MontserratMedium">Update password to maintain account integrity</span>
             </div>
-            <button className="text-[#ff6b6b] text-[11px] font-MontserratSemiBold hover:underline">Update password</button>
+            <button 
+              className="text-[#ff6b6b] text-[11px] font-MontserratSemiBold hover:underline"
+              onClick={() => setIsResetModalOpen(true)}
+            >
+              Update password
+            </button>
           </div>
 
           <div className="pt-2">
@@ -53,6 +94,31 @@ export default function PasswordSection() {
             </div>
           </div>
       </div>
+      
+      <ResetPasswordModal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        onSave={handleSavePassword}
+        loading={updatingPassword}
+      />
+
+      <ResultModal 
+        isOpen={showSuccessModal}
+        onConfirm={() => setShowSuccessModal(false)}
+        result="success"
+        title="Success"
+        message="Your password was successfully updated."
+        buttenText="Okay"
+      />
+
+      <ResultModal 
+        isOpen={showErrorModal}
+        onConfirm={() => setShowErrorModal(false)}
+        result="error"
+        title="Update Failed"
+        message={errorMessage}
+        buttenText="Okay"
+      />
     </div>
   );
 }

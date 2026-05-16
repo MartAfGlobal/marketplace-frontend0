@@ -297,7 +297,7 @@ const [isOpen, setIsOpen] = useState(false);
         </Button>
       </form>}
       <div>
-        <ResultModal isOpen={isOpen} title="Registration complete" message="Welcome to the team!" discRescription={emailVerification || ""}  onConfirm={handleConfirm } buttenText="Continue"/>
+        <ResultModal isOpen={isOpen} title="Registration complete" message="Welcome to the team! Your registration is pending admin approval." discRescription={emailVerification || ""}  onConfirm={handleConfirm } buttenText="Continue"/>
       </div>
     </div>
   );

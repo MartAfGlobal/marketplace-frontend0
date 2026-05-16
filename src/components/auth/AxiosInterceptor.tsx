@@ -17,25 +17,6 @@ export default function AxiosInterceptor({ children }: { children: React.ReactNo
       (response) => response,
       (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
-          // Token expired or unauthorized
-          dispatch(tokenActions.deleteToken());
-          localStorage.removeItem("token");
-          localStorage.removeItem("accessToken");
-
-          const currentPath = window.location.pathname;
-          const isManagerPage = currentPath.startsWith("/info/manager");
-          
-          if (isManagerPage) {
-            return Promise.reject(error);
-          }
-
-          const isSeller = currentPath.startsWith("/dashboard/seller");
-          
-          if (currentPath.startsWith("/dashboard/seller")) {
-            const currentUrl = currentPath + window.location.search;
-            localStorage.setItem("sellerRedirectUrl", currentUrl);
-          }
-
           // Extract error message if available
           let errorMessage = "Session expired. Please login again.";
           const data = error.response?.data;
@@ -63,12 +44,38 @@ export default function AxiosInterceptor({ children }: { children: React.ReactNo
             }
           }
 
-          toast.error(errorMessage);
+          const isTokenError = 
+            error.response?.status === 401 || 
+            (error.response?.status === 403 && errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided"));
 
-          if (isSeller) {
-            router.replace("/auth/seller/login");
-          } else {
-            router.replace("/auth/login");
+          if (isTokenError) {
+            // Token expired or unauthorized
+            dispatch(tokenActions.deleteToken());
+            localStorage.removeItem("token");
+            localStorage.removeItem("accessToken");
+
+            const currentPath = window.location.pathname;
+            const isManagerPage = currentPath.startsWith("/info/manager");
+            const isAuthPage = currentPath.startsWith("/auth/");
+            
+            if (isManagerPage || isAuthPage) {
+              return Promise.reject(error);
+            }
+
+            const isSeller = currentPath.startsWith("/dashboard/seller");
+            
+            if (isSeller) {
+              const currentUrl = currentPath + window.location.search;
+              localStorage.setItem("sellerRedirectUrl", currentUrl);
+            }
+
+            toast.error(errorMessage.toLowerCase().includes("token") ? errorMessage : "Session expired. Please login again.");
+
+            if (isSeller) {
+              router.replace("/auth/seller/login");
+            } else {
+              router.replace("/auth/login");
+            }
           }
         }
         return Promise.reject(error);
