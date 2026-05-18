@@ -31,7 +31,7 @@ export const SellerMobileHeader = ({
   };
 
   return (
-    <div className={`flex items-center lg:h-c64 justify-between px-4 lg:px-0 ${showBorder ? "lg:border-b lg:border-000000/10" : ""}`}>
+    <div className={`flex items-center lg:h-c64 justify-between  lg:px-0 ${showBorder ? "lg:border-b lg:border-000000/10" : ""}`}>
       <div className="flex items-center">
         {showBackButton && (
           <button

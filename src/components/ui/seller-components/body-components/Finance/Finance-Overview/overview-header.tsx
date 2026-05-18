@@ -31,7 +31,7 @@ export default function OverViewHeader() {
     fetchData();
   }, [token]);
 
-  if (error) {
+  if (error && !error.includes("401")) {
     console.error("Finance Balance Error:", error);
   }
 
