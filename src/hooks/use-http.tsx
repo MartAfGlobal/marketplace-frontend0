@@ -146,7 +146,9 @@ export const useHttp = () => {
         }
 
         setError(errorMessage);
-        toast.error(errorMessage);
+        if (!error?.response?.data?.requires_2fa) {
+          toast.error(errorMessage);
+        }
       } finally {
         setLoading(false);
       }

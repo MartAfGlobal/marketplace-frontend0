@@ -52,14 +52,7 @@ export default function LoginForm({ userType }: RegProps) {
     setShowPassword((prev) => !prev);
   };
 
-  const loginSuccess = (res: any) => {
-    const accessToken = res?.data?.access;
-
-    if (!accessToken) {
-      toast.error("Login failed: No token received.");
-      return;
-    }
-
+  const handleLoginSuccess = (accessToken: string) => {
     // Save email & password if "Remember me" is checked
     if (formData.rememberMe) {
       localStorage.setItem("rememberEmail", formData.email);
@@ -106,6 +99,17 @@ export default function LoginForm({ userType }: RegProps) {
     router.back();
   };
 
+  const loginSuccess = (res: any) => {
+    const accessToken = res?.data?.access;
+
+    if (!accessToken) {
+      toast.error("Login failed: No token received.");
+      return;
+    }
+
+    handleLoginSuccess(accessToken);
+  };
+
   const url =
     userType === "seller"
       ? "/accounts/manufacturer/login/"
@@ -138,6 +142,22 @@ export default function LoginForm({ userType }: RegProps) {
         successMessage: "Login successful!",
       },
       successRes: loginSuccess,
+      errorRes: (err: any) => {
+        const data = err?.response?.data;
+        if (data?.requires_2fa) {
+          const params = new URLSearchParams();
+          params.set("user_id", data.user_id);
+          params.set("email", formData.email);
+          params.set("userType", userType);
+          if (data.retry_after_seconds !== undefined) {
+            params.set("retry_after", String(data.retry_after_seconds));
+          }
+          if (formData.rememberMe) {
+            params.set("remember", "true");
+          }
+          router.push(`/auth/verify-2fa?${params.toString()}`);
+        }
+      }
     });
   };
 

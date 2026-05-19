@@ -24,7 +24,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   
     if (loading) return <WireframeLoader/>;
 
-  const hideLayout = ["/auth", "/dashboard/seller", "/informative", "/info"].some((path) =>
+  const hideLayout = ["/auth", "/dashboard/seller", "/dashboard/admin", "/informative", "/info"].some((path) =>
     pathname?.includes(path)
   );
 

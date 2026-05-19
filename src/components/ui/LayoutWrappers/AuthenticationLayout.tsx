@@ -36,7 +36,7 @@ export default function AuthenticationLayout({
       </motion.div>
 
       {/* Centered Content */}
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full 0 items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -94,7 +94,7 @@ export default function AuthenticationLayout({
               </div>
             </div>
           )}
-          <div className="text-center">
+          <div className="text-center  w-full max-w-100 m-auto ">
             <h1 className="font-MontserratSemiBold pb-1 text-c18 text-161616">
               {title}
             </h1>

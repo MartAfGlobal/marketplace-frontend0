@@ -11,6 +11,7 @@ import { RegisterParams } from "@/types/global";
 import { useRouter } from "next/navigation";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "../../loading-spinner";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 import MobileLogin from "./sign-in";
 import { AuthStep } from "@/types/global";
@@ -36,11 +37,55 @@ export default function AuthModal({
 
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
 
-  const [formData, setFormData] = useState<RegisterParams>({
+  const [formData, setFormData] = useState({
     email: "",
-    password: "",
-    confirm_password: "",
   });
+
+  const RESEND_TIMEOUT = 120;
+  const [secondsLeft, setSecondsLeft] = useState(RESEND_TIMEOUT);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const { loading: resendLoading, sendHttpRequest: resendUserReq } = useHttp();
+
+  useEffect(() => {
+    if (step === "verificationSent") {
+      setSecondsLeft(RESEND_TIMEOUT);
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== "verificationSent" || secondsLeft <= 0) return;
+
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [secondsLeft, step]);
+
+  const resetTimer = () => {
+    setSecondsLeft(RESEND_TIMEOUT);
+  };
+
+  const handleResendLink = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    resendUserReq({
+      successRes: () => {
+        setShowSuccessModal(true);
+        resetTimer();
+      },
+      requestConfig: {
+        url: "/accounts/resend-verification-email/",
+        method: "POST",
+        body: { email: formData.email },
+        userType: "buyer",
+      },
+    });
+  };
+
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = secondsLeft % 60;
 
   useEffect(() => {
     if (open) {
@@ -55,17 +100,23 @@ export default function AuthModal({
   };
 
   const registerUserRes = (res: any) => {
-    toast.success("Registration successful. Please sign in.");
-    setStep("signin");
+    setStep("verificationSent");
+  };
+
+  const handleRegisterError = (err: any) => {
+    const data = err?.response?.data;
+    const errorMsg = typeof data === "string" ? data : JSON.stringify(data);
+    const lowerError = errorMsg.toLowerCase();
+    if (
+      lowerError.includes("already been sent") ||
+      lowerError.includes("already sent")
+    ) {
+      setStep("verificationSent");
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (formData.password !== formData.confirm_password) {
-      toast.error("Passwords do not match!");
-      return;
-    }
 
     if (!formData.email?.includes("@")) {
       toast.error("Please enter a valid email address!");
@@ -74,17 +125,17 @@ export default function AuthModal({
 
     registerUserReq({
       successRes: registerUserRes,
+      errorRes: handleRegisterError,
       requestConfig: {
         url: "/accounts/register",
         method: "POST",
         body: {
-          ...formData,
+          email: formData.email,
         },
-        successMessage: "Registration Complete, Please login.",
       },
     });
 
-    console.log("Registration data:", { ...formData });
+    console.log("Registration data:", { email: formData.email });
   };
   //  LogIn
 
@@ -100,8 +151,9 @@ export default function AuthModal({
   }, [open]);
 
   return (
-    <AnimatePresence>
-      {open && (
+    <>
+      <AnimatePresence>
+        {open && (
         <>
           {/* Backdrop */}
           <motion.div
@@ -150,54 +202,6 @@ export default function AuthModal({
                       className="w-full border border-black/10 rounded-lg pl-10 pr-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
                       placeholder="Email address"
                     />
-                  </div>
-
-                  {/* Password */}
-                  <div className="relative w-full">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                      className="w-full border border-black/10 rounded-lg pr-10 pl-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-                      placeholder="Password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    >
-                      {showPassword ? (
-                        <EyeOffIcon className="w-5 h-5" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-
-                  
-                  <div className="relative w-full">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirm_password"
-                      value={formData.confirm_password}
-                      onChange={handleChange}
-                      required
-                      className="w-full border border-black/10 rounded-lg pr-10 pl-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-                      placeholder="Confirm password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOffIcon className="w-5 h-5" />
-                      ) : (
-                        <EyeIcon className="w-5 h-5" />
-                      )}
-                    </button>
                   </div>
 
                   {/* Sign Up */}
@@ -262,10 +266,77 @@ export default function AuthModal({
             {step === "resetPassword" && (
               <ResetPasswordModal onClose={onClose} setStep={setStep} />
             )}
+
+            {step === "verificationSent" && (
+              <div className="text-center space-y-4">
+                <div className="space-y-2">
+                  <h2 className="text-c20 font-MontserratSemiBold">Check your email</h2>
+                  <p className="font-MontserratNormal text-sm">
+                    We’ve sent a verification link to:
+                    <br />
+                    <span className="font-semibold text-ff715b">{formData.email}</span>
+                  </p>
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    const emailDomain = formData.email?.split("@")[1];
+                    let emailUrl = "mailto:" + formData.email;
+                    if (emailDomain?.includes("gmail")) emailUrl = "https://mail.google.com";
+                    else if (emailDomain?.includes("yahoo")) emailUrl = "https://mail.yahoo.com";
+                    else if (emailDomain?.includes("outlook") || emailDomain?.includes("hotmail"))
+                      emailUrl = "https://outlook.live.com";
+                    window.open(emailUrl, "_blank");
+                  }}
+                  className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center"
+                >
+                  Go to email app
+                </button>
+
+                <button
+                  type="button"
+                  disabled={secondsLeft > 0 || resendLoading}
+                  onClick={handleResendLink}
+                  className={`w-full h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center border ${
+                    secondsLeft > 0
+                      ? "border-[#EFEFEF] text-black/40 bg-transparent"
+                      : "border-ff715b text-ff715b hover:bg-ff715b/5 bg-transparent"
+                  }`}
+                >
+                  {resendLoading ? (
+                    <LoadingSpinner color="border-ff715b" />
+                  ) : secondsLeft > 0 ? (
+                    `Resend email link (${minutes}:${seconds.toString().padStart(2, "0")})`
+                  ) : (
+                    "Resend email link"
+                  )}
+                </button>
+
+                <p className="text-sm text-center font-MontserratNormal">
+                  If you didn't receive the email, check your spam folder or{" "}
+                  <span
+                    onClick={() => setStep("signup")}
+                    className="text-6a0dad font-medium cursor-pointer"
+                  >
+                    try signing up again
+                  </span>
+                </p>
+              </div>
+            )}
           </motion.div>
           </div>
         </>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+      <ResultModal
+        isOpen={showSuccessModal}
+        title="Verification email resent"
+        message="A new verification link has been resent to your email address."
+        buttenText="Okay"
+        onConfirm={() => setShowSuccessModal(false)}
+        onCancel={() => setShowSuccessModal(false)}
+      />
+    </>
   );
 }

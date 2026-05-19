@@ -1,22 +1,45 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ResetPasswordModal from "@/components/ui/Modals/update-password-modal";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import ResultModal from "@/components/ui/forms/resultModal";
+import Confirm2faPasswordModal from "@/components/ui/Modals/confirm-2fa-password-modal";
+import { sellerActions } from "@/store/user-data/seller/seller-slice";
 
 export default function PasswordSection() {
+  const dispatch = useDispatch();
+  const sellerData = useSelector((state: RootState) => state.seller.data);
+
   const [tfa, setTfa] = useState(false);
   const [googleLink, setGoogleLink] = useState(true);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [is2faModalOpen, setIs2faModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successTitle, setSuccessTitle] = useState("Success");
+  const [successMsg, setSuccessMsg] = useState("");
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const token = useSelector((state: RootState) => state.token.token);
   const { loading: updatingPassword, sendHttpRequest: updatePasswordReq } = useHttp();
+  const { loading: toggling2fa, sendHttpRequest: toggle2faReq } = useHttp();
+
+  useEffect(() => {
+    if (sellerData) {
+      const has2fa =
+        (sellerData as any).two_factor_enabled ||
+        (sellerData as any).is_two_factor_enabled ||
+        (sellerData as any).tfa ||
+        (sellerData as any).tfa_enabled ||
+        (sellerData as any).profile?.two_factor_enabled ||
+        (sellerData as any).profile?.is_two_factor_enabled ||
+        false;
+      setTfa(has2fa);
+    }
+  }, [sellerData]);
 
   const handleSavePassword = (passwords: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
     updatePasswordReq({
@@ -33,10 +56,41 @@ export default function PasswordSection() {
       },
       successRes: (res: any) => {
         setIsResetModalOpen(false);
+        setSuccessTitle("Success");
+        setSuccessMsg("Your password was successfully updated.");
         setShowSuccessModal(true);
       },
       errorRes: (err: any) => {
         setErrorMessage(err.response?.data?.message || err.message || "Failed to update password.");
+        setShowErrorModal(true);
+      }
+    });
+  };
+
+  const handleToggle2FA = (password: string) => {
+    toggle2faReq({
+      requestConfig: {
+        url: "/accounts/2fa/toggle/",
+        method: "POST",
+        token: token ?? undefined,
+        isAuth: true,
+        userType: "seller",
+        body: {
+          enabled: !tfa,
+          password: password,
+        },
+      },
+      successRes: (res: any) => {
+        setIs2faModalOpen(false);
+        setTfa(!tfa);
+        dispatch(sellerActions.updateSellerData({ two_factor_enabled: !tfa } as any));
+        setSuccessTitle("Two-Factor Authentication");
+        setSuccessMsg(`2FA has been successfully ${!tfa ? "enabled" : "disabled"}.`);
+        setShowSuccessModal(true);
+      },
+      errorRes: (err: any) => {
+        setIs2faModalOpen(false);
+        setErrorMessage(err.response?.data?.message || err.response?.data?.error || err.message || "Failed to toggle 2FA.");
         setShowErrorModal(true);
       }
     });
@@ -53,7 +107,7 @@ export default function PasswordSection() {
               <span className="text-[10px] text-[#999999] font-MontserratMedium">Use an authenticator or SMS OTP each time you login</span>
             </div>
             <button 
-              onClick={() => setTfa(!tfa)}
+              onClick={() => setIs2faModalOpen(true)}
               className={`w-9 h-5 rounded-full relative transition-colors duration-200 ${tfa ? "bg-[#ff6b6b]" : "bg-gray-200"}`}
             >
                 <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${tfa ? "right-0.5" : "left-0.5"}`} />
@@ -102,12 +156,20 @@ export default function PasswordSection() {
         loading={updatingPassword}
       />
 
+      <Confirm2faPasswordModal
+        isOpen={is2faModalOpen}
+        onClose={() => setIs2faModalOpen(false)}
+        onConfirm={handleToggle2FA}
+        loading={toggling2fa}
+        isEnabled={tfa}
+      />
+
       <ResultModal 
         isOpen={showSuccessModal}
         onConfirm={() => setShowSuccessModal(false)}
         result="success"
-        title="Success"
-        message="Your password was successfully updated."
+        title={successTitle}
+        message={successMsg}
         buttenText="Okay"
       />
 
@@ -115,7 +177,7 @@ export default function PasswordSection() {
         isOpen={showErrorModal}
         onConfirm={() => setShowErrorModal(false)}
         result="error"
-        title="Update Failed"
+        title="Failed"
         message={errorMessage}
         buttenText="Okay"
       />

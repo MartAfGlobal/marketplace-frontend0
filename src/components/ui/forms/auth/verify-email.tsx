@@ -18,6 +18,7 @@ import { useHttp } from "@/hooks/use-http";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { registrationActions } from "@/store/auth/registration-slice";
 import { useDispatch } from "react-redux";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export interface RegProps {
   userType: "seller" | "buyer" | "admin";
@@ -39,14 +40,21 @@ export default function VerifyEmail({ userType, token }: RegProps) {
 
   const router = useRouter();
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const { loading, error, sendHttpRequest: registerUserReq } = useHttp();
 
   const email = formData.email;
 
   const registerUserRes = (res: any) => {
     dispatch(registrationActions.setEmail(email));
+    setShowSuccessModal(true);
+  };
+
+  const handleModalConfirm = () => {
+    setShowSuccessModal(false);
     router.push(
-      `/auth/seller/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
+      `/auth/${userType === "buyer" ? "buyer" : "seller"}/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
     );
   };
 
@@ -54,13 +62,17 @@ export default function VerifyEmail({ userType, token }: RegProps) {
     if (!error) return;
     console.log("Error message:", error);
 
-    if (error.includes("verification message has already been sent")) {
+    const lowerError = error.toLowerCase();
+    if (
+      lowerError.includes("already been sent") ||
+      lowerError.includes("already sent")
+    ) {
       router.push(
-        `/auth/seller/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
+        `/auth/${userType === "buyer" ? "buyer" : "seller"}/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
       );
       dispatch(registrationActions.setEmail(email));
     }
-  }, [error, email, router]);
+  }, [error, email, router, userType, dispatch]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,13 +85,12 @@ export default function VerifyEmail({ userType, token }: RegProps) {
     registerUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/register/manufacturer/",
+        url: userType === "buyer" ? "/accounts/register" : "/accounts/register/manufacturer/",
         method: "POST",
         body: {
           ...formData,
         },
         userType: userType,
-        successMessage: "Verification email sent successfully",
       },
     });
 
@@ -139,11 +150,19 @@ export default function VerifyEmail({ userType, token }: RegProps) {
         </div>
         <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
           <p className="text-161616"> have an account?</p>
-          <Link href="/auth/seller/login" className="text-ff715b">
+          <Link href={userType === "buyer" ? "/auth/login" : "/auth/seller/login"} className="text-ff715b">
             Sign in
           </Link>
         </div>
       </div>
+      <ResultModal
+        isOpen={showSuccessModal}
+        title="Verification email sent"
+        message="A verification link has been sent to your email address."
+        buttenText="Okay"
+        onConfirm={handleModalConfirm}
+        onCancel={handleModalConfirm}
+      />
     </div>
   );
 }

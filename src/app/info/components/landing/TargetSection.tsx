@@ -138,7 +138,7 @@ export default function TargetSection() {
         </div>
 
         {/* Journey Section Integrated */}
-        <div className="mt-16 md:mt-24 lg:mt-40 mx-auto px-6">
+        <div className="mt-16 md:mt-24 lg:mt-40 mx-auto md:px-6 ">
           <div className="text-center mb-22">
             <h2 className="text-3xl md:text-[32px] font-MontserratNormal text-000000 ">
               {journeyData[activeAudience].title}
@@ -147,7 +147,7 @@ export default function TargetSection() {
 
           <div className="">
             {/* First Row: 3 cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-c64 mb-16 px-6 md:px-18 lg:px-[70.5px]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8  lg:gap-c64 mb-16  md:px-18 lg:px-[70.5px]">
               {journeyData[activeAudience].steps
                 .slice(0, 3)
                 .map((step, index) => (
@@ -157,7 +157,7 @@ export default function TargetSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                     viewport={{ once: true }}
-                    className=" px-10 py-6 rounded-[32px] border border-000000/4 transition-all group min-h-[320px] flex flex-col items-start"
+                    className=" md:px-10 px-4 py-6 rounded-[32px] border border-000000/4 transition-all group min-h-[320px] flex flex-col items-start"
                   >
                     <div className="w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                       {step.icon}
@@ -173,7 +173,7 @@ export default function TargetSection() {
             </div>
 
             {/* Second Row: 2 cards centered */}
-            <div className="flex flex-col md:flex-row gap-8 lg:gap-c64 justify-center px-6 md:px-18 lg:px-[70.5px]">
+            <div className="flex flex-col md:flex-row gap-8 lg:gap-c64 justify-center  md:px-18 lg:px-[70.5px]">
               {journeyData[activeAudience].steps
                 .slice(3, 5)
                 .map((step, index) => (
@@ -183,7 +183,7 @@ export default function TargetSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: (index + 3) * 0.1 }}
                     viewport={{ once: true }}
-                    className=" p-10 rounded-[32px] border border-000000/4 max-w-[362.65px] transition-all group md:w-1/2 min-h-[320px] flex flex-col items-start"
+                    className=" md:p-10 px-4 rounded-[32px] border border-000000/4 max-w-[362.65px] transition-all group md:w-1/2 min-h-[320px] flex flex-col items-start"
                   >
                     <div className="w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
                       {step.icon}

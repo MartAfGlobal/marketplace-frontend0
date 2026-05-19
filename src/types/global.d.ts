@@ -1203,7 +1203,8 @@ export type AuthStep =
   | "signin"
   | "forgot"
   | "resetVerify"
-  | "resetPassword";
+  | "resetPassword"
+  | "verificationSent";
 
 export interface ShippingInfo {
   city: string | null;

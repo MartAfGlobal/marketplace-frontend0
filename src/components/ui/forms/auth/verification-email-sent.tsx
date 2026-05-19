@@ -7,6 +7,7 @@ import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../../loading-spinner";
 import { useEffect, useState } from "react";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export interface RegProps {
   userType: "seller" | "buyer";
@@ -20,6 +21,7 @@ export default function VerificationEmailSent({ userType }: RegProps) {
   const email = searchParams.get("email");
 
   const [secondsLeft, setSecondsLeft] = useState(RESEND_TIMEOUT);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   /* ===============================
      TIMER LOGIC
@@ -64,7 +66,7 @@ export default function VerificationEmailSent({ userType }: RegProps) {
   =============================== */
 
   const registerUserRes = () => {
-    toast.success("Verification link resent");
+    setShowSuccessModal(true);
     resetTimer();
   };
 
@@ -73,14 +75,18 @@ export default function VerificationEmailSent({ userType }: RegProps) {
   const handleResentLink = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const Url =
+      userType === "buyer"
+        ? "/accounts/resend-verification-email/"
+        : "/accounts/manufacturer/resend-verification-email/";
+
     resendUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/manufacturer/resend-verification-email/",
+        url: Url,
         method: "POST",
         body: { email },
         userType,
-        successMessage: "Verification link resent",
       },
     });
   };
@@ -123,11 +129,19 @@ export default function VerificationEmailSent({ userType }: RegProps) {
       <div className="font-MontserratMedium text-c12 justify-center mt-c24 px-c42">
         <p className="text-161616 text-center">
           If you haven't received the email, check your spam folder or{" "}
-          <Link href="/auth/register" className="text-ff715b">
+          <Link href={userType === "buyer" ? "/auth/buyer/sign-up" : "/auth/seller/sign-up"} className="text-ff715b">
             Sign up
           </Link>
         </p>
       </div>
+      <ResultModal
+        isOpen={showSuccessModal}
+        title="Verification email resent"
+        message="A new verification link has been resent to your email address."
+        buttenText="Okay"
+        onConfirm={() => setShowSuccessModal(false)}
+        onCancel={() => setShowSuccessModal(false)}
+      />
     </div>
   );
 }

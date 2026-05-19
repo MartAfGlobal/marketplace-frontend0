@@ -63,7 +63,7 @@ export default function MapSection() {
       </div>
 
       {/* We are building with Section */}
-      <div className="mt-c56 px-6 md:px-16">
+      <div className="mt-c56 md:px-16">
         <p className="text-white/68 text-c18 font-MontserratNormal mb-8">
           We are building with:
         </p>

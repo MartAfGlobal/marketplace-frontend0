@@ -37,7 +37,7 @@ export default function ShowcaseSection() {
       <div className="w-full ">
         <div className="flex flex-col md:flex-row items-center md:items-end px-6 md:px-18 lg:px-34.5 justify-between mb-16 gap-8 text-center md:text-left">
           <div className="max-w-full md:max-w-207.25 flex flex-col gap-10">
-            <span className="text-6a0dad/68 font-MontserratMedium border border-6a0dad/68 text-c18 rounded-[48px] w-full max-w-80 md:max-w-fit h-fit py-6 lg:px-12 md:px-8 px-4">
+            <span className="text-6a0dad/68 font-MontserratMedium border border-6a0dad/68 text-c18 rounded-[48px] w-full  md:max-w-fit h-fit py-6 lg:px-12 md:px-8  mx-auto md:mx-0">
               Problems we are solving
             </span>
             <div>

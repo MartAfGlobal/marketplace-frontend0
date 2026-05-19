@@ -23,18 +23,11 @@ import { useSelector } from "react-redux";
 export default function RegisterForm({ userType, token }: RegProps) {
 
   const VerifiedEmail = useSelector((state: any) => state.registration.email);
-  const [formData, setFormData] =
-    userType === "buyer"
-      ? useState<RegisterParams>({
-          email: "",
-          password: "",
-          confirm_password: "",
-        })
-      : useState<RegisterParams>({
-          password: "",
-          confirm_password: "",
-          phone: "",
-        });
+  const [formData, setFormData] = useState<RegisterParams>({
+    password: "",
+    confirm_password: "",
+    phone: "",
+  });
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -77,19 +70,14 @@ export default function RegisterForm({ userType, token }: RegProps) {
       return;
     }
 
-    if (userType === "buyer" && !formData.email?.includes("@")) {
-      toast.error("Please enter a valid email address!");
-      return;
-    }
-
-    if (userType === "seller" && !formData.phone) {
+    if (!formData.phone) {
       toast.error("Please enter your phone number!");
       return;
     }
 
     const Url =
-      userType === UserType.BUYER
-        ? "/accounts/register"
+      userType === "buyer"
+        ? `/accounts/buyer/set-password-phone/${token}/`
         : `/accounts/manufacturer/set-password-phone/${token}/`;
 
     registerUserReq({
@@ -115,13 +103,9 @@ export default function RegisterForm({ userType, token }: RegProps) {
   };
 
   const isFormValid =
-    userType === "buyer"
-      ? formData.email !== "" &&
-        formData.password !== "" &&
-        formData.confirm_password !== ""
-      : formData.phone !== "" &&
-        formData.confirm_password !== "" &&
-        formData.password !== "";
+    formData.phone !== "" &&
+    formData.password !== "" &&
+    formData.confirm_password !== "";
 
   //   const handleSubmit = async (e: React.FormEvent) => {
   //     e.preventDefault();
@@ -134,44 +118,26 @@ export default function RegisterForm({ userType, token }: RegProps) {
         <div className="h-full w-ful">
           <form className="" onSubmit={handleSubmit}>
             <fieldset disabled={loading}>
-              {userType === "buyer" ? (
-                <div className="flex flex-col gap-2 pt-2">
-                  <Label className="text-c12 font-MontserratMedium ">
-                    email
-                  </Label>
-                  <Input
-                    icon={
-                      <Image src={Email} alt="email" width={20} height={20} />
-                    }
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="border border-efefef "
-                  />
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2 pt-2">
-                  <Label className="text-c12 font-MontserratMedium ">
-                    Mobile number
-                  </Label>
-                  <Input
-                    icon={
-                      <Image
-                        src={PhoNEiCON}
-                        alt="phone"
-                        width={11.25}
-                        height={17.5}
-                      />
-                    }
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="border border-efefef "
-                  />
-                </div>
-              )}
+              <div className="flex flex-col gap-2 pt-2">
+                <Label className="text-c12 font-MontserratMedium ">
+                  Mobile number
+                </Label>
+                <Input
+                  icon={
+                    <Image
+                      src={PhoNEiCON}
+                      alt="phone"
+                      width={11.25}
+                      height={17.5}
+                    />
+                  }
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  className="border border-efefef "
+                />
+              </div>
               <div className="flex flex-col gap-2 pt-3 ">
                 <Label className="text-c12 font-MontserratMedium ">
                   Password
