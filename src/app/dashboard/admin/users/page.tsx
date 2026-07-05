@@ -1,146 +1,272 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import AdminStatsChartCard from "@/components/ui/admin-components/AdminStatsChartCard";
 import AdminListHeader from "@/components/ui/admin-components/AdminListHeader";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import Pagination from "@/components/ui/seller-components/body-components/products/pignation-button";
+import StatusFrame from "@/components/admin-components/users/status-frame";
+import BuyersTable from "@/components/admin-components/users/BuyersTable";
+import SellersTable from "@/components/admin-components/users/SellersTable";
+import activeUserIcon from "@/assets/admin/Vector.svg";
+import activeIcon from "@/assets/admin/active.svg";
+import inActiveIcon from "@/assets/admin/inactive.svg";
+import suspendedUserIcon from "@/assets/admin/suspend.svg";
 
 interface UserRow {
   id: string;
-  name: string;
+  name?: string;
   email: string;
   phone: string;
   status: "Active" | "Inactive";
   totalOrders: number;
-  repeatRate: string;
-  country: string;
+  repeatRate?: string;
+  state: string;
   date: string;
+  disputes?: number;
+  totalProducts?: number;
+  kycStatus?: "pending" | "verified" | "rejected";
+  businessType?: "individual" | "registered";
 }
+
+const sellerMockData: UserRow[] = Array.from(
+  { length: 20 },
+  (_, i) => {
+    const id = `S-${String(i + 1).padStart(3, "0")}`;
+
+    return {
+      id,
+      name: `Seller ${id}`,
+      email: `seller${id.toLowerCase()}@example.com`,
+      phone: `+234-800000${String(i + 1).padStart(4, "0")}`,
+      status: i % 2 === 0 ? "Active" : "Inactive",
+      totalProducts: Math.floor(Math.random() * 500),
+      totalOrders: Math.floor(Math.random() * 1000),
+      businessType: i % 2 === 0 ? "individual" : "registered",
+      state: ["Lagos", "Abuja", "Kano", "Rivers"][i % 4],
+      date: new Date(
+        Date.now() - Math.floor(Math.random() * 10000000000)
+      ).toLocaleDateString("en-GB"),
+      kycStatus: ["pending", "verified", "rejected"][
+        i % 3
+      ] as UserRow["kycStatus"],
+    };
+  }
+);
+
+
+const mockData: UserRow[] = Array.from({ length: 20 }, (_, i) => {
+  const id = `U-${String(i + 1).padStart(3, "0")}`;
+  return {
+    id,
+    name: `User ${id}`,
+    email: `user${id.toLowerCase()}@example.com`,
+    phone: `+234-800000${String(i + 1).padStart(4, "0")}`,
+    status: i % 2 === 0 ? "Active" : "Inactive",
+    totalOrders: Math.floor(Math.random() * 100),
+    repeatRate: `${Math.floor(Math.random() * 100)}%`,
+    state: ["Lagos", "Abuja", "Kano", "Rivers"][i % 4],
+    date: new Date(
+      Date.now() - Math.floor(Math.random() * 10000000000),
+    ).toLocaleDateString("en-GB"),
+    disputes: Math.floor(Math.random() * 10),
+  };
+});
+
+
 
 export default function AdminUsersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
+
   // Default to buyers if no type param exists
   const type = searchParams.get("type") || "buyers";
   const isBuyers = type === "buyers";
 
   const [searchVal, setSearchVal] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rows, setRows] = useState<UserRow[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [activeRowId, setActiveRowId] = useState<string | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
-  // Buyers list mock data
-  const mockBuyers: UserRow[] = [
-    { id: "B000245", name: "Kelvin Uglejfe", email: "chinweokafor@gmail.com", phone: "+234-703235232", status: "Active", totalOrders: 1500, repeatRate: "30%", country: "Nigeria", date: "18/9/2016" },
-    { id: "B000246", name: "Kelvin Ugliegweg", email: "chinweokafor@gmail.com", phone: "+234-703235232", status: "Inactive", totalOrders: 260, repeatRate: "80%", country: "South Africa", date: "18/9/2016" },
-    { id: "B000247", name: "Kelvin Ugliegweg", email: "chinweokafor@gmail.com", phone: "+234-703235232", status: "Active", totalOrders: 342, repeatRate: "50%", country: "Nigeria", date: "18/9/2016" },
-    { id: "B000248", name: "Kelvin Ugliegweg", email: "chinweokafor@gmail.com", phone: "+234-703235232", status: "Inactive", totalOrders: 150, repeatRate: "10%", country: "Nigeria", date: "18/9/2016" },
-  ];
+  const token = useSelector((state: RootState) => state.token?.token);
+  const loading = false;
 
-  // Sellers list mock data
-  const mockSellers: UserRow[] = [
-    { id: "S000101", name: "Martaf Store Ltd", email: "info@martafstore.com", phone: "+234-809823432", status: "Active", totalOrders: 4200, repeatRate: "45%", country: "Nigeria", date: "12/5/2019" },
-    { id: "S000102", name: "Adegoke Electronics", email: "adegoke@el.com", phone: "+234-708823121", status: "Active", totalOrders: 150, repeatRate: "20%", country: "Nigeria", date: "09/1/2021" },
-    { id: "S000103", name: "Onaaga SuperMart", email: "hello@onaaga.com", phone: "+233-503423212", status: "Inactive", totalOrders: 980, repeatRate: "65%", country: "Ghana", date: "24/8/2020" },
-  ];
+  // Reset page when search or type changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [type, searchVal]);
 
-  const currentRows = isBuyers ? mockBuyers : mockSellers;
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleOutsideClick = () => {
+      setActiveRowId(null);
+    };
+    window.addEventListener("click", handleOutsideClick);
+    return () => window.removeEventListener("click", handleOutsideClick);
+  }, []);
 
-  // Filter rows based on search
-  const filteredRows = currentRows.filter(row => 
-    row.name.toLowerCase().includes(searchVal.toLowerCase()) ||
-    row.id.toLowerCase().includes(searchVal.toLowerCase()) ||
-    row.email.toLowerCase().includes(searchVal.toLowerCase())
-  );
+  useEffect(() => {
+    const query = searchVal.trim().toLowerCase();
+    const sourceData = isBuyers ? mockData : sellerMockData;
+
+    const filteredData = sourceData.filter((item) => {
+      const haystack = [item.id, item.name, item.email, item.phone, item.state, item.status]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+
+    const pageSize = 20;
+    const start = (currentPage - 1) * pageSize;
+    const pagedData = filteredData.slice(start, start + pageSize);
+
+    const mapped = pagedData.map((item) => ({
+      id: item.id,
+      name: item.name || "N/A",
+      email: item.email || "N/A",
+      phone: item.phone || "N/A",
+      status: item.status,
+      totalOrders: item.totalOrders || 0,
+      repeatRate: item.repeatRate || "0%",
+      state: item.state || "N/A",
+      date: item.date || "N/A",
+      disputes: item.disputes,
+      totalProducts: item.totalProducts,
+      kycStatus: item.kycStatus,
+    }));
+
+    setRows(mapped);
+    setTotalCount(filteredData.length);
+  }, [isBuyers, currentPage, searchVal]);
 
   const handleRowClick = (userId: string) => {
-    // Navigate to dynamic details page (Image 3)
     router.push(`/dashboard/admin/users/${userId}`);
   };
 
+  const truncateText = (value: string | number | undefined, maxLength = 10) => {
+    const text = String(value ?? "").trim();
+    return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+  };
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
+    );
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedUserIds((prev) => {
+      const allVisibleIds = rows.map((row) => row.id);
+      const allSelected = allVisibleIds.every((id) => prev.includes(id));
+
+      return allSelected
+        ? prev.filter((id) => !allVisibleIds.includes(id))
+        : [...new Set([...prev, ...allVisibleIds])];
+    });
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-ffffff p-6 rounded-c16">
       {/* Page Title & Breadcrumbs */}
       <div>
-        <div className="text-[10px] text-gray-400 font-MontserratMedium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-          <span>Users</span>
-          <span>&gt;</span>
-          <span className="text-gray-600 font-MontserratBold capitalize">{type}</span>
-        </div>
-        <h1 className="text-xl md:text-2xl font-MontserratBold text-[#161616] capitalize">{type}</h1>
+        <h1 className="text-c20 font-MontserratMedium py-2">
+          {isBuyers ? "Buyers" : "Sellers"}
+        </h1>
       </div>
 
       {/* Top Stats Graph Card (Reusable) */}
-      <AdminStatsChartCard 
-        title={type}
-        total={isBuyers ? "5,000" : "1,850"}
-        active={isBuyers ? "250" : "180"}
-        inactive={isBuyers ? "150" : "45"}
-        timeFilterText="This week"
-      />
+      <div className="justify-between flex items-center w-full">
+        <StatusFrame
+          title={isBuyers ? "Total buyers" : "Total sellers"}
+          quantity={isBuyers ? totalCount : totalCount}
+          icon={activeUserIcon}
+          width={26}
+          height={22}
+        />
+        <StatusFrame
+          title={isBuyers ? "Active buyers" : "Active sellers"}
+          quantity={isBuyers ? 200 : 200}
+          icon={activeIcon}
+          width={26}
+          height={26}
+        />
+        <StatusFrame
+          title={isBuyers ? "Inactive buyers" : "Inactive sellers"}
+          quantity={isBuyers ? 250 : 250}
+          icon={inActiveIcon}
+          width={26}
+          height={26}
+        />
+        <StatusFrame
+          title={isBuyers ? "Suspended buyers" : "Suspended sellers"}
+          quantity={isBuyers ? 50 : 50}
+          icon={suspendedUserIcon}
+          width={18}
+          height={26}
+        />
+      </div>
 
       {/* Main Listing Section */}
-      <div className="bg-white rounded-2xl p-6 border border-[#eef0f3] shadow-sm animate-in fade-in duration-300">
-        <h2 className="text-sm font-MontserratBold text-[#161616] capitalize mb-6">{type} list</h2>
+      <div className="">
+        <h2 className="text-base font-MontserratNormal text-000000 mb-6">
+          {type === "buyers" ? "Buyer's" : "Seller's"} table
+        </h2>
 
         {/* Filters Header (Reusable) */}
-        <AdminListHeader 
+        <AdminListHeader
           searchVal={searchVal}
           setSearchVal={setSearchVal}
           placeholder={`Search ${type} by ID, name or email...`}
+          searchExpandable={true}
+          filterOptions={["Date", "Status", "Country", "Quantity"]}
+          onFilterChange={(filters) => console.log("Selected filters:", filters)}
         />
 
         {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[900px]">
-            <thead>
-              <tr className="border-b border-gray-100 text-[10px] text-gray-400 font-MontserratBold uppercase tracking-wider h-11">
-                <th className="py-3 px-4 font-bold">{isBuyers ? "Buyer ID" : "Seller ID"}</th>
-                <th className="py-3 px-4 font-bold">Full name</th>
-                <th className="py-3 px-4 font-bold">Email</th>
-                <th className="py-3 px-4 font-bold">Phone number</th>
-                <th className="py-3 px-4 font-bold">Status</th>
-                <th className="py-3 px-4 font-bold">Total orders</th>
-                <th className="py-3 px-4 font-bold">Repeat rate</th>
-                <th className="py-3 px-4 font-bold">Country</th>
-                <th className="py-3 px-4 font-bold">Last purchase date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-[11px] text-gray-700 font-MontserratMedium">
-              {filteredRows.length > 0 ? (
-                filteredRows.map((row) => (
-                  <tr 
-                    key={row.id} 
-                    onClick={() => handleRowClick(row.id)}
-                    className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer"
-                  >
-                    <td className="py-3 px-4 text-gray-400 font-MontserratMedium">{row.id}</td>
-                    <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">{row.name}</td>
-                    <td className="py-3 px-4 text-gray-500">{row.email}</td>
-                    <td className="py-3 px-4 text-gray-500">{row.phone}</td>
-                    <td className="py-3 px-4">
-                      <span className={`text-[9px] font-MontserratBold px-2.5 py-0.5 rounded-full uppercase ${
-                        row.status === "Active"
-                          ? "text-[#2ea37d] bg-[#2ea37d]/10"
-                          : "text-[#f44336] bg-[#f44336]/10"
-                      }`}>
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">{row.totalOrders}</td>
-                    <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">{row.repeatRate}</td>
-                    <td className="py-3 px-4 text-gray-400">{row.country}</td>
-                    <td className="py-3 px-4 text-gray-400">{row.date}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={9} className="py-8 text-center text-gray-400 font-MontserratMedium text-xs">
-                    No records found matching your search.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {isBuyers ? (
+          <BuyersTable
+            rows={rows}
+            selectedUserIds={selectedUserIds}
+            activeRowId={activeRowId}
+            loading={loading}
+            onSelectAll={toggleSelectAll}
+            onToggleRow={toggleUserSelection}
+            onRowClick={handleRowClick}
+            onSetActiveRowId={setActiveRowId}
+            truncateText={truncateText}
+          />
+        ) : (
+          <SellersTable
+            rows={rows}
+            selectedUserIds={selectedUserIds}
+            activeRowId={activeRowId}
+            loading={loading}
+            onSelectAll={toggleSelectAll}
+            onToggleRow={toggleUserSelection}
+            onRowClick={handleRowClick}
+            onSetActiveRowId={setActiveRowId}
+            truncateText={truncateText}
+          />
+        )}
+
+        {/* Pagination Section */}
+        {totalCount > 20 && (
+          <div className="flex justify-end mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalCount / 20)}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

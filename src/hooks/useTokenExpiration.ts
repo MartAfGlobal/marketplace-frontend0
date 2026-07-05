@@ -7,9 +7,10 @@ import { tokenActions } from "@/store/token/token-slice";
 import { usePathname } from "next/navigation";
 
 function isTokenExpired(token: string) {
+  return false; // TEMPORARILY DISABLED
   if (!token) return true;
   try {
-    const base64Url = token.split(".")[1];
+    const base64Url = token!.split(".")[1];
     if (!base64Url) return true;
     
     // Polyfill for React Native/Node base64 decoding (though Window.atob is generally available in browsers)
@@ -41,24 +42,45 @@ export const useTokenExpiration = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  useEffect(() => {
-    if (token) {
-      if (isTokenExpired(token)) {
-        dispatch(tokenActions.deleteToken());
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("token");
-        console.log("Token expired on load/navigation - clearing local state.");
-        
-        const isManagerPage = pathname.startsWith("/info/manager");
-        if (isManagerPage) return;
+  const getCurrentUrl = () =>
+    typeof window !== "undefined"
+      ? window.location.pathname + window.location.search
+      : pathname;
 
-        const isSeller = pathname.startsWith("/dashboard/seller");
-        if (isSeller) {
-          router.replace("/auth/seller/login");
-        } else {
-          router.replace("/auth/login");
-        }
+  const getLoginPath = () => {
+    if (pathname.startsWith("/dashboard/admin")) {
+      return "/auth/admin/login";
+    }
+    if (pathname.startsWith("/dashboard/seller")) {
+      return "/auth/seller/login";
+    }
+    return "/auth/login";
+  };
+
+  useEffect(() => {
+    return; // TEMPORARILY DISABLED
+    if (!token) {
+      if (pathname.startsWith("/dashboard/admin")) {
+        const currentUrl = getCurrentUrl();
+        router.replace(
+          `/auth/admin/login?from=${encodeURIComponent(currentUrl)}`,
+        );
       }
+      return;
+    }
+
+    if (token && isTokenExpired(token!)) {
+      dispatch(tokenActions.deleteToken());
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
+      console.log("Token expired on load/navigation - clearing local state.");
+
+      const isManagerPage = pathname.startsWith("/info/manager");
+      if (isManagerPage) return;
+
+      const loginPath = getLoginPath();
+      const currentUrl = getCurrentUrl();
+      router.replace(`${loginPath}?from=${encodeURIComponent(currentUrl)}`);
     }
   }, [token, dispatch, pathname, router]);
 };

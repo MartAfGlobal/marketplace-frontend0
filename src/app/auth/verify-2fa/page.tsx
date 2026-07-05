@@ -85,7 +85,7 @@ function Verify2faContent() {
     setVerifying(true);
     sendHttpRequest({
       requestConfig: {
-        url: "/accounts/2fa/verify/",
+        url: "/accounts/login/verify-otp/",
         method: "POST",
         body: {
           user_id: userId,

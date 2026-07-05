@@ -1,18 +1,26 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
+import CustomerImage from "@/assets/admin/customerImage.svg";
+import Phonicon from "@/assets/admin/phone.svg";
+import {
+  Phone,
+  Mail,
+  MapPin,
   Edit,
   User,
   AlertTriangle,
-  Trash2
+  Trash2,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import SellerDetails from "@/components/admin-components/users/seller-details/SellerDetails";
+import EditUserModal from "@/components/ui/Modals/admin/EditUserModal";
+import EditAccountModal from "@/components/ui/Modals/admin/EditAccountModal";
+import SuspendUserModal from "@/components/ui/Modals/admin/SuspendUserModal";
+import DeleteUserModal from "@/components/ui/Modals/admin/DeleteUserModal";
 
 // Reusing avatar picture pattern or stylised icon
 import Custermer1 from "@/assets/Seller/customer1.png";
@@ -26,168 +34,297 @@ export default function AdminUserDetailsPage() {
   const parentCategory = isSeller ? "Sellers" : "Buyers";
   const name = isSeller ? "Martaf Store Ltd" : "Kelvin Uglejfe";
 
-  return (
-    <div className="space-y-6">
-      {/* Top Breadcrumbs & Nav back */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="text-[10px] text-gray-400 font-MontserratMedium uppercase tracking-wider mb-1 flex items-center gap-1.5">
-            <Link href={`/dashboard/admin/users?type=${isSeller ? "sellers" : "buyers"}`} className="hover:text-gray-600 transition-colors">
-              {parentCategory}
-            </Link>
-            <span>&gt;</span>
-            <span className="text-gray-600 font-MontserratBold">{name}</span>
-          </div>
-          <h1 className="text-xl md:text-2xl font-MontserratBold text-[#161616]">User Information</h1>
-        </div>
+  const [isEditAddressModalOpen, setIsEditAddressModalOpen] = useState(false);
+  const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
+  const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-        {/* Action Buttons: Suspend & Delete */}
+  const handleEditAddressConfirm = (data: any) => {
+    console.log("Updated address data:", data);
+    setIsEditAddressModalOpen(false);
+  };
+
+  const handleEditAccountConfirm = (data: any) => {
+    console.log("Updated account data:", data);
+    setIsEditAccountModalOpen(false);
+  };
+
+  const handleSuspendConfirm = (reason: string) => {
+    console.log("Suspend reason:", reason);
+    setIsSuspendModalOpen(false);
+  };
+
+  const handleDeleteConfirm = (reason: string) => {
+    console.log("Delete reason:", reason);
+    setIsDeleteModalOpen(false);
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Top Breadcrumbs & Nav back */}
+
+      <div>
+        <div className="text-c12  font-MontserratMedium    flex items-center gap-1">
+          <Link
+            href={`/dashboard/admin/users?type=${isSeller ? "sellers" : "buyers"}`}
+            className="hover:text-gray-600 text-000000/12 transition-colors"
+          >
+            {parentCategory}
+          </Link>
+          <ChevronRight className="text-000000/44 w-4 h-4 px-[2.5px]" />
+          <span className=" font-MontserratSemiBold">{name}</span>
+        </div>
+      </div>
+
+      <div className="flex justify-between">
+        <h1 className="text-c18 font-MontserratBold ">{isSeller ? "Seller's details" : "User Information"}</h1>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 h-10 px-5 bg-[#ff9800] text-white rounded-xl text-xs font-MontserratBold hover:bg-[#e68a00] transition-colors shadow-md shadow-[#ff9800]/10 active:scale-95 cursor-pointer">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            <span>Suspend</span>
+          <button 
+            onClick={() => setIsSuspendModalOpen(true)}
+            className="w-full max-w-28 h-12 px-6 py-3 rounded-c8 bg-ffaco6 text-ffffff text-sm font-MontserratSemiBold"
+          >
+            Suspend
           </button>
-          <button className="flex items-center gap-2 h-10 px-5 bg-[#f44336] text-white rounded-xl text-xs font-MontserratBold hover:bg-[#d32f2f] transition-colors shadow-md shadow-[#f44336]/10 active:scale-95 cursor-pointer">
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Delete</span>
+          <button 
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="w-full max-w-24 h-12 px-6 py-3 rounded-c8 bg-ca0202 text-ffffff text-sm font-MontserratSemiBold"
+          >
+            Delete
           </button>
         </div>
       </div>
 
-      {/* Details Grid (3 columns on desktop) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
-        {/* Column 1: Profile Summary Card */}
-        <div className="bg-white rounded-2xl border border-[#eef0f3] p-6 text-center flex flex-col items-center justify-between min-h-[460px] shadow-sm animate-in fade-in slide-in-from-left-4 duration-500">
-          <div className="w-full flex flex-col items-center">
-            {/* Avatar Section */}
-            <div className="w-36 h-36 rounded-2xl overflow-hidden border border-[#efefef] mb-5 shadow-sm">
-              <Image 
-                src={Custermer1} 
-                alt="avatar" 
-                width={144} 
-                height={144} 
-                className="object-cover w-full h-full"
+      {isSeller ? (
+        <SellerDetails userId={userId} />
+      ) : (
+        <div className="flex gap-8 justify-center items-start h-120">
+          <div className="bg-ffffff rounded-c16  p-6 text-center  flex flex-col items-center gap-4 h-full w-full max-w-61 animate-in fade-in slide-in-from-left-4 duration-500 ">
+            <div className="w-full  flex flex-col items-center ">
+              <div className="w-full max-w-49  h-49 overflow-hidden  mb-4 ">
+              <Image
+                src={CustomerImage}
+                alt="avatar"
+                width={244}
+                height={244}
+                className=" object-cover w-full h-full"
               />
             </div>
 
-            {/* Profile Info */}
-            <h2 className="text-base font-MontserratBold text-[#161616] mb-1.5">{name}</h2>
-            <span className="text-[10px] font-MontserratBold text-[#2ea37d] bg-[#2ea37d]/10 px-3 py-1 rounded-full uppercase mb-6 inline-block">
-              Active
-            </span>
+            <div className="h-22.5 w-full">
+              {/* Profile Info */}
+              <h2 className="text-c18 font-MontserratSemiBold  mb-2">{name}</h2>
+              <span className="text-[12px] font-MontserratMedium text-[#4DBEA7] bg-[#28A745]/12 px-6 py-2 rounded-c4 w-21.75 h-8  inline-block">
+                Active
+              </span>
+            </div>
           </div>
 
           {/* Contact Details Panel */}
-          <div className="w-full border-t border-gray-100 pt-6 space-y-4 text-left">
-            <div className="flex items-center gap-3.5 text-xs text-gray-600 font-MontserratMedium">
-              <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+          <div className="w-full f space-y-3.5">
+            <div className="flex items-center gap-2 w-full justify-center text-c12 font-MontserratNormal text-000000/68">
+              <Image
+                src={Phonicon}
+                alt="Phone"
+                width={11.5}
+                height={17.5}
+                className="w-4 h-4 text-sm font-MontserratNormal text-000000/68 shrink-0"
+              />
               <span>+23478564598</span>
             </div>
-            <div className="flex items-center gap-3.5 text-xs text-gray-600 font-MontserratMedium">
-              <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+            <div className="flex items-center justify-center w-full gap-2 text-c12 font-MontserratNormal text-000000/68">
+              <Mail className="w-4 h-4 text-[#343330] shrink-0" />
               <span className="truncate">chinweokafor@gmail.com</span>
             </div>
-            <div className="flex items-center gap-3.5 text-xs text-gray-600 font-MontserratMedium">
-              <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
+            <div className="flex items-center gap-2 justify-center w-full text-c12 font-MontserratNormal text-000000/68">
+              <MapPin className="w-4 h-4 text-[#343330] shrink-0" />
               <span>Nigeria</span>
             </div>
           </div>
         </div>
 
         {/* Column 2: Account & Address Details Card */}
-        <div className="lg:col-span-1 space-y-6 animate-in fade-in duration-500 delay-100">
+        <div className="w-full max-w-109 flex-col flex justify-between animate-in fade-in duration-500 delay-100 h-full">
           {/* Account Information Panel */}
-          <div className="bg-white rounded-2xl border border-[#eef0f3] p-6 shadow-sm relative">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-sm font-MontserratBold text-[#161616]">Account information</h3>
-              <button className="text-gray-400 hover:text-[#7f00ff] transition-colors p-1" title="Edit account details">
-                <Edit className="w-4 h-4" />
+          <div className="bg-ffffff rounded-c16 border border-[#eef0f3] p-6 shadow-sm relative">
+            <div className="flex justify-between items-center pb-2 mb-4">
+              <h3 className="font-MontserratSemiBold text-base">
+                Account information
+              </h3>
+              <button onClick={() => setIsEditAccountModalOpen(true)}>
+                <Edit className="w-[18.75px] h-[18.75px] text-ff715b" />
               </button>
             </div>
             <div className="space-y-4">
-              <div className="flex justify-between text-xs font-MontserratMedium">
-                <span className="text-gray-400">First name</span>
-                <span className="text-[#161616] font-MontserratSemiBold">{isSeller ? "Martaf" : "Kelvin"}</span>
+              <div className="flex justify-between ">
+                <span className="text-sm font-MontserratNormal text-000000/68">
+                  First name
+                </span>
+                <span className="font-MontserratNormal text-sm text-000000">
+                  {isSeller ? "Martaf" : "Kelvin"}
+                </span>
               </div>
-              <div className="flex justify-between text-xs font-MontserratMedium">
-                <span className="text-gray-400">Last name</span>
-                <span className="text-[#161616] font-MontserratSemiBold">{isSeller ? "Store Ltd" : "Uglejfe"}</span>
+              <div className="flex justify-between ">
+                <span className="text-sm font-MontserratNormal text-000000/68">
+                  Last name
+                </span>
+                <span className="font-MontserratNormal text-sm text-000000">
+                  {isSeller ? "Store Ltd" : "Uglejfe"}
+                </span>
               </div>
-              <div className="flex justify-between text-xs font-MontserratMedium">
-                <span className="text-gray-400">Date of Birth</span>
-                <span className="text-[#161616] font-MontserratSemiBold">15th June, 1984</span>
+              <div className="flex justify-between ">
+                <span className="text-sm font-MontserratNormal text-000000/68">
+                  Date of Birth
+                </span>
+                <span className="font-MontserratNormal text-sm text-000000">
+                  15th June, 1984
+                </span>
               </div>
-              <div className="flex justify-between text-xs font-MontserratMedium">
-                <span className="text-gray-400">Gender</span>
-                <span className="text-[#161616] font-MontserratSemiBold">Male</span>
+              <div className="flex justify-between ">
+                <span className="text-sm font-MontserratNormal text-000000/68">
+                  Gender
+                </span>
+                <span className="font-MontserratNormal text-sm text-000000">
+                  Male
+                </span>
               </div>
             </div>
           </div>
 
           {/* Address Information Panel */}
-          <div className="bg-white rounded-2xl border border-[#eef0f3] p-6 shadow-sm relative">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-sm font-MontserratBold text-[#161616]">Address information</h3>
-              <button className="text-gray-400 hover:text-[#7f00ff] transition-colors p-1" title="Edit address details">
-                <Edit className="w-4 h-4" />
+          <div className="bg-ffffff rounded-2xl border border-[#eef0f3] p-6 shadow-sm relative">
+            <div className="flex justify-between items-center pb-2 mb-4">
+              <h3 className="font-MontserratSemiBold text-base">
+                Address information
+              </h3>
+              <button 
+                onClick={() => setIsEditAddressModalOpen(true)}
+                className="text-sm font-MontserratNormal text-000000/68 hover:text-[#7f00ff] transition-colors p-1"
+              >
+                <Edit className="w-[18.75px] h-[18.75px] text-ff715b" />
               </button>
             </div>
             <div className="space-y-4">
-              <div className="flex justify-between text-xs font-MontserratMedium">
-                <span className="text-gray-400">Address</span>
-                <span className="text-[#161616] font-MontserratSemiBold text-right max-w-[200px] truncate" title="43H, Eastern Avenue, Lagos">
+              <div className="flex justify-between ">
+                <span className="text-sm font-MontserratNormal text-000000/68">
+                  Address
+                </span>
+                <span
+                  className="font-MontserratNormal text-sm text-000000 text-right max-w-[200px] truncate"
+                  title="43H, Eastern Avenue, Lagos"
+                >
                   43H, Eastern Avenue, Lagos
                 </span>
               </div>
-              <div className="flex justify-between text-xs font-MontserratMedium">
-                <span className="text-gray-400">State/City</span>
-                <span className="text-[#161616] font-MontserratSemiBold">Lagos</span>
+              <div className="flex justify-between ">
+                <span className="text-sm font-MontserratNormal text-000000/68">
+                  State/City
+                </span>
+                <span className="font-MontserratNormal text-sm text-000000">
+                  Lagos
+                </span>
               </div>
-              <div className="flex justify-between text-xs font-MontserratMedium">
-                <span className="text-gray-400">Country</span>
-                <span className="text-[#161616] font-MontserratSemiBold">Nigeria</span>
+              <div className="flex justify-between ">
+                <span className="text-sm font-MontserratNormal text-000000/68">
+                  Country
+                </span>
+                <span className="font-MontserratNormal text-sm text-000000">
+                  Nigeria
+                </span>
               </div>
-              <div className="flex justify-between text-xs font-MontserratMedium">
-                <span className="text-gray-400">Zipcode</span>
-                <span className="text-[#161616] font-MontserratSemiBold">900001</span>
+              <div className="flex justify-between ">
+                <span className="text-sm font-MontserratNormal text-000000/68">
+                  Zipcode
+                </span>
+                <span className="font-MontserratNormal text-sm text-000000">
+                  900001
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Column 3: Usage Information Card */}
-        <div className="bg-white rounded-2xl border border-[#eef0f3] p-6 shadow-sm min-h-[460px] flex flex-col animate-in fade-in slide-in-from-right-4 duration-500 delay-200">
-          <h3 className="text-sm font-MontserratBold text-[#161616] mb-6">Usage Information</h3>
-          <div className="space-y-5 flex-1 flex flex-col justify-around">
-            <div className="flex justify-between text-xs font-MontserratMedium border-b border-gray-50 pb-3">
-              <span className="text-gray-400">Last login</span>
-              <span className="text-[#161616] font-MontserratSemiBold">25th April, 2025 4:00PM</span>
+        <div className="bg-ffffff rounded-c16 p-6 h-full w-full max-w-90 flex flex-col animate-in fade-in slide-in-from-right-4 duration-500 delay-200">
+          <h3 className="font-MontserratSemiBold text-base pb-6 ">
+            Usage Information
+          </h3>
+          <div className=" flex flex-col gap-4">
+            <div className="flex justify-between  ">
+              <span className="text-sm font-MontserratNormal text-000000/68">
+                Last login
+              </span>
+              <span className="font-MontserratNormal text-sm text-000000">
+                25th April, 2025 4:00PM
+              </span>
             </div>
-            <div className="flex justify-between text-xs font-MontserratMedium border-b border-gray-50 pb-3">
-              <span className="text-gray-400">IP for last login</span>
-              <span className="text-[#161616] font-MontserratSemiBold">192.168.101.23</span>
+            <div className="flex justify-between ">
+              <span className="text-sm font-MontserratNormal text-000000/68">
+                IP for last login
+              </span>
+              <span className="font-MontserratNormal text-sm text-000000">
+                192.168.101.23
+              </span>
             </div>
-            <div className="flex justify-between text-xs font-MontserratMedium border-b border-gray-50 pb-3">
-              <span className="text-gray-400">Last order date</span>
-              <span className="text-[#161616] font-MontserratSemiBold">25th April, 2025</span>
+            <div className="flex justify-between ">
+              <span className="text-sm font-MontserratNormal text-000000/68">
+                Last order date
+              </span>
+              <span className="font-MontserratNormal text-sm text-000000">
+                25th April, 2025
+              </span>
             </div>
-            <div className="flex justify-between text-xs font-MontserratMedium border-b border-gray-50 pb-3">
-              <span className="text-gray-400">Last payment method</span>
-              <span className="text-[#161616] font-MontserratSemiBold">Paystack TPP</span>
+            <div className="flex justify-between ">
+              <span className="text-sm font-MontserratNormal text-000000/68">
+                Last payment method
+              </span>
+              <span className="font-MontserratNormal text-sm text-000000">
+                Paystack TPP
+              </span>
             </div>
-            <div className="flex justify-between text-xs font-MontserratMedium border-b border-gray-50 pb-3">
-              <span className="text-gray-400">Maximum order amount</span>
-              <span className="text-[#161616] font-MontserratSemiBold">N250,000</span>
+            <div className="flex justify-between ">
+              <span className="text-sm font-MontserratNormal text-000000/68">
+                Maximum order amount
+              </span>
+              <span className="font-MontserratNormal text-sm text-000000">
+                N250,000
+              </span>
             </div>
-            <div className="flex justify-between text-xs font-MontserratMedium pb-2">
-              <span className="text-gray-400">Return rate</span>
-              <span className="text-[#161616] font-MontserratSemiBold">30%</span>
+            <div className="flex justify-between  pb-2">
+              <span className="text-sm font-MontserratNormal text-000000/68">
+                Return rate
+              </span>
+              <span className="font-MontserratNormal text-sm text-000000">
+                30%
+              </span>
             </div>
           </div>
         </div>
+        </div>
+      )}
 
-      </div>
+      {/* Modals */}
+      <EditUserModal 
+        isOpen={isEditAddressModalOpen} 
+        onClose={() => setIsEditAddressModalOpen(false)} 
+        onConfirm={handleEditAddressConfirm} 
+        initialData={{ address: "43H, Eastern Avenue, Lagos", state: "Lagos", country: "Nigeria", zipcode: "900001" }}
+      />
+      <EditAccountModal 
+        isOpen={isEditAccountModalOpen} 
+        onClose={() => setIsEditAccountModalOpen(false)} 
+        onConfirm={handleEditAccountConfirm} 
+        initialData={{ firstName: isSeller ? "Martaf" : "Kelvin", lastName: isSeller ? "Store Ltd" : "Uglejfe", dob: "15th June, 1984", gender: "Male" }}
+      />
+      <SuspendUserModal 
+        isOpen={isSuspendModalOpen} 
+        onClose={() => setIsSuspendModalOpen(false)} 
+        onConfirm={handleSuspendConfirm} 
+      />
+      <DeleteUserModal 
+        isOpen={isDeleteModalOpen} 
+        onClose={() => setIsDeleteModalOpen(false)} 
+        onConfirm={handleDeleteConfirm} 
+      />
     </div>
   );
 }

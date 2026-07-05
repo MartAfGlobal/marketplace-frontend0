@@ -44,9 +44,9 @@ export default function AxiosInterceptor({ children }: { children: React.ReactNo
             }
           }
 
-          const isTokenError = 
+          const isTokenError = false; /*
             error.response?.status === 401 || 
-            (error.response?.status === 403 && errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided"));
+            (error.response?.status === 403 && errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided")); */
 
           if (isTokenError) {
             // Token expired or unauthorized

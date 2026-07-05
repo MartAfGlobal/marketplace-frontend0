@@ -68,7 +68,11 @@ export default function LoginForm({ userType }: RegProps) {
 
     // ⭐ Admin redirect
     if (userType === "admin") {
-      router.push("/info/manager/update");
+      if (fromPage && fromPage !== "/auth/admin/login") {
+        router.push(fromPage);
+        return;
+      }
+      router.push("/dashboard/admin");
       return;
     }
 

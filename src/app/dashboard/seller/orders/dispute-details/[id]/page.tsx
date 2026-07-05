@@ -121,7 +121,7 @@ export default function DisputeDetailsPage() {
           disabled={dispute.status === "ESCALATED" || dispute.is_escalated}
         >
           {dispute.status === "ESCALATED" || dispute.is_escalated ? "Escalated" : "Escalate"}
-        </Button>
+        </Button> 
       </div>
 
       <EscalateDisputeModal

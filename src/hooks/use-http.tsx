@@ -22,12 +22,20 @@ export const useHttp = () => {
         // Clear any stored token
         dispatch(tokenActions.deleteToken());
 
-        // if (requestConfig.userType === "seller") {
-        //   router.replace("/auth/seller/login");
-        // }
+        if (typeof window !== "undefined") {
+          const currentUrl = window.location.pathname + window.location.search;
+          console.log("Auto-redirect to login disabled. Current URL:", currentUrl);
+          // if (window.location.pathname.startsWith("/dashboard/admin")) {
+          //   router.replace(`/auth/admin/login?from=${encodeURIComponent(currentUrl)}`);
+          // } else if (window.location.pathname.startsWith("/dashboard/seller")) {
+          //   router.replace(`/auth/seller/login?from=${encodeURIComponent(currentUrl)}`);
+          // } else {
+          //   router.replace(`/auth/login?from=${encodeURIComponent(currentUrl)}`);
+          // }
+        }
 
         setError("Please login!");
-        toast.error("Please login!");
+        // toast.error("Please login!");
         return;
       }
 
@@ -102,11 +110,11 @@ export const useHttp = () => {
             }
           }
         }
-        const isTokenError = 
+        const isTokenError = false; /*
           requestConfig.isAuth && (
             error?.response?.status === 401 || 
             (error?.response?.status === 403 && errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided"))
-          );
+          ); */
 
         if (isTokenError) {
           errorMessage = errorMessage.toLowerCase().includes("token") ? errorMessage : "Token expired, please login.";
@@ -115,30 +123,36 @@ export const useHttp = () => {
           localStorage.removeItem("token");
           console.log("Unauthorized access - redirecting to login", errorMessage);
 
-          const userType = requestConfig.userType ?? "seller"; // default buyer
-          const isMobile = /Android|iPhone|iPad|iPod/i.test(
-            navigator.userAgent,
-          );
-          
+          const inferredUserType = requestConfig.userType ??
+            (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard/admin")
+              ? "admin"
+              : "seller");
+
           if (typeof window !== "undefined") {
             const currentUrl = window.location.pathname + window.location.search;
             if (currentUrl.startsWith("/dashboard/seller")) {
-               localStorage.setItem("sellerRedirectUrl", currentUrl);
+              localStorage.setItem("sellerRedirectUrl", currentUrl);
             }
           }
 
-          if (userType === "seller") {
-            router.replace("/auth/seller/login");
+          if (inferredUserType === "admin") {
+            if (typeof window !== "undefined") {
+              const currentUrl = window.location.pathname + window.location.search;
+              router.replace(`/auth/admin/login?from=${encodeURIComponent(currentUrl)}`);
+            } else {
+              router.replace("/auth/admin/login");
+            }
+          } else if (inferredUserType === "seller") {
+            if (typeof window !== "undefined") {
+              const currentUrl = window.location.pathname + window.location.search;
+              router.replace(`/auth/seller/login?from=${encodeURIComponent(currentUrl)}`);
+            } else {
+              router.replace("/auth/seller/login");
+            }
           } else {
-            if (isMobile) {
-              const params = new URLSearchParams(window.location.search);
-              params.set("showLogin", "true");
-
-              window.history.replaceState(
-                {},
-                "",
-                `${window.location.pathname}?${params.toString()}`,
-              );
+            if (typeof window !== "undefined") {
+              const currentUrl = window.location.pathname + window.location.search;
+              router.replace(`/auth/login?from=${encodeURIComponent(currentUrl)}`);
             } else {
               router.replace("/auth/login");
             }

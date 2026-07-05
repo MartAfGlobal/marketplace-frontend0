@@ -3,14 +3,16 @@ import { cn } from "@/lib/utils";
 
 interface TextareaProps extends React.ComponentProps<"textarea"> {
   valid?: boolean; // for validation styling
+  autoResize?: boolean;
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, valid = true, onChange, ...props }, ref) => {
+  ({ className, valid = true, autoResize = true, onChange, ...props }, ref) => {
     const innerRef = React.useRef<HTMLTextAreaElement>(null);
     React.useImperativeHandle(ref, () => innerRef.current!);
 
     const adjustHeight = () => {
+      if (!autoResize) return;
       if (innerRef.current) {
         innerRef.current.style.height = "auto";
         innerRef.current.style.height = `${innerRef.current.scrollHeight}px`;
@@ -19,7 +21,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     React.useEffect(() => {
       adjustHeight();
-    }, []);
+    }, [autoResize]);
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       adjustHeight();

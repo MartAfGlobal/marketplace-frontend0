@@ -1,42 +1,105 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { 
-  LayoutDashboard, 
-  Users, 
-  ShieldCheck, 
-  ShoppingBag, 
-  ShoppingCart, 
-  Headset, 
-  FileText, 
+import { StaticImageData } from "next/image";
+import {
+  LayoutDashboard,
+  Users,
+  ShieldCheck,
+  ShoppingBag,
+  ShoppingCart,
+  Headset,
+  FileText,
   UserSquare2,
   ChevronDown,
   Search,
   Bell,
   Menu,
   X,
-  User
+  User,
 } from "lucide-react";
-import { Input } from "@/components/ui/forms/Input";
+import Image from "next/image";
+import LogoPurple from "@/assets/images/logo-purple.svg";
+import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
+import DefaultNofication from "@/assets/icons/bellNotification.svg";
+import UserIcon from "@/assets/icons/userIcon.svg";
+import BuyerIcon from "@/assets/admin/activeBuyerIcon.svg";
+import InactiveBuyerIcon from "@/assets/admin/inActiveBuyerIcon.svg";
+import activeSellerIcon from "@/assets/admin/activeSellerIcon.svg";
+import SellerIcon from "@/assets/icons/sellerIcon.svg";
+import OverviewIcon from "@/assets/icons/admin/overviewIcon.svg";
+import ActiveOverviewIcon from "@/assets/icons/admin/activeOverviewIcon.svg";
+import UsersIcon from "@/assets/icons/admin/usersIcon.svg";
+import VerificationsIcon from "@/assets/icons/admin/verificatioIcon.svg";
+import ActiveVerificationsIcon from "@/assets/admin/activeKYC.svg";
+import ProductsIcon from "@/assets/icons/admin/products.svg";
+import OrdersIcon from "@/assets/icons/admin/orders.svg";
+import RefundIcon from "@/assets/icons/refund.svg";
+import SupportIcon from "@/assets/icons/admin/supportIcon.svg";
+import ReportsIcon from "@/assets/icons/admin/ReportIcon.svg";
+import StaffIcon from "@/assets/icons/admin/staffIcon.svg";
+import ProductBoxIcon from "@/assets/icons/productBox.svg";
+import ProductListin from "@/assets/admin/productlistings.svg";
+import Categories from "@/assets/admin/Prodcategories.svg";
+import ActiveCategories from "@/assets/admin/activeProductCategory.svg";
+import { LayoutGrid } from "lucide-react";
 
 interface SidebarItem {
   name: string;
-  icon: React.ComponentType<any>;
+  activeIcon?: React.ComponentType<any> | StaticImageData;
+  icon: React.ComponentType<any> | StaticImageData;
   path: string;
-  subItems?: { name: string; path: string }[];
+  subItems?: {
+    name: string;
+    path: string;
+    activeIcon?: React.ComponentType<any> | StaticImageData;
+    icon?: React.ComponentType<any> | StaticImageData;
+  }[];
 }
+
+const isIconComponent = (
+  icon: React.ComponentType<any> | StaticImageData,
+): icon is React.ComponentType<any> => typeof icon === "function";
+
+const renderSidebarIcon = (
+  icon: React.ComponentType<any> | StaticImageData,
+  alt: string,
+  className?: string,
+  width = 18,
+  height = 18,
+) => {
+  if (isIconComponent(icon)) {
+    const Icon = icon;
+    return <Icon className={className} />;
+  }
+
+  return (
+    <Image
+      src={icon}
+      alt={alt}
+      width={width}
+      height={height}
+      className={className}
+    />
+  );
+};
 
 type AdminRole = "Super Admin" | "Operational" | "IT" | "Support" | "Finance";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
-    Users: false,
-  });
+  const [expandedItems, setExpandedItems] = useState<
+    Record<string, boolean | undefined>
+  >({});
 
   // Automatically detect the role based on the route path
   const getRoleFromPath = (path: string): AdminRole => {
@@ -51,109 +114,258 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Define sidebar navigation configuration for each role
   const roleNavigation: Record<AdminRole, string[]> = {
-    "Super Admin": ["Overview", "Users", "Verifications", "Products", "Orders", "Support", "Reports", "Staff"],
-    "Operational": ["Overview", "Users", "Verifications", "Products", "Orders"],
-    "IT": ["Overview", "Support", "Staff"],
-    "Support": ["Overview", "Users", "Support"],
-    "Finance": ["Overview", "Orders", "Reports"]
+    "Super Admin": [
+      "Overview",
+      "Users",
+      "Verifications",
+      "Products",
+      "Orders",
+      "Support",
+      "Reports",
+      "Staff",
+    ],
+    Operational: ["Overview", "Users", "Verifications", "Products", "Orders"],
+    IT: ["Overview", "Support", "Staff"],
+    Support: ["Overview", "Users", "Support"],
+    Finance: ["Overview", "Orders", "Reports"],
   };
 
   const sidebarItems: SidebarItem[] = [
-    { name: "Overview", icon: LayoutDashboard, path: "/dashboard/admin" },
-    { 
-      name: "Users", 
-      icon: Users,
+    {
+      name: "Overview",
+      icon: OverviewIcon,
+      activeIcon: ActiveOverviewIcon,
+      path: "/dashboard/admin",
+    },
+    {
+      name: "Users",
+      icon: UsersIcon,
+      activeIcon: UsersIcon,
       path: "/dashboard/admin/users",
       subItems: [
-        { name: "Buyers", path: "/dashboard/admin/users?type=buyers" },
-        { name: "Sellers", path: "/dashboard/admin/users?type=sellers" }
-      ]
+        {
+          name: "Buyers",
+          path: "/dashboard/admin/users?type=buyers",
+          icon: InactiveBuyerIcon,
+          activeIcon: BuyerIcon,
+        },
+
+        {
+          name: "Sellers",
+          path: "/dashboard/admin/users?type=sellers",
+          icon: SellerIcon,
+          activeIcon: activeSellerIcon,
+        },
+      ],
     },
-    { name: "Verifications", icon: ShieldCheck, path: "/dashboard/admin/verifications" },
-    { name: "Products", icon: ShoppingBag, path: "/dashboard/admin/products" },
-    { name: "Orders", icon: ShoppingCart, path: "/dashboard/admin/orders" },
-    { name: "Support", icon: Headset, path: "/dashboard/admin/support" },
-    { name: "Reports", icon: FileText, path: "/dashboard/admin/reports" },
-    { name: "Staff", icon: UserSquare2, path: "/dashboard/admin/staff" },
+    {
+      name: "Verifications",
+      icon: VerificationsIcon,
+      activeIcon: ActiveVerificationsIcon,
+      path: "/dashboard/admin/verifications",
+    },
+    {
+      name: "Products",
+      icon: ProductsIcon,
+      path: "/dashboard/admin/products",
+      subItems: [
+        {
+          name: "Product Listings",
+          path: "/dashboard/admin/products?type=listings",
+          icon: InactiveBuyerIcon,
+          activeIcon: BuyerIcon,
+        },
+        {
+          name: "Categories",
+          path: "/dashboard/admin/categories",
+          icon: Categories,
+          activeIcon: ActiveCategories,
+        },
+      ],
+    },
+    {
+      name: "Orders",
+      icon: OrdersIcon,
+      path: "/dashboard/admin/orders",
+      subItems: [
+        {
+          name: "All Orders",
+          path: "/dashboard/admin/orders?type=all-orders",
+          icon: InactiveBuyerIcon,
+          activeIcon: BuyerIcon,
+        },
+        {
+          name: "Refund & Dispute",
+          path: "/dashboard/admin/orders?type=refund-dispute",
+          icon: Categories,
+          activeIcon: ActiveCategories,
+        },
+      ],
+    },
+    { name: "Support", icon: SupportIcon, path: "/dashboard/admin/support" },
+    { name: "Reports", icon: ReportsIcon, path: "/dashboard/admin/reports" },
+    { name: "Staff", icon: StaffIcon, path: "/dashboard/admin/staff" },
   ];
 
   // Filter sidebar items dynamically based on selected role
   const activeRoleItems = roleNavigation[currentRole] || [];
-  const filteredSidebarItems = sidebarItems.filter(item => activeRoleItems.includes(item.name));
+  const filteredSidebarItems = sidebarItems.filter((item) =>
+    activeRoleItems.includes(item.name),
+  );
 
   const toggleExpand = (name: string) => {
-    setExpandedItems(prev => ({
+    setExpandedItems((prev) => ({
       ...prev,
-      [name]: !prev[name]
+      [name]: !prev[name],
     }));
   };
+
+  const normalizePath = (path: string) => path.split("?")[0];
 
   const isItemActive = (item: SidebarItem) => {
     if (item.name === "Overview") {
       // Check if it is exact /dashboard/admin or operational/it/finance/support-department index pages
-      return pathname === "/dashboard/admin" || 
-             pathname === "/dashboard/admin/operational" || 
-             pathname === "/dashboard/admin/it" || 
-             pathname === "/dashboard/admin/support-department" ||
-             pathname === "/dashboard/admin/finance";
+      return (
+        pathname === "/dashboard/admin" ||
+        pathname === "/dashboard/admin/operational" ||
+        pathname === "/dashboard/admin/it" ||
+        pathname === "/dashboard/admin/support-department" ||
+        pathname === "/dashboard/admin/finance"
+      );
     }
+
     if (pathname.startsWith(item.path)) return true;
+
     if (item.subItems) {
-      return item.subItems.some(sub => pathname.startsWith(sub.path));
+      return item.subItems.some((sub) => {
+        const normalizedSubPath = normalizePath(sub.path);
+        return normalizePath(pathname).startsWith(normalizedSubPath);
+      });
     }
+
     return false;
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white text-gray-700 py-6 px-4">
-      {/* Menu Title Label exactly as shown in image 2 */}
-      <p className="text-[11px] font-MontserratBold text-gray-800 uppercase tracking-widest pl-3.5 mb-5 mt-2">Menu</p>
+    <div className="flex flex-col h-full  w-full max-w-56 ">
+      <p className="text-sm font-MontserratSemiBold pl-6 pb-4">Menu</p>
 
       {/* Navigation Items */}
-      <nav className="flex-1 space-y-3 overflow-y-auto scrollbar-hide px-1">
+      <nav className="flex-1  space-y-4 overflow-y-auto scrollbar-hide px-1">
         {filteredSidebarItems.map((item) => {
           const hasSubItems = !!item.subItems;
-          const isExpanded = expandedItems[item.name];
           const active = isItemActive(item);
+          const isExpanded = expandedItems[item.name];
+          const isOpen = isExpanded ?? active;
 
           return (
-            <div key={item.name} className="space-y-1">
+            <div key={item.name} className="space-y-1 ">
               {hasSubItems ? (
                 <div>
                   <button
                     onClick={() => toggleExpand(item.name)}
-                    className={`w-full flex items-center justify-between px-4 py-3.5 rounded-[12px] transition-all text-[12px] font-MontserratSemiBold ${
-                      active 
-                        ? "bg-[#6A0DAD] text-white shadow-md shadow-[#6A0DAD]/15" 
-                        : "text-gray-600 hover:bg-gray-50/80"
+                    className={`w-full flex items-center  truncate justify-between text-sm px-6 py-3.5 text-nowrap  hover:bg-6a0dad/20 bg-ffffff rounded-c24 transition-all font-MontserratSemiBold ${
+                      active ? "  " : "text-000000/68   "
                     }`}
                   >
                     <div className="flex items-center gap-3.5">
-                      <item.icon className={`w-4.5 h-4.5 ${active ? "text-white" : "text-gray-400"}`} />
-                      <span>{item.name}</span>
+                      <div className="w-6 h-6 flex-shrink-0">
+                        {renderSidebarIcon(
+                          item.icon,
+                          `${item.name} Icon`,
+                          "w-4.5 h-4.5",
+                        )}
+                      </div>
+
+                      <span className="">{item.name}</span>
                     </div>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded || active ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-black transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
 
                   {/* Subitems */}
-                  {(isExpanded || active) && (
-                    <div className="pl-10 mt-1.5 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                  {isOpen && (
+                    <div className="pl-8 mt-2 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
                       {item.subItems!.map((sub) => {
-                        const isSubActive = pathname === "/dashboard/admin/users" 
-                          ? (sub.path.includes("buyers") && !pathname.includes("sellers")) 
-                          : pathname.startsWith(sub.path);
-                          
+                        const queryType = searchParams.get("type");
+                        let isSubActive = false;
+
+                        if (pathname.startsWith("/dashboard/admin/users")) {
+                          if (sub.path.includes("buyers")) {
+                            isSubActive =
+                              pathname === "/dashboard/admin/users"
+                                ? queryType === "buyers" || !queryType
+                                : true;
+                          } else if (sub.path.includes("sellers")) {
+                            isSubActive =
+                              pathname === "/dashboard/admin/users"
+                                ? queryType === "sellers"
+                                : false;
+                          }
+                        } else if (
+                          pathname.startsWith("/dashboard/admin/orders")
+                        ) {
+                          if (sub.path.includes("all-orders")) {
+                            isSubActive =
+                              pathname === "/dashboard/admin/orders"
+                                ? queryType === "all-orders" || !queryType
+                                : true;
+                          } else if (sub.path.includes("refund-dispute")) {
+                            isSubActive =
+                              pathname === "/dashboard/admin/orders"
+                                ? queryType === "refund-dispute"
+                                : false;
+                          }
+                        } else if (
+                          pathname.startsWith("/dashboard/admin/products") ||
+                          pathname.startsWith("/dashboard/admin/categories")
+                        ) {
+                          if (sub.path.includes("listings")) {
+                            isSubActive =
+                              pathname.startsWith(
+                                "/dashboard/admin/products/listings",
+                              ) ||
+                              (pathname === "/dashboard/admin/products" &&
+                                (queryType === "listings" || !queryType));
+                          } else if (sub.path.includes("categories")) {
+                            isSubActive = pathname.startsWith(
+                              "/dashboard/admin/categories",
+                            );
+                          }
+                        }
+
                         return (
                           <Link
                             key={sub.name}
                             href={sub.path}
-                            className={`flex items-center px-4 py-2.5 rounded-lg text-[11px] font-MontserratMedium transition-all ${
+                            className={`flex items-center text-nowrap truncate  gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all  ${
                               isSubActive
-                                ? "text-[#6A0DAD] font-MontserratBold"
-                                : "text-gray-500 hover:text-gray-800 hover:bg-gray-50/50"
+                                ? "text-white bg-[#6A0DAD] font-MontserratBold shadow-md shadow-[#6A0DAD]/15"
+                                : "text-gray-600 bg-ffffff hover:bg-6a0dad/20"
                             }`}
                           >
-                            {sub.name}
+                            {isSubActive ? (
+                              <div className="h-6 w-6 flex-shrink-0 flex justify-center items-center">
+                                {sub.icon &&
+                                  renderSidebarIcon(
+                                    sub.activeIcon || sub.icon,
+                                    sub.name,
+                                    "w-4.5 h-4.5 flex-shrink-0",
+                                  )}
+                              </div>
+                            ) : (
+                              <div className="h-6 w-6 flex-shrink-0 flex justify-center items-center">
+                                {sub.icon &&
+                                  renderSidebarIcon(
+                                    sub.icon,
+                                    sub.name,
+                                    "w-4.5 h-4.5 flex-shrink-0",
+                                  )}
+                              </div>
+                            )}
+
+                            <span>{sub.name}</span>
                           </Link>
                         );
                       })}
@@ -163,17 +375,40 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               ) : (
                 <Link
                   href={item.path}
-                  className={`flex items-center justify-between px-4 py-3.5 rounded-[12px] transition-all text-[12px] font-MontserratSemiBold ${
+                  className={`flex items-center justify-between px-6 py-3.5 rounded-c24 text-nowrap transition-all text-sm font-MontserratSemiBold ${
                     active
                       ? "bg-[#6A0DAD] text-white shadow-md shadow-[#6A0DAD]/15"
-                      : "text-gray-600 hover:bg-gray-50/80"
+                      : "text-gray-600  bg-ffffff"
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
-                    <item.icon className={`w-4.5 h-4.5 ${active ? "text-white" : "text-gray-400"}`} />
+                    {active ? (
+                      <div>
+                        {item.activeIcon
+                          ? renderSidebarIcon(
+                              item.activeIcon,
+                              `${item.name} Active Icon`,
+                              "w-4.5 h-4.5 text-white",
+                            )
+                          : renderSidebarIcon(
+                              item.icon,
+                              `${item.name} Icon`,
+                              "w-4.5 h-4.5 text-white",
+                            )}
+                      </div>
+                    ) : (
+                      renderSidebarIcon(
+                        item.icon,
+                        `${item.name} Icon`,
+                        "w-4.5 h-4.5 text-gray-400",
+                      )
+                    )}
+
                     <span>{item.name}</span>
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 ${active ? "text-white" : "text-gray-400"}`} />
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 ${active ? "text-white" : "text-gray-400"}`}
+                  />
                 </Link>
               )}
             </div>
@@ -184,90 +419,138 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="min-h-screen flex bg-[#f8f9fa] w-full">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-64 fixed inset-y-0 left-0 bg-white border-r border-[#eef0f3] z-30">
-        {/* Brand / Logo exactly aligned with sidebar */}
-        <div className="h-16 md:h-20 flex items-center px-8 border-b border-[#eef0f3]">
-          <Link href="/dashboard/admin" className="flex items-center gap-2">
-            <span className="text-xl font-MontserratBold text-[#6A0DAD] tracking-wider">MARTAF</span>
+    <div
+      className="min-h-screen flex  w-full px-6 pb-[35.19px] "
+      style={{
+        background:
+          "linear-gradient(0deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.92) 100%), linear-gradient(0deg, #947FFF 0%, #947FFF 100%)",
+      }}
+    >
+      <header
+        className=" fixed top-0  h-16 md:h-26 flex items-center justify-between px-4 md:px-8 z-20"
+        style={{
+          background:
+            "linear-gradient(0deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.92) 100%), linear-gradient(0deg, #947FFF 0%, #947FFF 100%)",
+        }}
+      >
+        <div className="h-16 md:h-20 flex items-center px-8  ">
+          <Link href="/dashboard/admin" className="flex items-center gap-3">
+            <Image
+              src={LogoPurple}
+              alt="Logo"
+              width={32}
+              height={26}
+              className="object-contain"
+            />
+            <span className="text-c18 font-MontserratBold text-6a0dad">
+              MARTAF
+            </span>
           </Link>
         </div>
-        {sidebarContent}
-      </aside>
+        <div className=" lg:hidden flex items-center gap-4 flex-1">
+          {/* Mobile Hamburger menu */}
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <Menu className="w-6 h-6 text-gray-700" />
+          </button>
 
-      {/* Main Container */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="sticky top-0 bg-white border-b border-[#eef0f3] h-16 md:h-20 flex items-center justify-between px-4 md:px-8 z-20">
-          <div className="flex items-center gap-4 flex-1">
-            {/* Mobile Hamburger menu */}
-            <button 
-              onClick={() => setMobileSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <Menu className="w-6 h-6 text-gray-700" />
-            </button>
+          {/* Desktop Brand Label in Mobile header */}
+          <span className="lg:hidden text-lg font-MontserratBold text-[#6A0DAD] tracking-wider">
+            MARTAF
+          </span>
 
-            {/* Desktop Brand Label in Mobile header */}
-            <span className="lg:hidden text-lg font-MontserratBold text-[#6A0DAD] tracking-wider">MARTAF</span>
+          {/* Central Search Bar exactly matching second image */}
+        </div>
+        <div className="hidden md:block w-full max-w-116">
+          <SearchInput placeholder="Search for products" className="h-12" />
+        </div>
 
-            {/* Central Search Bar exactly matching second image */}
-            <div className="hidden md:block w-full max-w-md ml-4">
-              <Input 
-                placeholder="Search for products" 
-                icon={<Search className="w-4 h-4 text-gray-400 cursor-pointer" />} 
-                className="h-11 border border-[#eef0f3] bg-[#f8f9fa] rounded-xl px-4 py-2 focus:bg-white transition-all text-xs"
+        {/* Right Header Actions exactly matching Image 2 */}
+        <div className="flex items-center gap-3 text-gray-600">
+          {/* Notifications Bell */}
+          <button className="relative bg-ffffff rounded-full transition-colors h-12 w-12 flex items-center justify-center hover:bg-gray-50">
+            <Image
+              src={DefaultNofication}
+              alt="Notification"
+              width={18}
+              height={19.5}
+            />
+            {/* <Bell className="w-6 h-6 text-000000" /> */}
+            <span className="absolute -top-2 right-0 w-5 h-5 bg-ca0202 text-white rounded-full flex items-center justify-center text-c10 font-MontserratSemiBold">
+              1
+            </span>
+          </button>
+
+          {/* User Profile Outline Dropdown */}
+          <div className="relative flex items-center gap-1 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors">
+            <div className="relative bg-ffffff rounded-full transition-colors h-12 w-12 flex items-center justify-center hover:bg-gray-50">
+              <Image
+                src={UserIcon}
+                alt="Notification"
+                width={18}
+                height={19.5}
               />
             </div>
+            <ChevronDown className="w-4 h-4 text-000000" />
           </div>
+        </div>
+      </header>
+      {/* Desktop Sidebar */}
 
-          {/* Right Header Actions exactly matching Image 2 */}
-          <div className="flex items-center gap-4 md:gap-6 text-gray-600">
-            {/* Notifications Bell */}
-            <button className="relative hover:bg-gray-50 rounded-full transition-colors p-1">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] font-bold border border-white">1</span>
-            </button>
+      {/* Main Container */}
+      <div className="flex-1 flex mt-28 gap-8 min-w-0">
+        {/* Top Header */}
+        <aside
+          className=" lg:block w-64 sticky top-30 border-r-[0.5px] border-6a0dad/44  self-start h-[calc(100vh-120px)] flex-shrink-0 flex flex-col"
+          style={{ width: "16rem" }}
+        >
+          {/* Brand / Logo exactly aligned with sidebar */}
 
-            {/* User Profile Outline Dropdown */}
-            <div className="relative flex items-center gap-1.5 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors">
-              <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center bg-gray-50 text-gray-500">
-                <User className="w-4.5 h-4.5" />
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            </div>
-          </div>
-        </header>
+          {sidebarContent}
+        </aside>
 
         {/* Page Content View */}
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-[1600px] w-full mx-auto bg-[#f8f9fa]">
-          {children}
-        </main>
+        <main className="flex-1   w-full mx-auto">{children}</main>
       </div>
 
       {/* Mobile Drawer Backdrop */}
       {mobileSidebarOpen && (
-        <div 
+        <div
           onClick={() => setMobileSidebarOpen(false)}
           className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
         />
       )}
 
       {/* Mobile Drawer Sidebar */}
-      <aside className={`
-        lg:hidden fixed inset-y-0 left-0 w-64 bg-white z-50 transform transition-transform duration-300 ease-in-out
-        ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-      `}>
+      <aside
+        className={`
+          lg:hidden fixed inset-y-0 left-0 w-64 bg-white z-50 transform transition-transform duration-300 ease-in-out
+          ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+        style={{ width: "16rem" }}
+      >
         {/* Close Button Inside Mobile Drawer */}
-        <button 
+        <button
           onClick={() => setMobileSidebarOpen(false)}
           className="absolute top-4 right-4 p-1 hover:bg-gray-50 rounded-full text-gray-400"
         >
           <X className="w-5 h-5" />
         </button>
         <div className="h-16 flex items-center px-6 border-b border-[#eef0f3]">
-          <span className="text-xl font-MontserratBold text-[#6A0DAD] tracking-wider">MARTAF</span>
+          <Link href="/dashboard/admin" className="flex items-center gap-3">
+            <Image
+              src={LogoPurple}
+              alt="Logo"
+              width={32}
+              height={26}
+              className="object-contain"
+            />
+            <span className="text-xl font-MontserratBold text-[#6A0DAD] tracking-wider">
+              MARTAF
+            </span>
+          </Link>
         </div>
         {sidebarContent}
       </aside>
