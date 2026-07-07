@@ -18,7 +18,7 @@ export default function OrderDetailsTable() {
         <p className="text-xs text-[#00BE5C] font-MontserratMedium">
           Accepted items
         </p>
-        <div className="overflow-x-auto admincustom-scroll">
+        <div className="overflow-x-auto adminXcustom-scroll">
           <table className="w-full text-left min-w-[650px]">
             <thead>
               <tr className="bg-[#947FFF] text-white text-[12px] font-MontserratSemiBold h-10">
@@ -125,7 +125,7 @@ export default function OrderDetailsTable() {
         <p className="text-xs text-ca0202 font-MontserratNormal">
           Cancelled items
         </p>
-        <div className="overflow-x-auto admincustom-scroll">
+        <div className="overflow-x-auto adminXcustom-scroll">
           <table className="w-full text-left min-w-[650px]">
              <thead>
               <tr className="bg-[#947FFF] text-white text-[12px] font-MontserratSemiBold h-10">
