@@ -5,6 +5,7 @@ import HandBug from "@/assets/Seller/handBug.png";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 
+
 export interface ProductRow {
   id: string;
   name: string;

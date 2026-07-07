@@ -11,19 +11,61 @@ export interface OrderRow {
   vendors: string;
   extraVendors?: number;
   amount: string;
-  payment: string;
-  status: "Delivered" | "Processing" | "Processed" | "Cancelled" | "Approved" | "Pending" | "Rejected";
+  location: string;
+  status: "Delivered" | "Ongoing" | "Disputed";
   date: string;
 }
 
-const statusStyles: Record<string, string> = {
-  Delivered: "text-[#2ea37d] bg-[#28A745]/12",
-  Processing: "text-[#FFAC06] bg-[#FFAC06]/12",
-  Processed: "text-[#0070E9] bg-[#0070E9]/12",
-  Cancelled: "text-[#CC0000] bg-[#CC0000]/12",
-  Approved: "text-[#2ea37d] bg-[#28A745]/12",
-  Pending: "text-[#FFAC06] bg-[#FFAC06]/12",
-  Rejected: "text-[#CC0000] bg-[#CC0000]/12",
+const statusConfig: Record<
+  string,
+  { pill: string; icon: React.ReactNode; label: string }
+> = {
+  Delivered: {
+    pill: "text-[#2ea37d] bg-[#2ea37d]/10",
+    label: "Delivered",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="6.5" stroke="#2ea37d" strokeWidth="1.2" />
+        <path
+          d="M4.5 7l2 2 3-3"
+          stroke="#2ea37d"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  Ongoing: {
+    pill: "text-[#FFAC06] bg-[#FFAC06]/10",
+    label: "Ongoing",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path
+          d="M3 2h8M3 12h8M4.5 2v2.5C4.5 6.5 7 7 7 7s-2.5.5-2.5 2.5V12M9.5 2v2.5C9.5 6.5 7 7 7 7s2.5.5 2.5 2.5V12"
+          stroke="#FFAC06"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  Disputed: {
+    pill: "text-[#E8334A] bg-[#E8334A]/10",
+    label: "Disputed",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="6.5" stroke="#E8334A" strokeWidth="1.2" />
+        <path
+          d="M5 5l4 4M9 5l-4 4"
+          stroke="#E8334A"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
 };
 
 interface OrdersTableProps {
@@ -51,7 +93,7 @@ export default function OrdersTable({
     <div className="overflow-x-auto min-h-[250px]">
       <table className="w-full text-left">
         <thead>
-          <tr className="h-10.5 bg-[#947fff] text-white text-nowrap">
+          <tr className="h-10.5 bg-[#947fff] text-white text-nowrap ">
             <th className="font-MontserratNormal text-sm text-center w-10 p-3">
               <button
                 type="button"
@@ -60,7 +102,8 @@ export default function OrdersTable({
                   onSelectAll();
                 }}
                 className={`mx-auto flex h-4 w-4 items-center justify-center border duration-200 ${
-                  rows.length > 0 && rows.every((row) => selectedIds.includes(row.id))
+                  rows.length > 0 &&
+                  rows.every((row) => selectedIds.includes(row.id))
                     ? "border-[#ff715b] bg-[#ff715b]"
                     : "border-white hover:border-[#ff715b]"
                 }`}
@@ -73,7 +116,8 @@ export default function OrdersTable({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   className={`h-2.5 w-2.5 ${
-                    rows.length > 0 && rows.every((row) => selectedIds.includes(row.id))
+                    rows.length > 0 &&
+                    rows.every((row) => selectedIds.includes(row.id))
                       ? "text-white"
                       : "text-[#ff715b] opacity-0 hover:opacity-100 hover:text-white"
                   }`}
@@ -82,17 +126,22 @@ export default function OrdersTable({
                 </svg>
               </button>
             </th>
-            <th className="p-3 font-MontserratNormal text-sm">Order ID</th>
-            <th className="p-3 font-MontserratNormal text-sm">Buyer</th>
-            <th className="p-3 font-MontserratNormal text-sm">Vendors</th>
-            <th className="p-3 font-MontserratNormal text-sm">Amount</th>
-            <th className="p-3 font-MontserratNormal text-sm">Payment</th>
-            <th className="p-3 font-MontserratNormal text-sm">Status</th>
-            <th className="p-3 font-MontserratNormal text-sm">Date</th>
-            <th className="p-3 font-MontserratNormal text-sm text-center"></th>
+            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Date</th>
+            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Order ID</th>
+            <th className="p-3 font-MontserratNormal text-sm leading-[1%] w-[203.4]">
+              Buyer
+            </th>
+            <th className="p-3 font-MontserratNormal text-sm leading-[1%] w-[203.4]">
+              Business name
+            </th>
+            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Status</th>
+            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Amount</th>
+
+            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Location</th>
+            <th className="p-3 font-MontserratNormal text-sm leading-[1%] text-center"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50 text-[11px] text-gray-700 font-MontserratMedium">
+        <tbody className=" text-[11px]  text-000000/68 font-MontserratNormal">
           {loading ? (
             <tr>
               <td colSpan={9} className="py-12 text-center">
@@ -107,7 +156,7 @@ export default function OrdersTable({
                 key={row.id}
                 className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer"
               >
-                <td className="py-3 px-4 text-gray-400 font-MontserratMedium">
+                <td className="py-3 px-4  font-MontserratMedium">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -137,35 +186,39 @@ export default function OrdersTable({
                     </svg>
                   </button>
                 </td>
-                <td className="py-3 px-4 text-gray-500 font-MontserratMedium">
+                <td className="py-3 px-4  ">
+                  {row.date}
+                </td>
+                <td className="py-3 px-4 ">
                   {row.id}
                 </td>
-                <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">
+                <td className="py-3 px-4 text-000000/68">
                   {row.buyer}
+                 
                 </td>
-                <td className="py-3 px-4 text-gray-500">
+                <td className="py-3 px-4 ">
                   {row.vendors}
-                  {row.extraVendors && row.extraVendors > 0 ? (
-                    <span className="text-[#0070E9] ml-1">
-                      +{row.extraVendors} more
-                    </span>
-                  ) : null}
                 </td>
-                <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">
-                  {row.amount}
-                </td>
-                <td className="py-3 px-4 text-gray-500">{row.payment}</td>
+               
                 <td className="py-3 px-4">
-                  <div
-                    className={`inline-flex items-center justify-center text-[10px] font-MontserratMedium px-2.5 py-1 rounded-full uppercase w-fit ${
-                      statusStyles[row.status] ||
-                      "text-gray-500 bg-gray-100"
-                    }`}
-                  >
-                    {row.status}
-                  </div>
+                  {(() => {
+                    const cfg = statusConfig[row.status];
+                    return cfg ? (
+                      <div
+                        className={`inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium px-3 py-1 rounded-full w-fit ${cfg.pill}`}
+                      >
+                        {cfg.icon}
+                        {cfg.label}
+                      </div>
+                    ) : (
+                      <span className=" text-[11px]">
+                        {row.status}
+                      </span>
+                    );
+                  })()}
                 </td>
-                <td className="py-3 px-4 text-gray-500">{row.date}</td>
+                <td className="py-3 px-4 text-gray-500">{row.amount}</td>
+                <td className="py-3 px-4 text-gray-500">{row.location}</td>
                 <td
                   className="py-3 px-4 text-center relative"
                   onClick={(e) => e.stopPropagation()}
@@ -177,12 +230,7 @@ export default function OrdersTable({
                       onSetActiveRowId(activeRowId === row.id ? null : row.id);
                     }}
                   >
-                    <Image
-                      src={HandBug}
-                      alt="actions"
-                      width={16}
-                      height={16}
-                    />
+                    <Image src={HandBug} alt="actions" width={16} height={16} />
                   </button>
                   <AnimatePresence>
                     {activeRowId === row.id && (
@@ -230,7 +278,7 @@ export default function OrdersTable({
             <tr>
               <td
                 colSpan={9}
-                className="py-8 text-center text-gray-400 font-MontserratMedium text-xs"
+                className="py-8 text-center  font-MontserratMedium text-xs"
               >
                 No orders found matching your search.
               </td>

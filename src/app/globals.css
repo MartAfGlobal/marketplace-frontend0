@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
-
 @custom-variant dark (&:is(.dark *));
 
 /* Scrollbar utilities */
@@ -11,6 +10,26 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* adminXcustom-scroll — global scrollbar (2px wide/tall, short thumb) */
+.adminXcustom-scroll::-webkit-scrollbar {
+  width: 2px;  /* vertical scrollbar thickness */
+  height: 2px; /* horizontal scrollbar thickness */
+}
+.adminXcustom-scroll::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+.adminXcustom-scroll::-webkit-scrollbar-thumb {
+  border-radius: 64px;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.76)),
+    linear-gradient(0deg, #947FFF, #947FFF);
+  /* Transparent borders shrink the visible thumb on both axes */
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  background-clip: padding-box;
 }
 
 @font-face {
@@ -87,7 +106,7 @@
   --color-cf4e7fd: #f4e7fd;
   --color-c333333: #333333;
   --color-0070e9: #0070e9;
-  --color-28a745: #28A745;
+  --color-28a745: #28a745;
 
   --spacing-c1: 1px;
   --spacing-c2: 2px;
@@ -269,8 +288,7 @@ select option {
 }
 
 @layer utilities {
-
-  body{
+  body {
     user-select: none;
   }
   .shadow-custom {
@@ -340,6 +358,20 @@ select option {
   .custom-scroll::-webkit-scrollbar {
     width: 8px;
   }
+  .admincustom-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  /* adminXcustom-scroll moved to global scope above @layer utilities */
+  .admincustom-scroll::-webkit-scrollbar-thumb {
+    border-radius: 64px;
+    background: linear-gradient(0deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.76)),
+      linear-gradient(0deg, #947FFF, #947FFF);
+  }
+  .admincustom-scroll::-webkit-scrollbar-thumb {
+    border-radius: 64px;
+    background: linear-gradient(0deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.76)),
+      linear-gradient(0deg, #947FFF, #947FFF);
+  }
   .custom-scrollrailes::-webkit-scrollbar {
     width: 4px;
   }
@@ -383,7 +415,8 @@ select option {
   .custom-border {
     border: 1px solid;
 
-    border-image-source: linear-gradient(0deg, #000000, #000000),
+    border-image-source:
+      linear-gradient(0deg, #000000, #000000),
       linear-gradient(
         0deg,
         rgba(255, 255, 255, 0.88),
@@ -412,8 +445,13 @@ select option {
   }
 
   .text-custom-black {
-    background: linear-gradient(0deg, #000000, #000000),
-      linear-gradient(0deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32));
+    background:
+      linear-gradient(0deg, #000000, #000000),
+      linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.32),
+        rgba(255, 255, 255, 0.32)
+      );
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -421,7 +459,8 @@ select option {
   }
 
   .bg-dual-gradient {
-    background: linear-gradient(
+    background:
+      linear-gradient(
         0deg,
         rgba(255, 255, 255, 0.05),
         rgba(255, 255, 255, 0.05)
@@ -447,11 +486,8 @@ select option {
   .my-faint-gradient-border {
     border: 2px solid;
     border-image-source: 
-    /* faint black top layer */ linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.08),
-        rgba(0, 0, 0, 0.08)
-      ),
+    /* faint black top layer */
+      linear-gradient(0deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)),
       /* slightly stronger faint black base layer */
         linear-gradient(0deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.18));
     border-image-slice: 1;
@@ -469,7 +505,7 @@ select option {
   /* Base checkbox */
   .custom-checkbox {
     width: 1.25rem; /* 20px */
-    height: 1.25rem; 
+    height: 1.25rem;
     border: 2px solid #ff715b;
     border-radius: 9999px;
     background-color: #ffffff;

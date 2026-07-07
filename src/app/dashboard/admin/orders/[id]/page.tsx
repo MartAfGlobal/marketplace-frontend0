@@ -4,398 +4,223 @@ import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ChevronLeft,
+  ChevronRight,
   Download,
-  Copy,
-  CheckCircle2,
   MoreVertical,
-  Edit,
 } from "lucide-react";
-import editIcon from "@/assets/admin/editIcon.svg";
-import VerifiedIcon from "@/assets/admin/verified.svg";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/Button/Button";
-import copyIcon from "@/assets/admin/copyIcon.svg";
-import Image from "next/image";
-import { OrderProgress } from "@/app/dashboard/seller/orders/order-details/[id]/components/OrderProgress";
-
-// Dummy product image
-const dummyImg =
-  "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=80";
+import OrderProgressBar from "@/components/ui/Modals/admin/OrderProgressBar";
+import OrderDetailsTable from "@/components/ui/Modals/admin/orderDetailsTable";
+import OrderDetailsSummary from "@/components/ui/Modals/admin/OrderdetailsSummary";
 
 export default function AdminOrderDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const orderId = (params.id as string) || "304657846532";
+  const orderId = (params.id as string) || "ORD-235235";
 
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const handleUpdateTracking = () => {
+    toast.success("Tracking status update modal opened.");
+  };
 
-  const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  const handleCancelOrder = () => {
+    toast.error("Order has been cancelled.");
+  };
+
+  const handleDownload = () => {
+    toast.info("Downloading order details...");
   };
 
   return (
-    <div className=" bg-white rounded-2xl p-6   mb-12">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-4 transition-colors"
-        >
-          <span className="h-6 w-6 flex items-center justify-center">
-            <ChevronLeft className="w-5 h-5 text-black" />
-          </span>
-          <h1 className="text-c18 font-MontserratMedium">Order details</h1>
-        </button>
-        <button className="w-10 h-10 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors text-[#df6b62]">
-          <Download className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Top Section */}
-      <div className="flex flex-col lg:flex-row justify-between lg:gap-c64 mb-c64 w-ful ">
-        <div className="flex flex-col gap-3 w-full max-w-[309.33px] text-sm font-MontserratSemiBold">
-          <div className="flex items-center gap-2 ">
-            <span className="text-000000/68">Order ID:</span>
-            <div className="flex items-center gap-2 font-MontserratSemiBold ">
-              {orderId}{" "}
-              <button
-                onClick={() => handleCopy(orderId, "orderId")}
-                className="h-4 w-4 flex items-center justify-center"
-              >
-                {copiedId === "orderId" ? (
-                  <span className="text-xs  text-000000/68 font-MontserratNormal">
-                    Copied!
-                  </span>
-                ) : (
-                  <Image src={copyIcon} alt="Product" width={12} height={12} />
-                )}
-              </button>
-            </div>
-          </div>
-          <div className=" font-MontserratNormal flex items-center md:justify-between gap-6">
-            <span className="">Order date:</span>
-            <span className="">May 15, 2025</span>
-          </div>
-          <div className="font-MontserratNormal flex items-center md:justify-between gap-6">
-            <span className="">Total amount:</span>
-            <span className="font-MontserratSemiBold ">₦15,000.00</span>
-          </div>
-          <div className="font-MontserratNormal flex items-center md:justify-between gap-6">
-            <span className="">Order Status:</span>
-            <span className="text-[12px] font-MontserratSemiBold bg-[#FFAC06]/12 text-000000/68 px-4 py-2 rounded-c16 w-fit">
-              Unprocessed
-            </span>
-          </div>
+    <div className="mb-12 box-border w-full animate-in fade-in duration-300">
+      {/* Breadcrumb */}
+      <div className="bg-white min-h-36 h-auto p-6 mb-6  rounded-2xl animate-in fade-in duration-300 ">
+        <div className="text-xs text-000000/44 font-MontserratMedium mb-8 flex items-center gap-1">
+          <span>Orders</span>
+          <ChevronRight className="w-4 h-4 text-000000/44 stroke-[2]" />
+          <span className="font-MontserratNormal leading-[2%]">{orderId}</span>
         </div>
 
-        <div className="flex flex-col gap-3 text-sm font-MontserratNormal w-full max-w-[309.33px]">
-          <div className="font-MontserratNormal flex items-center gap-2">
-            <span className="font-MontserratSemiBold text-000000/68">
-              Transaction ID:
-            </span>
-            <div className="flex items-center gap-2 font-MontserratSemiBold ">
-              TNX-{orderId}{" "}
-              <button
-                onClick={() => handleCopy(`TNX-${orderId}`, "txId")}
-                className="h-4 w-4 flex items-center justify-center"
-              >
-                {copiedId === "txId" ? (
-                  <span className="text-xs  text-000000/68 font-MontserratNormal">
-                    Copied!
-                  </span>
-                ) : (
-                  <Image src={copyIcon} alt="Product" width={12} height={12} />
-                )}
-              </button>
-            </div>
-          </div>
-          <div className="font-MontserratNormal flex items-center md:justify-between gap-6">
-            <span className="">Payment date:</span>
-            <span className="">May 15, 2025</span>
-          </div>
-          <div className="font-MontserratNormal flex items-center md:justify-between gap-6">
-            <span className="">Payment Method:</span>
-            <span className="">Card</span>
-          </div>
-          <div className="font-MontserratNormal flex items-center md:justify-between gap-6">
-            <span className="">Payment Status:</span>
-            <span className="text-[12px] font-MontserratSemiBold bg-[#2D7565]/12 text-[#2D7565] px-4 py-2 rounded-c16 w-fit">
-              Paid
-            </span>
-          </div>
-        </div>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center py-1.5 justify-between gap-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-3 transition-colors hover:opacity-80 group text-left"
+          >
+            <ChevronLeft className="w-6 h-6 text-black stroke-[2.5]" />
+            <h1 className="text-c20 font-MontserratMedium ">{orderId}</h1>
+          </button>
 
-        <div className="flex flex-col gap-6 w-full max-w-[309.33px] text-sm font-MontserratNormal">
-          <Button className="">Track Order</Button>
-          <Button className=" bg-[#C70000] hover:bg-[#a60000]  font-MontserratMedium text-sm transition-colors">
-            Cancel order
-          </Button>
-        </div>
-      </div>
-
-      {/* User Details Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-        {/* Buyer Details */}
-        <div className="flex flex-col w-full max-w-[309.33px]">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-MontserratSemiBold text-sm ">Buyer Details</h3>
-            <button className="text-[12px] text-ff715b flex items-center gap-1 font-MontserratMedium">
-              <span>Edit Address</span>{" "}
-              <span className="w-6 h-6 flex justify-center items-center">
-                <Image src={editIcon} alt="Edit" width={12} height={12} />
-              </span>
+          <div className="flex items-center gap-4 w-full max-w-106.5 flex-wrap sm:flex-nowrap justify-start sm:justify-end">
+            <Button className=" text-nowrap">Update tracking status</Button>
+            <button
+              onClick={handleCancelOrder}
+              className="border w-full max-w-35 border-ca0202 text-ca0202 hover:bg-ca0202/5 px-5 py-2.5 rounded-lg text-sm font-MontserratSemiBold transition-colors"
+            >
+              Cancel order
+            </button>
+            <button
+              onClick={handleDownload}
+              className="w-10 h-10 border border-ff715b rounded-c8 flex-shrink-0 flex items-center justify-center  transition-colors"
+            >
+              <Download className="w-4 h-4 text-[#ff715b]" />
             </button>
           </div>
+        </div>
+      </div>
 
-          <div className="flex items-center gap-2 ">
-            <div className="w-8 h-8 rounded-full  overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80"
-                alt="Buyer"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="font-MontserratSemiBold text-base ">
-                Damian Chinonso
-              </span>
-              <div className="flex items-center gap-1 ">
-                <span className="text-[12px]  font-MontserratSemiBold  text-2d7565">
-                  Verified
-                </span>
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <Image
-                    src={VerifiedIcon}
-                    alt="Verified"
-                    width={16}
-                    height={20}
-                  />
+      {/* Main Grid split into Details (Left) and Order Details Column (Right) */}
+      <div className="flex flex-col lg:flex-row gap-6 w-full  ">
+        {/* Left Column (8/12 width) */}
+        <div className="flex-1 min-w-0 max-w-182 admincustom-scroll h-162.5 overflow-y-auto ">
+          <div className="w-full   pr-2 ">
+            {/* Buyer & Seller Details Row */}
+            <div className="flex gap-4 ">
+              {/* Buyer Details */}
+              <div className="space-y-6 flex-1 min-w-0 min-h-73.5 p-6  bg-ffffff rounded-c16 ">
+                <h3 className="text-sm font-MontserratNormal tracking-[1%] text-000000/68 leading-[18px] mb-6 ">
+                  Buyer's details
+                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    <img
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80"
+                      alt="Buyer Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex items-center w-full justify-between">
+                    <span className="text-base font-MontserratNormal leading-[24px] text-ff715b">
+                      Kelvin Emeka
+                    </span>
+                    <a
+                      href="mailto:demisolaankara@gmail.com"
+                      className="text-[#FF6D5B] hover:opacity-80"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="space-y-4 ">
+                  <div className="flex-col flex">
+                    <span className=" text-xs  mb-1 font-MontserratNormal leading-[16px] tracking-[2%] text-000000/44">
+                      Address
+                    </span>
+                    <span className="text-xs font-MontserratNormal leading-[16px] tracking-[2%] text-000000/68">
+                      12 demisoa street, Enugu, Nigeria
+                    </span>
+                  </div>
+                  <div className="flex-col flex">
+                    <span className=" text-xs  mb-1 font-MontserratNormal leading-[16px] tracking-[2%] text-000000/44">
+                      Phone number
+                    </span>
+                    <span className="text-xs font-MontserratNormal leading-[16px] tracking-[2%] text-000000/68">
+                      +234965857434
+                    </span>
+                  </div>
+                  <div className="flex-col flex">
+                    <span className="block text-xs  mb-1 font-MontserratNormal leading-[16px] tracking-[2%] text-000000/44">
+                      Email address
+                    </span>
+                    <span className="text-xs font-MontserratNormal leading-[16px] tracking-[2%] text-000000/68">
+                      demisolaankara@gmail.com
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-3 text-sm font-MontserratNormal  mt-3">
-            <p>Email Address: deminonso@gmail.com</p>
-            <p>Phone: +234 806 123 4567</p>
-            <p className="">Delivery Address: 12 Umunna Street, Enugu</p>
-          </div>
-
-          <div className="flex gap-3 mt-3">
-            <button className="flex-1 h-9 rounded-lg border border-[#df6b62] text-[#df6b62] font-MontserratMedium text-xs hover:bg-red-50 transition-colors">
-              View Profile
-            </button>
-            <button className="flex-1 h-9 rounded-lg bg-[#0070E9] hover:bg-[#005bb5] text-white font-MontserratMedium text-xs transition-colors">
-              Message Buyer
-            </button>
-          </div>
-        </div>
-
-        {/* Shipping details */}
-        <div className="flex flex-col w-full max-w-[309.33px]">
-          <h3 className="font-MontserratSemiBold text-sm mb-8">
-            Shipping details
-          </h3>
-
-          <div className="flex flex-col gap-4 text-sm font-MontserratNormal ">
-            <div className="flex  gap-1">
-              <span className="text-nowrap">Shipping Address:</span>
-              <span className="leading-relaxed">
-                B23 Global estate HQ, Abuja.
-              </span>
-            </div>
-            <div className="flex  gap-1">
-              <span className="">Shipping Method:</span>
-              <span>MartAf Express</span>
-            </div>
-            <div className="flex  gap-2">
-              <span className="">Tracking Number:</span>
-              <span className="text-ff715b font-MontserratSemiBold">
-                NGN4829424982
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Seller Details */}
-        <div className="flex flex-col w-full max-w-[309.33px]">
-          <h3 className="font-MontserratSemiBold text-sm mb-6">
-            Seller Details
-          </h3>
-
-          <div className="flex items-center gap-3 mt-1">
-            <div className="w-8 h-8 border-[0.27px] border-[#A2A2A2] rounded-full bg-[#F89F1C] flex items-center justify-center  overflow-hidden p-0.5 text-center">
-              <span className="text-[3.2px] leading-[100%] font-MontserratBold">
-                COMPANY LOGO
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="font-MontserratSemiBold text-base ">
-                Chijoke LTD
-              </span>
-              <div className="flex items-center gap-1 ">
-                <span className="text-[12px]  font-MontserratSemiBold  text-2d7565">
-                  Verified
-                </span>
-                <div className="w-6 h-6 flex items-center justify-center">
-                  <Image
-                    src={VerifiedIcon}
-                    alt="Verified"
-                    width={16}
-                    height={20}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 text-sm font-MontserratNormal  mt-3">
-            <p>Email Address: deminonso@gmail.com</p>
-            <p>Phone: +234 806 123 4567</p>
-            <p className="">Contact Address: 12 Umunna Street, Enugu</p>
-          </div>
-
-          <div className="flex gap-3 mt-3">
-            <button className="flex-1 h-9 rounded-lg border border-[#df6b62] text-[#df6b62] font-MontserratMedium text-xs hover:bg-red-50 transition-colors">
-              View Profile
-            </button>
-            <button className="flex-1 h-9 rounded-lg bg-[#0070E9] hover:bg-[#005bb5] text-white font-MontserratMedium text-xs transition-colors">
-              Message Seller
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Order Progress */}
-      <div className="mb-16">
-        <OrderProgress order={{}} getMappedStatus={() => "unprocessed"} />
-      </div>
-
-      <div className="">
-        {/* Order items */}
-        <div>
-          <h3 className="font-MontserratSemiBold text-sm  mb-8 leading-c20">
-            Order items
-          </h3>
-          <div className="w-full flex gap-c56">
-            <table className="w-full text-left max-w-[680px]">
-              <thead>
-                <tr className="bg-947fff text-white text-[12px] font-MontserratSemiBold h-10">
-                  <th className="px-3 font-normal">SKU</th>
-                  <th className="px-3 font-normal">Items</th>
-                  <th className="px-3 font-normal">Unit price</th>
-                  <th className="px-3 font-normal text-center">Qty</th>
-                  <th className="px-3 font-normal">Total</th>
-                  <th className="px-3"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 text-[11px] font-MontserratMedium">
-                {[
-                  {
-                    sku: "NKB-XL",
-                    img: dummyImg,
-                    name: "Nike shoes xl fine blue",
-                    price: "N1500",
-                    qty: 2,
-                    total: "N3000",
-                  },
-                  {
-                    sku: "NKB-XL",
-                    img: dummyImg,
-                    name: "Cap red/black",
-                    price: "N700",
-                    qty: 2,
-                    total: "N1400",
-                  },
-                  {
-                    sku: "NKB-XL",
-                    img: dummyImg,
-                    name: "Earring diamond studded",
-                    price: "N3500",
-                    qty: 2,
-                    total: "N7000",
-                  },
-                  {
-                    sku: "HTB-XL",
-                    img: dummyImg,
-                    name: "Earring diamond studded",
-                    price: "N3500",
-                    qty: 2,
-                    total: "N7000",
-                  },
-                ].map((item, index) => (
-                  <tr
-                    key={index}
-                    className="h-[72px] text-sm font-MontserratNormal"
-                  >
-                    <td className="px-3 font-MontserratMedium ">{item.sku}</td>
-                    <td className="px-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-md overflow-hidden  flex-shrink-0">
-                          <img
-                            src={item.img}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span className="">{item.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-3 ">{item.price}</td>
-                    <td className="px-3 text-center ">{item.qty}</td>
-                    <td className="px-3 font-MontserratSemiBold ">
-                      {item.total}
-                    </td>
-                    <td className="px-3 text-gray-400">
-                      <button className="0">
-                        <MoreVertical className="w-3 h-3" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="pt-2 w-full max-w-[320px]">
-              <h3 className="font-MontserratSemiBold text-sm  mb-6">
-                Order Summary
-              </h3>
-              <div className="flex flex-col gap-3 text-sm font-MontserratNormal">
-                <div className="flex justify-between items-center">
-                  <span>Total Amount</span>
-                  <span className="">N18,400</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Total items</span>
-                  <span className="">8</span>
-                </div>
-                <div className="flex justify-between items-center text-ca0202">
-                  <span>Discounts</span>
-                  <span>-N2,000</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Subtotal</span>
-                  <span className="">N16,400</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Shipping Fee</span>
-                  <span className="">N5,000</span>
+              {/* Seller Details */}
+              <div className="space-y-6 flex-1 min-w-0 min-h-73.5 p-6 bg-ffffff rounded-c16">
+                <h3 className=" block text-sm font-MontserratNormal tracking-[1%] text-000000/68 leading-[18px] ">
+                  Seller's details
+                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
+                    <img
+                      src="https://images.unsplash.com/photo-1516841273335-e39b37888115?auto=format&fit=crop&q=80&w=80"
+                      alt="Seller Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="w-full flex items-center justify-between">
+                    <span className="text-base font-MontserratNormal leading-[24px] text-ff715b">
+                      Ankara Co.
+                    </span>
+                    <a
+                      href="mailto:demisolaankara@gmail.com"
+                      className="text-[#FF6D5B] hover:opacity-80"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    </a>
+                  </div>
                 </div>
 
-                <div className="pt-6 mt-2">
-                  <div className="flex justify-between items-center">
-                    <span>Grand Total</span>
-                    <span className="text-[32px] font-MontserratSemiBold ">
-                      N21,400
+                <div className="space-y-4 ">
+                  <div className="flex-col flex">
+                    <span className="block text-xs  mb-1 font-MontserratNormal leading-[16px] tracking-[2%] text-000000/44">
+                      Address
+                    </span>
+                    <span className="text-xs font-MontserratNormal leading-[16px] tracking-[2%] text-000000/68">
+                      12 demisoa street, Enugu, Nigeria
+                    </span>
+                  </div>
+                  <div className="flex-col flex">
+                    <span className="text-xs  mb-1 font-MontserratNormal leading-[16px] tracking-[2%] text-000000/44">
+                      Phone number
+                    </span>
+                    <span className="text-xs font-MontserratNormal leading-[16px] tracking-[2%] text-000000/68">
+                      +234965857434
+                    </span>
+                  </div>
+                  <div className="flex-col flex">
+                    <span className="block text-xs  mb-1 font-MontserratNormal leading-[16px] tracking-[2%] text-000000/44">
+                      Email address
+                    </span>
+                    <span className="text-xs font-MontserratNormal leading-[16px] tracking-[2%] text-000000/68">
+                      demisolaankara@gmail.com
                     </span>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Order Progress Stepper */}
+            <OrderProgressBar />
+
+            {/* Order Items Section */}
+            <OrderDetailsTable />
           </div>
         </div>
 
-        {/* Order Summary */}
+        {/* Right Column (4/12 width) - Details and Summary */}
+        <div className="w-full lg:w-84.5 h-auto lg:h-162.5 flex-shrink-0">
+          <OrderDetailsSummary />
+        </div>
       </div>
     </div>
   );

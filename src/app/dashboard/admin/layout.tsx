@@ -512,7 +512,7 @@ export default function AdminLayout({
         </aside>
 
         {/* Page Content View */}
-        <main className="flex-1   w-full mx-auto">{children}</main>
+        <main className="flex-1 min-w-0 w-full mx-auto">{children}</main>
       </div>
 
       {/* Mobile Drawer Backdrop */}

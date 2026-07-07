@@ -7,21 +7,28 @@ import { useHttp } from "@/hooks/use-http";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toast } from "sonner";
-import Image from "next/image";
+
 import HandBug from "@/assets/Seller/handBug.png";
-import { AnimatePresence, motion } from "framer-motion";
+
 import Pagination from "@/components/ui/seller-components/body-components/products/pignation-button";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { ChevronDown, Plane, Camera, ArrowLeftRight } from "lucide-react";
+
 import OrdersIcon from "@/assets/icons/admin/orders.svg";
-import TotalRevenue from "@/assets/admin/TotalRevenue.svg";
-import TotalDispute from "@/assets/admin/disputetotal.svg";
+
 import { Button } from "@/components/ui/Button/Button";
+import activeUserIcon from "@/assets/admin/Vector.svg";
+import activeIcon from "@/assets/admin/active.svg";
+import suspendedUserIcon from "@/assets/admin/inactive.svg";
+import inActiveIcon from "@/assets/admin/suspend.svg";
+
 import { Input } from "@/components/ui/forms/Input";
 
 import FilterDropdown from "@/components/ui/seller-components/body-components/over-view/Filter-components/filterButton";
 
-import OrdersTable, { OrderRow } from "@/components/admin-components/orders/OrdersTable";
+import OrdersTable, {
+  OrderRow,
+} from "@/components/admin-components/orders/OrdersTable";
+import StatusFrame from "@/components/admin-components/users/status-frame";
+import { ProductRow } from "@/components/admin-components/products/ProductsTable";
 
 const mockOrders: OrderRow[] = [
   {
@@ -30,7 +37,7 @@ const mockOrders: OrderRow[] = [
     vendors: "Tech Store",
     extraVendors: 2,
     amount: "₦150,000",
-    payment: "Paid",
+    location: "Abuja",
     status: "Delivered",
     date: "20/06/2026",
   },
@@ -39,8 +46,8 @@ const mockOrders: OrderRow[] = [
     buyer: "Jane Smith",
     vendors: "Fashion Hub",
     amount: "₦45,000",
-    payment: "Pending",
-    status: "Processing",
+    location: "Lagos",
+    status: "Ongoing",
     date: "19/06/2026",
   },
   {
@@ -49,8 +56,8 @@ const mockOrders: OrderRow[] = [
     vendors: "Home Goods",
     extraVendors: 1,
     amount: "₦220,000",
-    payment: "Paid",
-    status: "Processed",
+    location: "Lagos",
+    status: "Ongoing",
     date: "18/06/2026",
   },
   {
@@ -58,16 +65,41 @@ const mockOrders: OrderRow[] = [
     buyer: "Bob Williams",
     vendors: "Sports Gear",
     amount: "₦30,000",
-    payment: "Failed",
-    status: "Cancelled",
+    location: "Lagos",
+    status: "Disputed",
     date: "17/06/2026",
   },
 ];
+const mockProducts: ProductRow[] = Array.from({ length: 25 }, (_, i) => {
+  const id = `PRD-${String(i + 1).padStart(3, "0")}`;
+  const statuses: ("Pending" | "Approved" | "Rejected")[] = [
+    "Pending",
+    "Approved",
+    "Rejected",
+  ];
+  return {
+    id,
+    name: `Product ${id}`,
+    seller: `Seller ${Math.floor(Math.random() * 10) + 1}`,
+    category: ["Fashion", "Electronics", "Home", "Beauty"][i % 4],
+    price: `₦${(Math.random() * 50000 + 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+    stock: Math.floor(Math.random() * 500),
+    status: statuses[i % 3],
+    date: new Date(
+      Date.now() - Math.floor(Math.random() * 10000000000),
+    ).toLocaleDateString("en-GB"),
+  };
+});
 
 export default function AdminOrdersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const [selectedMonth, setSelectedMonth] = useState("This Month");
+  const onMonthChange = (value: string) => {
+    setSelectedMonth(value);
+    // filter your orders by the selected period
+  };
   // Default to all-orders if no type param exists
   const type = searchParams.get("type") || "all-orders";
   const isAllOrders = type === "all-orders";
@@ -92,7 +124,7 @@ export default function AdminOrdersPage() {
 
   const handleToggleRow = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -113,10 +145,11 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     let filtered = mockOrders;
     if (searchVal) {
-      filtered = mockOrders.filter(o => 
-        o.id.toLowerCase().includes(searchVal.toLowerCase()) ||
-        o.buyer.toLowerCase().includes(searchVal.toLowerCase()) ||
-        o.vendors.toLowerCase().includes(searchVal.toLowerCase())
+      filtered = mockOrders.filter(
+        (o) =>
+          o.id.toLowerCase().includes(searchVal.toLowerCase()) ||
+          o.buyer.toLowerCase().includes(searchVal.toLowerCase()) ||
+          o.vendors.toLowerCase().includes(searchVal.toLowerCase()),
       );
     }
     setRows(filtered);
@@ -132,243 +165,64 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="space-y-8 ">
+    <div className="space-y-8 bg-white rounded-2xl p-6   animate-in fade-in duration-300">
       {/* Page Title & Track Order */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between  w-full ">
         <h1 className="text-xl md:text-c18 font-MontserratSemiBold">
           Order Management
         </h1>
-        <div className="flex items-center gap-4  w-full max-w-101.5">
-          <Input
-            type="text"
-            placeholder="Enter Tracking No."
-            value={trackingNo}
-            onChange={(e) => setTrackingNo(e.target.value)}
-            className=" max-w-60 "
-          />
+        <div className="flex items-center gap-4 justif w-full max-w-66.25 ">
           <Button
-
+            variant="secondary"
             onClick={handleTrackOrder}
             className="max-w-37.5"
           >
             Track Order
           </Button>
+          <FilterDropdown
+            options={["This Week", "This Month", "This Year"]}
+            defaultValue="This Month"
+            onChange={onMonthChange}
+            className="!rounded-c8 !h-10 !py-0 !px-3 !gap-4 !shadow-custom"
+          />
         </div>
       </div>
 
-      {/* Stats Cards Row */}
-      <div className="flex gap-6">
-        {/* Orders Stats Card */}
-        <div className="bg-ffffff rounded-c16 p-6 border border-000000/4 flex flex-col h-fit animate-in fade-in zoom-in duration-300">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-8 h-c48 border-b border-gray-000000/2">
-            <h2 className="text-c20 font-MontserratMedium text-000000/68">
-              Orders
-            </h2>
-            <FilterDropdown 
-              options={["This Week", "This Month", "This Year"]} 
-              defaultValue="This Month" 
-              className="border border-ff715b !rounded-lg !h-fit !py-1.5 !px-3 !gap-1.5 !shadow-none" 
-            />
-          </div>
-
-          {/* Stats Breakdown Grid */}
-          <div className="flex gap-6  items-stretch">
-            {/* Left Primary Stat */}
-            <div className="flex flex-col gap-14.75 h-full min-h-39.25">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 flex-shrink-0 rounded-full bg-000000/4 flex items-center justify-center text-gray-400">
-                  <Image src={OrdersIcon} alt="orders" height={25} width={25} className="opacity-44"/>
-                </div>
-                <div>
-                  <p className="text-xl md:text-c28 font-MontserratSemiBold">
-                    1,500,000
-                  </p>
-                  <p className="text-c12 text-000000/44 font-MontserratMedium">
-                    N55M
-                  </p>
-                </div>
-              </div>
-
-              <div className="col-span-1 md:col-span-2 flex flex-wrap gap-x-4 gap-y-2">
-                {["NG", "US", "GH", "CN"].map((c, i) => (
-                  <div
-                    key={c}
-                    className="text-left flex flex-col items-start gap-2"
-                  >
-                    <span className="text-c18 font-MontserratSemiBold">
-                      {c}
-                    </span>
-                    <span className="text-c12 text-000000/44 font-MontserratMedium">
-                      {i === 0 ? "150,000" : "500"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Middle Stats Badges */}
-            <div className="flex  gap-6 min-h-39.25">
-              <div className="flex flex-col justify-between gap-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-c18 font-MontserratSemiBold">
-                      1,500,000
-                    </p>
-                    <p className="text-c12 text-000000/44 font-MontserratMedium">
-                      N54,000
-                    </p>
-                    <span className="text-[10px] font-MontserratBold bg-[#28A745]/12 text-[#4DBEA7] px-2 py-0.5 rounded-c4 leading-[16px] h-5">
-                      Completed
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-c18 font-MontserratSemiBold">750</p>
-                    <p className="text-c12 text-000000/44 font-MontserratMedium">
-                      N55,000
-                    </p>
-                    <span className="text-[10px] font-MontserratBold bg-[#0070E9]/12 text-[#0070E9] px-2 py-0.5 rounded-c4 leading-[16px] h-5">
-                      Pending
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col items-center justify-between gap-6">
-                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-c18 font-MontserratSemiBold">1000</p>
-                    <p className="text-c12 text-000000/44 font-MontserratMedium">
-                      N55,000
-                    </p>
-                    <span className="text-[10px] font-MontserratBold bg-[#FFAC06]/12 text-[#FFAC06] px-2 py-0.5 rounded-c4 leading-[16px] h-5">
-                      Fulfilled
-                    </span>
-                  </div>
-                </div>
-               
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-c18 font-MontserratSemiBold">350,000</p>
-                    <p className="text-c12 text-000000/44 font-MontserratMedium">
-                      N55,000
-                    </p>
-                    <span className="text-[10px] font-MontserratBold bg-[#CC0000]/12 text-[#CA0202] px-2 py-0.5 rounded-c4 leading-[16px] h-5">
-                      Returned
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Revenue & Dispute Card */}
-        <div className="bg-ffffff rounded-c16 w-[55%] p-6 border border-000000/4 flex flex-col h-fit animate-in fade-in zoom-in duration-300">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-8 h-c48 border-b border-gray-000000/2">
-            <h2 className="text-sm font-MontserratBold text-000000/68">
-              Revenue & Dispute
-            </h2>
-            <FilterDropdown 
-              options={["This Week", "This Month", "This Year"]} 
-              defaultValue="This Month" 
-              className="border border-ff715b !rounded-lg !h-fit !py-1.5 !px-3 !gap-1.5 !shadow-none" 
-            />
-          </div>
-
-          {/* Stats */}
-          <div className="flex  gap-6 items-stretch">
-            {/* Left: Revenue */}
-            <div className="flex flex-col gap-8">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 flex-shrink-0 rounded-full bg-000000/4 flex items-center justify-center text-gray-400">
-                  
-                   <Image src={TotalRevenue} alt="total revenue" height={30} width={30} className="opacity-44"/>
-                </div>
-                <div>
-                  <p className="text-c12 text-000000/44 font-MontserratMedium">
-                    Total Revenue
-                  </p>
-                  <p className="text-xl md:text-c28 font-MontserratSemiBold">
-                    ₦1,500,000
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-6">
-                <div>
-                  <p className="text-c12 text-000000/44 font-MontserratMedium mb-1">
-                    Paid
-                  </p>
-                  <p className="text-c18 font-MontserratSemiBold">
-                    ₦1,000,000
-                  </p>
-                </div>
-                <div>
-                  <p className="text-c12 text-000000/44 font-MontserratMedium mb-1">
-                    Pending
-                  </p>
-                  <p className="text-c18 font-MontserratSemiBold">₦500,000</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Dispute & Refund */}
-            <div className="flex flex-col gap-8">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 flex-shrink-0 rounded-full bg-000000/4 flex items-center justify-center text-gray-400">
-                   <Image src={TotalDispute} alt="total revenue" height={28} width={30} className="opacity-44"/>
-                </div>
-                <div>
-                  <p className="text-c12 text-000000/44 font-MontserratMedium">
-                    Dispute & Refund
-                  </p>
-                  <p className="text-xl md:text-c28 font-MontserratSemiBold">
-                    210
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex md:gap-4 box-border">
-                <div>
-                  <p className="text-c18 font-MontserratSemiBold">80</p>
-                  <p className="text-c12 text-000000/44 font-MontserratMedium">
-                    N54,000
-                  </p>
-                  <span className="text-[10px] font-MontserratBold bg-[#28A745]/12 text-[#4DBEA7] px-2 py-0.5 rounded-c4 leading-[16px] h-5">
-                    Approved
-                  </span>
-                </div>
-                <div>
-                  <p className="text-c18 font-MontserratSemiBold">60</p>
-                  <p className="text-c12 text-000000/44 font-MontserratMedium">
-                    N55,000
-                  </p>
-                  <span className="text-[10px] font-MontserratBold bg-[#FFAC06]/12 text-[#FFAC06] px-2 py-0.5 rounded-c4 leading-[16px] h-5">
-                    Pending
-                  </span>
-                </div>
-                <div>
-                  <p className="text-c18 font-MontserratSemiBold">70</p>
-                  <p className="text-c12 text-000000/44 font-MontserratMedium">
-                    N55,000
-                  </p>
-                  <span className="text-[10px] font-MontserratBold bg-[#CC0000]/12 text-[#CA0202] px-2 py-0.5 rounded-c4 leading-[16px] h-5">
-                    Rejected
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="justify-between flex items-center w-full">
+        <StatusFrame
+          title="Total Orders"
+          quantity={totalCount}
+          icon={OrdersIcon}
+          width={26}
+          height={22}
+        />
+        <StatusFrame
+          title="Delivered Orders"
+          quantity={mockProducts.filter((p) => p.status === "Approved").length}
+          icon={activeIcon}
+          width={26}
+          height={26}
+        />
+        <StatusFrame
+          title="Ongoing Orders"
+          quantity={mockProducts.filter((p) => p.status === "Pending").length}
+          icon={inActiveIcon}
+          width={18}
+          height={26}
+        />
+        <StatusFrame
+          title="Disputed Orders"
+          quantity={mockProducts.filter((p) => p.status === "Rejected").length}
+          icon={suspendedUserIcon}
+          width={26}
+          height={26}
+        />
       </div>
 
       {/* Orders List Table */}
-      <div className="bg-white rounded-2xl p-6 border border-000000/4  animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl p-6 border border-000000/4">
         <h2 className="text-base font-MontserratNormal text-000000/68 mb-6">
-          List of Orders
+          Orders table
         </h2>
 
         {/* Filters Header (Reusable) */}
@@ -380,7 +234,7 @@ export default function AdminOrdersPage() {
         />
 
         {/* Data Table */}
-        <OrdersTable 
+        <OrdersTable
           rows={rows}
           selectedIds={selectedIds}
           activeRowId={activeRowId}

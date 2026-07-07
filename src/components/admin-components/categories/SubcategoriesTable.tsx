@@ -39,6 +39,7 @@ export default function SubcategoriesTable({
   onRowClick,
   onSetActiveRowId,
   onSelectAll,
+  onToggleRow,
   selectedProductIds,
 }: SubcategoriesTableProps) {
   return (
