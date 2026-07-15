@@ -25,7 +25,7 @@ export default function SellerDashboardLayout({
 
   useEffect(() => {
     if (!token) return;
-    console.log("Token found in SellerDashboardLayout:", token);
+  
 
     const fetchVerificationStatus = () => {
       statusHttpRequest({

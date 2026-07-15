@@ -55,7 +55,6 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       return;
     }
 
-  
     if (formData.rememberMe) {
       localStorage.setItem("rememberEmail", formData.email);
       localStorage.setItem("rememberPassword", formData.password);
@@ -65,6 +64,7 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
     }
 
     dispatch(tokenActions.setToken(accessToken));
+    toast.success("Login successful!");
     onClose();
   };
 
@@ -90,7 +90,6 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
           check: formData.rememberMe,
         },
         userType: "buyer",
-        successMessage: "Login successful!",
       },
       successRes: loginSuccess,
     });

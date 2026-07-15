@@ -120,7 +120,7 @@ export default function LoginForm({ userType }: RegProps) {
 
   const url =
     userType === "seller"
-      ? "/accounts/manufacturer/login/"
+      ? "/accounts/login"
       : userType === "admin"
       ? "/accounts/admin/login/"
       : "/accounts/login";
