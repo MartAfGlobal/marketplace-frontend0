@@ -28,7 +28,17 @@ import OrdersTable, {
   OrderRow,
 } from "@/components/admin-components/orders/OrdersTable";
 import StatusFrame from "@/components/admin-components/users/status-frame";
-import { ProductRow } from "@/components/admin-components/products/ProductsTable";
+
+type MockProductRow = {
+  id: string;
+  name: string;
+  seller: string;
+  category: string;
+  price: string;
+  stock: number;
+  status: "Pending" | "Approved" | "Rejected";
+  date: string;
+};
 
 const mockOrders: OrderRow[] = [
   {
@@ -70,7 +80,7 @@ const mockOrders: OrderRow[] = [
     date: "17/06/2026",
   },
 ];
-const mockProducts: ProductRow[] = Array.from({ length: 25 }, (_, i) => {
+const mockProducts: MockProductRow[] = Array.from({ length: 25 }, (_, i) => {
   const id = `PRD-${String(i + 1).padStart(3, "0")}`;
   const statuses: ("Pending" | "Approved" | "Rejected")[] = [
     "Pending",

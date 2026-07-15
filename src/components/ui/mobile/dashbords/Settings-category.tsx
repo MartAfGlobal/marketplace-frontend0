@@ -11,8 +11,11 @@ import ChangePasswordModal from "./buyer-dashboard/change-password";
 import Flag from "@/assets/icons/flag.svg";
 import { logout } from "@/utils/logout";
 import { useLogout } from "@/utils/logout";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
 import NotificationSettings from "../../buyer-components/Main-section/sections/notification-settings";
+import ResultModal from "@/components/ui/forms/resultModal";
+import { useHttp } from "@/hooks/use-http";
 
 // Minimal African sample (add more as needed)
 const countrySettings: Record<
@@ -40,6 +43,30 @@ const countrySettings: Record<
 
 export default function Settings() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const { loading, sendHttpRequest } = useHttp();
+  const dispatch = useDispatch();
+  const token = useSelector((state: RootState) => state.token.token);
+  const logout = useLogout(dispatch);
+
+  const handleDeleteConfirm = () => {
+    sendHttpRequest({
+      requestConfig: {
+        url: "/accounts/delete",
+        method: "DELETE",
+        isAuth: true,
+        token: token ?? undefined,
+      },
+      successRes: () => {
+        setIsDeleteModalOpen(false);
+        logout();
+      },
+      errorRes: () => {
+        setIsDeleteModalOpen(false);
+      }
+    });
+  };
+
   const [openSections, setOpenSections] = useState<string[]>([]);
   const [toggles, setToggles] = useState({
     orderNotifications: true,
@@ -48,8 +75,6 @@ export default function Settings() {
     twoFactor: false,
   });
   const router = useRouter();
-  const dispatch = useDispatch();
-  const logout = useLogout(dispatch);
   const [selectedCountry, setSelectedCountry] =
     useState<keyof typeof countrySettings>("Nigeria");
   const [isRegionOpen, setIsRegionOpen] = useState(false);
@@ -265,9 +290,19 @@ export default function Settings() {
           <span>Legal information</span>
         </div>
         <div className="flex items-center h-11 border-b border-b-000000/5">
-          <button className="text-ff715b">Delete account</button>
+          <button onClick={() => setIsDeleteModalOpen(true)} className="text-ff715b">Delete account</button>
         </div>
       </div>
+      <ResultModal
+        isOpen={isDeleteModalOpen}
+        result="warning"
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone."
+        buttenText="Delete"
+        loading={loading}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+      />
       <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center  justify-center ">
         <Button
           onClick={logout}

@@ -1,14 +1,24 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import ApproveProductModal from "@/components/ui/Modals/admin/ApproveProductModal";
 import RejectProductModal from "@/components/ui/Modals/admin/RejectProductModal";
+import { AdminDetails } from "@/helpers/admin/adminHelper";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { AdminProductDetail } from "@/types/global";
 
 import ProductImage from "@/assets/admin/productMainImage.svg";
+
+// Using a placeholder for images since it's UI only
+const placeholderImage =
+  "https://via.placeholder.com/400x400/111111/FFFFFF?text=Product+Image";
+const thumbnailImage =
+  "https://via.placeholder.com/60x60/111111/FFFFFF?text=Thumb";
 
 export default function ProductReviewPage({
   params,
@@ -22,6 +32,20 @@ export default function ProductReviewPage({
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [variantIndex, setVariantIndex] = useState(0);
   const variantsScrollRef = useRef<HTMLDivElement>(null);
+  const { fetchAdminSellersProductDetails, loading } = AdminDetails();
+
+  const productId = unwrappedParams.id;
+  const token = useSelector((state: RootState) => state.token?.token);
+  const product = useSelector(
+    (state: RootState) =>
+      (state as any).adminProductDetail?.product as AdminProductDetail | null
+  );
+
+  useEffect(() => {
+    if (token) {
+      fetchAdminSellersProductDetails(productId);
+    }
+  }, [token, productId]);
 
   const scrollVariants = (direction: "left" | "right") => {
     const newIndex =
@@ -31,27 +55,72 @@ export default function ProductReviewPage({
     setVariantIndex(newIndex);
   };
 
-  const images = Array(6).fill(ProductImage);
+  // ── Real images (fallback to 6 placeholders if not loaded yet) ──────────────
+  const galleryUrls: string[] = [];
+  if (product?.main_image) galleryUrls.push(product.main_image);
+  product?.images?.forEach((img) => {
+    const url = img.medium || img.large || img.thumbnail || img.url || "";
+    if (url && !galleryUrls.includes(url)) galleryUrls.push(url);
+  });
+  const images = galleryUrls.length > 0 ? galleryUrls : Array(6).fill(thumbnailImage);
 
-  // Mock Variants Data
-  const variants = [
-    {
-      id: 1,
-      sku: "123PKU6785",
-      color: "Black",
-      size: "XS",
-      quantity: 20,
-      material: "Silk",
-    },
-    {
-      id: 2,
-      sku: "123PKU6786",
-      color: "Red",
-      size: "S",
-      quantity: 15,
-      material: "Cotton",
-    },
-  ];
+  // ── Real variants (fallback to mock while loading) ───────────────────────────
+  const variants = product?.variations?.length
+    ? product.variations.map((v) => ({
+        id: v.id,
+        sku: v.sku,
+        color: v.attribute_summary?.["Color"] ?? v.attribute_summary?.["Colour"] ?? "—",
+        size: v.attribute_summary?.["Size"] ?? "—",
+        quantity: v.stock,
+        material: v.attribute_summary?.["Material"] ?? "—",
+        thumb: v.main_image_url || v.images?.[0]?.thumbnail || null,
+        name: v.name,
+      }))
+    : [
+        { id: 1, sku: "123PKU6785", color: "Black", size: "XS", quantity: 20, material: "Silk", thumb: null, name: "Variation Name" },
+        { id: 2, sku: "123PKU6786", color: "Red",   size: "S",  quantity: 15, material: "Cotton", thumb: null, name: "Variation Name" },
+      ];
+
+  // ── Real price range variations ──────────────────────────────────────────────
+  const currency = product?.price_range?.currency ?? "₦";
+  const priceVariations = product
+    ? Object.entries(product.variation_options ?? {}).flatMap(([, opt]) =>
+        opt.values.map((val) => ({
+          name: val.value,
+          price: `${currency}${Number(val.min_price).toLocaleString()}`,
+        }))
+      )
+    : [
+        { name: "Variation Name", price: "₦18,000" },
+        { name: "Variation Name", price: "₦18,000" },
+        { name: "Variation Name", price: "₦18,000" },
+      ];
+
+  // ── Status badge ─────────────────────────────────────────────────────────────
+  const approvalStatus = (product?.is_approved ?? "pending").toLowerCase();
+  const statusClass =
+    approvalStatus === "approved"
+      ? "bg-green-100 text-green-700"
+      : approvalStatus === "rejected"
+      ? "bg-red-100 text-red-600"
+      : "bg-ffaco6/12 text-ffaco6";
+  const statusLabel =
+    approvalStatus === "approved" ? "Approved"
+    : approvalStatus === "rejected" ? "Rejected"
+    : "Pending";
+
+  // ── Other real values ────────────────────────────────────────────────────────
+  const basePrice = product?.base_price
+    ? `${currency}${Number(product.base_price).toLocaleString()}`
+    : "₦20,000";
+  const stock = product?.inventory ?? 200;
+  const productName = product?.name ?? "Product Name";
+  const sellerName = product?.manufacturer_name ?? "KYZ co. Ltd";
+  const createdAt = product?.created_at
+    ? new Date(product.created_at).toLocaleDateString("en-GB")
+    : "12/12/2025";
+  const categoryName = product?.category?.name ?? "Fashion";
+  const subcategoryName = product?.category?.subcategory?.name ?? "Adult Wears";
 
   // Checklist state
   const checklistSections = [
@@ -149,34 +218,45 @@ export default function ProductReviewPage({
         <div className="flex items-end w-full bg-ffffff rounded-c12 h-43 justify-between shadow-[0px_3px_8px_0px_#6A0DAD14] p-6 mb-12">
           <div className="flex gap-6 items-center">
             <div className="h-30 fl">
-              <Image
-                src={ProductImage}
-                alt="Product"
-                width={120}
-                height={120}
-                className="rounded-c8 h-30 w-30 object-cover"
-              />
+              {galleryUrls.length > 0 ? (
+                <Image
+                  src={galleryUrls[0]}
+                  alt="Product"
+                  width={120}
+                  height={120}
+                  className="rounded-c8 h-30 w-30 object-cover"
+                  unoptimized
+                />
+              ) : (
+                <Image
+                  src={ProductImage}
+                  alt="Product"
+                  width={120}
+                  height={120}
+                  className="rounded-c8 h-30 w-30 object-cover"
+                />
+              )}
             </div>
             <div className="flex flex-col justify-between h-35 text-base font-MontserratSemiBold py-2">
               <h2 className="text-c20 font-MontserratSemiBold ">
-                Product Name
+                {productName}
               </h2>
 
               <div className="flex items-center gap-2">
                 <span>Seller:</span>
                 <div className="flex items-center gap-1.5">
                   <div className="w-6 h-6 bg-[#ffac06] rounded-full flex items-center justify-center text-[2.88px] text-center">
-                    COMPANY LOGO
+                    LOGO
                   </div>
                   <span className=" font-MontserratSemiBold text-000000/68">
-                    KYZ co. Ltd
+                    {sellerName}
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span>Status:</span>
-                <span className="bg-[#ffac06]/12 w-25 flex items-center justify-center h-8 text-[#ffac06] px-2 py-0.5 rounded-c16 text-[12px] font-MontserratSemiBold">
-                  Pending
+                <span className={`w-25 flex items-center justify-center h-8 px-2 py-0.5 rounded-c16 text-[12px] font-MontserratSemiBold ${statusClass}`}>
+                  {statusLabel}
                 </span>
               </div>
             </div>
@@ -184,12 +264,12 @@ export default function ProductReviewPage({
           <div className=" gap-x-8 gap-y-5.5 py-2 text-base  flex flex-col items-end font-MontserratSemiBold">
             <div className="flex items-center gap-2">
               <span>Category: </span>
-              <span className="text-000000/68">Fashion</span>
+              <span className="text-000000/68">{categoryName}</span>
             </div>
 
             <div className="flex items-center gap-2">
               <span>Date: </span>
-              <span className="text-000000/68">12/12/2025</span>
+              <span className="text-000000/68">{createdAt}</span>
             </div>
           </div>
 
@@ -239,7 +319,17 @@ export default function ProductReviewPage({
           <div className="w-full xl:w-[50%] min-w-0 sticky top-6 h-[calc(100vh-3rem)] overflow-y-auto no-scrollbar pb-6">
             {/* Main Image */}
             <div className="rounded-c16  overflow-hidden w-full h-90 relative mb-6">
-              <Image src={ProductImage} alt="Main Product" fill />
+              {galleryUrls.length > 0 ? (
+                <Image
+                  src={galleryUrls[activeImage] ?? galleryUrls[0]}
+                  alt="Main Product"
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <Image src={ProductImage} alt="Main Product" fill />
+              )}
             </div>
 
             {/* Progress / Image indicator bar */}
@@ -252,7 +342,7 @@ export default function ProductReviewPage({
                       ? "flex-[2] max-w-36 border-000000/68"
                       : "flex-1 max-w-10 border-000000/4"
                   }`}
-                ></div>
+                />
               ))}
             </div>
 
@@ -264,13 +354,24 @@ export default function ProductReviewPage({
                   onClick={() => setActiveImage(idx)}
                   className={`flex-shrink-0 w-[66.81px] h-[66.81px] rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? "border-[#ff715b]" : "border-transparent"}`}
                 >
-                  <Image
-                    src={ProductImage}
-                    alt={`Thumb ${idx}`}
-                    width={66.81}
-                    height={66.81}
-                    className="w-full h-full object-cover"
-                  />
+                  {galleryUrls.length > 0 ? (
+                    <Image
+                      src={img}
+                      alt={`Thumb ${idx}`}
+                      width={66.81}
+                      height={66.81}
+                      className="w-full h-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <Image
+                      src={ProductImage}
+                      alt={`Thumb ${idx}`}
+                      width={66.81}
+                      height={66.81}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </button>
               ))}
             </div>
@@ -279,16 +380,45 @@ export default function ProductReviewPage({
               <h3 className="text-base font-MontserratSemiBold mb-3">
                 Product Description
               </h3>
-              <p className="text-xs  font-MontserratNormal">
-                Lorem ipsum dolor sit amet consectetur. Et id in non arcu eu
-                elit facilisi ut tellus. Habitant pellentesque turpis turpis vel
-                vitae vestibulum. Congue nunc tempus eget mi. Placerat laoreet
-                in ultricies at. Lorem hac pharetra ullamcorper maecenas purus.
-                Et ornare sollicitudin eget est volutpat fames dictumst
-                scelerisque mattis. Dui scelerisque fermentum sapien cras id
-                dignissim aenean. Etiam ultrices sed diam odio ligula ornare
-                augue posuere.
-              </p>
+              {product?.description_html ? (
+                <div
+                  className="text-xs  font-MontserratNormal"
+                  dangerouslySetInnerHTML={{ __html: product.description_html }}
+                />
+              ) : (
+                <p className="text-xs  font-MontserratNormal">
+                  Lorem ipsum dolor sit amet consectetur. Et id in non arcu eu
+                  elit facilisi ut tellus. Habitant pellentesque turpis turpis vel
+                  vitae vestibulum. Congue nunc tempus eget mi. Placerat laoreet
+                  in ultricies at. Lorem hac pharetra ullamcorper maecenas purus.
+                  Et ornare sollicitudin eget est volutpat fames dictumst
+                  scelerisque mattis. Dui scelerisque fermentum sapien cras id
+                  dignissim aenean. Etiam ultrices sed diam odio ligula ornare
+                  augue posuere.
+                </p>
+              )}
+            </div>
+            <div className="mb-6 mt-8">
+              <h3 className="text-base font-MontserratSemiBold mb-3">
+                Product Specifications
+              </h3>
+              {product?.specifications_html ? (
+                <div
+                  className="text-xs  font-MontserratNormal"
+                  dangerouslySetInnerHTML={{ __html: product.specifications_html }}
+                />
+              ) : (
+                <p className="text-xs  font-MontserratNormal">
+                  Lorem ipsum dolor sit amet consectetur. Et id in non arcu eu
+                  elit facilisi ut tellus. Habitant pellentesque turpis turpis vel
+                  vitae vestibulum. Congue nunc tempus eget mi. Placerat laoreet
+                  in ultricies at. Lorem hac pharetra ullamcorper maecenas purus.
+                  Et ornare sollicitudin eget est volutpat fames dictumst
+                  scelerisque mattis. Dui scelerisque fermentum sapien cras id
+                  dignissim aenean. Etiam ultrices sed diam odio ligula ornare
+                  augue posuere.
+                </p>
+              )}
             </div>
             <div className="w-full flex  max-w-132 border border-00000/12 rounded-c8 mb-c32">
               <div className="  w-full max-w-66 px-4 py-3 flex flex-col gap-4 border-r-2 border-r-000000/12">
@@ -296,7 +426,7 @@ export default function ProductReviewPage({
                   Category
                 </h4>
                 <p className="text-c12 font-MontserratNormal leading-[16px]">
-                  Fashion
+                  {categoryName}
                 </p>
               </div>
               <div className="w-full max-w-66 px-4 py-3 flex flex-col gap-4">
@@ -304,7 +434,7 @@ export default function ProductReviewPage({
                   Subcategory
                 </h4>
                 <p className="text-c12 font-MontserratNormal leading-[16px]">
-                  Adult Wears
+                  {subcategoryName}
                 </p>
               </div>
             </div>
@@ -321,14 +451,14 @@ export default function ProductReviewPage({
                     disabled={variantIndex === 0}
                     className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <ChevronLeft className="w-4 h-4 text-gray-500" />
+                    <ChevronLeft className="w-4 h-4 text-000000/68" />
                   </button>
                   <button
                     onClick={() => scrollVariants("right")}
                     disabled={variantIndex + 2 >= variants.length}
                     className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                    <ChevronRight className="w-4 h-4 text-000000/68" />
                   </button>
                 </div>
               </div>
@@ -342,43 +472,55 @@ export default function ProductReviewPage({
                     >
                       <div className="flex-shrink-0">
                         <p className="text-xs font-MontserratSemiBold mb-3 leading-4 truncate max-w-[80px]">
-                          Variation Name
+                          {variant.name || "Variation Name"}
                         </p>
-                        <Image
-                          src={ProductImage}
-                          alt="Variant"
-                          width={80}
-                          height={80}
-                          className="rounded-c8 object-cover"
-                        />
+                        {variant.thumb ? (
+                          <div className="w-[80px] h-[80px] relative rounded-c8 overflow-hidden">
+                            <Image
+                              src={variant.thumb}
+                              alt={variant.name || "Variant"}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <Image
+                            src={ProductImage}
+                            alt="Variant"
+                            width={80}
+                            height={80}
+                            className="rounded-c8 object-cover"
+                          />
+                        )}
                       </div>
                       <div className="flex flex-col gap-1.5 text-[11px] min-w-0 flex-1">
                         <p className="flex truncate">
-                          <span className="text-gray-500 mr-1">SKU:</span>{" "}
+                          <span className="text-000000/68 mr-1">SKU:</span>{" "}
                           <span className="font-MontserratSemiBold truncate">
                             {variant.sku}
                           </span>
                         </p>
                         <p className="flex truncate">
-                          <span className="text-gray-500 mr-1">Colour:</span>{" "}
+                          <span className="text-000000/68 mr-1">Colour:</span>{" "}
                           <span className="font-MontserratSemiBold truncate">
                             {variant.color}
                           </span>
                         </p>
                         <p className="flex truncate">
-                          <span className="text-gray-500 mr-1">Size:</span>{" "}
+                          <span className="text-000000/68 mr-1">Size:</span>{" "}
                           <span className="font-MontserratSemiBold truncate">
                             {variant.size}
                           </span>
                         </p>
                         <p className="flex truncate">
-                          <span className="text-gray-500 mr-1">Quantity:</span>{" "}
+                          <span className="text-000000/68 mr-1">Quantity:</span>{" "}
                           <span className="font-MontserratSemiBold truncate">
                             {variant.quantity}
                           </span>
                         </p>
                         <p className="flex truncate">
-                          <span className="text-gray-500 mr-1">Material:</span>{" "}
+                          <span className="text-000000/68 mr-1">Material:</span>{" "}
                           <span className="font-MontserratSemiBold truncate">
                             {variant.material}
                           </span>
@@ -400,7 +542,7 @@ export default function ProductReviewPage({
                   <div className=" flex-col flex truncate min-w-18.75 gap-8">
                     <p className="text-sm font-MontserratSemiBold ">Price</p>
                     <p className="text-xs font-MontserratSemiBold text-161616 ">
-                      ₦20,000
+                      {basePrice}
                     </p>
                   </div>
                   <div className="  w-full space-y-4">
@@ -408,30 +550,16 @@ export default function ProductReviewPage({
                       Price Range
                     </p>
                     <div className="flex gap-6 w-full flex-wrap">
-                      <div className="space-y-1 w-full max-w-23.5 truncate">
-                        <p className="font-MontserratNormal text-xs text-000000/68">
-                          Variation Name
-                        </p>
-                        <p className="text-xs font-MontserratSemiBold text-161616 text-center">
-                          ₦18,000
-                        </p>
-                      </div>
-                      <div className="space-y-1 w-full max-w-23.5 truncate">
-                        <p className="font-MontserratNormal text-xs text-000000/68">
-                          Variation Name
-                        </p>
-                        <p className="text-xs font-MontserratSemiBold text-161616 text-center">
-                          ₦18,000
-                        </p>
-                      </div>
-                      <div className="space-y-1 w-full max-w-23.5 truncate">
-                        <p className="font-MontserratNormal text-xs text-000000/68">
-                          Variation Name
-                        </p>
-                        <p className="text-xs font-MontserratSemiBold text-161616 text-center">
-                          ₦18,000
-                        </p>
-                      </div>
+                      {priceVariations.slice(0, 3).map((v, i) => (
+                        <div key={i} className="space-y-1 text-left w-full max-w-20.5 truncate">
+                          <p className="font-MontserratNormal text-xs text-000000/68">
+                            {v.name}
+                          </p>
+                          <p className="text-xs font-MontserratSemiBold text-161616 ">
+                            {v.price}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -440,7 +568,7 @@ export default function ProductReviewPage({
                 <div className="w-ful truncate w-18.75">
                   <p className="text-sm font-MontserratSemiBold">Stock</p>
                   <p className="text-xs  font-MontserratNormal text-161616 mt-4">
-                    200
+                    {stock}
                   </p>
                 </div>
                 <div className="">
@@ -479,7 +607,7 @@ export default function ProductReviewPage({
 
           {/* Right Side - Review Checklist */}
           <div className="w-full xl:w-[50%] flex flex-col min-w-0 sticky top-6 h-[calc(100vh-3rem)] pb-6">
-            <div className="flex-1 overflow-y-auto pr-4 mb-8 no-scrollbar">
+            <div className="flex-1 overflow-y-auto pr-4 c64 no-scrollbar">
               {checklistSections.map((section, sIdx) => (
                 <div key={sIdx} className="mb-6">
                   <h3 className="text-sm font-MontserratSemiBold  mb-3">
@@ -520,7 +648,7 @@ export default function ProductReviewPage({
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-auto pt-4 flex justify-end gap-4 border-t border-gray-100">
+            <div className="mt-auto  flex justify-end gap-4  ">
               <Button className="bg-transparent text-[#ff715b] border border-[#ff715b] hover:bg-[#ffe8e8] w-36 h-12">
                 Message Seller
               </Button>

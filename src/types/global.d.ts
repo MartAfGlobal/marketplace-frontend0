@@ -1204,7 +1204,8 @@ export type AuthStep =
   | "forgot"
   | "resetVerify"
   | "resetPassword"
-  | "verificationSent";
+  | "verificationSent"
+  | "personalDetails";
 
 export interface ShippingInfo {
   city: string | null;
@@ -1575,4 +1576,378 @@ export interface SellerOrderResult {
   time_remaining_to_accept: number;
   time_remaining_to_fulfill: number | null;
   updated_at: string;
+}
+
+export interface AdminBuyerData {
+  account_status: "Active" | "Inactive" | "Suspended";
+  city: string | null;
+  country: string | null;
+  created_at: string;
+  date_joined: string;
+  disputes: number;
+  email: string;
+  email_verified: boolean;
+  first_name: string | null;
+  id: number;
+  is_active: boolean;
+  last_name: string | null;
+  loyalty_points: boolean;
+  phone: string;
+  state: string | null;
+  total_orders: number;
+  user_id: string;
+}
+
+export interface AdminBuyerDetailsData {
+  account_status: "Active" | "Inactive" | "Suspended" | string;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  created_at: string;
+  date_joined: string;
+  deleted_at: string | null;
+  deletion_reason: string | null;
+  disputes: number;
+  dob: string | null;
+  email: string;
+  email_verified: boolean;
+  first_name: string | null;
+  gender: string | null;
+  gender_display: string | null;
+  id: number;
+  is_active: boolean;
+  is_deleted: boolean;
+  is_google_user: boolean;
+  landmark: string | null;
+  last_login: string | null;
+  last_name: string | null;
+  loyalty_points: number;
+  phone: string;
+  phone2: string | null;
+  last_payment_method: string | null;
+  preferred_payment_method: string | null;
+  postal_code: string | null;
+  state: string | null;
+  suspended_at: string | null;
+  suspension_note: string;
+  return_rat: number;
+  max_order_amount: string | null;
+  profile_picture_url: string | null;
+  suspension_reason: string | null;
+  suspension_reason_display: string | null;
+  total_orders: number;
+  last_login_ip: string | null;
+  last_order_date: string | null;
+  user_id: string;
+}
+
+export interface AdminSellerData {
+  bank_verification_status: "VERIFIED" | "UNVERIFIED" | "PENDING";
+  business_industry: string | null;
+  company_country_name: string;
+  company_name: string;
+  created_at: string;
+  id: 9;
+  is_registered_business: false;
+  location: string;
+  phone: string;
+  profile_picture_url: string | null;
+  seller_ref: string;
+  shipping_zone: string | null;
+  total_orders: number;
+  total_products: number;
+  user_email: string;
+  user_id: string;
+  kyc_status: "VERIFIED" | "REJECTED" | "PENDING";
+  user_is_active: boolean;
+  user_status: "Pending" | "Verified" | "Active" | "Rejected" | "Suspended";
+  wallet_balance: number;
+}
+
+export interface VerificationSteps {
+  identification_verified: boolean;
+  personal_info: boolean;
+  phone_verified: boolean;
+}
+
+export interface VerificationProgress {
+  completed_steps: number;
+  percentage: number;
+  steps: VerificationSteps;
+  total_steps: number;
+}
+
+export interface AdminSellerDetailsData {
+  id: number;
+  user_id: string;
+  seller_ref: string;
+  company_name: string;
+  company_country: string;
+  company_address: string;
+  company_city: string | null;
+  company_state: string | null;
+  company_postal_code: string | null;
+  company_email: string | null;
+  company_logo: string | null;
+  is_registered_business: boolean;
+  business_industry: string;
+  business_location: string;
+  business_registration_location: string | null;
+  business_registration_number: string | null;
+  business_type: string;
+  business_description: string;
+  certificate_of_registration: string | null;
+  CAC_No: string | null;
+  CAC_No_file: string | null;
+  tax_identification_number: string | null;
+  tax_identification_file: string | null;
+  vat_number: string | null;
+  bank_details: any | null;
+  bank_verification_status: "VERIFIED" | "UNVERIFIED" | "PENDING" | string;
+  location: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string | null;
+  landmark: string;
+  phone: string;
+  phone2: string | null;
+  dob: string | null;
+  nationality: string;
+  residence_country: string;
+  profile_picture: string | null;
+  shipping_address: string | null;
+  return_address: string | null;
+  shipping_zone: string;
+  active_products: number;
+  total_products: number;
+  total_orders: number;
+  total_revenue: number | null;
+  wallet_balance: number;
+  user_is_active: boolean;
+  user_account_status: string;
+  user_date_created: string;
+  user_email: string;
+  user_status?: string;
+  created_at: string;
+  last_login: string | null;
+  last_login_ip: string | null;
+  last_login_location: string | null;
+  suspended_at: string | null;
+  suspension_reason: string | null;
+  suspension_reason_display: string | null;
+  suspension_note: string;
+  is_deleted: boolean;
+  deleted_at: string | null;
+  deletion_reason: string | null;
+  deletion_note: string;
+  documents: any[];
+  identification_verifications: any[];
+  is_fully_verified: boolean;
+  is_warehouse: boolean;
+  kyc_status: "PENDING" | "VERIFIED" | "REJECTED" | string;
+  kyc_status_display: string;
+  kyc_submitted_at: string;
+  kyc_rejection_reason: string | null;
+  kyc_rejection_reason_display: string | null;
+  kyc_rejection_note: string;
+  kyc_reviewed_at: string | null;
+  kyc_reviewed_by: string | null;
+  last_product_added: string | null;
+  last_order_date: string | null;
+  loyalty_points: number;
+  pending_documents: number;
+  total_documents: number;
+  verified_documents: number;
+  warehouse: any | null;
+  website: string | null;
+  verification_progress: VerificationProgress;
+  time_in_queue_seconds: number;
+}
+
+export interface KycVerificationData {
+  business_location: string | null;
+  business_name: string | null;
+  business_type: string;
+  id: number;
+  phone: string;
+  phone2: string | null;
+  seller_ref: string;
+  status: "PENDING" | "VERIFIED" | "REJECTED" | string;
+  status_display: string;
+  submission_date: string;
+  time_in_queue_display: string;
+  time_in_queue_seconds: number;
+  user_id: string;
+}
+
+export interface AdminProductData {
+  id: string;
+  name: string;
+  slug: string;
+  stockcode: string;
+  brand: string;
+  manufacturer_name: string;
+  category: {
+    id: string | number;
+    name: string;
+    slug?: string;
+  } | null;
+  base_price: string;
+  price_range: {
+    min: string;
+    max: string;
+  } | null;
+  inventory: number;
+  sold: number;
+  is_active: boolean;
+  has_variations: boolean;
+  variation_count: number;
+  rating_average: number;
+  main_image: {
+    medium: string;
+    thumbnail: string;
+  } | null;
+  created_at: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | string;
+  is_approved: "approved" | "pending" | "rejected";
+}
+
+// ─── Admin Product Detail (single product full response) ──────────────────────
+
+export interface AdminProductDetailImage {
+  id: string;
+  alt_text: string;
+  thumbnail: string;
+  medium: string;
+  large: string;
+  url?: string;
+  cloudinary_id?: string;
+}
+
+export interface AdminProductDetailVariationValue {
+  id: string;
+  value: string;
+  slug: string;
+  display_order: number;
+  extra_data: Record<string, string>;
+  min_price: string;
+  max_price: string;
+  available_variations_count: number;
+  has_stock: boolean;
+}
+
+export interface AdminProductDetailExtraField {
+  name: string;
+  label: string;
+  default?: string;
+}
+
+export interface AdminProductDetailVariationOption {
+  attribute_id: string;
+  attribute_name: string;
+  display_order: number;
+  extra_fields: AdminProductDetailExtraField[];
+  values: AdminProductDetailVariationValue[];
+}
+
+export interface AdminProductDetailVariation {
+  id: string;
+  sku: string;
+  name: string;
+  attribute_summary: Record<string, string>;
+  base_price: number;
+  final_price: string;
+  has_discount: boolean;
+  stock: number;
+  is_default: boolean;
+  images: AdminProductDetailImage[];
+  main_image_url: string;
+}
+
+export interface AdminProductDetailAvailableAttribute {
+  id: string;
+  name: string;
+  slug: string;
+  display_order: number;
+}
+
+export interface AdminProductDetailBulkPriceTier {
+  min_qty: number;
+  max_qty: number | null;
+  price: string;
+}
+
+export interface AdminProductDetailCategory {
+  id: string;
+  name: string;
+  slug: string;
+  image: string | null;
+  subcategory: {
+    id: string;
+    name: string;
+    slug: string;
+    image: string | null;
+  };
+}
+
+export interface AdminProductDetail {
+  id: string;
+  name: string;
+  slug: string;
+  stockcode: string;
+  brand: string;
+  manufacturer_name: string;
+
+  category: AdminProductDetailCategory;
+
+  description: string;
+  description_html: string;
+
+  whatsinbox: string;
+  whatsinbox_html: string;
+
+  specifications: any[];
+  specifications_html: string;
+  specifications_text: string | null;
+
+  features: any[];
+
+  base_price: number;
+  price_range: {
+    min: string;
+    max: string;
+    currency: string;
+  };
+
+  bulk_price_threshold: number;
+  bulk_price_tiers: AdminProductDetailBulkPriceTier[];
+  has_bulk_pricing: boolean;
+
+  inventory: number;
+  sold: number;
+  sales_percentage: number;
+  rating_average: number;
+  weight: number | null;
+
+  main_image: string; // direct URL string from API
+  images: AdminProductDetailImage[];
+
+  has_variations: boolean;
+  variation_count: number;
+  available_attributes: AdminProductDetailAvailableAttribute[];
+  variation_options: Record<string, AdminProductDetailVariationOption>;
+  variations: AdminProductDetailVariation[];
+
+  is_active: boolean;
+  is_published: boolean;
+  is_approved: "approved" | "pending" | "rejected" | "pending_update" | string;
+  can_edit: boolean;
+
+  activation_requested: boolean;
+  deactivation_requested: boolean;
+  rejection_reason: string;
+
+  created_at: string;
 }

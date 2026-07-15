@@ -112,7 +112,7 @@ export default function MobileEditProfile() {
     editRegisterUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/UserDetails/",
+        url: "/accounts/customer",
         method: "PATCH",
         body: form,
         token,

@@ -17,10 +17,19 @@ import { RegisterParams } from "@/types/global";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useHttp } from "@/hooks/use-http";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { RegProps } from "./verify-email";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { tokenActions } from "@/store/token/token-slice";
 
-export default function RegisterForm({ userType, token }: RegProps) {
+
+export interface RegProps {
+  userType: "seller" | "buyer" | "admin";
+  token?: string;
+  businessType?: "registered" | "individual";
+  onSuccess?: () => void;
+}
+
+export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
+  const dispatch = useDispatch()
 
   const VerifiedEmail = useSelector((state: any) => state.registration.email);
   const [formData, setFormData] = useState<RegisterParams>({
@@ -40,14 +49,25 @@ export default function RegisterForm({ userType, token }: RegProps) {
   const { loading, error, sendHttpRequest: registerUserReq } = useHttp();
 
   const registerUserRes = (res: any) => {
+    const accessToken = res?.data?.access;
+    console.log("reg token", res);
+
+    if (accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+      dispatch(tokenActions.setToken(accessToken));
+    }
 
     if (userType === "seller") {
       router.push(`/auth/seller/sign-up/registration-step2`);
       return;
-    } 
-    else {
-    router.push(`/auth/login`);
-  }
+    }
+
+    // On mobile, call onSuccess to close the modal gracefully
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      router.push(`/auth/login`);
+    }
   };
 
     // useEffect(() => {
@@ -74,19 +94,20 @@ export default function RegisterForm({ userType, token }: RegProps) {
       toast.error("Please enter your phone number!");
       return;
     }
+    console.log("fcfc", token)
 
-    const Url =
-      userType === "buyer"
-        ? `/accounts/buyer/set-password-phone/${token}/`
-        : `/accounts/manufacturer/set-password-phone/${token}/`;
+ 
+     
 
     registerUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: Url,
+        url: "/accounts/register/complete/",
         method: "POST",
         body: {
           ...formData,
+          token,
+          email: VerifiedEmail
         },
         userType: userType,
         successMessage: "Registration Complete, Please login.",

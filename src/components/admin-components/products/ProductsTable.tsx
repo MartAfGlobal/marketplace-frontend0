@@ -3,19 +3,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import HandBug from "@/assets/Seller/handBug.png";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, XCircle } from "lucide-react";
+import { AdminProductData } from "@/types/global";
 
-
-export interface ProductRow {
-  id: string;
-  name: string;
-  seller: string;
-  category: string;
-  price: string;
-  stock: number;
-  status: "Pending" | "Approved" | "Rejected";
-  date: string;
-}
+// Re-export so other files can still import ProductRow if needed
+export type ProductRow = AdminProductData;
 
 interface ProductsTableProps {
   rows: ProductRow[];
@@ -28,6 +20,47 @@ interface ProductsTableProps {
   onSetActiveRowId: (id: string | null) => void;
   truncateText: (value: string | number | undefined, maxLength?: number) => string;
 }
+
+const renderStatus = (status: string) => {
+  const s = (status ?? "").toLowerCase();
+  if (s === "approved") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[#00BE5C] bg-[#00BE5C]/12 h-6 rounded-c32 px-3 text-[10px]">
+        <CheckCircle2 size={14} />
+        Approved
+      </span>
+    );
+  }
+  if (s === "rejected") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[#CA0202] bg-[#CA0202]/12 h-6 rounded-c32 px-3 text-[10px]">
+        <XCircle size={14} />
+        Rejected
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-[#FFAC06] bg-[#FFAC06]/12 h-6 rounded-c32 px-3 text-[10px]">
+      <Clock3 size={14} />
+      Pending
+    </span>
+  );
+};
+
+const formatPrice = (row: ProductRow) => {
+  if (row.price_range?.min && row.price_range?.max) {
+    return `₦${Number(row.price_range.min).toLocaleString()} – ₦${Number(row.price_range.max).toLocaleString()}`;
+  }
+  if (row.base_price) {
+    return `₦${Number(row.base_price).toLocaleString()}`;
+  }
+  return "—";
+};
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-GB");
+};
 
 export default function ProductsTable({
   rows,
@@ -80,13 +113,13 @@ export default function ProductsTable({
             <th className="p-3 font-MontserratNormal text-sm">Seller</th>
             <th className="p-3 font-MontserratNormal text-sm">Category</th>
             <th className="p-3 font-MontserratNormal text-sm">Price</th>
-            <th className="p-3 font-MontserratNormal text-sm">Stock</th>
+            <th className="p-3 font-MontserratNormal text-sm text-center">Stock</th>
             <th className="p-3 font-MontserratNormal text-sm text-center">Status</th>
             <th className="p-3 font-MontserratNormal text-sm">Date Added</th>
             <th className="p-3 font-MontserratNormal text-sm text-center"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50 text-[11px] text-gray-700 font-MontserratMedium">
+        <tbody className="text-sm text-000000/68 font-MontserratNormal">
           {loading ? (
             <tr>
               <td colSpan={9} className="py-12 text-center">
@@ -100,9 +133,10 @@ export default function ProductsTable({
               <tr
                 key={row.id}
                 onClick={() => onRowClick(row.id)}
-                className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer"
+                className="transition-colors h-10.5 text-000000/68 cursor-pointer font-MontserratNormal text-sm"
               >
-                <td className="py-3 px-4 text-gray-400 font-MontserratMedium">
+                {/* Checkbox */}
+                <td className="py-3 px-4">
                   <button
                     type="button"
                     aria-label={`Select ${row.name}`}
@@ -133,35 +167,37 @@ export default function ProductsTable({
                     </svg>
                   </button>
                 </td>
-                <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">
-                  <span className="block max-w-[10rem] truncate" title={row.name}>{row.name}</span>
+
+                {/* Product Name */}
+                <td className="p-3">
+                  <span className="block max-w-[160px] truncate" title={row.name}>
+                    {row.name}
+                  </span>
                 </td>
-                <td className="py-3 px-4 text-gray-500">
-                  <span className="block max-w-[8rem] truncate" title={row.seller}>{row.seller}</span>
+
+                {/* Seller */}
+                <td className="p-3">
+                  <span className="block max-w-[120px] truncate" title={row.manufacturer_name}>
+                    {row.manufacturer_name || "—"}
+                  </span>
                 </td>
-                <td className="py-3 px-4 text-gray-500">{row.category}</td>
-                <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">{row.price}</td>
-                <td className="py-3 px-4 text-gray-500">{row.stock}</td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-1.5">
-                    {row.status === "Approved" && (
-                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-green-200 text-green-600 bg-green-50 text-[10px] font-MontserratMedium w-fit">
-                        <CheckCircle2 className="w-3 h-3" /> Approved
-                      </div>
-                    )}
-                    {row.status === "Pending" && (
-                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-yellow-200 text-yellow-600 bg-yellow-50 text-[10px] font-MontserratMedium w-fit">
-                        <Clock className="w-3 h-3" /> Pending
-                      </div>
-                    )}
-                    {row.status === "Rejected" && (
-                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-red-200 text-red-600 bg-red-50 text-[10px] font-MontserratMedium w-fit">
-                        <XCircle className="w-3 h-3" /> Rejected
-                      </div>
-                    )}
-                  </div>
-                </td>
-                <td className="py-3 px-4 text-gray-400">{row.date}</td>
+
+                {/* Category */}
+                <td className="p-3 max-w-[120px] truncate">{row.category?.name ?? "—"}</td>
+
+                {/* Price */}
+                <td className="p-3">{row.base_price}</td>
+
+                {/* Stock */}
+                <td className="p-3 text-center">{row.inventory ?? 0}</td>
+
+                {/* Status */}
+                <td className="p-3 text-center">{renderStatus(row.is_approved ?? "")}</td>
+
+                {/* Date */}
+                <td className="py-3 px-4 text-gray-400">{formatDate(row.created_at)}</td>
+
+                {/* Actions */}
                 <td className="py-3 px-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
@@ -179,7 +215,7 @@ export default function ProductsTable({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute right-4 mt-2 w-36 bg-white border border-[#eef0f3] rounded-xl shadow-lg z-50 py-2 flex flex-col items-start font-MontserratMedium text-xs text-[#161616] overflow-hidden"
+                        className="absolute -right-3 top-7 mt-2 w-37.5 bg-white border border-[#eef0f3] rounded-xl shadow-lg z-50 py-2 flex flex-col items-start font-MontserratMedium text-xs text-[#161616] overflow-hidden"
                       >
                         <button
                           onClick={() => {
@@ -216,7 +252,9 @@ export default function ProductsTable({
             ))
           ) : (
             <tr>
-              <td colSpan={9} className="py-8 text-center text-gray-400 font-MontserratMedium text-xs">No records found matching your search.</td>
+              <td colSpan={9} className="py-8 text-center text-gray-400 font-MontserratMedium text-xs">
+                No records found matching your search.
+              </td>
             </tr>
           )}
         </tbody>

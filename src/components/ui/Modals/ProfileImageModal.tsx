@@ -8,13 +8,12 @@ import { Button } from "@/components/ui/Button/Button";
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
-import profileImage from "@/assets/icons/profile-averter.svg"; 
+import profileImage from "@/assets/icons/profile-averter.svg";
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
-
 
 interface ProfileImageModalProps {
   isOpen: boolean;
@@ -37,9 +36,6 @@ export default function ProfileImageModal({
   const token = useSelector((state: RootState) => state.token.token);
   const dispatch = useDispatch();
 
-
-
-
   const router = useRouter();
 
   const { loading, sendHttpRequest: editRegisterUserReq } = useHttp();
@@ -51,44 +47,47 @@ export default function ProfileImageModal({
       toast.error("Please select an image to upload.");
       return;
     }
-    
 
     const form = new FormData();
     form.append("profile_picture", selectedFile);
 
-   const registerUserRes = (res: any) => {
-  toast.success("Profile picture updated successfully!");
-   
-  if (selectedFile) {
-    const profileURL = URL.createObjectURL(selectedFile);
+    for (const [key, value] of form.entries()) {
+      console.log(key, value);
+    }
+    const registerUserRes = (res: any) => {
 
-    dispatch(
-      buyerActions.updateBuyerData({
-        profile: {
-          ...buyer.profile,
-          profile_picture: profileURL,
-        },
-      })
-    );
+      if (selectedFile) {
+        const profileURL = URL.createObjectURL(selectedFile);
 
-   
-    onUpload(selectedFile!);
-  }
+        dispatch(
+          buyerActions.updateBuyerData({
+            profile: {
+              ...buyer.profile,
+              profile_picture: profileURL,
+            },
+          }),
+        );
 
-  onUpload(selectedFile!);  // ✅ 
-  onClose();
-  router.push(`/dashboard/buyer`);
-};
+        onUpload(selectedFile!);
+      }
+
+      onUpload(selectedFile!); // ✅
+      onClose();
+      router.push(`/dashboard/buyer`);
+    };
+    console.log(selectedFile);
+    console.log(form.get("profile_picture"));
 
     editRegisterUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/UserDetails/",
+        url: "/accounts/customer",
         method: "PATCH",
-        body: form, 
+        body: form,
         token: token ?? undefined,
         isAuth: true,
         userType: "buyer",
+        successMessage: "Profile picture updated successfully!",
       },
     });
   };
@@ -104,14 +103,12 @@ export default function ProfileImageModal({
     };
   }, [isOpen]);
 
-function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-  const file = e.target.files?.[0];
-  if (file) {
-    setSelectedFile(file);
-    
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
   }
-}
-
 
   return (
     <AnimatePresence>
@@ -127,7 +124,6 @@ function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
             opacity: 0,
             transition: { duration: 0.8, ease: "easeInOut" },
           }}
-      
           aria-modal="true"
           role="dialog"
         >
@@ -156,7 +152,9 @@ function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
 
             {/* Profile Preview */}
             <div className="flex justify-center h-26 w-26 m-auto">
-              {(selectedFile || buyer?.profile?.profile_picture || profileImage) && (
+              {(selectedFile ||
+                buyer?.profile?.profile_picture ||
+                profileImage) && (
                 <Image
                   src={
                     selectedFile
@@ -190,10 +188,7 @@ function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
                 Upload from device
               </Button>
 
-              <Button
-                onClick={onRemove}
-                variant="secondary"
-              >
+              <Button onClick={onRemove} variant="secondary">
                 No profile picture
               </Button>
 
@@ -202,7 +197,7 @@ function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
                 disabled={loading}
                 className=""
               >
-                {loading ? <LoadingSpinner/> : "Save"}
+                {loading ? <LoadingSpinner /> : "Save"}
               </Button>
             </div>
           </motion.div>

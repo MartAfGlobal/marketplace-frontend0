@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../../Button/Button";
 import { LoadingSpinner } from "../../loading-spinner";
@@ -24,10 +24,24 @@ export default function EditUserModal({
 }: EditUserModalProps) {
   const [formData, setFormData] = useState({
     address: initialData.address || "",
+    city: initialData.city || "",
     state: initialData.state || "",
     country: initialData.country || "",
     zipcode: initialData.zipcode || "",
   });
+
+  // Re-sync whenever the modal opens so it always reflects the latest buyer data
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        address: initialData.address || "",
+        city: initialData.city || "",
+        state: initialData.state || "",
+        country: initialData.country || "",
+        zipcode: initialData.zipcode || "",
+      });
+    }
+  }, [isOpen, initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -60,8 +74,9 @@ export default function EditUserModal({
               </div>
 
               <div className="flex flex-col gap-4 mb-8">
+                {/* Row 1: Address */}
                 <div>
-                  <Label className="">
+                  <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
                     Address
                   </Label>
                   <Input
@@ -69,10 +84,22 @@ export default function EditUserModal({
                     value={formData.address}
                     onChange={handleChange}
                     placeholder="Address"
-                    className="h-11 rounded-xl"
                   />
                 </div>
+
+                {/* Row 2: City & State */}
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
+                      City
+                    </Label>
+                    <Input
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      placeholder="City"
+                    />
+                  </div>
                   <div>
                     <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
                       State
@@ -82,9 +109,12 @@ export default function EditUserModal({
                       value={formData.state}
                       onChange={handleChange}
                       placeholder="State"
-                      className="h-11 rounded-xl"
                     />
                   </div>
+                </div>
+
+                {/* Row 3: Country & Zipcode */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
                       Country
@@ -94,21 +124,19 @@ export default function EditUserModal({
                       value={formData.country}
                       onChange={handleChange}
                       placeholder="Country"
-                      className="h-11 rounded-xl"
                     />
                   </div>
-                </div>
-                <div>
-                  <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
-                    Zipcode
-                  </Label>
-                  <Input
-                    name="zipcode"
-                    value={formData.zipcode}
-                    onChange={handleChange}
-                    placeholder="Zipcode"
-                    className="h-11 rounded-xl w-1/2 pr-2"
-                  />
+                  <div>
+                    <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
+                      Zipcode
+                    </Label>
+                    <Input
+                      name="zipcode"
+                      value={formData.zipcode}
+                      onChange={handleChange}
+                      placeholder="Zipcode"
+                    />
+                  </div>
                 </div>
               </div>
 

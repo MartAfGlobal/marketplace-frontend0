@@ -40,19 +40,11 @@ export default function VerifyEmail({ userType, token }: RegProps) {
 
   const router = useRouter();
 
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-
   const { loading, error, sendHttpRequest: registerUserReq } = useHttp();
-
   const email = formData.email;
 
   const registerUserRes = (res: any) => {
     dispatch(registrationActions.setEmail(email));
-    setShowSuccessModal(true);
-  };
-
-  const handleModalConfirm = () => {
-    setShowSuccessModal(false);
     router.push(
       `/auth/${userType === "buyer" ? "buyer" : "seller"}/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
     );
@@ -128,7 +120,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
             </div>
           </fieldset>
           <Button type="submit" disabled={loading || !isFormValid}>
-            {loading ? <LoadingSpinner /> : "Verify email"}
+            {loading ? <LoadingSpinner /> : "Send code"}
           </Button>
         </form>
         <div className="flex justify-between items-center gap-c24 mt-c8 mb-c8 h-c24">
@@ -155,14 +147,6 @@ export default function VerifyEmail({ userType, token }: RegProps) {
           </Link>
         </div>
       </div>
-      <ResultModal
-        isOpen={showSuccessModal}
-        title="Verification email sent"
-        message="A verification link has been sent to your email address."
-        buttenText="Okay"
-        onConfirm={handleModalConfirm}
-        onCancel={handleModalConfirm}
-      />
     </div>
   );
 }

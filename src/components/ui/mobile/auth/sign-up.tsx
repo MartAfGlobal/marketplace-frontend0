@@ -12,6 +12,10 @@ import { useRouter } from "next/navigation";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "../../loading-spinner";
 import ResultModal from "@/components/ui/forms/resultModal";
+import { Input } from "@/components/ui/forms/Input";
+import RegisterForm from "@/components/ui/forms/auth/registerForm";
+import { useDispatch, useSelector } from "react-redux";
+import { registrationActions } from "@/store/auth/registration-slice";
 
 import MobileLogin from "./sign-in";
 import { AuthStep } from "@/types/global";
@@ -31,6 +35,12 @@ export default function AuthModal({
 }) {
   const [step, setStep] = useState<AuthStep>(defaultStep);
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [verifiedOtp, setVerifiedOtp] = useState("");
+  const router = useRouter();
+  const dispatch = useDispatch();
+  // Pull saved email from Redux so it survives any component re-renders
+  const savedEmail = useSelector((state: any) => state.registration.email);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -46,6 +56,7 @@ export default function AuthModal({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const { loading: resendLoading, sendHttpRequest: resendUserReq } = useHttp();
+  const { loading: verifying, sendHttpRequest: verifyOtpReq } = useHttp();
 
   useEffect(() => {
     if (step === "verificationSent") {
@@ -67,6 +78,68 @@ export default function AuthModal({
     setSecondsLeft(RESEND_TIMEOUT);
   };
 
+  const handleOtpChange = (index: number, value: string) => {
+    if (value.length > 1) value = value.slice(-1);
+    if (!/^\d*$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`signup-otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: any) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`signup-otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handleVerifySignupOtp = () => {
+    const otpString = otp.join("");
+    if (otpString.length < 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+    verifyOtpReq({
+      requestConfig: {
+        url: "/accounts/register/verify-otp/",
+        method: "POST",
+        body: {
+          // Use saved Redux email as fallback in case formData cleared
+          email: formData.email || savedEmail,
+          otp: otpString,
+        },
+        userType: "buyer",
+      },
+      successRes: (res: any) => {
+        console.log(" checking seller", res)
+        // Some backends return 200 OK with an error in the body
+        if (res?.data?.error || (res?.data?.status === false) || res?.data?.message?.toLowerCase().includes("invalid")) {
+          toast.error(res?.data?.message || res?.data?.error || "Invalid OTP");
+          return;
+        }
+        
+        const token = res?.data?.token || otpString;
+        dispatch(registrationActions.setToken(token));
+        setVerifiedOtp(token);
+        setStep("personalDetails");
+      },
+      errorRes: (err: any) => {
+        toast.error(
+          err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            err?.response?.data?.otp?.[0] ||
+            "Invalid OTP"
+        );
+      },
+    });
+  };
+
   const handleResendLink = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -76,7 +149,7 @@ export default function AuthModal({
         resetTimer();
       },
       requestConfig: {
-        url: "/accounts/resend-verification-email/",
+        url: "/accounts/register/resend-otp/",
         method: "POST",
         body: { email: formData.email },
         userType: "buyer",
@@ -100,7 +173,10 @@ export default function AuthModal({
   };
 
   const registerUserRes = (res: any) => {
+    dispatch(registrationActions.setEmail(formData.email));
+    console.log("new res", res)
     setStep("verificationSent");
+    
   };
 
   const handleRegisterError = (err: any) => {
@@ -111,6 +187,7 @@ export default function AuthModal({
       lowerError.includes("already been sent") ||
       lowerError.includes("already sent")
     ) {
+      dispatch(registrationActions.setEmail(formData.email));
       setStep("verificationSent");
     }
   };
@@ -135,7 +212,7 @@ export default function AuthModal({
       },
     });
 
-    console.log("Registration data:", { email: formData.email });
+    console.log("Registration data:",  { email: formData.email });
   };
   //  LogIn
 
@@ -270,28 +347,38 @@ export default function AuthModal({
             {step === "verificationSent" && (
               <div className="text-center space-y-4">
                 <div className="space-y-2">
-                  <h2 className="text-c20 font-MontserratSemiBold">Check your email</h2>
+                  <h2 className="text-c20 font-MontserratSemiBold">Enter OTP</h2>
                   <p className="font-MontserratNormal text-sm">
-                    We’ve sent a verification link to:
+                    We’ve sent a 6-digit code to:
                     <br />
                     <span className="font-semibold text-ff715b">{formData.email}</span>
+                    <br />
+                    Enter it below to continue.
                   </p>
                 </div>
                 
+                <div className="flex justify-center mb-8 gap-2 w-full">
+                  {otp.map((digit, idx) => (
+                    <Input
+                      key={idx}
+                      id={`signup-otp-${idx}`}
+                      type="text"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                      className="w-12 h-12 text-center text-xl font-MontserratBold px-0"
+                    />
+                  ))}
+                </div>
+
                 <button
                   type="button"
-                  onClick={() => {
-                    const emailDomain = formData.email?.split("@")[1];
-                    let emailUrl = "mailto:" + formData.email;
-                    if (emailDomain?.includes("gmail")) emailUrl = "https://mail.google.com";
-                    else if (emailDomain?.includes("yahoo")) emailUrl = "https://mail.yahoo.com";
-                    else if (emailDomain?.includes("outlook") || emailDomain?.includes("hotmail"))
-                      emailUrl = "https://outlook.live.com";
-                    window.open(emailUrl, "_blank");
-                  }}
-                  className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center"
+                  onClick={handleVerifySignupOtp}
+                  disabled={otp.some((d) => d === "") || verifying}
+                  className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center disabled:opacity-50"
                 >
-                  Go to email app
+                  {verifying ? <LoadingSpinner /> : "Verify"}
                 </button>
 
                 <button
@@ -307,13 +394,13 @@ export default function AuthModal({
                   {resendLoading ? (
                     <LoadingSpinner color="border-ff715b" />
                   ) : secondsLeft > 0 ? (
-                    `Resend email link (${minutes}:${seconds.toString().padStart(2, "0")})`
+                    `Resend OTP (${minutes}:${seconds.toString().padStart(2, "0")})`
                   ) : (
-                    "Resend email link"
+                    "Resend OTP"
                   )}
                 </button>
 
-                <p className="text-sm text-center font-MontserratNormal">
+                <p className="text-sm text-center font-MontserratNormal mt-4">
                   If you didn't receive the email, check your spam folder or{" "}
                   <span
                     onClick={() => setStep("signup")}
@@ -322,6 +409,21 @@ export default function AuthModal({
                     try signing up again
                   </span>
                 </p>
+              </div>
+            )}
+
+            {/* ---------- PERSONAL DETAILS ---------- */}
+            {step === "personalDetails" && (
+              <div className="space-y-6">
+                <div className="space-y-2 text-center">
+                  <h2 className="text-c20 font-MontserratSemiBold">Personal details</h2>
+                  <p className="font-MontserratNormal text-sm">
+                    Add your phone number and create your password
+                  </p>
+                </div>
+                <div className="max-h-[60vh] overflow-y-auto">
+                  <RegisterForm userType="buyer" token={verifiedOtp} onSuccess={onClose} />
+                </div>
               </div>
             )}
           </motion.div>

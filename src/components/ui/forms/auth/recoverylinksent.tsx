@@ -28,7 +28,7 @@ export default function RecoveryEmailSent() {
     resendUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/resend-verification-email/",
+        url: "/accounts/register/resend-otp/",
         method: "POST",
         body: { email },
         userType: "buyer",

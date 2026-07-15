@@ -82,13 +82,17 @@ export default function LoginForm({ userType }: RegProps) {
       return;
     }
 
-    // ⭐ If a previous page exists and isn't login
-    if (fromPage && fromPage !== "/auth/login") {
+    // ⭐ If a previous page exists and isn't a login page
+    if (fromPage && fromPage !== "/auth/login" && fromPage !== "/auth/seller/login" && fromPage !== "/auth/admin/login") {
       router.push(fromPage);
       return;
     }
 
     if (userType === "seller") {
+      if (fromPage && fromPage !== "/auth/seller/login") {
+        router.push(fromPage);
+        return;
+      }
       const redirectUrl = localStorage.getItem("sellerRedirectUrl");
       if (redirectUrl) {
         localStorage.removeItem("sellerRedirectUrl");
@@ -99,8 +103,8 @@ export default function LoginForm({ userType }: RegProps) {
       return;
     }
 
-    // ⭐ Default fallback
-    router.back();
+    // ⭐ Default fallback for buyers — always go to homepage
+    router.push("/");
   };
 
   const loginSuccess = (res: any) => {

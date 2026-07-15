@@ -19,7 +19,11 @@ import {
   Menu,
   X,
   User,
+  LogOut,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useDispatch } from "react-redux";
+import { useLogout } from "@/utils/logout";
 import Image from "next/image";
 import LogoPurple from "@/assets/images/logo-purple.svg";
 import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
@@ -96,7 +100,10 @@ export default function AdminLayout({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const dispatch = useDispatch();
+  const logout = useLogout(dispatch);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<
     Record<string, boolean | undefined>
   >({});
@@ -296,12 +303,12 @@ export default function AdminLayout({
                             isSubActive =
                               pathname === "/dashboard/admin/users"
                                 ? queryType === "buyers" || !queryType
-                                : true;
+                                : pathname.includes("/buyers/");
                           } else if (sub.path.includes("sellers")) {
                             isSubActive =
                               pathname === "/dashboard/admin/users"
                                 ? queryType === "sellers"
-                                : false;
+                                : pathname.includes("/sellers/");
                           }
                         } else if (
                           pathname.startsWith("/dashboard/admin/orders")
@@ -484,16 +491,52 @@ export default function AdminLayout({
           </button>
 
           {/* User Profile Outline Dropdown */}
-          <div className="relative flex items-center gap-1 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors">
-            <div className="relative bg-ffffff rounded-full transition-colors h-12 w-12 flex items-center justify-center hover:bg-gray-50">
-              <Image
-                src={UserIcon}
-                alt="Notification"
-                width={18}
-                height={19.5}
+          <div className="relative">
+            <button
+              onClick={() => setUserOpen((prev) => !prev)}
+              className="flex items-center gap-1 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors"
+            >
+              <div className="relative bg-ffffff rounded-full transition-colors h-12 w-12 flex items-center justify-center hover:bg-gray-50">
+                <Image
+                  src={UserIcon}
+                  alt="User"
+                  width={18}
+                  height={19.5}
+                />
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-000000 transition-transform duration-200 ${
+                  userOpen ? "rotate-180" : "rotate-0"
+                }`}
               />
-            </div>
-            <ChevronDown className="w-4 h-4 text-000000" />
+            </button>
+
+            <AnimatePresence>
+              {userOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 top-14 w-40 py-3 font-normal text-sm rounded-lg z-50 shadow-lg bg-white border border-gray-100"
+                >
+                  <ul className="text-gray-700 flex flex-col gap-1">
+                    <li>
+                      <button
+                        onClick={() => {
+                          setUserOpen(false);
+                          logout();
+                        }}
+                        className="flex items-center gap-2.5 text-gray-500 hover:text-red-500 hover:bg-red-50 px-4 py-2 w-full text-left transition-colors rounded-md"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Log out
+                      </button>
+                    </li>
+                  </ul>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </header>

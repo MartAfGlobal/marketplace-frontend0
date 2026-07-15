@@ -57,7 +57,7 @@ export default function RejectVerificationModal({
               </div>
 
               <div className="mb-8">
-                <Label className="">
+                <Label className="mb-2">
                   Reason for rejection
                 </Label>
                 <DropdownInput

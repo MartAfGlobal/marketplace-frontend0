@@ -12,6 +12,12 @@ import subCategoryProductsReducer from "@/store/user-data/products/subCategoryPr
 import topDealsReducer from "@/store/user-data/products/topDealsSlice";
 import uiSliceReducer from "@/store/uiSlice";
 import draftReducer from "@/store/sellers/draftSlice";
+import AdminBuyerDetailsReducer from "@/store/admin/users/buyers/buyerDetailsSlice"
+import AdminSellerDetailsReducer from "@/store/admin/users/seller/sellerDetailsSlice"
+import AdminSellerByIdReducer from "@/store/admin/users/seller/sellerByIdSlice"
+import AdminKycDetailsReducer from "@/store/admin/users/kyc/kycDetailsSlice"
+import AdminProductsReducer from "@/store/admin/products/adminProductsSlice"
+import AdminProductDetailReducer from "@/store/admin/products/adminProductDetailSlice"
 
 import productReducer from "./user-data/products/product-slice";
 import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice";
@@ -61,6 +67,7 @@ const variationIdPersistConfig = {
   key: "selectedVariation",
   storage,
 };
+
 const buyerPersistConfig = {
   key: "buyer",
   storage,
@@ -116,12 +123,42 @@ const financePersistConfig = {
   key: "finance",
   storage,
 };
+const AdminBuyerDetailsPersistConfig = {
+  key: "adminBuyerDetails",
+  storage,
+};
+const AdminSellerDetailsPersistConfig = {
+  key: "adminSellerDetails",
+  storage,
+};
+const AdminSellerByIdPersistConfig = {
+  key: "adminSellerById",
+  storage,
+};
+const AdminKycDetailsPersistConfig = {
+  key: "adminKycDetails",
+  storage,
+};
+const AdminProductsPersistConfig = {
+  key: "adminProducts",
+  storage,
+};
+const AdminProductDetailPersistConfig = {
+  key: "adminProductDetail",
+  storage,
+};
 
 const rootReducer = combineReducers({
   productDetails: persistReducer(
     productDetailsPersistConfig,
     productDetailReducer,
   ),
+ adminBuyerDetails:persistReducer(AdminBuyerDetailsPersistConfig, AdminBuyerDetailsReducer),
+ adminSellerDetails:persistReducer(AdminSellerDetailsPersistConfig, AdminSellerDetailsReducer),
+ adminSellerById:persistReducer(AdminSellerByIdPersistConfig, AdminSellerByIdReducer),
+ adminKycDetails:persistReducer(AdminKycDetailsPersistConfig, AdminKycDetailsReducer),
+ adminProducts:persistReducer(AdminProductsPersistConfig, AdminProductsReducer),
+ adminProductDetail:persistReducer(AdminProductDetailPersistConfig, AdminProductDetailReducer),
   sellerProduct: persistReducer(SellerPersistConfig, SellerProductReducer),
   tracking: persistReducer(trackingPersistCobfig, trackingReducer),
   token: persistReducer(tokenPersistConfig, tokenReducer),

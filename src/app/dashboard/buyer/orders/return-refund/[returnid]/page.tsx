@@ -53,7 +53,7 @@ interface ReturnQuantity {
 
 const reasons = ["Item is damaged"];
 
-export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+export default function OrderDetailsPage() {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const { returnid } = useParams();

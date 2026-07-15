@@ -83,13 +83,13 @@ export default function BuyerDashboard() {
         <div className="flex items-center justify-between ">
           <div className="flex items-center gap-3">
             <div className="w-16 h-16 rounded-full overflow-hidden border border-gray-300">
-              <Image
+              {/* <Image
                 src={buyer?.profile?.profile_picture || profilePicture}
                 alt="Profile Image"
                 width={64}
                 height={64}
                 className="rounded-full object-contain "
-              />
+              /> */}
             </div>
             <div className="space-y-1">
               <p className="text-sm font-MontserratSemiBold">

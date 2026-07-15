@@ -58,13 +58,11 @@ export const useTokenExpiration = () => {
   };
 
   useEffect(() => {
-    return; // TEMPORARILY DISABLED
     if (!token) {
-      if (pathname.startsWith("/dashboard/admin")) {
+      if (pathname.startsWith("/dashboard/admin") || pathname.startsWith("/dashboard/seller")) {
+        const loginPath = getLoginPath();
         const currentUrl = getCurrentUrl();
-        router.replace(
-          `/auth/admin/login?from=${encodeURIComponent(currentUrl)}`,
-        );
+        router.replace(`${loginPath}?from=${encodeURIComponent(currentUrl)}`);
       }
       return;
     }

@@ -4,7 +4,10 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button/Button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { X, ChevronDown } from "lucide-react";
+import { X } from "lucide-react";
+import { Label } from "@/components/ui/forms/Label";
+import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
+import CheckBoxButton from "@/components/ui/Button/checkBoxButton";
 
 interface UpdateOrderStatusModalProps {
   isOpen: boolean;
@@ -12,6 +15,8 @@ interface UpdateOrderStatusModalProps {
   onConfirm: (newStatus: string) => void;
   loading?: boolean;
 }
+
+const ORDER_STATUSES = ["Processing", "Shipped", "Delivered", "Cancelled"];
 
 export default function UpdateOrderStatusModal({
   isOpen,
@@ -37,71 +42,72 @@ export default function UpdateOrderStatusModal({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="bg-white shadow-xl flex flex-col w-full max-w-[560px] rounded-2xl p-10 relative"
+              className="bg-white shadow-xl flex flex-col w-full max-w-[595px] rounded-2xl p-12 relative"
             >
-              <button 
+              {/* Close Button */}
+              <button
                 onClick={onClose}
-                className="absolute top-6 right-6 text-gray-500 hover:bg-gray-100 rounded-full p-1 transition-colors"
+                className="absolute top-6 right-6 text-343330 hover:bg-gray-100 rounded-full p-1 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
 
-              <div className="text-center mb-8 max-w-sm mx-auto">
-                <h2 className="text-xl font-MontserratSemiBold mb-3 text-[#161616]">
+              {/* Header */}
+              <div className="text-center mb-8">
+                <h2 className="text-lg font-MontserratMedium leading-[26px] mb-8">
                   Update Order Status
                 </h2>
-                <p className="text-sm font-MontserratMedium text-[#161616]">
-                  You are about to update the status of this order. Please confirm the new status before proceeding.
+                <p className="text-xs font-MontserratMedium leading-[16px]">
+                  You are about to update the status of this order. Please
+                  confirm the new status before proceeding.
                 </p>
               </div>
 
-              <div className="flex items-center gap-4 mb-8">
-                <label className="text-sm font-MontserratMedium text-[#161616] whitespace-nowrap min-w-max">
-                  Order Status:
-                </label>
-                <div className="relative w-full">
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm font-MontserratMedium text-gray-700 bg-white focus:outline-none focus:border-ff715b focus:ring-1 focus:ring-ff715b appearance-none"
-                  >
-                    <option value="Processing">Processing</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                </div>
+              {/* Order Status Dropdown */}
+              <div className=" flex text-nowrap items-center gap-6">
+                <Label className="mb-0">Order Status:</Label>
+                <DropdownInput
+                  placeholder="Select order status"
+                  options={ORDER_STATUSES}
+                  value={status}
+                  onChange={(val) => setStatus(val)}
+                  disabled={loading}
+                />
               </div>
 
-              <div className="flex items-start gap-3 mb-10">
-                <div className="relative flex items-center mt-0.5">
-                  <input
-                    type="checkbox"
-                    checked={confirmed}
-                    onChange={(e) => setConfirmed(e.target.checked)}
-                    className="w-4 h-4 rounded border-[#ff715b] text-[#ff715b] focus:ring-[#ff715b] cursor-pointer"
+              {/* Confirmation Checkbox */}
+              <div className="flex items-start gap-3 mt-8 mb-12">
+                <div className="mt-0.5 shrink-0">
+                  <CheckBoxButton
+                    defaultChecked={confirmed}
+                    onChange={(checked) => setConfirmed(checked)}
                   />
                 </div>
-                <label className="text-sm font-MontserratMedium text-gray-600 cursor-pointer" onClick={() => setConfirmed(!confirmed)}>
-                  I confirm that the selected order status is correct and should be applied.
-                </label>
+                <p
+                  className="text-xs font-MontserratNormal text-[#000000]/68 cursor-pointer leading-relaxed"
+                  onClick={() => setConfirmed((prev) => !prev)}
+                >
+                  I confirm that the selected order status is correct and should
+                  be applied.
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Action Buttons */}
+              <div className="flex gap-4">
                 <Button
-                  variant="secondary"
                   onClick={onClose}
                   disabled={loading}
+                  variant="secondary"
                 >
                   Cancel
                 </Button>
                 <Button
-                  variant="primary"
                   onClick={() => onConfirm(status)}
                   disabled={!confirmed || loading}
+                  variant="primary"
+                  className="disabled:cursor-not-allowed"
                 >
-                  {loading ? <LoadingSpinner size={24} color="border-white" /> : "Update Status"}
+                  {loading ? <LoadingSpinner /> : "Update Status"}
                 </Button>
               </div>
             </motion.div>

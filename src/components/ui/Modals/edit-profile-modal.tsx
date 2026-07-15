@@ -25,26 +25,26 @@ export default function ProfileDetailsModal({
 }: ProfileDetailsModalProps) {
   const [details, setDetails] = useState(currentDetails);
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
-    const [formData, setFormData] = useState<BuyerEditParams>(() => ({
-      first_name: buyer?.first_name || "",
-      last_name: buyer?.last_name || "",
-      phone: buyer?.profil?.phone || "",
-      phone2: buyer?.profil?.phone2 || "",
-    }));
-  
-    // ✅ Sync form values with buyer data when it updates
-    useEffect(() => {
-      if (buyer) {
-        setFormData({
-          first_name: buyer.first_name || "",
-          last_name: buyer.last_name || "",
-          phone: buyer.profile.phone || "",
-          phone2: buyer.profile.phone2  || "",
-        });
-      }
-    }, [buyer]);
+  const [formData, setFormData] = useState<BuyerEditParams>(() => ({
+    first_name: buyer?.first_name || "",
+    last_name: buyer?.last_name || "",
+    phone: buyer?.profil?.phone || "",
+    phone2: buyer?.profil?.phone2 || "",
+  }));
+
+  // ✅ Sync form values with buyer data when it updates
+  useEffect(() => {
+    if (buyer) {
+      setFormData({
+        first_name: buyer.first_name || "",
+        last_name: buyer.last_name || "",
+        phone: buyer.profile.phone || "",
+        phone2: buyer.profile.phone2 || "",
+      });
+    }
+  }, [buyer]);
 
   const tokenSlice = useSelector((state: any) => state.token);
   const { token } = tokenSlice;
@@ -55,34 +55,35 @@ export default function ProfileDetailsModal({
   const handleeditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-   
     const form = new FormData();
     form.append("first_name", formData.first_name ?? "");
     form.append("last_name", formData.last_name ?? "");
     form.append("phone", formData.phone ?? "");
     form.append("phone2", formData.phone2 ?? "");
 
+    console.log("Form data to be sent:",form)
+
     const registerUserRes = (res: any) => {
       toast.success("Profile updated successfully!");
 
-        dispatch(
-    buyerActions.updateBuyerData({
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-    })
-  );
+      dispatch(
+        buyerActions.updateBuyerData({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+        }),
+      );
 
-  // Update nested profile fields separately
-  dispatch(
-    buyerActions.updateBuyerData({
-      profile: {
-        ...buyer.profile,
-        phone: formData.phone,
-        phone2: formData.phone2,
-      },
-    })
-  );
-      console.log ("profile edited:", res.data)
+      // Update nested profile fields separately
+      dispatch(
+        buyerActions.updateBuyerData({
+          profile: {
+            ...buyer.profile,
+            phone: formData.phone,
+            phone2: formData.phone2,
+          },
+        }),
+      );
+      console.log("profile edited:", res.data);
       onClose();
       router.push(`/dashboard/buyer`);
     };
@@ -90,7 +91,7 @@ export default function ProfileDetailsModal({
     editRegisterUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/UserDetails/",
+        url: "/accounts/customer",
         method: "PATCH",
         body: form,
         token, // ✅ attach token

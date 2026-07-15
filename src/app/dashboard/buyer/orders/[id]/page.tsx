@@ -38,7 +38,7 @@ import ToShipOrderDetails from "@/components/ui/buyer-components/orders/order-de
 import CancelledOrders from "@/components/ui/buyer-components/orders/order-details/cancelled";
 import CancelledOrderDetails from "@/components/ui/buyer-components/orders/order-details/cancelled";
 
-export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+export default function OrderDetailsPage() {
   // const [copied, setCopied] = useState(false);
   // const [open, setOpen] = useState(false);
   const { id } = useParams(); // dynamic route

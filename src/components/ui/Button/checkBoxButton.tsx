@@ -25,7 +25,7 @@ export default function CheckBoxButton({
       type="button"
       onClick={toggleCheck}
       className={`rounded-c4 border flex items-center justify-center h-5 w-5 transition-colors duration-200 
-        ${checked ? "bg-[#FF715B] border-[#FF715B]" : "border-black/60 bg-white"}
+        ${checked ? "bg-[#FF715B] border-[#FF715B]" : "border-[#FF715B] bg-white"}
       `}
     >
       <span

@@ -3,8 +3,37 @@
 import { useState } from "react";
 import { motion, TargetAndTransition } from "framer-motion";
 import { NotificationItem } from "@/types/global";
+import ResultModal from "@/components/ui/forms/resultModal";
+import { useHttp } from "@/hooks/use-http";
+import { useLogout } from "@/utils/logout";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function DeleteAccount() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { loading, sendHttpRequest } = useHttp();
+  const dispatch = useDispatch();
+  const token = useSelector((state: RootState) => state.token.token);
+  const logout = useLogout(dispatch);
+
+  const handleDeleteConfirm = () => {
+    sendHttpRequest({
+      requestConfig: {
+        url: "/accounts/delete",
+        method: "DELETE",
+        isAuth: true,
+        token: token ?? undefined,
+      },
+      successRes: () => {
+        setIsModalOpen(false);
+        logout();
+      },
+      errorRes: () => {
+        setIsModalOpen(false);
+      }
+    });
+  };
+
   const [settings, setSettings] = useState<Record<number, boolean>>({
     1: true,
     2: false,
@@ -94,9 +123,21 @@ export default function DeleteAccount() {
         );
       })}
     </motion.div>
-    <button className="text-c12 font-MontserratSemiBold text-ff715b w-47.75 h-c40 border border-ff715b rounded-c8 mt-c24">
+    <button 
+      onClick={() => setIsModalOpen(true)}
+      className="text-c12 font-MontserratSemiBold text-ff715b w-47.75 h-c40 border border-ff715b rounded-c8 mt-c24">
         Delete account
     </button>
+    <ResultModal
+      isOpen={isModalOpen}
+      result="warning"
+      title="Delete Account"
+      message="Are you sure you want to delete your account? This action cannot be undone."
+      buttenText="Delete"
+      loading={loading}
+      onCancel={() => setIsModalOpen(false)}
+      onConfirm={handleDeleteConfirm}
+    />
   </div>
   );
 }

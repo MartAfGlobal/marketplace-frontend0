@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../../Button/Button";
 import { LoadingSpinner } from "../../loading-spinner";
@@ -11,6 +11,7 @@ interface SuspendUserModalProps {
   onClose: () => void;
   onConfirm: (reason: string) => void;
   loading?: boolean;
+  action?: "suspend" | "unsuspend";
 }
 
 export default function SuspendUserModal({
@@ -18,14 +19,32 @@ export default function SuspendUserModal({
   onClose,
   onConfirm,
   loading,
+  action = "suspend",
 }: SuspendUserModalProps) {
+  const isUnsuspend = action === "unsuspend";
   const [reason, setReason] = useState("");
-  const reasons = [
+
+  const suspendReasons = [
+    "Fraudulent activity detected",
     "Malicious payment information",
     "Spam activity",
     "Terms of service violation",
     "Other",
   ];
+
+  const unsuspendReasons = [
+    "Issue resolved",
+    "Incorrect suspension",
+    "Other",
+  ];
+
+  const reasons = isUnsuspend ? unsuspendReasons : suspendReasons;
+
+  useEffect(() => {
+    if (isOpen) {
+      setReason(isUnsuspend ? "Issue resolved" : "Fraudulent activity detected");
+    }
+  }, [isOpen, isUnsuspend]);
 
   return (
     <AnimatePresence>
@@ -46,7 +65,7 @@ export default function SuspendUserModal({
             >
               <div className="text-center mb-8">
                 <h2 className="text-lg font-MontserratMedium mb-1">
-                  Reason for Suspension
+                  {isUnsuspend ? "Reason for Unsuspension" : "Reason for Suspension"}
                 </h2>
                 <p className="text-c12 font-MontserratNormal text-000000/68">
                   Choose from the list of predefined options
@@ -55,10 +74,10 @@ export default function SuspendUserModal({
 
               <div className="mb-8">
                 <label className="block text-xs font-MontserratMedium text-000000/68 mb-1">
-                  Reason for suspension
+                  {isUnsuspend ? "Reason for unsuspension" : "Reason for suspension"}
                 </label>
                 <DropdownInput
-                  placeholder="Malicious payment information"
+                  placeholder={isUnsuspend ? "Issue resolved" : "Fraudulent activity detected"}
                   options={reasons}
                   value={reason}
                   onChange={(val) => setReason(val)}
@@ -79,7 +98,13 @@ export default function SuspendUserModal({
                   disabled={loading || !reason}
                   className="flex-1 bg-[#ffac06] text-white hover:bg-[#e69b05] h-12 border-none"
                 >
-                  {loading ? <LoadingSpinner /> : "Confirm, suspend user"}
+                  {loading ? (
+                    <LoadingSpinner />
+                  ) : isUnsuspend ? (
+                    "Confirm, unsuspend user"
+                  ) : (
+                    "Confirm, suspend user"
+                  )}
                 </Button>
               </div>
             </motion.div>

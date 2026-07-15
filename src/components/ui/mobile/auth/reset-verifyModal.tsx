@@ -5,6 +5,9 @@ import { MobileLoginProps } from "@/types/global";
 import { toast } from "sonner";
 import { Button } from "../../Button/Button";
 import { LoadingSpinner } from "../../loading-spinner";
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/forms/Input";
+import { useRouter } from "next/navigation";
 
 export default function ResetVerify({
   onClose,
@@ -12,10 +15,55 @@ export default function ResetVerify({
   email,
 }: MobileLoginProps) {
   const { loading, sendHttpRequest: resendUserReq } = useHttp();
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [timer, setTimer] = useState(120);
+  const router = useRouter();
+
+  useEffect(() => {
+    let interval: any;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (value.length > 1) value = value.slice(-1);
+    if (!/^\d*$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`reset-otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: any) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      const prevInput = document.getElementById(`reset-otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handleVerifyOtp = () => {
+    const otpString = otp.join("");
+    if (otpString.length < 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+    router.push("?resetToken=" + otpString);
+    setStep("resetPassword");
+  };
 
   // ✅ Success handler for resend request
   const registerUserRes = (res: any) => {
-    toast.success("Verification link resent successfully!");
+    toast.success("Verification OTP resent successfully!");
+    setTimer(120);
   };
 
   // ✅ Handle resend link
@@ -31,36 +79,66 @@ export default function ResetVerify({
     resendUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/resend-verification-email/",
+        url: "/accounts/register/resend-otp/",
         method: "POST",
         body: { email },
-        successMessage: "Verification link resent.",
+        successMessage: "Verification OTP resent.",
       },
     });
   };
 
   // ✅ Return JSX
   return (
-    <div className=" text-center">
+    <div className="text-center">
       <div className="space-y-2 mb-c32">
-        <h2 className="text-c20 font-MontserratSemiBold">Check your email</h2>
+        <h2 className="text-c20 font-MontserratSemiBold">Enter OTP</h2>
         <p className="font-MontserratNormal text-sm">
-       
-          <span className="font-semibold text-6a0dad">{email}</span>
-          <br />
-          if there’s an account associated with that email, you’ll receive a reset link shortly.
+          We've sent a 6-digit code to <span className="font-semibold text-6a0dad">{email}</span>.
+          <br /> Enter it below to continue.
         </p>
       </div>
 
-      <Button
-        type="button"
-        variant="primary"
-        disabled={loading}
-        onClick={handleResendLink}
-       
-      >
-        {loading ? <LoadingSpinner /> : "Resend email link"}
-      </Button>
+      <div className="flex justify-center mb-8 gap-2 w-full">
+        {otp.map((digit, idx) => (
+          <Input
+            key={idx}
+            id={`reset-otp-${idx}`}
+            type="text"
+            maxLength={1}
+            value={digit}
+            onChange={(e) => handleOtpChange(idx, e.target.value)}
+            onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+            className="w-12 h-12 text-center text-xl font-MontserratBold px-0"
+          />
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <Button
+          type="button"
+          onClick={handleVerifyOtp}
+          disabled={otp.some((d) => d === "")}
+        >
+          Verify
+        </Button>
+
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={loading || timer > 0}
+          onClick={handleResendLink}
+        >
+          {loading ? (
+            <LoadingSpinner color="border-ff715b" />
+          ) : timer > 0 ? (
+            `Resend OTP (${Math.floor(timer / 60)}:${(timer % 60)
+              .toString()
+              .padStart(2, "0")})`
+          ) : (
+            "Resend OTP"
+          )}
+        </Button>
+      </div>
 
       <div>
        

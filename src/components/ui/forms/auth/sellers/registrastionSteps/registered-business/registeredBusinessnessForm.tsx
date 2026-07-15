@@ -15,19 +15,19 @@ import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 import ResultModal from "@/components/ui/forms/resultModal";
 
-
 interface RegisterFormStep3Props {
   userType: "seller" | "buyer";
   businessType: "registered" | "unregistered";
 }
 
-export default function RegisterFormStep3({
-
-}: RegisterFormStep3Props) {
+export default function RegisterFormStep3({}: RegisterFormStep3Props) {
   const router = useRouter();
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
-  const emailVerification = useSelector((state:RootState)=>state.registration.email)
-const [isOpen, setIsOpen] = useState(false);
+  const emailVerification = useSelector(
+    (state: RootState) => state.registration.email,
+  );
+  const token = useSelector((state: RootState) => state.token?.token);
+  const [isOpen, setIsOpen] = useState(false);
 
   const cacFileRef = useRef<HTMLInputElement | null>(null);
   const tinFileRef = useRef<HTMLInputElement | null>(null);
@@ -66,238 +66,284 @@ const [isOpen, setIsOpen] = useState(false);
   };
 
   const handleConfirm = () => {
-    
     router.push(`/auth/seller/login`);
-  }
+  };
 
- const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const payload = new FormData();
+    const payload = new FormData();
 
-  payload.append(
-    "business_registration_number",
-    formData.business_registration_number?? ""
-  );
-  payload.append("CAC_No", formData.CAC_No??"");
-  payload.append(
-    "tax_identification_number",
-    formData.tax_identification_number?? ""
-  );
-  payload.append("vat_number", formData.vat_number?? "");
-  payload.append(
-    "is_registered_business",
-    String(formData.is_registered_business)
-  );
-
-  if (formData.CAC_No_file) {
-    payload.append("CAC_No_file", formData.CAC_No_file);
-  }
-
-  if (formData.tax_identification_file) {
     payload.append(
-      "tax_identification_file",
-      formData.tax_identification_file
+      "business_registration_number",
+      formData.business_registration_number ?? "",
     );
-  }
-
-  if (formData.certificate_of_registration) {
+    payload.append("CAC_No", formData.CAC_No ?? "");
     payload.append(
-      "certificate_of_registration",
-      formData.certificate_of_registration
+      "tax_identification_number",
+      formData.tax_identification_number ?? "",
     );
-  }
+    payload.append("vat_number", formData.vat_number ?? "");
+    payload.append(
+      "is_registered_business",
+      String(formData.is_registered_business),
+    );
 
-  registerUserReq({
-    successRes: () => {
-      setIsOpen(true);
-    },
-    requestConfig: {
-      url: `/accounts/manufacturer/business-documents/${emailVerification}/`,
-      method: "PATCH",
-      body: payload, 
-      userType: "seller",
-    },
-  });
-};
+    if (formData.CAC_No_file) {
+      payload.append("CAC_No_file", formData.CAC_No_file);
+    }
 
+    if (formData.tax_identification_file) {
+      payload.append(
+        "tax_identification_file",
+        formData.tax_identification_file,
+      );
+    }
+
+    if (formData.certificate_of_registration) {
+      payload.append(
+        "certificate_of_registration",
+        formData.certificate_of_registration,
+      );
+    }
+
+    registerUserReq({
+      successRes: () => {
+        setIsOpen(true);
+      },
+      requestConfig: {
+        url: `/accounts/manufacturer/business-documents/`,
+        method: "PATCH",
+        body: payload,
+        token: token ?? undefined,
+        userType: "seller",
+      },
+    });
+  };
 
   return (
     <div className="w-full h-full text-black/65">
-      {!isOpen && <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* ROW 1 */}
-        <div className="flex gap-4 items-center">
-          <div className="flex-1 flex flex-col gap-2">
-            <Label>Business registration number*</Label>
-            <Input
-              value={formData.business_registration_number}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  business_registration_number: e.target.value,
-                })
-              }
-            />
-          </div>
+      {!isOpen && (
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* ROW 1 */}
+          <div className="flex gap-4 items-center">
+            <div className="flex-1 flex flex-col gap-2">
+              <Label>Business registration number*</Label>
+              <Input
+                value={formData.business_registration_number}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    business_registration_number: e.target.value,
+                  })
+                }
+              />
+            </div>
 
-          <div className="flex-1 flex flex-col gap-2">
-            <Label>CAC Registration Number *</Label>
-            <Input
-              value={formData.CAC_No}
-              onChange={(e) =>
-                setFormData({ ...formData, CAC_No: e.target.value })
-              }
-            />
-          </div>
-        </div>
-
-        {/* ROW 2 */}
-        <div className="flex gap-4 items-center md:flex-row flex-col">
-          <div className="flex-1 flex flex-col w-full gap-2">
-            <Label>CAC02 & CAC07</Label>
-
-            <input
-              ref={cacFileRef}
-              type="file"
-              className="hidden"
-              onChange={(e) => handleFileChange(e, "CAC_No_file")}
-            />
-
-            <div
-              className={`flex items-center justify-between border rounded-c8 px-3 py-2 ${formData.CAC_No_file ? "border-ff715b border-2" : ""}`}
-            >
-              <span className="text-sm truncate">
-                {formData.CAC_No_file?.name || ""}
-              </span>
-
-              {formData.CAC_No_file ? (
-                <button type="button" onClick={() => clearFile("CAC_No_file")}>
-                  <Image src={Trash} alt="Delete" className="w-5 h-5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => cacFileRef.current?.click()}
-                >
-                  <Image src={UploadIcon} alt="Upload" className="w-5 h-5" />
-                </button>
-              )}
+            <div className="flex-1 flex flex-col gap-2">
+              <Label>CAC Registration Number *</Label>
+              <Input
+                value={formData.CAC_No}
+                onChange={(e) =>
+                  setFormData({ ...formData, CAC_No: e.target.value })
+                }
+              />
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-2 w-full">
-            <Label>TIN (tax identification number)</Label>
-            <Input
-              value={formData.tax_identification_number}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  tax_identification_number: e.target.value,
-                })
-              }
-            />
-          </div>
-        </div>
+          {/* ROW 2 */}
+          <div className="flex gap-4 items-center md:flex-row flex-col">
+            <div className="flex-1 flex flex-col w-full gap-2">
+              <Label>CAC02 & CAC07</Label>
 
-        {/* ROW 3 */}
-        <div className="flex gap-4 items-center md:flex-row flex-col">
-          <div className="flex-1 flex flex-col gap-2 w-full">
-            <Label>Upload TIN (tax identification number)</Label>
+              <input
+                ref={cacFileRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => handleFileChange(e, "CAC_No_file")}
+              />
 
-            <input
-              ref={tinFileRef}
-              type="file"
-              className="hidden"
-              onChange={(e) => handleFileChange(e, "tax_identification_file")}
-            />
-            <div
-              className={`flex items-center justify-between border rounded-c8 px-3 py-2 ${formData.tax_identification_file ? "border-ff715b border-2" : ""}`}
-            >
-              <span className="text-sm truncate">
-                {formData.tax_identification_file?.name || ""}
-              </span>
+              <div
+                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12  ${formData.CAC_No_file ? "border-ff715b border-2" : ""}`}
+              >
+                <span className="text-sm truncate">
+                  {formData.CAC_No_file?.name || ""}
+                </span>
 
-              {formData.tax_identification_file ? (
-                <button
-                  type="button"
-                  onClick={() => clearFile("tax_identification_file")}
-                >
-                  <Image src={Trash} alt="Delete" className="w-5 h-5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => tinFileRef.current?.click()}
-                >
-                  <Image src={UploadIcon} alt="Upload" className="w-5 h-5" />
-                </button>
-              )}
+                {formData.CAC_No_file ? (
+                  <button
+                    type="button"
+                    onClick={() => clearFile("CAC_No_file")}
+                  >
+                    <Image
+                      src={Trash}
+                      alt="Delete"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => cacFileRef.current?.click()}
+                  >
+                    <Image
+                      src={UploadIcon}
+                      alt="Upload"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col gap-2 w-full">
+              <Label>Certificate of Registration</Label>
+
+              <input
+                ref={certFileRef}
+                type="file"
+                className="hidden"
+                onChange={(e) =>
+                  handleFileChange(e, "certificate_of_registration")
+                }
+              />
+
+              <div
+                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12 ${formData.certificate_of_registration ? "border-ff715b border-2" : ""}`}
+              >
+                <span className="text-sm truncate">
+                  {formData.certificate_of_registration?.name || ""}
+                </span>
+
+                {formData.certificate_of_registration ? (
+                  <button
+                    type="button"
+                    onClick={() => clearFile("certificate_of_registration")}
+                  >
+                    <Image
+                      src={Trash}
+                      alt="Delete"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => certFileRef.current?.click()}
+                  >
+                    <Image
+                      src={UploadIcon}
+                      alt="Upload"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-2 w-full">
-            <Label>Certificate of Registration</Label>
+          {/* ROW 3 */}
+          <div className="flex gap-4 items-center md:flex-row flex-col">
+            <div className="flex-1 flex flex-col gap-2 w-full">
+              <Label>Upload TIN (tax identification number)</Label>
 
-            <input
-              ref={certFileRef}
-              type="file"
-              className="hidden"
-              onChange={(e) =>
-                handleFileChange(e, "certificate_of_registration")
-              }
-            />
+              <input
+                ref={tinFileRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => handleFileChange(e, "tax_identification_file")}
+              />
+              <div
+                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12 ${formData.tax_identification_file ? "border-ff715b border-2" : ""}`}
+              >
+                <span className="text-sm truncate">
+                  {formData.tax_identification_file?.name || ""}
+                </span>
 
-            <div
-              className={`flex items-center justify-between border rounded-c8 px-3 py-2 ${formData.certificate_of_registration ? "border-ff715b border-2" : ""}`}
-            >
-              <span className="text-sm truncate">
-                {formData.certificate_of_registration?.name || ""}
-              </span>
-
-              {formData.certificate_of_registration ? (
-                <button
-                  type="button"
-                  onClick={() => clearFile("certificate_of_registration")}
-                >
-                  <Image src={Trash} alt="Delete" className="w-5 h-5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => certFileRef.current?.click()}
-                >
-                  <Image src={UploadIcon} alt="Upload" className="w-5 h-5" />
-                </button>
-              )}
+                {formData.tax_identification_file ? (
+                  <button
+                    type="button"
+                    onClick={() => clearFile("tax_identification_file")}
+                  >
+                    <Image
+                      src={Trash}
+                      alt="Delete"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => tinFileRef.current?.click()}
+                  >
+                    <Image
+                      src={UploadIcon}
+                      alt="Upload"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                    />
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col gap-2 w-full">
+              <Label>TIN (tax identification number)</Label>
+              <Input
+                value={formData.tax_identification_number}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    tax_identification_number: e.target.value,
+                  })
+                }
+              />
             </div>
           </div>
-        </div>
 
-        {/* ROW 4 */}
-        <div className="flex gap-4 items-center w-full md:flex-row flex-col">
-          <div className="flex-1 flex flex-col gap-2 w-full">
-            <Label>VAT number</Label>
-            <Input
-              value={formData.vat_number}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  vat_number: e.target.value,
-                })
-              }
-            />
+          {/* ROW 4 */}
+          <div className="flex gap-4 items-center w-full md:flex-row flex-col">
+            <div className="flex-1 flex flex-col gap-2 w-full">
+              <Label>VAT number</Label>
+              <Input
+                value={formData.vat_number}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    vat_number: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="flex-1" />
           </div>
 
-          <div className="flex-1" />
-        </div>
-
-        {/* SUBMIT */}
-        <Button type="submit" disabled={loading}>
-          {loading ? <LoadingSpinner /> : "Complete"}
-        </Button>
-      </form>}
+          {/* SUBMIT */}
+          <Button type="submit" disabled={loading}>
+            {loading ? <LoadingSpinner /> : "Complete"}
+          </Button>
+        </form>
+      )}
       <div>
-        <ResultModal isOpen={isOpen} title="Registration complete" message="Welcome to the team! Your registration is pending admin approval." discRescription={emailVerification || ""}  onConfirm={handleConfirm } buttenText="Continue"/>
+        <ResultModal
+          isOpen={isOpen}
+          title="Registration complete"
+          message="Welcome to the team! Your registration is pending admin approval."
+          discRescription={emailVerification || ""}
+          onConfirm={handleConfirm}
+          buttenText="Continue"
+        />
       </div>
     </div>
   );

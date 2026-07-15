@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../../Button/Button";
 import { LoadingSpinner } from "../../loading-spinner";
 import { Input } from "../../forms/Input";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
-import { Calendar } from "lucide-react";
+import { Label } from "../../forms/Label";
 
 interface EditAccountModalProps {
   isOpen: boolean;
@@ -30,6 +30,18 @@ export default function EditAccountModal({
     gender: initialData.gender || "",
   });
 
+  // Re-sync when open
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        firstName: initialData.firstName || "",
+        lastName: initialData.lastName || "",
+        dob: initialData.dob || "",
+        gender: initialData.gender || "",
+      });
+    }
+  }, [isOpen, initialData]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -51,7 +63,7 @@ export default function EditAccountModal({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="bg-white shadow-xl flex flex-col w-full max-w-[517px] rounded-2xl p-8"
+              className="bg-white shadow-xl flex flex-col w-full max-w-[517px] rounded-2xl p-8 overflow-visible"
             >
               <div className="text-center mb-6">
                 <h2 className="text-lg font-MontserratSemiBold text-[#000000] mb-1">
@@ -62,58 +74,62 @@ export default function EditAccountModal({
                 </p>
               </div>
 
-              <div className="flex flex-col gap-4 mb-8">
+              <div className="flex flex-col gap-4 mb-8 overflow-visible">
+                {/* Row 1: First & Last Name */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
+                    <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
                       First Name
-                    </label>
+                    </Label>
                     <Input
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
                       placeholder="First Name"
-                      className="h-11 rounded-xl"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
+                    <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
                       Last Name
-                    </label>
+                    </Label>
                     <Input
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
                       placeholder="Last Name"
-                      className="h-11 rounded-xl"
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
+
+                {/* Row 2: DOB & Gender */}
+                <div className="grid grid-cols-2 gap-4 overflow-visible">
+                  {/* DOB using customized calendar component */}
+                  <div className="overflow-visible">
+                    <Label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
                       Date of birth
-                    </label>
-                    <div className="relative">
-                      <Input
-                        name="dob"
-                        type="text"
-                        value={formData.dob}
-                        onChange={handleChange}
-                        placeholder="Date of birth"
-                        className="h-11 rounded-xl pr-10"
-                      />
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    </div>
+                    </Label>
+                    <Input
+                      name="dob"
+                      type="date-custom"
+                      value={formData.dob}
+                      onChange={handleChange}
+                      placeholder="YYYY-MM-DD"
+                    />
                   </div>
+
+                  {/* Gender Option */}
                   <div>
-                    <label className="block text-xs font-MontserratMedium text-[#666666] mb-1">
+                    <Label className="block ">
                       Gender
-                    </label>
+                    </Label>
                     <DropdownInput
                       placeholder="Gender"
                       options={genderOptions}
-                      value={formData.gender}
+                      value={
+                        formData.gender
+                          ? formData.gender.charAt(0).toUpperCase() + formData.gender.slice(1).toLowerCase()
+                          : ""
+                      }
                       onChange={(val) => setFormData({ ...formData, gender: val })}
                       disabled={loading}
                     />

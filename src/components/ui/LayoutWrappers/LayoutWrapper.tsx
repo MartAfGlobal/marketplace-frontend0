@@ -7,6 +7,10 @@ import FooterPage from "../Footer/Footer";
 import { ReactNode } from "react";
 import WireframeLoader from "../WireframeLoader";
 import { useTokenExpiration } from "@/hooks/useTokenExpiration";
+import { useSelector, useDispatch } from "react-redux";
+import ResultModal from "../forms/resultModal";
+import { closeGlobalResultModal } from "@/store/uiSlice";
+import { RootState } from "@/store";
 
 interface LayoutWrapperProps {
   children: ReactNode;
@@ -15,6 +19,8 @@ interface LayoutWrapperProps {
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
   useTokenExpiration();
+  const dispatch = useDispatch();
+  const resultModal = useSelector((state: RootState) => state.ui?.resultModal);
 
     const [loading, setLoading] = useState(true);
   
@@ -33,6 +39,13 @@ const productPage = ["/product", "/cart", "/dashboard"].some(path => pathname?.s
 
   return (
     <>
+      <ResultModal
+        isOpen={resultModal?.isOpen || false}
+        result={resultModal?.result as any}
+        title={resultModal?.title}
+        message={resultModal?.message}
+        onCancel={() => dispatch(closeGlobalResultModal())}
+      />
       {!hideLayout && <Header />}
      
        {children}

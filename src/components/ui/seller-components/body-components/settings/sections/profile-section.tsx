@@ -78,6 +78,8 @@ export default function ProfileSection() {
               <Image
                 src={profileImage}
                 alt="Default Profile"
+                width={96}
+                height={96}
                 className="w-full h-full object-cover"
               />
             )}
@@ -168,9 +170,9 @@ export default function ProfileSection() {
             value={formData.company_state}
             onChange={handleInputChange}
             readOnly={!isEditing}
-            className={`w-full h-10 border rounded-lg px-4 text-[11px] outline-none transition-all ${
+            className={`transition-all ${
               isEditing
-                ? "bg-white border-[#3b82f6] text-[#161616]"
+                ? "bg-white  text-[#161616]"
                 : "bg-transparent border-[#e5e5e5] text-[#999999] cursor-not-allowed"
             }`}
           />

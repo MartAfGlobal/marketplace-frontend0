@@ -64,14 +64,16 @@ const nigeriaStates = [
 ];
 
 export default function RegisterFormStep2({ userType }: RegProps) {
-  const [businessType, setBusinessType] = useState<BusinessType>("registered");
+  const [businessType, setBusinessType] = useState(false);
   const router = useRouter();
 
   const email = useSelector((state: RootState) => state.registration.email);
+  const token = useSelector((state:RootState)=>state.token?.token)
 
   const { loading, error, sendHttpRequest: registerUserReq } = useHttp();
   const { loading: fetchingIndustry, sendHttpRequest } = useHttp();
-  const [businessIndustry, setBusinessIndustry] = useState([]);
+  const [businessIndustry, setBusinessIndustry] = useState<string[]>([]);
+  const [shippingZone, setShippingZone] = useState<{ label: string; value: string }[]>([])
 
   const dispatch = useDispatch();
 
@@ -85,7 +87,7 @@ export default function RegisterFormStep2({ userType }: RegProps) {
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      is_registered_business: businessType === "registered",
+      is_registered_business: businessType === true,
     }));
   }, [businessType]);
 
@@ -102,7 +104,7 @@ export default function RegisterFormStep2({ userType }: RegProps) {
         body: {
           ...formData,
         },
-        userType: "buyer",
+        userType: "seller",
       },
       successRes: (res: any) => {
         const industries = res.data.map((item: any) => item.value);
@@ -113,10 +115,31 @@ export default function RegisterFormStep2({ userType }: RegProps) {
         console.log("Business Industries", businessIndustry);
       },
     });
+    sendHttpRequest({
+      requestConfig: {
+        url: `/shippingcalculator/zones/active/`,
+        method: "GET",
+        body: {
+          ...formData,
+        },
+        userType: "seller",
+      },
+      successRes: (res: any) => {
+        const shippingZones = res.data.map((item: any) => ({
+          label: item.name,
+          value: item.id,
+        }));
+
+        console.log("Business", res.data, shippingZones);
+
+        setShippingZone(shippingZones);
+        console.log("Business shippingZone", shippingZone);
+      },
+    });
   }, []);
 
   const registerUserRes = (res: any) => {
-    if (businessType === "registered") {
+    if (businessType) {
       router.push(`/auth/seller/sign-up/reg-registration-step3`);
       return;
     } else {
@@ -124,10 +147,17 @@ export default function RegisterFormStep2({ userType }: RegProps) {
     }
   };
   const handleSubmit = (e: React.FormEvent) => {
+    if(!token){
+      return
+    }
+
+    
     console.log("Submitting payload:", {
       ...formData,
-      is_registered_business: businessType === "registered",
-    });
+      is_registered_business: businessType,
+
+      
+    }, "is token trueee:", token);
     e.preventDefault();
     if (Invalid) {
       return;
@@ -135,13 +165,14 @@ export default function RegisterFormStep2({ userType }: RegProps) {
     registerUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: `accounts/manufacturer/basic-info/${email}/`,
+        url: `/accounts/manufacturer/basic-info/`,
         method: "PATCH",
         body: {
           ...formData,
-          is_registered_business: businessType === "registered",
+          is_registered_business: businessType,
         },
-        userType: "buyer",
+        token,
+        userType: "seller",
         successMessage: "Shop information saved successfully.",
       },
     });
@@ -157,11 +188,11 @@ export default function RegisterFormStep2({ userType }: RegProps) {
           {/* Registered Company */}
           <button
             type="button"
-            onClick={() => setBusinessType("registered")}
+            onClick={() => setBusinessType(true)}
             className="flex items-center gap-2"
           >
             <span className="w-4.5 h-4.5 rounded-full border border-ff715b flex items-center justify-center">
-              {businessType === "registered" && (
+              {businessType && (
                 <span className="w-2.5 h-2.5 bg-ff715b rounded-full" />
               )}
             </span>
@@ -171,11 +202,11 @@ export default function RegisterFormStep2({ userType }: RegProps) {
           {/* Individual */}
           <button
             type="button"
-            onClick={() => setBusinessType("individual")}
+            onClick={() => setBusinessType(false)}
             className="flex items-center gap-2"
           >
             <span className="w-4.5 h-4.5 rounded-full border border-ff715b flex items-center justify-center">
-              {businessType === "individual" && (
+              {!businessType && (
                 <span className="w-2.5 h-2.5 bg-ff715b rounded-full" />
               )}
             </span>
@@ -234,7 +265,7 @@ export default function RegisterFormStep2({ userType }: RegProps) {
                 </Label>
                 <DropdownInput
                   placeholder="Enter shipping zone"
-                  options={nigeriaStates}
+                  options={shippingZone}
                   value={formData.shipping_zone}
                   onChange={(val) =>
                     setFormData({ ...formData, shipping_zone: val })

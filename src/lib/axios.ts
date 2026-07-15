@@ -8,6 +8,23 @@ const axios = Axios.create({
   },
 });
 
+// Remove default Content-Type headers for post, put, patch requests on this instance
+if (axios.defaults.headers) {
+  const methods = ["post", "put", "patch"] as const;
+  methods.forEach((method) => {
+    const headers = axios.defaults.headers[method] as any;
+    if (headers) {
+      if (typeof headers.delete === "function") {
+        headers.delete("Content-Type");
+        headers.delete("content-type");
+      } else {
+        delete headers["Content-Type"];
+        delete headers["content-type"];
+      }
+    }
+  });
+}
+
 // Attach token from localStorage on every request
 axios.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
@@ -18,9 +35,22 @@ axios.interceptors.request.use((config) => {
     }
   }
 
-  if (config.data instanceof FormData) {
-    // Let the browser set multipart boundary
-    delete config.headers?.["Content-Type"];
+  const isForm = config.data && (
+    config.data instanceof FormData ||
+    config.data.constructor?.name === "FormData" ||
+    (typeof config.data === "object" && typeof config.data.append === "function")
+  );
+
+  if (isForm) {
+    if (config.headers) {
+      if (typeof config.headers.delete === "function") {
+        config.headers.delete("Content-Type");
+        config.headers.delete("content-type");
+      } else {
+        delete config.headers["Content-Type"];
+        delete config.headers["content-type"];
+      }
+    }
   }
 
   return config;

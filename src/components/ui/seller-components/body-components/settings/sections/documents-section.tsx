@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Store, ChevronDown } from "lucide-react";
+import { Store, ChevronDown, Check } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
@@ -11,6 +11,10 @@ import { sellerActions } from "@/store/user-data/seller/seller-slice";
 import { motion, AnimatePresence } from "framer-motion";
 import UploadIcon from "@/assets/FormIcon/Vector.svg";
 import Image from "next/image";
+import SelectButton from "@/assets/icons/selectbutton.png";
+import Xicon from "@/assets/FormIcon/xicon.svg";
+import { Label } from "@/components/ui/forms/Label";
+import { Input } from "@/components/ui/forms/Input";
 
 const nigeriaStates = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
@@ -54,7 +58,7 @@ const FileInput = ({
   };
 
   return (
-    <div className="w-full h-12 border border-[#e5e5e5] rounded-xl p-1.5 flex items-center justify-between bg-white">
+    <div className="h-12 px-3.5 w-full rounded-c8 text-ffffff border outline-none md:text-sm p-1.5 flex items-center justify-between bg-white">
       <div className={`px-4 h-full flex items-center rounded-lg text-[12px] font-MontserratMedium truncate max-w-[70%] ${fileName || fileUrl ? "bg-[#e5e5e5] text-[#666666]" : "bg-transparent text-[#cccccc]"}`}>
         {fileName || (fileUrl ? "Document.jpg" : placeholder)}
       </div>
@@ -71,11 +75,11 @@ const FileInput = ({
           {disabled ? (
             "View"
           ) : (
-            <Image src={UploadIcon} alt="Upload" className="w-4 h-4" />
+            <Image src={UploadIcon} alt="Upload" width={16} height={16} className="w-4 h-4" />
           )}
         </button>
         {!disabled && (
-          <input
+          <Input
             type="file"
             className="absolute inset-0 w-[57px] h-[24px] opacity-0 cursor-pointer"
             onChange={(e) => e.target.files?.[0] && onFileSelect?.(e.target.files[0])}
@@ -86,17 +90,17 @@ const FileInput = ({
   );
 };
 
-const TextInput = ({ label, placeholder, value, name, disabled = false }: { label: string, placeholder?: string, value?: string, name: string, disabled?: boolean }) => (
+const TextInput = ({ label, placeholder, value, name, disabled = false, onChange }: { label: string, placeholder?: string, value?: string, name: string, disabled?: boolean, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-[12px] text-[#666666] font-MontserratMedium">{label}</label>
-    <input 
+    <Label className="">{label}</Label>
+    <Input 
       type="text" 
       name={name}
       placeholder={placeholder}
       value={value || ""}
-      onChange={(e) => updateFormData && updateFormData((prev: any) => ({ ...prev, [name]: e.target.value }))}
+      onChange={onChange || ((e) => updateFormData && updateFormData((prev: any) => ({ ...prev, [name]: e.target.value })))}
       disabled={disabled}
-      className={`w-full h-12 border border-[#e5e5e5] rounded-xl px-4 text-[13px] text-[#161616] font-MontserratMedium outline-none focus:border-[#ff6b6b] placeholder:text-[#cccccc] ${disabled ? "bg-gray-50 text-[#999999]" : "bg-white"}`}
+      className={` ${disabled ? "bg-gray-50 text-[#999999]" : "bg-white"}`}
     />
   </div>
 );
@@ -106,6 +110,8 @@ export default function DocumentsSection() {
   const sellerData = useSelector((state: RootState) => state.seller.data);
   const profile = sellerData?.profile || ({} as any);
   const token = useSelector((state: RootState) => state.token.token);
+
+  console.log("gvgdvdgvg", profile)
 
   const [activeTab, setActiveTab] = useState("Shop information");
   const [businessType, setBusinessType] = useState("");
@@ -123,6 +129,17 @@ export default function DocumentsSection() {
   const { loading: fetchingTypes, sendHttpRequest: fetchTypesReq } = useHttp();
   const { loading: updatingProfile, sendHttpRequest: updateProfileReq } = useHttp();
   const { loading: fetchingUserDetails, sendHttpRequest: fetchUserDetailsReq } = useHttp();
+
+  const ID_TYPE_MAP: Record<string, string> = {
+    Passport: "PASSPORT",
+    "National ID": "NATIONAL_ID",
+    "Voter’s card": "VOTERS_CARD",
+    "Driver’s license": "DRIVERS_LICENCE",
+  };
+  
+  const availableIds = Object.keys(ID_TYPE_MAP);
+
+  const [idDropdownOpen, setIdDropdownOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     company_name: profile?.company_name || "",
@@ -151,10 +168,50 @@ export default function DocumentsSection() {
     return_state: profile?.return_state || "",
     return_country: profile?.return_country || "",
     return_postal_code: profile?.return_postal_code || "",
+    ids: (profile?.identification_verifications || []).map((id: any) => ({
+      means_of_id: id.type || id.means_of_id || "",
+      id_number: id.id_number || "",
+      id_front_image_url: id.id_front_image_url || "",
+      id_back_image_url: id.id_back_image_url || "",
+    })),
   });
 
   updateFormData = setFormData;
   updateViewerImage = setViewerImage;
+
+  const addId = (idLabel: string) => {
+    const backendValue = ID_TYPE_MAP[idLabel];
+
+    if (formData.ids.some((i: any) => i.means_of_id === backendValue)) return;
+    if (formData.ids.length >= 2) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      ids: [
+        ...prev.ids,
+        {
+          means_of_id: backendValue,
+          id_number: "",
+          id_front_image: null,
+          id_back_image: null,
+        },
+      ],
+    }));
+  };
+
+  const getIdLabel = (value: string) => {
+    return (
+      Object.keys(ID_TYPE_MAP).find((key) => ID_TYPE_MAP[key] === value) ??
+      value
+    );
+  };
+
+  const removeId = (idType: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      ids: prev.ids.filter((i: any) => i.means_of_id !== idType),
+    }));
+  };
 
   useEffect(() => {
     if (profile) {
@@ -185,6 +242,12 @@ export default function DocumentsSection() {
         return_state: profile.return_state || "",
         return_country: profile.return_country || "",
         return_postal_code: profile.return_postal_code || "",
+        ids: (profile.identification_verifications || []).map((id: any) => ({
+          means_of_id: id.type || id.means_of_id || "",
+          id_number: id.id_number || "",
+          id_front_image_url: id.id_front_image_url || "",
+          id_back_image_url: id.id_back_image_url || "",
+        })),
       });
       
       // Auto-select business type based on is_registered_business flag
@@ -243,66 +306,11 @@ export default function DocumentsSection() {
   }, [token]);
 
   const validateForm = () => {
-    if (activeTab === "Shop information") {
-      if (!formData.company_name || !formData.business_industry) {
-        return "Please fill in all required shop information fields.";
-      }
-    } else if (activeTab === "Business information") {
-      if (businessType === "Registered company") {
-        const requiredText = [
-          formData.business_registration_number,
-          formData.cac_registration_number,
-          formData.tax_identification_number,
-          formData.company_address_line1,
-          formData.company_city,
-          formData.company_state,
-          formData.company_country,
-          formData.company_postal_code,
-        ];
-        if (requiredText.some((t) => !t)) return "Please fill in all required text fields.";
-
-        const requiredDocs = [
-          { key: "CAC_No_file", url: profile?.CAC_No_file_url },
-          { key: "tax_identification_file", url: profile?.tax_certificate_url },
-          { key: "certificate_of_registration", url: profile?.certificate_of_registration_url },
-          { key: "proof_of_address", url: profile?.proof_of_address },
-        ];
-        const missing = requiredDocs.filter((doc) => !doc.url && !newFiles[doc.key]);
-        if (missing.length > 0) return "Please upload all required business documents.";
-      } else {
-        const requiredText = [
-          formData.tax_identification_number,
-          formData.company_address_line1,
-          formData.company_city,
-          formData.company_state,
-          formData.company_country,
-          formData.company_postal_code,
-        ];
-        if (requiredText.some((t) => !t)) return "Please fill in all required text fields.";
-
-        const requiredDocs = [
-          { key: "tax_identification_file", url: profile?.tax_certificate_url },
-          { key: "proof_of_address", url: profile?.proof_of_address },
-        ];
-        const missingDocs = requiredDocs.filter((doc) => !doc.url && !newFiles[doc.key]);
-        if (missingDocs.length > 0) return "Please upload all required business documents.";
-      }
-    } else if (activeTab === "Shipping information") {
-      if (!formData.shipping_zone) return "Please select a shipping zone.";
-      if (!shippingSameAsBusiness) {
-        const req = [formData.shipping_address_line1, formData.shipping_city, formData.shipping_state, formData.shipping_country, formData.shipping_postal_code];
-        if (req.some((t) => !t)) return "Please fill in all shipping address fields.";
-      }
-      if (!returnSameAsBusiness) {
-        const req = [formData.return_address_line1, formData.return_city, formData.return_state, formData.return_country, formData.return_postal_code];
-        if (req.some((t) => !t)) return "Please fill in all return address fields.";
-      }
-    }
+    // Relaxed validation: seller can submit incomplete form during document update
     return null;
   };
 
   const handleUpdateProfile = () => {
-
     const formDataObj = new FormData();
 
     if (activeTab === "Shop information") {
@@ -310,8 +318,21 @@ export default function DocumentsSection() {
       formDataObj.append("is_registered_business", String(businessType === "Registered company"));
       formDataObj.append("business_industry", formData.business_industry);
     } else if (activeTab === "Business information") {
-      formDataObj.append("business_registration_number", formData.business_registration_number);
-      formDataObj.append("CAC_No", formData.cac_registration_number);
+      if (businessType === "Registered company") {
+        formDataObj.append("business_registration_number", formData.business_registration_number);
+        formDataObj.append("CAC_No", formData.cac_registration_number);
+      } else if (businessType === "Individual") {
+        formData.ids.forEach((id: any, idx: number) => {
+          formDataObj.append(`ids[${idx}][means_of_id]`, id.means_of_id);
+          formDataObj.append(`ids[${idx}][id_number]`, id.id_number);
+          if (id.id_front_image) {
+            formDataObj.append(`ids[${idx}][id_front_image]`, id.id_front_image);
+          }
+          if (id.id_back_image) {
+            formDataObj.append(`ids[${idx}][id_back_image]`, id.id_back_image);
+          }
+        });
+      }
       formDataObj.append("tax_identification_number", formData.tax_identification_number);
       formDataObj.append("vat_number", formData.vat_number);
       formDataObj.append("city", formData.company_city);
@@ -451,9 +472,9 @@ export default function DocumentsSection() {
         <div className="flex flex-col gap-8">
           {/* Business Type */}
           <div className="flex flex-col gap-4">
-            <label className="text-[12px] text-[#666666] font-MontserratMedium">Business type</label>
+            <Label className="">Business type</Label>
             <div className="flex items-center gap-6">
-              <label 
+              <Label 
                 className={`flex items-center gap-2 cursor-not-allowed opacity-70`}
               >
                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${businessType === "Registered company" ? "border-[#ff6b6b]" : "border-[#cccccc]"}`}>
@@ -462,9 +483,9 @@ export default function DocumentsSection() {
                 <span className={`text-[13px] font-MontserratMedium ${businessType === "Registered company" ? "text-[#333333]" : "text-[#666666]"}`}>
                   Registered company
                 </span>
-              </label>
+              </Label>
               
-              <label 
+              <Label 
                 className={`flex items-center gap-2 cursor-not-allowed opacity-70`}
               >
                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${businessType === "Individual" ? "border-[#ff6b6b]" : "border-[#cccccc]"}`}>
@@ -473,25 +494,25 @@ export default function DocumentsSection() {
                 <span className={`text-[13px] font-MontserratMedium ${businessType === "Individual" ? "text-[#333333]" : "text-[#666666]"}`}>
                   Individual
                 </span>
-              </label>
+              </Label>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Business Name / Full Name */}
             <div className="flex flex-col gap-2">
-              <label className="text-[12px] text-[#666666] font-MontserratMedium">
+              <Label className="">
                 {businessType === "Registered company" ? "Business name" : "Full legal name"}
-              </label>
+              </Label>
               <div className="relative">
-                <input 
+                <Input 
                   type="text" 
                   name="company_name"
                   value={formData.company_name}
                   onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
                   disabled={!isEditing}
                   placeholder={businessType === "Registered company" ? "e.g Acme" : "Enter your full name"}
-                  className={`w-full h-12 border border-[#e5e5e5] rounded-xl px-4 pr-10 text-[13px] text-[#161616] font-MontserratMedium outline-none focus:border-[#ff6b6b] placeholder:text-[#cccccc] ${!isEditing ? "bg-gray-50 text-[#999999]" : "bg-white"}`}
+                  className={` ${!isEditing ? "bg-gray-50 text-[#999999]" : "bg-white"}`}
                 />
                 <Store size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#cccccc]" />
               </div>
@@ -499,7 +520,7 @@ export default function DocumentsSection() {
 
             {/* Business Industry */}
             <div className="flex flex-col gap-2">
-              <label className="text-[12px] text-[#666666] font-MontserratMedium">Business Industry</label>
+              <Label className="">Business Industry</Label>
               <div className="relative">
                  <DropdownInput 
                    disabled={!isEditing}
@@ -537,7 +558,7 @@ export default function DocumentsSection() {
                 />
                 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[12px] text-[#666666] font-MontserratMedium">CAC02 & CAC07</label>
+                  <label className="">CAC02 & CAC07</label>
                   <FileInput 
                     placeholder="upload as jpeg, jpg, png, pdf" 
                     disabled={!isEditing} 
@@ -555,7 +576,7 @@ export default function DocumentsSection() {
                 />
                 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[12px] text-[#666666] font-MontserratMedium">Upload TIN (tax identification number)</label>
+                  <label className="">Upload TIN (tax identification number)</label>
                   <FileInput 
                     placeholder="upload as jpeg, jpg, png, pdf" 
                     disabled={!isEditing} 
@@ -566,7 +587,7 @@ export default function DocumentsSection() {
                 </div>
                 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[12px] text-[#666666] font-MontserratMedium">Certificate of registration</label>
+                  <label className="">Certificate of registration</label>
                   <FileInput 
                     placeholder="upload as jpeg, jpg, png, pdf" 
                     disabled={!isEditing} 
@@ -588,56 +609,194 @@ export default function DocumentsSection() {
 
           {/* Personal Identification - Only for Individual */}
           {businessType === "Individual" && (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 ">
               <h3 className="text-[16px] font-MontserratMedium text-[#161616]">Personal identification</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {profile?.identification_verifications?.map((id: any, index: number) => (
-                  <div key={index} className="flex flex-col gap-4 p-4 border border-[#f0f0f0] rounded-xl bg-gray-50/30">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[14px] font-MontserratSemiBold text-[#333333]">{id.type || "ID Document"} {index + 1}</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-4">
-                      <TextInput 
-                        label="ID Number" 
-                        name={`id_number_${index}`} 
-                        value={id.id_number} 
-                        disabled 
-                      />
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-2">
-                          <label className="text-[12px] text-[#666666] font-MontserratMedium">Front view</label>
-                          <FileInput 
-                            placeholder="Front view" 
-                            disabled={!isEditing} 
-                            fileName={id.id_front_image_url ? `Front_ID_${index + 1}.jpg` : ""}
-                            fileUrl={id.id_front_image_url}
-                            onFileSelect={(file) => setNewFiles(prev => ({ ...prev, [`ids[${index}][id_front_image]`]: file }))}
-                          />
+              {isEditing ? (
+                <div className="flex flex-col gap-6 ">
+                  {/* ID Selector (matching registration individual business form pattern) */}
+                  <div className="flex md:flex-row flex-col gap-4 ">
+                    <div className="flex-1 flex flex-col gap-2 relative">
+                      <label className="">ID type</label>
+                      <div
+                        className="border border-[#e5e5e5] rounded-xl px-3 py-2 min-h-[48px] flex flex-wrap gap-2 cursor-pointer relative items-center bg-white"
+                        onClick={() => setIdDropdownOpen((p) => !p)}
+                      >
+                        {/* ID Tags */}
+                        <div className="flex flex-wrap gap-2 flex-1 ">
+                          {formData.ids.length === 0 && (
+                            <span className="text-sm text-[#cccccc] font-MontserratMedium">Select ID</span>
+                          )}
+                          {formData.ids.map((id: any) => (
+                            <span
+                              key={id.means_of_id}
+                              className="flex items-center gap-2.5 bg-black/10 font-MontserratMedium px-2.5 py-1 rounded-lg text-xs text-[#333333]"
+                            >
+                              {getIdLabel(id.means_of_id)}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeId(id.means_of_id);
+                                }}
+                              >
+                                <Image
+                                  src={Xicon}
+                                  alt="remove"
+                                  width={10}
+                                  height={10}
+                                  className="w-2.5 h-2.5"
+                                />
+                              </button>
+                            </span>
+                          ))}
                         </div>
-                        <div className="flex flex-col gap-2">
-                          <label className="text-[12px] text-[#666666] font-MontserratMedium">Back view</label>
-                          <FileInput 
-                            placeholder="Back view" 
-                            disabled={!isEditing} 
-                            fileName={id.id_back_image_url ? `Back_ID_${index + 1}.jpg` : ""}
-                            fileUrl={id.id_back_image_url}
-                            onFileSelect={(file) => setNewFiles(prev => ({ ...prev, [`ids[${index}][id_back_image]`]: file }))}
+                        <div
+                          className="mx-2 transition-transform"
+                          style={{
+                            transform: idDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                          }}
+                        >
+                          <Image
+                            src={SelectButton}
+                            alt="select"
+                            width={12}
+                            height={7}
                           />
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
 
-                {(!profile?.identification_verifications || profile.identification_verifications.length === 0) && (
-                  <p className="text-[13px] text-[#999999] font-MontserratMedium col-span-2 text-center py-10 bg-gray-50 rounded-xl border border-dashed">
-                    No identification documents found.
-                  </p>
-                )}
-              </div>
+                      {idDropdownOpen && (
+                        <div className="absolute top-full w-full py-1.5 px-4 bg-white border rounded-xl shadow-lg z-20 mt-1">
+                          {availableIds.map((id) => (
+                            <div
+                              key={id}
+                              onClick={() => {
+                                addId(id);
+                                setIdDropdownOpen(false);
+                              }}
+                              className="py-2.5 flex items-center text-[#161616] text-xs font-MontserratMedium gap-3 cursor-pointer hover:bg-gray-50"
+                            >
+                              <div
+                                className={`w-4 h-4 rounded border flex items-center justify-center ${formData.ids.some((i: any) => i.means_of_id === ID_TYPE_MAP[id]) ? "bg-[#ff6b6b] border-[#ff6b6b]" : "border-gray-300"}`}
+                              >
+                                {formData.ids.some((i: any) => i.means_of_id === ID_TYPE_MAP[id]) && (
+                                  <Check size={12} color="white" />
+                                )}
+                              </div>
+                              {id}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1" />
+                  </div>
+
+                  {/* ID Input Forms */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 ">
+                    {formData.ids.map((id: any, index: number) => (
+                      <div key={id.means_of_id} className="flex flex-col gap-4 p-4 ">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[14px] font-MontserratSemiBold text-[#333333]">
+                            {getIdLabel(id.means_of_id)} Document {index + 1}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          <TextInput
+                            label="ID Number"
+                            name={`id_number_${index}`}
+                            value={id.id_number}
+                            onChange={(e) => {
+                              const updatedIds = [...formData.ids];
+                              updatedIds[index].id_number = e.target.value;
+                              setFormData((prev) => ({ ...prev, ids: updatedIds }));
+                            }}
+                          />
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-2">
+                              <Label className="">Front view</Label>
+                              <FileInput
+                                placeholder="Front view"
+                                fileName={id.id_front_image?.name || (id.id_front_image_url ? `Front_ID_${index + 1}.jpg` : "")}
+                                fileUrl={id.id_front_image_url}
+                                onFileSelect={(file) => {
+                                  const updatedIds = [...formData.ids];
+                                  updatedIds[index].id_front_image = file;
+                                  setFormData((prev) => ({ ...prev, ids: updatedIds }));
+                                }}
+                              />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <Label className="">Back view</Label>
+                              <FileInput
+                                placeholder="Back view"
+                                fileName={id.id_back_image?.name || (id.id_back_image_url ? `Back_ID_${index + 1}.jpg` : "")}
+                                fileUrl={id.id_back_image_url}
+                                onFileSelect={(file) => {
+                                  const updatedIds = [...formData.ids];
+                                  updatedIds[index].id_back_image = file;
+                                  setFormData((prev) => ({ ...prev, ids: updatedIds }));
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {formData.ids.map((id: any, index: number) => (
+                    <div key={index} className="flex flex-col gap-4 p-4 border border-[#f0f0f0] rounded-xl ">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[14px] font-MontserratSemiBold text-[#333333]">
+                          {getIdLabel(id.means_of_id)} Document {index + 1}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <TextInput
+                          label="ID Number"
+                          name={`id_number_${index}`}
+                          value={id.id_number}
+                          disabled
+                        />
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-2">
+                            <Label className="">Front view</Label>
+                            <FileInput
+                              placeholder="Front view"
+                              disabled
+                              fileName={id.id_front_image_url ? `Front_ID_${index + 1}.jpg` : ""}
+                              fileUrl={id.id_front_image_url}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Label className="">Back view</Label>
+                            <FileInput
+                              placeholder="Back view"
+                              disabled
+                              fileName={id.id_back_image_url ? `Back_ID_${index + 1}.jpg` : ""}
+                              fileUrl={id.id_back_image_url}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {formData.ids.length === 0 && (
+                    <p className="text-[13px] text-[#999999] font-MontserratMedium col-span-2 text-center py-10 bg-gray-50 rounded-xl border border-dashed">
+                      No identification documents found.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Individual TIN/VAT */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
@@ -648,7 +807,7 @@ export default function DocumentsSection() {
                   disabled={!isEditing} 
                 />
                 <div className="flex flex-col gap-2">
-                  <label className="text-[12px] text-[#666666] font-MontserratMedium">Upload TIN</label>
+                  <label className="">Upload TIN</label>
                   <FileInput 
                     placeholder="Upload TIN" 
                     disabled={!isEditing} 
@@ -682,7 +841,7 @@ export default function DocumentsSection() {
               <div className="md:col-span-1"><TextInput label="Country" name="company_country" value={formData.company_country} disabled={!isEditing} /></div>
               <div className="md:col-span-1"><TextInput label="Postal code" name="company_postal_code" value={formData.company_postal_code} disabled={!isEditing} /></div>
               <div className="md:col-span-2 flex flex-col gap-2">
-                <label className="text-[12px] text-[#666666] font-MontserratMedium">Proof of address</label>
+                <Label className="">Proof of address</Label>
                 <FileInput 
                   placeholder="" 
                   disabled={!isEditing} 
@@ -702,7 +861,7 @@ export default function DocumentsSection() {
           {/* Shipping zone */}
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-2 w-full md:max-w-md">
-              <label className="text-[12px] text-[#666666] font-MontserratMedium">Shipping zone</label>
+              <label className="">Shipping zone</label>
               <div className="relative">
                  <DropdownInput 
                    disabled={!isEditing}

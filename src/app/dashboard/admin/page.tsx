@@ -109,10 +109,10 @@ export default function AdminOverviewPage() {
             <h2 className="text-sm font-MontserratBold text-000000/68">
               Orders
             </h2>
-            <FilterDropdown 
-              options={["This Week", "This Month", "This Year"]} 
-              defaultValue="This Month" 
-              className="border border-ff715b !rounded-lg !h-fit !py-1.5 !px-3 !gap-1.5 !shadow-none" 
+            <FilterDropdown
+              options={["This Week", "This Month", "This Year"]}
+              defaultValue="This Month"
+              className="border border-ff715b !rounded-lg !h-fit !py-1.5 !px-3 !gap-1.5 !shadow-none"
             />
           </div>
 
@@ -216,10 +216,10 @@ export default function AdminOverviewPage() {
             <h2 className="text-sm font-MontserratBold text-000000/68">
               Users
             </h2>
-            <FilterDropdown 
-              options={["This Week", "This Month", "This Year"]} 
-              defaultValue="This Week" 
-              className="border border-ff715b !rounded-c8 !h-fit !py-1.5 !px-3 !gap-1.5 !shadow-none" 
+            <FilterDropdown
+              options={["This Week", "This Month", "This Year"]}
+              defaultValue="This Week"
+              className="border border-ff715b !rounded-c8 !h-fit !py-1.5 !px-3 !gap-1.5 !shadow-none"
             />
           </div>
 
@@ -229,7 +229,9 @@ export default function AdminOverviewPage() {
             <div className="flex  flex-col gap-c48 w-full  ">
               <div className="flex  gap-3">
                 <div className="w-13.5  h-13.5 rounded-full bg-000000/4 flex items-center justify-center text-gray-400">
-                  <NextImage
+                  <Image
+                    width={27}
+                    height={27}
                     src={UsersIcon}
                     alt="Users Icon"
                     className="w-6.75 h-6.75 opacity-44"
@@ -287,10 +289,7 @@ export default function AdminOverviewPage() {
                         style={{ height: bar.height }}
                         className="absolute bottom-0 left-0 w-2 bg-[#947fff]/50 group-hover:bg-[#7f00ff] transition-all"
                       />
-                      <div
-                        
-                        className="absolute w-0.25 h-full bg-000000/4 transition-all"
-                      />
+                      <div className="absolute w-0.25 h-full bg-000000/4 transition-all" />
                     </div>
 
                     <span className="text-[8px] text-000000/44 font-MontserratMedium">
@@ -317,7 +316,6 @@ export default function AdminOverviewPage() {
               className="text-c12 font-MontserratMedium text-ff715b hover:underline  "
             >
               <span>View all</span>
-          
             </Link>
           </div>
 
@@ -325,7 +323,7 @@ export default function AdminOverviewPage() {
           <div className="flex items-center justify-between mb-c32">
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 rounded-full bg-000000/4 flex items-center justify-center text-gray-400">
-                <Image src ={HelpIcon} alt="Help" width={26} height={28} />
+                <Image src={HelpIcon} alt="Help" width={26} height={28} />
               </div>
               <p className="text-c28 font-MontserratSemiBold">1500</p>
             </div>
@@ -350,17 +348,11 @@ export default function AdminOverviewPage() {
                 {mockTickets.map((ticket, i) => (
                   <tr key={i} className=" transition-colors">
                     <td className="pb-6 ">{ticket.id}</td>
-                    <td className="pb-6 ">
-                      {ticket.subject}
-                    </td>
+                    <td className="pb-6 ">{ticket.subject}</td>
                     <td className="pb-6">
-                      <span className="pb-6">
-                        {ticket.priority}
-                      </span>
+                      <span className="pb-6">{ticket.priority}</span>
                     </td>
-                    <td className="pb-6">
-                      {ticket.status}
-                    </td>
+                    <td className="pb-6">{ticket.status}</td>
                     <td className="pb-6">{ticket.date}</td>
                   </tr>
                 ))}
@@ -381,15 +373,19 @@ export default function AdminOverviewPage() {
               className="text-c12 font-MontserratMedium text-ff715b hover:underline "
             >
               <span>View all</span>
-             
             </Link>
           </div>
 
           {/* Stats Header Box */}
           <div className="flex items-center justify-between mb-c32">
             <div className="flex items-center gap-3">
-             <div className="w-14 h-14 rounded-full bg-000000/4 flex items-center justify-center text-gray-400">
-                <Image src ={pendingFile} alt="Pending File" width={22} height={26} />
+              <div className="w-14 h-14 rounded-full bg-000000/4 flex items-center justify-center text-gray-400">
+                <Image
+                  src={pendingFile}
+                  alt="Pending File"
+                  width={22}
+                  height={26}
+                />
               </div>
               <p className="text-c28 font-MontserratSemiBold">250</p>
             </div>
@@ -411,9 +407,7 @@ export default function AdminOverviewPage() {
               <tbody className="space-x-4 text-c12 font-MontserratMedium">
                 {mockKYBs.map((kyb, i) => (
                   <tr key={i} className="pb-6">
-                    <td className="pb-6">
-                      {kyb.name}
-                    </td>
+                    <td className="pb-6">{kyb.name}</td>
                     <td className="pb-6">{kyb.type}</td>
                     <td className="pb-6 ">{kyb.country}</td>
                   </tr>

@@ -40,12 +40,15 @@ const nextConfig: NextConfig = {
     return config;
   },
 
+  // Required to silence Turbopack/webpack conflict in Next.js 16
   turbopack: {},
+
 };
 
 export default withPWA({
   dest: "public",
   register: true,
+  // @ts-expect-error skipWaiting is supported by the plugin but not defined in PluginOptions types
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
 })(nextConfig);

@@ -12,120 +12,29 @@ import activeUserIcon from "@/assets/admin/Vector.svg";
 import activeIcon from "@/assets/admin/active.svg";
 import inActiveIcon from "@/assets/admin/inactive.svg";
 import suspendedUserIcon from "@/assets/admin/suspend.svg";
+import { AdminDetails } from "@/helpers/admin/adminHelper";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
-interface VerificationRow {
-  id: string;
-  submissionDate: string;
-  businessName: string;
-  businessType: string;
-  status: "Verified" | "Pending" | "Rejected";
-  businessLocation: string;
-  timeInQueue: string;
-}
 
-const mockData: VerificationRow[] = [
-  {
-    id: "V01",
-    submissionDate: "2023-08-23",
-    businessName: "Ankara Co.",
-    businessType: "Individual",
-    status: "Verified",
-    businessLocation: "Abuja",
-    timeInQueue: "Completed",
-  },
-  {
-    id: "V02",
-    submissionDate: "2023-08-23",
-    businessName: "Ekara Co.",
-    businessType: "Registered",
-    status: "Pending",
-    businessLocation: "Lagos",
-    timeInQueue: "1 hrs",
-  },
-  {
-    id: "V03",
-    submissionDate: "2023-08-23",
-    businessName: "Ankara Co.",
-    businessType: "Individual",
-    status: "Verified",
-    businessLocation: "Anambra",
-    timeInQueue: "Completed",
-  },
-  {
-    id: "V04",
-    submissionDate: "2023-08-23",
-    businessName: "Ankara Co.",
-    businessType: "Registered",
-    status: "Rejected",
-    businessLocation: "Abia",
-    timeInQueue: "5 hrs",
-  },
-  {
-    id: "V05",
-    submissionDate: "2023-08-23",
-    businessName: "Ankara Co.",
-    businessType: "Registered",
-    status: "Verified",
-    businessLocation: "Osun",
-    timeInQueue: "5 hrs",
-  },
-  {
-    id: "V06",
-    submissionDate: "2023-08-23",
-    businessName: "Ankara Co.",
-    businessType: "Individual",
-    status: "Pending",
-    businessLocation: "Anambra",
-    timeInQueue: "5 hrs",
-  },
-  {
-    id: "V07",
-    submissionDate: "2023-08-23",
-    businessName: "Ekara Co.",
-    businessType: "Individual",
-    status: "Verified",
-    businessLocation: "Ogun",
-    timeInQueue: "Completed",
-  },
-  {
-    id: "V08",
-    submissionDate: "2023-08-23",
-    businessName: "Isolated PLC",
-    businessType: "Individual",
-    status: "Pending",
-    businessLocation: "Ekiti",
-    timeInQueue: "5 hrs",
-  },
-  {
-    id: "V09",
-    submissionDate: "2023-08-23",
-    businessName: "Emeka & sons",
-    businessType: "Individual",
-    status: "Rejected",
-    businessLocation: "Anambra",
-    timeInQueue: "5 hrs",
-  },
-  {
-    id: "V10",
-    submissionDate: "2023-08-23",
-    businessName: "Ankara Co.",
-    businessType: "Registered",
-    status: "Verified",
-    businessLocation: "Anambra",
-    timeInQueue: "Completed",
-  },
-];
 
 export default function AdminVerificationsPage() {
   const router = useRouter();
 
-  const [searchVal, setSearchVal] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [rows, setRows] = useState<VerificationRow[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  const token = useSelector((state: RootState) => state.token?.token);
+  const kycDetails = useSelector((state: RootState) => state.adminKycDetails?.adminKycDetails ?? []);
+  const apiTotalCount = useSelector((state: RootState) => state.adminKycDetails?.totalCount ?? 0);
+  const { fetchAdminSellersKycList, loading } = AdminDetails();
+
+  useEffect(() => {
+    if (token) {
+      fetchAdminSellersKycList(currentPage);
+    }
+  }, [token, currentPage]);
 
   useEffect(() => {
     const handleOutsideClick = () => {
@@ -135,45 +44,18 @@ export default function AdminVerificationsPage() {
     return () => window.removeEventListener("click", handleOutsideClick);
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    const query = searchVal.trim().toLowerCase();
-
-    const filteredData = mockData.filter((item) => {
-      const haystack = [
-        item.businessName,
-        item.businessType,
-        item.status,
-        item.businessLocation,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(query);
-    });
-
-    const pageSize = 10;
-    const start = (currentPage - 1) * pageSize;
-    const pagedData = filteredData.slice(start, start + pageSize);
-
-    setTimeout(() => {
-      setRows(pagedData);
-      setTotalCount(filteredData.length);
-      setLoading(false);
-    }, 300);
-  }, [currentPage, searchVal]);
-
   const handleRowClick = (id: string) => {
     router.push(`/dashboard/admin/verifications/${id}`);
   };
 
   const handleSelectAll = () => {
-    if (rows.length > 0 && rows.every((row) => selectedIds.includes(row.id))) {
+    if (kycDetails.length > 0 && kycDetails.every((row) => selectedIds.includes(String(row.id)))) {
       setSelectedIds(
-        selectedIds.filter((id) => !rows.some((r) => r.id === id)),
+        selectedIds.filter((id) => !kycDetails.some((r) => String(r.id) === id)),
       );
     } else {
       const newIds = new Set(selectedIds);
-      rows.forEach((row) => newIds.add(row.id));
+      kycDetails.forEach((row) => newIds.add(String(row.id)));
       setSelectedIds(Array.from(newIds));
     }
   };
@@ -193,7 +75,7 @@ export default function AdminVerificationsPage() {
         <div className="justify-between flex items-center w-full">
           <StatusFrame
             title="Total Verifications"
-            quantity={500}
+            quantity={apiTotalCount}
             icon={activeUserIcon}
             width={26}
             height={22}
@@ -224,7 +106,7 @@ export default function AdminVerificationsPage() {
      
       {/* Table Section */}
       <VerificationsTable
-        rows={rows}
+        rows={kycDetails}
         selectedIds={selectedIds}
         activeRowId={activeRowId}
         loading={loading}
@@ -235,11 +117,13 @@ export default function AdminVerificationsPage() {
       />
 
       {/* Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(totalCount / 10)}
-        onPageChange={setCurrentPage}
-      />
+      {apiTotalCount > 20 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(apiTotalCount / 10)}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 }

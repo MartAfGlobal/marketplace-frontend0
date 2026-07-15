@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import axios from "@/lib/axios";
 import { HttpRequestConfigProps } from "@/types/global";
 import { tokenActions } from "@/store/token/token-slice";
+import { openGlobalResultModal } from "@/store/uiSlice";
 
 export const useHttp = () => {
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,7 @@ export const useHttp = () => {
 
   const router = useRouter();
   const dispatch = useDispatch();
+
 
   const sendHttpRequest = useCallback(
     async ({ successRes, requestConfig, errorRes }: HttpRequestConfigProps) => {
@@ -24,7 +26,10 @@ export const useHttp = () => {
 
         if (typeof window !== "undefined") {
           const currentUrl = window.location.pathname + window.location.search;
-          console.log("Auto-redirect to login disabled. Current URL:", currentUrl);
+          console.log(
+            "Auto-redirect to login disabled. Current URL:",
+            currentUrl,
+          );
           // if (window.location.pathname.startsWith("/dashboard/admin")) {
           //   router.replace(`/auth/admin/login?from=${encodeURIComponent(currentUrl)}`);
           // } else if (window.location.pathname.startsWith("/dashboard/seller")) {
@@ -42,7 +47,20 @@ export const useHttp = () => {
       setLoading(true);
 
       try {
-        const isFormData = requestConfig.body instanceof FormData;
+        const isFormData = requestConfig.body && (
+          requestConfig.body instanceof FormData ||
+          requestConfig.body.constructor?.name === "FormData" ||
+          (typeof requestConfig.body === "object" && typeof requestConfig.body.append === "function")
+        );
+
+        console.log("isFormData:", requestConfig.body instanceof FormData);
+        console.log("body:", requestConfig.body);
+
+        if (requestConfig.body instanceof FormData) {
+          for (const [key, value] of requestConfig.body.entries()) {
+            console.log("check key and value", key, value);
+          }
+        }
 
         const config = {
           url: requestConfig.url,
@@ -55,6 +73,22 @@ export const useHttp = () => {
           },
           ...(requestConfig.params && { params: requestConfig.params }),
           ...(requestConfig.body && { data: requestConfig.body }),
+          ...(isFormData && {
+            transformRequest: [
+              (data: any, headers: any) => {
+                if (headers) {
+                  if (typeof headers.delete === "function") {
+                    headers.delete("Content-Type");
+                    headers.delete("content-type");
+                  } else {
+                    delete headers["Content-Type"];
+                    delete headers["content-type"];
+                  }
+                }
+                return data;
+              },
+            ],
+          }),
         };
 
         console.log("config:", config);
@@ -63,7 +97,15 @@ export const useHttp = () => {
 
         if (res.status >= 200 && res.status < 300) {
           if (requestConfig.successMessage) {
-            toast.success(requestConfig.successMessage);
+            if (typeof window !== "undefined" && window.innerWidth < 768) {
+              dispatch(openGlobalResultModal({
+                result: "success",
+                title: "Success",
+                message: requestConfig.successMessage
+              }));
+            } else {
+              toast.success(requestConfig.successMessage);
+            }
           }
           successRes(res);
         }
@@ -81,10 +123,14 @@ export const useHttp = () => {
           errorMessage = "Request timed out. Please try again.";
         } else if (error?.response?.data) {
           const data = error.response.data;
-          const contentType = error.response.headers?.['content-type'];
+          const contentType = error.response.headers?.["content-type"];
 
           // Check if data is HTML and should be ignored as a message
-          const isHtml = typeof data === "string" && (data.trim().startsWith("<!DOCTYPE") || data.trim().startsWith("<html") || contentType?.includes("text/html"));
+          const isHtml =
+            typeof data === "string" &&
+            (data.trim().startsWith("<!DOCTYPE") ||
+              data.trim().startsWith("<html") ||
+              contentType?.includes("text/html"));
 
           if (!isHtml) {
             // Extract the first message dynamically regardless of nesting depth
@@ -110,26 +156,32 @@ export const useHttp = () => {
             }
           }
         }
-        const isTokenError = false; /*
+        const isTokenError = 
           requestConfig.isAuth && (
             error?.response?.status === 401 || 
-            (error?.response?.status === 403 && errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided"))
-          ); */
+            (error?.response?.status === 403 && (errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided")))
+          );
 
         if (isTokenError) {
-          errorMessage = errorMessage.toLowerCase().includes("token") ? errorMessage : "Token expired, please login.";
+          errorMessage = "Token expired";
           dispatch(tokenActions.deleteToken());
           localStorage.removeItem("accessToken");
           localStorage.removeItem("token");
-          console.log("Unauthorized access - redirecting to login", errorMessage);
+          console.log(
+            "Unauthorized access - redirecting to login",
+            errorMessage,
+          );
 
-          const inferredUserType = requestConfig.userType ??
-            (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard/admin")
+          const inferredUserType =
+            requestConfig.userType ??
+            (typeof window !== "undefined" &&
+            window.location.pathname.startsWith("/dashboard/admin")
               ? "admin"
               : "seller");
 
           if (typeof window !== "undefined") {
-            const currentUrl = window.location.pathname + window.location.search;
+            const currentUrl =
+              window.location.pathname + window.location.search;
             if (currentUrl.startsWith("/dashboard/seller")) {
               localStorage.setItem("sellerRedirectUrl", currentUrl);
             }
@@ -137,22 +189,31 @@ export const useHttp = () => {
 
           if (inferredUserType === "admin") {
             if (typeof window !== "undefined") {
-              const currentUrl = window.location.pathname + window.location.search;
-              router.replace(`/auth/admin/login?from=${encodeURIComponent(currentUrl)}`);
+              const currentUrl =
+                window.location.pathname + window.location.search;
+              router.replace(
+                `/auth/admin/login?from=${encodeURIComponent(currentUrl)}`,
+              );
             } else {
               router.replace("/auth/admin/login");
             }
           } else if (inferredUserType === "seller") {
             if (typeof window !== "undefined") {
-              const currentUrl = window.location.pathname + window.location.search;
-              router.replace(`/auth/seller/login?from=${encodeURIComponent(currentUrl)}`);
+              const currentUrl =
+                window.location.pathname + window.location.search;
+              router.replace(
+                `/auth/seller/login?from=${encodeURIComponent(currentUrl)}`,
+              );
             } else {
               router.replace("/auth/seller/login");
             }
           } else {
             if (typeof window !== "undefined") {
-              const currentUrl = window.location.pathname + window.location.search;
-              router.replace(`/auth/login?from=${encodeURIComponent(currentUrl)}`);
+              const currentUrl =
+                window.location.pathname + window.location.search;
+              router.replace(
+                `/auth/login?from=${encodeURIComponent(currentUrl)}`,
+              );
             } else {
               router.replace("/auth/login");
             }
@@ -161,7 +222,15 @@ export const useHttp = () => {
 
         setError(errorMessage);
         if (!error?.response?.data?.requires_2fa) {
-          toast.error(errorMessage);
+          if (typeof window !== "undefined" && window.innerWidth < 768) {
+            dispatch(openGlobalResultModal({
+              result: "error",
+              title: "Error",
+              message: errorMessage
+            }));
+          } else {
+            toast.error(errorMessage);
+          }
         }
       } finally {
         setLoading(false);

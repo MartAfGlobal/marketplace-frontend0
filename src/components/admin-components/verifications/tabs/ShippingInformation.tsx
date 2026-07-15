@@ -1,8 +1,13 @@
 "use client";
 
 import { Input } from "@/components/ui/forms/Input";
+import { Label } from "@/components/ui/forms/Label";
 
-export default function ShippingInformation() {
+interface ShippingInformationProps {
+  seller: any;
+}
+
+export default function ShippingInformation({ seller }: ShippingInformationProps) {
   return (
     <div className="flex flex-col gap-8 animate-in fade-in">
       {/* Shipping Address */}
@@ -23,61 +28,61 @@ export default function ShippingInformation() {
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               Address line 1
-            </label>
+            </Label>
             <Input
-              value="ewgegweg"
+              value={seller?.shipping_address_line1 || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               Address line 2
-            </label>
+            </Label>
             <Input
-              value="ewgegweg"
+              value={seller?.shipping_address_line2 || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               City/Town
-            </label>
+            </Label>
             <Input
-              value="ewgegweg"
+              value={seller?.shipping_city || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               State/Region
-            </label>
+            </Label>
             <Input
-              value="ewgegweg"
+              value={seller?.shipping_state || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               Country
-            </label>
+            </Label>
             <Input
-              value="ewgegweg"
+              value={seller?.shipping_country || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               Postal code
-            </label>
+            </Label>
             <Input
-              value="ewgegweg"
+              value={seller?.shipping_postal_code || ""}
               readOnly
               className=""
             />
@@ -107,61 +112,61 @@ export default function ShippingInformation() {
 
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               Address line 1
-            </label>
+            </Label>
             <Input
-              value="eqgeqeh"
+              value={seller?.return_address_line1 || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               Address line 2
-            </label>
+            </Label>
             <Input
-              value="eqgeqeh"
+              value={seller?.return_address_line2 || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               City/Town
-            </label>
+            </Label>
             <Input
-              value="eqgeqeh"
+              value={seller?.return_city || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               State/Region
-            </label>
+            </Label>
             <Input
-              value="eqgeqeh"
+              value={seller?.return_state || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               Country
-            </label>
+            </Label>
             <Input
-              value="eqgeqeh"
+              value={seller?.return_country || ""}
               readOnly
               className=""
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="">
+            <Label className="">
               Postal code
-            </label>
+            </Label>
             <Input
-              value="eqgeqeh"
+              value={seller?.return_postal_code || ""}
               readOnly
               className=""
             />

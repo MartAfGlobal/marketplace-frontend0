@@ -49,7 +49,7 @@ interface ReturnMethod {
 
 const reasons = ["Item is damaged"];
 
-export default function DisputeDetailsPage({ params }: OrderDetailsPageProps) {
+export default function DisputeDetailsPage() {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const { disputeId } = useParams();

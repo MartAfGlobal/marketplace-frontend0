@@ -87,6 +87,7 @@ export default function BuyerDashBoardPage() {
     });
     const fetchUserSucRes = (res: any) => {
       const resData = res?.data;
+      console.log("update user picture", res?.data, "ALSO TOKE", token)
 
       const user = resData?.buyerDetails || resData?.user || resData;
 

@@ -13,73 +13,26 @@ import activeUserIcon from "@/assets/admin/Vector.svg";
 import activeIcon from "@/assets/admin/active.svg";
 import inActiveIcon from "@/assets/admin/inactive.svg";
 import suspendedUserIcon from "@/assets/admin/suspend.svg";
-
-interface UserRow {
-  id: string;
-  name?: string;
-  email: string;
-  phone: string;
-  status: "Active" | "Inactive";
-  totalOrders: number;
-  repeatRate?: string;
-  state: string;
-  date: string;
-  disputes?: number;
-  totalProducts?: number;
-  kycStatus?: "pending" | "verified" | "rejected";
-  businessType?: "individual" | "registered";
-}
-
-const sellerMockData: UserRow[] = Array.from(
-  { length: 20 },
-  (_, i) => {
-    const id = `S-${String(i + 1).padStart(3, "0")}`;
-
-    return {
-      id,
-      name: `Seller ${id}`,
-      email: `seller${id.toLowerCase()}@example.com`,
-      phone: `+234-800000${String(i + 1).padStart(4, "0")}`,
-      status: i % 2 === 0 ? "Active" : "Inactive",
-      totalProducts: Math.floor(Math.random() * 500),
-      totalOrders: Math.floor(Math.random() * 1000),
-      businessType: i % 2 === 0 ? "individual" : "registered",
-      state: ["Lagos", "Abuja", "Kano", "Rivers"][i % 4],
-      date: new Date(
-        Date.now() - Math.floor(Math.random() * 10000000000)
-      ).toLocaleDateString("en-GB"),
-      kycStatus: ["pending", "verified", "rejected"][
-        i % 3
-      ] as UserRow["kycStatus"],
-    };
-  }
-);
-
-
-const mockData: UserRow[] = Array.from({ length: 20 }, (_, i) => {
-  const id = `U-${String(i + 1).padStart(3, "0")}`;
-  return {
-    id,
-    name: `User ${id}`,
-    email: `user${id.toLowerCase()}@example.com`,
-    phone: `+234-800000${String(i + 1).padStart(4, "0")}`,
-    status: i % 2 === 0 ? "Active" : "Inactive",
-    totalOrders: Math.floor(Math.random() * 100),
-    repeatRate: `${Math.floor(Math.random() * 100)}%`,
-    state: ["Lagos", "Abuja", "Kano", "Rivers"][i % 4],
-    date: new Date(
-      Date.now() - Math.floor(Math.random() * 10000000000),
-    ).toLocaleDateString("en-GB"),
-    disputes: Math.floor(Math.random() * 10),
-  };
-});
+import { AdminDetails } from "@/helpers/admin/adminHelper";
+import { AdminBuyerData, AdminSellerData } from "@/types/global";
+import SuspendUserModal from "@/components/ui/Modals/admin/SuspendUserModal";
+import DeleteUserModal from "@/components/ui/Modals/admin/DeleteUserModal";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 
 
 export default function AdminUsersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+  const {
+    fetchAdminBuyers,
+    loading,
+    fetchAdminSellers,
+    toggleAdminSellerStatus,
+    toggleAdminBuyerStatus,
+    deleteAdminSeller,
+    deleteAdminBuyer,
+  } = AdminDetails();
 
   // Default to buyers if no type param exists
   const type = searchParams.get("type") || "buyers";
@@ -87,13 +40,108 @@ export default function AdminUsersPage() {
 
   const [searchVal, setSearchVal] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [rows, setRows] = useState<UserRow[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
+  const [selectedSeller, setSelectedSeller] = useState<AdminSellerData | null>(null);
+  const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [successModalType, setSuccessModalType] = useState<
+    "suspend" | "unsuspend" | "error" | null
+  >(null);
+
+  // Buyer suspend state
+  const [selectedBuyer, setSelectedBuyer] = useState<AdminBuyerData | null>(null);
+  const [isBuyerSuspendModalOpen, setIsBuyerSuspendModalOpen] = useState(false);
+  const [buyerSuspendSuccess, setBuyerSuspendSuccess] = useState<"suspend" | "activate" | "error" | null>(null);
+
+  // Shared delete state
+  const [selectedDeleteSeller, setSelectedDeleteSeller] = useState<AdminSellerData | null>(null);
+  const [selectedDeleteBuyer, setSelectedDeleteBuyer] = useState<AdminBuyerData | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteSuccessType, setDeleteSuccessType] = useState<"deleted" | "error" | null>(null);
+
+  const handleSuspendConfirm = (reason: string) => {
+    if (!selectedSeller) return;
+    const isSuspended = selectedSeller.user_status === "Suspended";
+    const action = isSuspended ? "unsuspend" : "suspend";
+    toggleAdminSellerStatus(
+      selectedSeller.user_id,
+      { action, reason },
+      () => {
+        setIsSuspendModalOpen(false);
+        setSuccessModalType(action);
+        fetchAdminSellers(currentPage);
+      },
+      () => {
+        setIsSuspendModalOpen(false);
+        setSuccessModalType("error");
+      }
+    );
+  };
+
+  const handleBuyerSuspendConfirm = (reason: string) => {
+    if (!selectedBuyer) return;
+    const isSuspended = selectedBuyer.account_status === "Suspended";
+    const action = isSuspended ? "activate" : "suspend";
+    const formattedReason = reason.toUpperCase().replace(/[\s-]+/g, "_");
+    toggleAdminBuyerStatus(
+      selectedBuyer.user_id,
+      { action, reason: formattedReason, note: "" },
+      () => {
+        setIsBuyerSuspendModalOpen(false);
+        setBuyerSuspendSuccess(action);
+        fetchAdminBuyers(currentPage);
+      }
+    );
+  };
+
+  const handleDeleteConfirm = (reason: string) => {
+    const formattedReason = reason.toUpperCase().replace(/[\s-]+/g, "_");
+    if (selectedDeleteSeller) {
+      deleteAdminSeller(
+        selectedDeleteSeller.user_id,
+        { reason: formattedReason, note: "" },
+        () => {
+          setIsDeleteModalOpen(false);
+          setDeleteSuccessType("deleted");
+          fetchAdminSellers(currentPage);
+        },
+        () => {
+          setIsDeleteModalOpen(false);
+          setDeleteSuccessType("error");
+        }
+      );
+    } else if (selectedDeleteBuyer) {
+      deleteAdminBuyer(
+        selectedDeleteBuyer.user_id,
+        { reason: formattedReason, note: "" },
+        () => {
+          setIsDeleteModalOpen(false);
+          setDeleteSuccessType("deleted");
+          fetchAdminBuyers(currentPage);
+        },
+        () => {
+          setIsDeleteModalOpen(false);
+          setDeleteSuccessType("error");
+        }
+      );
+    }
+  };
+
   const token = useSelector((state: RootState) => state.token?.token);
-  const loading = false;
+  const buyerDetails = useSelector((state: RootState) => state.adminBuyerDetails?.adminBuyerDetails);
+  const sellerDetails = useSelector((state: RootState) => state.adminSellerDetails?.adminSellerDetails);
+  const totalCount = useSelector((state: RootState) => state.adminBuyerDetails?.totalCount ?? 0);
+
+  // Fetch buyers from API whenever the page number changes
+  useEffect(() => {
+    if (token && isBuyers) {
+      fetchAdminBuyers(currentPage)
+     ;
+    } else (token && !isBuyers); {
+      fetchAdminSellers(currentPage);
+    } 
+  }, [token, currentPage, isBuyers]);
 
   // Reset page when search or type changes
   useEffect(() => {
@@ -109,44 +157,13 @@ export default function AdminUsersPage() {
     return () => window.removeEventListener("click", handleOutsideClick);
   }, []);
 
-  useEffect(() => {
-    const query = searchVal.trim().toLowerCase();
-    const sourceData = isBuyers ? mockData : sellerMockData;
-
-    const filteredData = sourceData.filter((item) => {
-      const haystack = [item.id, item.name, item.email, item.phone, item.state, item.status]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return haystack.includes(query);
-    });
-
-    const pageSize = 20;
-    const start = (currentPage - 1) * pageSize;
-    const pagedData = filteredData.slice(start, start + pageSize);
-
-    const mapped = pagedData.map((item) => ({
-      id: item.id,
-      name: item.name || "N/A",
-      email: item.email || "N/A",
-      phone: item.phone || "N/A",
-      status: item.status,
-      totalOrders: item.totalOrders || 0,
-      repeatRate: item.repeatRate || "0%",
-      state: item.state || "N/A",
-      date: item.date || "N/A",
-      disputes: item.disputes,
-      totalProducts: item.totalProducts,
-      kycStatus: item.kycStatus,
-    }));
-
-    setRows(mapped);
-    setTotalCount(filteredData.length);
-  }, [isBuyers, currentPage, searchVal]);
 
   const handleRowClick = (userId: string) => {
-    router.push(`/dashboard/admin/users/${userId}`);
+    if (isBuyers) {
+      router.push(`/dashboard/admin/users/buyers/${userId}`);
+    } else {
+      router.push(`/dashboard/admin/users/sellers/${userId}`);
+    }
   };
 
   const truncateText = (value: string | number | undefined, maxLength = 10) => {
@@ -164,7 +181,8 @@ export default function AdminUsersPage() {
 
   const toggleSelectAll = () => {
     setSelectedUserIds((prev) => {
-      const allVisibleIds = rows.map((row) => row.id);
+      const currentRows = isBuyers ? (buyerDetails ?? []) : sellerDetails;
+      const allVisibleIds = currentRows.map((row: any) => String(row.id));
       const allSelected = allVisibleIds.every((id) => prev.includes(id));
 
       return allSelected
@@ -233,7 +251,7 @@ export default function AdminUsersPage() {
         {/* Data Table */}
         {isBuyers ? (
           <BuyersTable
-            rows={rows}
+            rows={buyerDetails ?? []}
             selectedUserIds={selectedUserIds}
             activeRowId={activeRowId}
             loading={loading}
@@ -242,10 +260,19 @@ export default function AdminUsersPage() {
             onRowClick={handleRowClick}
             onSetActiveRowId={setActiveRowId}
             truncateText={truncateText}
+            onSuspendClick={(buyer) => {
+              setSelectedBuyer(buyer);
+              setIsBuyerSuspendModalOpen(true);
+            }}
+            onDeleteClick={(buyer) => {
+              setSelectedDeleteBuyer(buyer);
+              setSelectedDeleteSeller(null);
+              setIsDeleteModalOpen(true);
+            }}
           />
         ) : (
           <SellersTable
-            rows={rows}
+            rows={sellerDetails ?? []}
             selectedUserIds={selectedUserIds}
             activeRowId={activeRowId}
             loading={loading}
@@ -254,6 +281,15 @@ export default function AdminUsersPage() {
             onRowClick={handleRowClick}
             onSetActiveRowId={setActiveRowId}
             truncateText={truncateText}
+            onSuspendClick={(seller) => {
+              setSelectedSeller(seller);
+              setIsSuspendModalOpen(true);
+            }}
+            onDeleteClick={(seller) => {
+              setSelectedDeleteSeller(seller);
+              setSelectedDeleteBuyer(null);
+              setIsDeleteModalOpen(true);
+            }}
           />
         )}
 
@@ -268,6 +304,130 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      {/* Seller Suspend Modal */}
+      {selectedSeller && (
+        <SuspendUserModal
+          isOpen={isSuspendModalOpen}
+          onClose={() => {
+            setIsSuspendModalOpen(false);
+            setSelectedSeller(null);
+          }}
+          onConfirm={handleSuspendConfirm}
+          loading={loading}
+          action={selectedSeller.user_status === "Suspended" ? "unsuspend" : "suspend"}
+        />
+      )}
+
+      {/* Buyer Suspend Modal */}
+      {selectedBuyer && (
+        <SuspendUserModal
+          isOpen={isBuyerSuspendModalOpen}
+          onClose={() => {
+            setIsBuyerSuspendModalOpen(false);
+            setSelectedBuyer(null);
+          }}
+          onConfirm={handleBuyerSuspendConfirm}
+          loading={loading}
+          action={selectedBuyer.account_status === "Suspended" ? "unsuspend" : "suspend"}
+        />
+      )}
+
+      {/* Shared Delete Modal */}
+      <DeleteUserModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedDeleteSeller(null);
+          setSelectedDeleteBuyer(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        loading={loading}
+      />
+
+      {/* Seller Suspend Result Modal */}
+      <ResultModal
+        isOpen={successModalType !== null}
+        onConfirm={() => setSuccessModalType(null)}
+        onCancel={() => setSuccessModalType(null)}
+        result={successModalType === "error" ? "error" : "success"}
+        title={
+          successModalType === "error"
+            ? "Action Failed"
+            : successModalType === "unsuspend"
+            ? "Seller Unsuspended Successfully"
+            : "Seller Suspended Successfully"
+        }
+        message={
+          successModalType === "error"
+            ? "There was an error updating the seller status. Please try again."
+            : successModalType === "unsuspend"
+            ? "The seller has been successfully unsuspended."
+            : "The seller has been successfully suspended."
+        }
+        discRescription={
+          successModalType === "error"
+            ? "Please check your network and connection, then try again."
+            : successModalType === "unsuspend"
+            ? "The account status of this seller is now set to active."
+            : "The account status of this seller is now set to suspended."
+        }
+        buttenText="Ok"
+      />
+
+      {/* Buyer Suspend Result Modal */}
+      <ResultModal
+        isOpen={buyerSuspendSuccess !== null}
+        onConfirm={() => setBuyerSuspendSuccess(null)}
+        onCancel={() => setBuyerSuspendSuccess(null)}
+        result={buyerSuspendSuccess === "error" ? "error" : "success"}
+        title={
+          buyerSuspendSuccess === "error"
+            ? "Action Failed"
+            : buyerSuspendSuccess === "activate"
+            ? "Buyer Activated Successfully"
+            : "Buyer Suspended Successfully"
+        }
+        message={
+          buyerSuspendSuccess === "error"
+            ? "There was an error updating the buyer status. Please try again."
+            : buyerSuspendSuccess === "activate"
+            ? "The buyer has been successfully activated."
+            : "The buyer has been successfully suspended."
+        }
+        discRescription={
+          buyerSuspendSuccess === "error"
+            ? "Please check your network and connection, then try again."
+            : buyerSuspendSuccess === "activate"
+            ? "The account status of this buyer is now set to active."
+            : "The account status of this buyer is now set to suspended."
+        }
+        buttenText="Ok"
+      />
+
+      {/* Delete Result Modal */}
+      <ResultModal
+        isOpen={deleteSuccessType !== null}
+        onConfirm={() => setDeleteSuccessType(null)}
+        onCancel={() => setDeleteSuccessType(null)}
+        result={deleteSuccessType === "error" ? "error" : "success"}
+        title={
+          deleteSuccessType === "error"
+            ? "Action Failed"
+            : "User Deleted Successfully"
+        }
+        message={
+          deleteSuccessType === "error"
+            ? "There was an error deleting the user. Please try again."
+            : "The account has been permanently deleted."
+        }
+        discRescription={
+          deleteSuccessType === "error"
+            ? "Please check your network and connection, then try again."
+            : "The user no longer has access to this platform."
+        }
+        buttenText="Ok"
+      />
     </div>
   );
 }

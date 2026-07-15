@@ -10,21 +10,9 @@ import activeUserIcon from "@/assets/admin/Vector.svg";
 import activeIcon from "@/assets/admin/active.svg";
 import inActiveIcon from "@/assets/admin/inactive.svg";
 import suspendedUserIcon from "@/assets/admin/suspend.svg";
-
-const mockProducts: ProductRow[] = Array.from({ length: 25 }, (_, i) => {
-  const id = `PRD-${String(i + 1).padStart(3, "0")}`;
-  const statuses: ("Pending" | "Approved" | "Rejected")[] = ["Pending", "Approved", "Rejected"];
-  return {
-    id,
-    name: `Product ${id}`,
-    seller: `Seller ${Math.floor(Math.random() * 10) + 1}`,
-    category: ["Fashion", "Electronics", "Home", "Beauty"][i % 4],
-    price: `₦${(Math.random() * 50000 + 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-    stock: Math.floor(Math.random() * 500),
-    status: statuses[i % 3],
-    date: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toLocaleDateString("en-GB"),
-  };
-});
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { AdminDetails } from "@/helpers/admin/adminHelper";
 
 export default function AdminProductsPage() {
   const searchParams = useSearchParams();
@@ -35,15 +23,27 @@ export default function AdminProductsPage() {
 
   const [searchVal, setSearchVal] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [rows, setRows] = useState<ProductRow[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
-  const loading = false;
+
+  const token = useSelector((state: RootState) => state.token?.token);
+  const adminProducts = useSelector(
+    (state: RootState) => state.adminProducts?.adminProducts ?? []
+  );
+  const apiTotalCount = useSelector(
+    (state: RootState) => state.adminProducts?.totalCount ?? 0
+  );
+  const { fetchAdminSellersProductsList, loading } = AdminDetails();
 
   useEffect(() => {
     setCurrentPage(1);
   }, [type, searchVal]);
+
+  useEffect(() => {
+    if (token) {
+      fetchAdminSellersProductsList(currentPage);
+    }
+  }, [token, currentPage]);
 
   useEffect(() => {
     const handleOutsideClick = () => {
@@ -53,30 +53,26 @@ export default function AdminProductsPage() {
     return () => window.removeEventListener("click", handleOutsideClick);
   }, []);
 
-  useEffect(() => {
-    const query = searchVal.trim().toLowerCase();
-    
-    // In a real app we would have category mock data too
-    const sourceData = isListings ? mockProducts : mockProducts;
-
-    const filteredData = sourceData.filter((item) => {
-      const haystack = [item.id, item.name, item.seller, item.category, item.status]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(query);
-    });
-
-    const pageSize = 20;
-    const start = (currentPage - 1) * pageSize;
-    const pagedData = filteredData.slice(start, start + pageSize);
-
-    setRows(pagedData);
-    setTotalCount(filteredData.length);
-  }, [isListings, currentPage, searchVal]);
+  // Client-side search filter over the current page results from Redux
+  const PAGE_SIZE = 20;
+  const query = searchVal.trim().toLowerCase();
+  const filteredRows: ProductRow[] = adminProducts.filter((item) => {
+    if (!query) return true;
+    const haystack = [
+      item.id,
+      item.name,
+      item.manufacturer_name,
+      item.category?.name,
+      item.stockcode,
+      item.status,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(query);
+  });
 
   const handleRowClick = (routeSuffix: string) => {
-    // routeSuffix is either the id or id/review
     router.push(`/dashboard/admin/products/listings/${routeSuffix}`);
   };
 
@@ -89,20 +85,30 @@ export default function AdminProductsPage() {
     setSelectedProductIds((prev) =>
       prev.includes(productId)
         ? prev.filter((id) => id !== productId)
-        : [...prev, productId],
+        : [...prev, productId]
     );
   };
 
   const toggleSelectAll = () => {
     setSelectedProductIds((prev) => {
-      const allVisibleIds = rows.map((row) => row.id);
+      const allVisibleIds = filteredRows.map((row) => row.id);
       const allSelected = allVisibleIds.every((id) => prev.includes(id));
-
       return allSelected
         ? prev.filter((id) => !allVisibleIds.includes(id))
         : [...new Set([...prev, ...allVisibleIds])];
     });
   };
+
+  // Stats derived from current page results
+  const approvedCount = adminProducts.filter(
+    (p) => (p.status ?? "").toUpperCase() === "APPROVED"
+  ).length;
+  const pendingCount = adminProducts.filter(
+    (p) => (p.status ?? "").toUpperCase() === "PENDING"
+  ).length;
+  const rejectedCount = adminProducts.filter(
+    (p) => (p.status ?? "").toUpperCase() === "REJECTED"
+  ).length;
 
   return (
     <div className="space-y-8 bg-ffffff p-6 rounded-c16">
@@ -117,28 +123,28 @@ export default function AdminProductsPage() {
       <div className="justify-between flex items-center w-full">
         <StatusFrame
           title="Total products"
-          quantity={totalCount}
+          quantity={apiTotalCount}
           icon={activeUserIcon}
           width={26}
           height={22}
         />
         <StatusFrame
           title="Approved"
-          quantity={mockProducts.filter(p => p.status === "Approved").length}
+          quantity={approvedCount}
           icon={activeIcon}
           width={26}
           height={26}
         />
         <StatusFrame
           title="Pending"
-          quantity={mockProducts.filter(p => p.status === "Pending").length}
+          quantity={pendingCount}
           icon={inActiveIcon}
           width={26}
           height={26}
         />
         <StatusFrame
           title="Rejected"
-          quantity={mockProducts.filter(p => p.status === "Rejected").length}
+          quantity={rejectedCount}
           icon={suspendedUserIcon}
           width={18}
           height={26}
@@ -163,7 +169,7 @@ export default function AdminProductsPage() {
 
         {/* Data Table */}
         <ProductsTable
-          rows={rows}
+          rows={filteredRows}
           selectedProductIds={selectedProductIds}
           activeRowId={activeRowId}
           loading={loading}
@@ -175,11 +181,11 @@ export default function AdminProductsPage() {
         />
 
         {/* Pagination Section */}
-        {totalCount > 20 && (
+        {apiTotalCount > PAGE_SIZE && (
           <div className="flex justify-end mt-6">
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(totalCount / 20)}
+              totalPages={Math.ceil(apiTotalCount / PAGE_SIZE)}
               onPageChange={(page) => setCurrentPage(page)}
             />
           </div>

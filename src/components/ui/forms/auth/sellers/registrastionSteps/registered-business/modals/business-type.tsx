@@ -8,7 +8,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface DropdownInputProps {
   placeholder: string;
-  options: string[];
+  options: (string | { label: string; value: string })[];
   value?: string;
   onChange?: (val: string) => void;
   disabled?: boolean;
@@ -26,14 +26,9 @@ export function DropdownInput({
   loading,
   emptyState = "No options available"
 }: DropdownInputProps) {
+  console.log("DropdownInput rendering with options:", options);
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(propValue);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Keep internal value in sync if controlled
-  useEffect(() => {
-    setValue(propValue);
-  }, [propValue]);
 
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -49,10 +44,24 @@ export function DropdownInput({
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  const handleSelect = (opt: string) => {
-    setValue(opt);
+  const handleSelect = (opt: string | { label: string; value: string }) => {
+    const val = typeof opt === "object" ? opt.value : opt;
     setOpen(false);
-    onChange?.(opt);
+    onChange?.(val);
+  };
+
+  const getSelectedLabel = () => {
+    if (!propValue) return "";
+    const found = options.find((opt) => {
+      if (typeof opt === "object") {
+        return opt.value === propValue;
+      }
+      return opt === propValue;
+    });
+    if (found && typeof found === "object") {
+      return found.label;
+    }
+    return propValue;
   };
 
   return (
@@ -69,9 +78,9 @@ export function DropdownInput({
         <Input
           type="text"
           readOnly
-          value={value}
+          value={getSelectedLabel()}
           placeholder={placeholder}
-          className="mt-2 cursor-pointer"
+          className=" cursor-pointer"
         />
         <button
           type="button"
@@ -88,17 +97,20 @@ export function DropdownInput({
         </button>
       </div>
       {open && (
-        <div className="absolute bottom-10 left-0 w-full bg-white border border-gray-200 max-h-60 overflow-y-auto py-2 px-3 rounded-lg shadow-lg mt-1 z-50">
+        <div className="absolute top-full left-0 w-full bg-white border border-gray-200 max-h-60 overflow-y-auto py-2 px-3 rounded-lg shadow-lg mt-1 z-[9999] flex flex-col">
           {options.length > 0 ? (
-            options.map((opt, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSelect(opt)}
-                className="w-full text-left px-3 py-2 font-MontserratNormal text-c12 hover:bg-[#F4E7FD]"
-              >
-                {opt}
-              </button>
-            ))
+            options.map((opt, idx) => {
+              const label = typeof opt === "object" ? opt.label : opt;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleSelect(opt)}
+                  className="w-full text-left px-3 py-2 font-MontserratNormal text-c12 hover:bg-[#F4E7FD]"
+                >
+                  {label}
+                </button>
+              );
+            })
           ) : (
             <div className="px-3 py-2 text-gray-400 font-MontserratNormal text-c12 italic text-center">
               {emptyState}

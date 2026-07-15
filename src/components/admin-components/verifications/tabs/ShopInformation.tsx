@@ -3,7 +3,11 @@
 import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
 
-export default function ShopInformation() {
+interface ShopInformationProps {
+  seller: any;
+}
+
+export default function ShopInformation({ seller }: ShopInformationProps) {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in">
       <h3 className="font-MontserratNormal text-base">Business details</h3>
@@ -12,7 +16,7 @@ export default function ShopInformation() {
         <div className="flex flex-col gap-1.5">
           <Label className="">Store name</Label>
           <Input 
-            value="Shakara Ankara" 
+            value={seller?.company_name || ""} 
             readOnly 
             className=" cursor-not-allowed" 
           />
@@ -20,7 +24,7 @@ export default function ShopInformation() {
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-MontserratMedium text-[#666666]">Business type</ Label>
           <Input 
-            value="Individual" 
+            value={seller?.business_type || ""} 
             readOnly 
             className="-allowed" 
           />
@@ -28,7 +32,7 @@ export default function ShopInformation() {
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-MontserratMedium text-[#666666]">Registration number</ Label>
           <Input 
-            value="CAC745784235" 
+            value={seller?.business_registration_number || seller?.CAC_No || ""} 
             readOnly 
             className="-allowed" 
           />
@@ -39,7 +43,7 @@ export default function ShopInformation() {
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-MontserratMedium text-[#666666]">Country</ Label>
           <Input 
-            value="Nigeria" 
+            value={seller?.company_country || seller?.country || ""} 
             readOnly 
             className="-allowed" 
           />
@@ -47,7 +51,7 @@ export default function ShopInformation() {
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-MontserratMedium text-[#666666]">State</ Label>
           <Input 
-            value="Abia" 
+            value={seller?.company_state || seller?.state || ""} 
             readOnly 
             className="-allowed" 
           />
@@ -55,7 +59,7 @@ export default function ShopInformation() {
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-MontserratMedium text-[#666666]">Business Industry</ Label>
           <Input 
-            value="Technology/Electronics" 
+            value={seller?.business_industry || ""} 
             readOnly 
             className="-allowed" 
           />
@@ -66,7 +70,7 @@ export default function ShopInformation() {
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-MontserratMedium text-[#666666]">City</Label>
           <Input 
-            value="Aba" 
+            value={seller?.company_city || seller?.city || ""} 
             readOnly 
             className="-allowed" 
           />
@@ -74,7 +78,7 @@ export default function ShopInformation() {
         <div className="flex flex-col gap-1.5">
           <Label className="text-xs font-MontserratMedium text-[#666666]">Postal code</ Label>
           <Input 
-            value="900001" 
+            value={seller?.company_postal_code || seller?.postal_code || ""} 
             readOnly 
             className="-allowed" 
           />

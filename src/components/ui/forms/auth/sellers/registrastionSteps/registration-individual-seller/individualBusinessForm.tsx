@@ -17,6 +17,8 @@ import ResultModal from "@/components/ui/forms/resultModal";
 import Xicon from "@/assets/FormIcon/xicon.svg";
 import Trash from "@/assets/FormIcon/Trash.svg";
 import { Check } from "lucide-react";
+import { Root } from "react-dom/client";
+import { toast } from "sonner";
 
 interface RegisterIndividual3Props {
   userType: "seller" | "buyer";
@@ -50,6 +52,7 @@ export default function RegisterIndividual3({
   const [isOpen, setIsOpen] = useState(false);
   const [idDropdownOpen, setIdDropdownOpen] = useState(false);
   const certFileRef = useRef<HTMLInputElement | null>(null);
+  const token = useSelector((state:RootState)=>state.token?.token)
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -125,6 +128,10 @@ export default function RegisterIndividual3({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if(!token){
+      toast("token expired please login")
+      router.push("auth/seller/login")
+    }
 
     if (formData.ids.length !== 2) {
       alert("Please select exactly 2 IDs");
@@ -155,9 +162,10 @@ export default function RegisterIndividual3({
 
     sendHttpRequest({
       requestConfig: {
-        url: `/accounts/manufacturer/personal-documents/${emailVerification}/`,
+        url: `/accounts/manufacturer/personal-documents/`,
         method: "PATCH",
         body: payload,
+         token: token ?? undefined,
         userType,
       },
       successRes: () => setIsOpen(true),
@@ -307,7 +315,7 @@ export default function RegisterIndividual3({
                               ? "Front Image"
                               : "Back Image")}
                         </span>
-                        <Image src={UploadIcon} alt="upload" />
+                        <Image src={UploadIcon} width={16} height={16} alt="upload" />
                       </div>
                     </div>
                   ))}
@@ -359,14 +367,14 @@ export default function RegisterIndividual3({
                     type="button"
                     onClick={() => clearFile("tax_identification_file")}
                   >
-                    <Image src={Trash} alt="Delete" className="w-5 h-5" />
+                    <Image src={Trash} alt="Delete" width={16} height={16} className="w-5 h-5" />
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => certFileRef.current?.click()}
                   >
-                    <Image src={UploadIcon} alt="Upload" className="w-5 h-5" />
+                    <Image src={UploadIcon} height={16} width={16} alt="Upload" className="w-5 h-5" />
                   </button>
                 )}
               </div>

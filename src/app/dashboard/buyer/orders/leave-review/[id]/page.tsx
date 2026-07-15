@@ -48,7 +48,7 @@ interface ReturnMethod {
   code: string;
 }
 
-export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+export default function OrderDetailsPage() {
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState<number>(0);

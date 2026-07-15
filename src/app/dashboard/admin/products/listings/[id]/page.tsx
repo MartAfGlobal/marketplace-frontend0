@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import ProductImage from "@/assets/admin/productMainImage.svg";
+import { AdminDetails } from "@/helpers/admin/adminHelper";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { AdminProductDetail } from "@/types/global";
 
 // Using a placeholder for images since it's UI only
 const placeholderImage =
@@ -21,9 +25,22 @@ export default function ProductDetailsPage({
   const router = useRouter();
   const unwrappedParams = React.use(params);
   const [activeImage, setActiveImage] = useState(0);
-  const images = Array(6).fill(thumbnailImage);
   const [variantIndex, setVariantIndex] = useState(0);
   const variantsScrollRef = useRef<HTMLDivElement>(null);
+  const { fetchAdminSellersProductDetails, loading } = AdminDetails();
+
+  const productId = unwrappedParams.id;
+  const token = useSelector((state: RootState) => state.token?.token);
+  const product = useSelector(
+    (state: RootState) =>
+      (state as any).adminProductDetail?.product as AdminProductDetail | null
+  );
+
+  useEffect(() => {
+    if (token) {
+      fetchAdminSellersProductDetails(productId);
+    }
+  }, [token, productId]);
 
   const scrollVariants = (direction: "left" | "right") => {
     const newIndex = direction === "left"
@@ -32,49 +49,73 @@ export default function ProductDetailsPage({
     setVariantIndex(newIndex);
   };
 
-  // Mock Variants Data
-  const variants = [
-    {
-      id: 1,
-      sku: "123PKU6785",
-      color: "Black",
-      size: "XS",
-      quantity: 20,
-      material: "Silk",
-    },
-    {
-      id: 2,
-      sku: "123PKU6786",
-      color: "Red",
-      size: "S",
-      quantity: 15,
-      material: "Cotton",
-    },
-    {
-      id: 3,
-      sku: "123PKU6787",
-      color: "Blue",
-      size: "M",
-      quantity: 10,
-      material: "Linen",
-    },
-    {
-      id: 4,
-      sku: "123PKU6787",
-      color: "Blue",
-      size: "M",
-      quantity: 10,
-      material: "Linen",
-    },
-    {
-      id: 5,
-      sku: "123PKU6787",
-      color: "Blue",
-      size: "M",
-      quantity: 10,
-      material: "Linen",
-    },
-  ];
+  // ── Real images (fallback to 6 placeholders if not loaded yet) ──────────────
+  const galleryUrls: string[] = [];
+  if (product?.main_image) galleryUrls.push(product.main_image);
+  product?.images?.forEach((img) => {
+    const url = img.medium || img.large || img.thumbnail || img.url || "";
+    if (url && !galleryUrls.includes(url)) galleryUrls.push(url);
+  });
+  const images = galleryUrls.length > 0 ? galleryUrls : Array(6).fill(thumbnailImage);
+
+  // ── Real variants (fallback to mock while loading) ───────────────────────────
+  const variants = product?.variations?.length
+    ? product.variations.map((v) => ({
+        id: v.id,
+        sku: v.sku,
+        color: v.attribute_summary?.["Color"] ?? v.attribute_summary?.["Colour"] ?? "—",
+        size: v.attribute_summary?.["Size"] ?? "—",
+        quantity: v.stock,
+        material: v.attribute_summary?.["Material"] ?? "—",
+      }))
+    : [
+        { id: 1, sku: "123PKU6785", color: "Black", size: "XS", quantity: 20, material: "Silk" },
+        { id: 2, sku: "123PKU6786", color: "Red",   size: "S",  quantity: 15, material: "Cotton" },
+        { id: 3, sku: "123PKU6787", color: "Blue",  size: "M",  quantity: 10, material: "Linen" },
+        { id: 4, sku: "123PKU6787", color: "Blue",  size: "M",  quantity: 10, material: "Linen" },
+        { id: 5, sku: "123PKU6787", color: "Blue",  size: "M",  quantity: 10, material: "Linen" },
+      ];
+
+  // ── Real price range variations ──────────────────────────────────────────────
+  const currency = product?.price_range?.currency ?? "₦";
+  const priceVariations = product
+    ? Object.entries(product.variation_options ?? {}).flatMap(([, opt]) =>
+        opt.values.map((val) => ({
+          name: val.value,
+          price: `${currency}${Number(val.min_price).toLocaleString()}`,
+        }))
+      )
+    : [
+        { name: "Variation Name", price: "₦18,000" },
+        { name: "Variation Name", price: "₦18,000" },
+        { name: "Variation Name", price: "₦18,000" },
+      ];
+
+  // ── Status badge ─────────────────────────────────────────────────────────────
+  const approvalStatus = (product?.is_approved ?? "pending").toLowerCase();
+  const statusClass =
+    approvalStatus === "approved"
+      ? "bg-green-100 text-green-700"
+      : approvalStatus === "rejected"
+      ? "bg-red-100 text-red-600"
+      : "bg-ffaco6/12 text-ffaco6";
+  const statusLabel =
+    approvalStatus === "approved" ? "Approved"
+    : approvalStatus === "rejected" ? "Rejected"
+    : "Pending";
+
+  // ── Other real values ────────────────────────────────────────────────────────
+  const basePrice = product?.base_price
+    ? `${currency}${Number(product.base_price).toLocaleString()}`
+    : "₦20,000";
+  const stock = product?.inventory ?? 200;
+  const productName = product?.name ?? "Product Name";
+  const sellerName = product?.manufacturer_name ?? "KYZ co. Ltd";
+  const createdAt = product?.created_at
+    ? new Date(product.created_at).toLocaleDateString("en-GB")
+    : "12/12/2025";
+  const categoryName = product?.category?.name ?? "Fashion";
+  const subcategoryName = product?.category?.subcategory?.name ?? "Adult Wears";
 
   return (
     <div className="w-full">
@@ -95,12 +136,22 @@ export default function ProductDetailsPage({
         </button>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-12 bg-ffffff rounded-c16 p-6 min-w-0">
+      <div className="flex flex-col xl:flex-row gap-12 h-[966.81px] bg-ffffff rounded-c16 p-6 min-w-0">
         {/* Left Side - Images */}
         <div className="w-full max-w-120 min-w-0">
           {/* Main Image */}
           <div className="rounded-c16  overflow-hidden w-full h-90 relative mb-6">
-            <Image src={ProductImage} alt="Main Product" fill />
+            {galleryUrls.length > 0 ? (
+              <Image
+                src={galleryUrls[activeImage] ?? galleryUrls[0]}
+                alt="Main Product"
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <Image src={ProductImage} alt="Main Product" fill />
+            )}
           </div>
 
           {/* Progress / Image indicator bar */}
@@ -125,13 +176,24 @@ export default function ProductDetailsPage({
                 onClick={() => setActiveImage(idx)}
                 className={`flex-shrink-0 w-[66.81px] h-[66.81px] rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? "border-[#ff715b]" : "border-transparent"}`}
               >
-                <Image
-                  src={ProductImage}
-                  alt={`Thumb ${idx}`}
-                  width={66.81}
-                  height={66.81}
-                  className="w-full h-full object-cover"
-                />
+                {galleryUrls.length > 0 ? (
+                  <Image
+                    src={img}
+                    alt={`Thumb ${idx}`}
+                    width={66.81}
+                    height={66.81}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <Image
+                    src={ProductImage}
+                    alt={`Thumb ${idx}`}
+                    width={66.81}
+                    height={66.81}
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </button>
             ))}
           </div>
@@ -145,7 +207,7 @@ export default function ProductDetailsPage({
                 <div className=" flex-col flex truncate min-w-18.75 gap-8">
                   <p className="text-sm font-MontserratSemiBold ">Price</p>
                   <p className="text-xs font-MontserratSemiBold text-161616 ">
-                    ₦20,000
+                    {basePrice}
                   </p>
                 </div>
                 <div className="  w-full space-y-4">
@@ -153,30 +215,16 @@ export default function ProductDetailsPage({
                     Price Range
                   </p>
                   <div className="flex gap-6 w-full flex-wrap">
-                    <div className="space-y-1 w-full max-w-23.5 truncate">
-                      <p className="font-MontserratNormal text-xs text-000000/68">
-                        Variation Name
-                      </p>
-                      <p className="text-xs font-MontserratSemiBold text-161616 text-center">
-                        ₦18,000
-                      </p>
-                    </div>
-                    <div className="space-y-1 w-full max-w-23.5 truncate">
-                      <p className="font-MontserratNormal text-xs text-000000/68">
-                        Variation Name
-                      </p>
-                      <p className="text-xs font-MontserratSemiBold text-161616 text-center">
-                        ₦18,000
-                      </p>
-                    </div>
-                    <div className="space-y-1 w-full max-w-23.5 truncate">
-                      <p className="font-MontserratNormal text-xs text-000000/68">
-                        Variation Name
-                      </p>
-                      <p className="text-xs font-MontserratSemiBold text-161616 text-center">
-                        ₦18,000
-                      </p>
-                    </div>
+                    {priceVariations.slice(0, 3).map((v, i) => (
+                      <div key={i} className="space-y-1 w-full text-left max-w-20.5 truncate">
+                        <p className="font-MontserratNormal  text-xs text-000000/68">
+                          {v.name}
+                        </p>
+                        <p className="text-xs font-MontserratSemiBold text-161616 ">
+                          {v.price}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -185,7 +233,7 @@ export default function ProductDetailsPage({
               <div className="w-ful truncate w-18.75">
                 <p className="text-sm font-MontserratSemiBold">Stock</p>
                 <p className="text-xs  font-MontserratNormal text-161616 mt-4">
-                  200
+                  {stock}
                 </p>
               </div>
               <div className="">
@@ -224,10 +272,10 @@ export default function ProductDetailsPage({
           <div className="">
             <div className="flex items-start justify-between mb-6">
               <h2 className="text-base font-MontserratSemiBold ">
-                Product Name
+                {productName}
               </h2>
-              <p className="h-c32 w-21.25 rounded-c16 bg-ffaco6/12 text-xs font-MontserratSemiBold text-ffaco6 flex items-center justify-center ">
-                Pending
+              <p className={`h-c32 w-21.25 rounded-c16 text-xs font-MontserratSemiBold flex items-center justify-center ${statusClass}`}>
+                {statusLabel}
               </p>
             </div>
             <div className=" flex justify-between mb-6">
@@ -238,14 +286,14 @@ export default function ProductDetailsPage({
                     COMPANY LOGO
                   </div>
                   <span className="text-[#161616] font-MontserratSemiBold">
-                    KYZ co. Ltd
+                    {sellerName}
                   </span>
                 </div>
               </div>
               <div>
                 <span>Date: </span>
                 <span className="text-[#161616] font-MontserratSemiBold">
-                  12/12/2025
+                  {createdAt}
                 </span>
               </div>
             </div>
@@ -255,25 +303,53 @@ export default function ProductDetailsPage({
             <h3 className="text-base font-MontserratSemiBold mb-3">
               Product Description
             </h3>
-            <p className="text-xs  font-MontserratNormal">
-              Lorem ipsum dolor sit amet consectetur. Et id in non arcu eu elit
-              facilisi ut tellus. Habitant pellentesque turpis turpis vel vitae
-              vestibulum. Congue nunc tempus eget mi. Placerat laoreet in
-              ultricies at. Lorem hac pharetra ullamcorper maecenas purus. Et
-              ornare sollicitudin eget est volutpat fames dictumst scelerisque
-              mattis. Dui scelerisque fermentum sapien cras id dignissim aenean.
-              Etiam ultrices sed diam odio ligula ornare augue posuere.
-            </p>
+            {product?.description_html ? (
+              <div
+                className="text-xs  font-MontserratNormal"
+                dangerouslySetInnerHTML={{ __html: product.description_html }}
+              />
+            ) : (
+              <p className="text-xs  font-MontserratNormal">
+                Lorem ipsum dolor sit amet consectetur. Et id in non arcu eu elit
+                facilisi ut tellus. Habitant pellentesque turpis turpis vel vitae
+                vestibulum. Congue nunc tempus eget mi. Placerat laoreet in
+                ultricies at. Lorem hac pharetra ullamcorper maecenas purus. Et
+                ornare sollicitudin eget est volutpat fames dictumst scelerisque
+                mattis. Dui scelerisque fermentum sapien cras id dignissim aenean.
+                Etiam ultrices sed diam odio ligula ornare augue posuere.
+              </p>
+            )}
+          </div>
+          <div className="mb-6">
+            <h3 className="text-base font-MontserratSemiBold mb-3">
+              Product Specification
+            </h3>
+            {product?.specifications_html ? (
+              <div
+                className="text-xs  font-MontserratNormal"
+                dangerouslySetInnerHTML={{ __html: product.specifications_html }}
+              />
+            ) : (
+              <p className="text-xs  font-MontserratNormal">
+                Lorem ipsum dolor sit amet consectetur. Et id in non arcu eu elit
+                facilisi ut tellus. Habitant pellentesque turpis turpis vel vitae
+                vestibulum. Congue nunc tempus eget mi. Placerat laoreet in
+                ultricies at. Lorem hac pharetra ullamcorper maecenas purus. Et
+                ornare sollicitudin eget est volutpat fames dictumst scelerisque
+                mattis. Dui scelerisque fermentum sapien cras id dignissim aenean.
+                Etiam ultrices sed diam odio ligula ornare augue posuere.
+              </p>
+            )}
           </div>
 
           <div className="w-full flex  max-w-132 border border-00000/12 rounded-c8 mb-c32">
             <div className="  w-full max-w-66 px-4 py-3 flex flex-col gap-4 border-r-2 border-r-000000/12">
               <h4 className="text-base font-MontserratSemiBold leading-[24px]">Category</h4>
-              <p className="text-c12 font-MontserratNormal leading-[16px]">Fashion</p>
+              <p className="text-c12 font-MontserratNormal leading-[16px]">{categoryName}</p>
             </div>
             <div className="w-full max-w-66 px-4 py-3 flex flex-col gap-4">
               <h4 className="text-base font-MontserratSemiBold leading-[24px]">Subcategory</h4>
-              <p className="text-c12 font-MontserratNormal leading-[16px]">Adult Wears</p>
+              <p className="text-c12 font-MontserratNormal leading-[16px]">{subcategoryName}</p>
             </div>
           </div>
 
@@ -350,7 +426,7 @@ export default function ProductDetailsPage({
           {/* Price and Stock */}
 
           {/* Action Buttons */}
-          <div className="mt-auto pt-6 flex justify-end gap-4 border-t border-gray-100">
+          <div className="mt-auto pt-6 flex pb-c40 justify-end gap-4 ">
             <Button className="bg-transparent text-[#ff715b] border border-[#ff715b] hover:bg-[#ffe8e8] w-36 h-12">
               Message Seller
             </Button>

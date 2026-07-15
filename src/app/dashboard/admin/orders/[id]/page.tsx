@@ -13,14 +13,32 @@ import { Button } from "@/components/ui/Button/Button";
 import OrderProgressBar from "@/components/ui/Modals/admin/OrderProgressBar";
 import OrderDetailsTable from "@/components/ui/Modals/admin/orderDetailsTable";
 import OrderDetailsSummary from "@/components/ui/Modals/admin/OrderdetailsSummary";
+import UpdateOrderStatusModal from "@/components/ui/Modals/admin/UpdateOrderStatusModal";
 
 export default function AdminOrderDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const orderId = (params.id as string) || "ORD-235235";
 
+  const [updateStatusOpen, setUpdateStatusOpen] = useState(false);
+  const [updateStatusLoading, setUpdateStatusLoading] = useState(false);
+
   const handleUpdateTracking = () => {
-    toast.success("Tracking status update modal opened.");
+    setUpdateStatusOpen(true);
+  };
+
+  const handleConfirmStatusUpdate = async (newStatus: string) => {
+    setUpdateStatusLoading(true);
+    try {
+      // TODO: wire to your real API call here
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success(`Order status updated to "${newStatus}" successfully.`);
+      setUpdateStatusOpen(false);
+    } catch {
+      toast.error("Failed to update order status. Please try again.");
+    } finally {
+      setUpdateStatusLoading(false);
+    }
   };
 
   const handleCancelOrder = () => {
@@ -52,7 +70,7 @@ export default function AdminOrderDetailsPage() {
           </button>
 
           <div className="flex items-center gap-4 w-full max-w-106.5 flex-wrap sm:flex-nowrap justify-start sm:justify-end">
-            <Button className=" text-nowrap">Update tracking status</Button>
+            <Button onClick={handleUpdateTracking} className=" text-nowrap">Update tracking status</Button>
             <button
               onClick={handleCancelOrder}
               className="border w-full max-w-35 border-ca0202 text-ca0202 hover:bg-ca0202/5 px-5 py-2.5 rounded-lg text-sm font-MontserratSemiBold transition-colors"
@@ -222,6 +240,14 @@ export default function AdminOrderDetailsPage() {
           <OrderDetailsSummary />
         </div>
       </div>
+
+      {/* Update Order Status Modal */}
+      <UpdateOrderStatusModal
+        isOpen={updateStatusOpen}
+        onClose={() => setUpdateStatusOpen(false)}
+        onConfirm={handleConfirmStatusUpdate}
+        loading={updateStatusLoading}
+      />
     </div>
   );
 }
