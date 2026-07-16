@@ -140,7 +140,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
           <form className="" onSubmit={handleSubmit}>
             <fieldset disabled={loading}>
               <div className="flex flex-col gap-2 pt-2">
-                <Label className="text-c12 font-MontserratMedium ">
+                <Label className=" ">
                   Mobile number
                 </Label>
                 <Input
@@ -160,7 +160,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
                 />
               </div>
               <div className="flex flex-col gap-2 pt-3 ">
-                <Label className="text-c12 font-MontserratMedium ">
+                <Label className=" ">
                   Password
                 </Label>
                 <Input
@@ -183,7 +183,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
                 />
               </div>
               <div className="flex flex-col gap-2 pt-3 mb-c20">
-                <Label className="text-c12 font-MontserratMedium ">
+                <Label className=" ">
                   Confirm password
                 </Label>
                 <Input

@@ -20,7 +20,7 @@ export default function ForgotPasswordModal({
   const { loading, sendHttpRequest: UseremailingReq } = useHttp();
 
   const UserResetLinkRes = (res: any) => {
-    toast.success("Verification link sent successfully!");
+    toast.success("Reset OTP sent successfully!");
     if (setEmail) setEmail(localEmail); // ✅ update parent AuthModal email
     setStep("resetVerify");
   
@@ -39,7 +39,7 @@ export default function ForgotPasswordModal({
         url: "/accounts/reset-password/",
         method: "POST",
         body: { email: localEmail },
-        successMessage: "Verification link sent.",
+        successMessage: "Otp sent to your email.",
       },
     });
   };
@@ -49,7 +49,7 @@ export default function ForgotPasswordModal({
       <div className="space-y-2 text-center">
         <h2 className="font-MontserratSemiBold text-c20">Forgot password</h2>
         <p className="font-MontserratNormal text-sm">
-          Enter your email and we’ll send you a reset link.
+          Enter your email and we’ll send you a reset otp.
         </p>
       </div>
 
@@ -63,7 +63,7 @@ export default function ForgotPasswordModal({
         />
 
         <Button type="submit" disabled={!isFormValid || loading}>
-          {loading ? <LoadingSpinner /> : "Send reset link"}
+          {loading ? <LoadingSpinner /> : "Send reset otp"}
         </Button>
       </form>
 

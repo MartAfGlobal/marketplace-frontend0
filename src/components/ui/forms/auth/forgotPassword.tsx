@@ -42,7 +42,7 @@ export default function ForgotPassword() {
           email,
         },
         userType: "buyer",
-        successMessage: "verification link sent.",
+        successMessage: "verification OTP sent.",
       },
     });
 

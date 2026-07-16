@@ -89,12 +89,13 @@ export default function ResetVerify({
 
   // ✅ Return JSX
   return (
-    <div className="text-center">
-      <div className="space-y-2 mb-c32">
+    <div className="text-center space-y-4">
+      <div className="space-y-2">
         <h2 className="text-c20 font-MontserratSemiBold">Enter OTP</h2>
         <p className="font-MontserratNormal text-sm">
-          We've sent a 6-digit code to <span className="font-semibold text-6a0dad">{email}</span>.
-          <br /> Enter it below to continue.
+          We've sent a 6-digit code to your email. Enter it below to continue.
+          <br />
+          <span className="text-base font-MontserratMedium">{email}</span>
         </p>
       </div>
 
@@ -108,7 +109,7 @@ export default function ResetVerify({
             value={digit}
             onChange={(e) => handleOtpChange(idx, e.target.value)}
             onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-            className="w-12 h-12 text-center text-xl font-MontserratBold px-0"
+            className="sm:max-w-12 max-w-[40.33px] h-c64 text-center text-xl font-MontserratBold px-0"
           />
         ))}
       </div>
@@ -141,7 +142,6 @@ export default function ResetVerify({
       </div>
 
       <div>
-       
         <div className="flex justify-center gap-4 text-sm font-MontserratSemiBold text-6a0dad mt-4">
           <button onClick={() => setStep("forgot")}>Change email</button>
         </div>
