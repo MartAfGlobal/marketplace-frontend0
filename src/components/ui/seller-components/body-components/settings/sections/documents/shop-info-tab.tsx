@@ -80,7 +80,7 @@ export default function ShopInfoTab({
         {/* Business Name / Full Name */}
         <div className="flex flex-col gap-2">
           <Label className="">
-            {businessType === "Registered company" ? "Business name" : "Full legal name"}
+            {businessType === "Registered company" ? "Company name" : "Business name"}
           </Label>
           <div className="relative">
             <Input
