@@ -73,22 +73,6 @@ export const useHttp = () => {
           },
           ...(requestConfig.params && { params: requestConfig.params }),
           ...(requestConfig.body && { data: requestConfig.body }),
-          ...(isFormData && {
-            transformRequest: [
-              (data: any, headers: any) => {
-                if (headers) {
-                  if (typeof headers.delete === "function") {
-                    headers.delete("Content-Type");
-                    headers.delete("content-type");
-                  } else {
-                    delete headers["Content-Type"];
-                    delete headers["content-type"];
-                  }
-                }
-                return data;
-              },
-            ],
-          }),
         };
 
         console.log("config:", config);
@@ -157,10 +141,12 @@ export const useHttp = () => {
           }
         }
         const isTokenError = 
-          requestConfig.isAuth && (
-            error?.response?.status === 401 || 
-            (error?.response?.status === 403 && (errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided")))
-          );
+          error?.response?.status === 401 || 
+          (error?.response?.status === 403 && (
+            errorMessage.toLowerCase().includes("token") || 
+            errorMessage.toLowerCase().includes("credentials were not provided") ||
+            errorMessage.toLowerCase().includes("not valid")
+          ));
 
         if (isTokenError) {
           errorMessage = "Token expired";
@@ -168,68 +154,73 @@ export const useHttp = () => {
           localStorage.removeItem("accessToken");
           localStorage.removeItem("token");
           console.log(
-            "Unauthorized access - redirecting to login",
-            errorMessage,
+            "Unauthorized access - cleared token",
+            errorMessage
           );
 
-          const inferredUserType =
-            requestConfig.userType ??
-            (typeof window !== "undefined" &&
-            window.location.pathname.startsWith("/dashboard/admin")
-              ? "admin"
-              : "seller");
+          if (requestConfig.isAuth) {
+            const inferredUserType =
+              requestConfig.userType ??
+              (typeof window !== "undefined" &&
+              window.location.pathname.startsWith("/dashboard/admin")
+                ? "admin"
+                : "seller");
 
-          if (typeof window !== "undefined") {
-            const currentUrl =
-              window.location.pathname + window.location.search;
-            if (currentUrl.startsWith("/dashboard/seller")) {
-              localStorage.setItem("sellerRedirectUrl", currentUrl);
+            if (typeof window !== "undefined") {
+              const currentUrl =
+                window.location.pathname + window.location.search;
+              if (currentUrl.startsWith("/dashboard/seller")) {
+                localStorage.setItem("sellerRedirectUrl", currentUrl);
+              }
             }
-          }
 
-          if (inferredUserType === "admin") {
-            if (typeof window !== "undefined") {
-              const currentUrl =
-                window.location.pathname + window.location.search;
-              router.replace(
-                `/auth/admin/login?from=${encodeURIComponent(currentUrl)}`,
-              );
+            if (inferredUserType === "admin") {
+              if (typeof window !== "undefined") {
+                const currentUrl =
+                  window.location.pathname + window.location.search;
+                router.replace(
+                  `/auth/admin/login?from=${encodeURIComponent(currentUrl)}`,
+                );
+              } else {
+                router.replace("/auth/admin/login");
+              }
+            } else if (inferredUserType === "seller") {
+              if (typeof window !== "undefined") {
+                const currentUrl =
+                  window.location.pathname + window.location.search;
+                router.replace(
+                  `/auth/seller/login?from=${encodeURIComponent(currentUrl)}`,
+                );
+              } else {
+                router.replace("/auth/seller/login");
+              }
             } else {
-              router.replace("/auth/admin/login");
-            }
-          } else if (inferredUserType === "seller") {
-            if (typeof window !== "undefined") {
-              const currentUrl =
-                window.location.pathname + window.location.search;
-              router.replace(
-                `/auth/seller/login?from=${encodeURIComponent(currentUrl)}`,
-              );
-            } else {
-              router.replace("/auth/seller/login");
-            }
-          } else {
-            if (typeof window !== "undefined") {
-              const currentUrl =
-                window.location.pathname + window.location.search;
-              router.replace(
-                `/auth/login?from=${encodeURIComponent(currentUrl)}`,
-              );
-            } else {
-              router.replace("/auth/login");
+              if (typeof window !== "undefined") {
+                const currentUrl =
+                  window.location.pathname + window.location.search;
+                router.replace(
+                  `/auth/login?from=${encodeURIComponent(currentUrl)}`,
+                );
+              } else {
+                router.replace("/auth/login");
+              }
             }
           }
         }
 
         setError(errorMessage);
         if (!error?.response?.data?.requires_2fa) {
-          if (typeof window !== "undefined" && window.innerWidth < 768) {
-            dispatch(openGlobalResultModal({
-              result: "error",
-              title: "Error",
-              message: errorMessage
-            }));
-          } else {
-            toast.error(errorMessage);
+          const isSilentTokenError = isTokenError && !requestConfig.isAuth;
+          if (!isSilentTokenError) {
+            if (typeof window !== "undefined" && window.innerWidth < 768) {
+              dispatch(openGlobalResultModal({
+                result: "error",
+                title: "Error",
+                message: errorMessage
+              }));
+            } else {
+              toast.error(errorMessage);
+            }
           }
         }
       } finally {

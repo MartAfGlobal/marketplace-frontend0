@@ -239,6 +239,16 @@ export default function AdminBuyerDetailsPage() {
                 />
                 <span>{buyer?.phone || "—"}</span>
               </div>
+              <div className="flex items-center gap-2 w-full justify-center text-c12 font-MontserratNormal text-000000/68">
+                <Image
+                  src={Phonicon}
+                  alt="Phone"
+                  width={11.5}
+                  height={17.5}
+                  className="w-4 h-4 shrink-0"
+                />
+                <span>{buyer?.phone2 || "—"}</span>
+              </div>
               <div className="flex items-center justify-center w-full gap-2 text-c12 font-MontserratNormal text-000000/68">
                 <Mail className="w-4 h-4 text-[#343330] shrink-0" />
                 <span className="truncate">{buyer?.email || "—"}</span>
@@ -291,22 +301,15 @@ export default function AdminBuyerDetailsPage() {
                     {buyer?.email || "—"}
                   </span>
                 </div>
+              
                 <div className="flex justify-between">
                   <span className="text-sm font-MontserratNormal text-000000/68">
-                    Phone
-                  </span>
-                  <span className="font-MontserratNormal text-sm text-000000">
-                    {buyer?.phone || "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-MontserratNormal text-000000/68">
-                    Email verified
+                    Gender
                   </span>
                   <span
                     className={`text-sm font-MontserratNormal ${buyer?.email_verified ? "text-[#2ea37d]" : "text-[#f44336]"}`}
                   >
-                    {buyer?.email_verified ? "Verified" : "Not verified"}
+                    {buyer?.gender}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -459,47 +462,7 @@ export default function AdminBuyerDetailsPage() {
                   {buyer?.loyalty_points ?? "—"}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-MontserratNormal text-000000/68">
-                  Account status
-                </span>
-                <span
-                  className={`text-sm font-MontserratSemiBold capitalize ${
-                    buyer?.account_status === "Active"
-                      ? "text-[#2ea37d]"
-                      : buyer?.account_status === "Suspended"
-                        ? "text-[#ff9800]"
-                        : "text-[#f44336]"
-                  }`}
-                >
-                  {buyer?.account_status || "—"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-MontserratNormal text-000000/68">
-                  Is active
-                </span>
-                <span
-                  className={`text-sm font-MontserratNormal ${buyer?.is_active ? "text-[#2ea37d]" : "text-[#f44336]"}`}
-                >
-                  {buyer?.is_active !== undefined
-                    ? buyer.is_active
-                      ? "Yes"
-                      : "No"
-                    : "—"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-MontserratNormal text-000000/68">
-                  User ID
-                </span>
-                <span
-                  className="font-MontserratNormal text-sm text-000000 truncate max-w-[140px]"
-                  title={buyer?.user_id}
-                >
-                  {buyer?.user_id || "—"}
-                </span>
-              </div>
+           
             </div>
           </div>
         </div>

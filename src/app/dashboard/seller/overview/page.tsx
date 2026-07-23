@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "Seller Dashboard Overview | Manage Your Store",
     description:
       "Quick insights into your sales, orders, products, and customers — all in one overview dashboard.",
-    url: "https://yourdomain.com/dashboard/seller/overview",
+    url: "https://martarf.com/dashboard/seller/overview",
     siteName: "Your Store",
     type: "website",
   },

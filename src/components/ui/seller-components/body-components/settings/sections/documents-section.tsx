@@ -29,15 +29,17 @@ interface FormData {
   company_country: string;
   company_postal_code: string;
   business_industry: string;
+  // Shipping address — keys match nested API body
   shipping_zone: string;
-  shipping_address_line1: string;
-  shipping_address_line2: string;
+  shipping_address_line_1: string;
+  shipping_address_line_2: string;
   shipping_city: string;
   shipping_state: string;
   shipping_country: string;
   shipping_postal_code: string;
-  return_address_line1: string;
-  return_address_line2: string;
+  // Return address — keys match nested API body
+  return_address_line_1: string;
+  return_address_line_2: string;
   return_city: string;
   return_state: string;
   return_country: string;
@@ -61,18 +63,18 @@ function buildInitialForm(profile: any): FormData {
     company_postal_code: profile?.company_postal_code || profile?.postal_code || "",
     business_industry: profile?.business_industry || "",
     shipping_zone: profile?.shipping_zone || "",
-    shipping_address_line1: profile?.shipping_address_line1 || "",
-    shipping_address_line2: profile?.shipping_address_line2 || "",
-    shipping_city: profile?.shipping_city || "",
-    shipping_state: profile?.shipping_state || "",
-    shipping_country: profile?.shipping_country || "",
-    shipping_postal_code: profile?.shipping_postal_code || "",
-    return_address_line1: profile?.return_address_line1 || "",
-    return_address_line2: profile?.return_address_line2 || "",
-    return_city: profile?.return_city || "",
-    return_state: profile?.return_state || "",
-    return_country: profile?.return_country || "",
-    return_postal_code: profile?.return_postal_code || "",
+    shipping_address_line_1: "",
+    shipping_address_line_2: "",
+    shipping_city: "",
+    shipping_state: "",
+    shipping_country: "",
+    shipping_postal_code: "",
+    return_address_line_1: "",
+    return_address_line_2: "",
+    return_city: "",
+    return_state: "",
+    return_country: "",
+    return_postal_code: "",
     ids: (profile?.identification_verifications || []).map((id: any) => ({
       means_of_id: id.type || id.means_of_id || "",
       id_number: id.id_number || "",
@@ -88,6 +90,8 @@ export default function DocumentsSection() {
   const profile = sellerData?.profile || ({} as any);
   const token = useSelector((state: RootState) => state.token.token);
 
+console.log("checjiiiii", sellerData)
+  
   const [activeTab, setActiveTab] = useState<TabName>("Shop information");
   const [businessType, setBusinessType] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -106,9 +110,12 @@ export default function DocumentsSection() {
 
   const { loading: fetchingIndustries, sendHttpRequest: fetchIndustriesReq } = useHttp();
   const { loading: updatingProfile, sendHttpRequest: updateProfileReq } = useHttp();
+  const { loading: docLoading, sendHttpRequest: updateDocReq } = useHttp();
+  const { loading: updatingAddresses, sendHttpRequest: updateAddressesReq } = useHttp();
   const { sendHttpRequest: fetchUserDetailsReq } = useHttp();
   const { sendHttpRequest: fetchTypesReq } = useHttp();
   const { sendHttpRequest: fetchShippingZonesReq } = useHttp();
+  const { sendHttpRequest: fetchAddressesReq } = useHttp();
 
   /* ── Sync profile from Redux ──────────────────────────────────────── */
   useEffect(() => {
@@ -171,6 +178,40 @@ export default function DocumentsSection() {
         );
       },
     });
+
+    // Fetch existing shipping & return addresses from the dedicated endpoint
+    fetchAddressesReq({
+      requestConfig: {
+        url: "/accounts/manufacturer/addresses/",
+        method: "GET",
+        isAuth: true,
+        token: token ?? undefined,
+        userType: "seller",
+      },
+      successRes: (res: any) => {
+        const data = res.data || {};
+        const sa = data.shipping_address || {};
+        const ra = data.return_address || {};
+        setFormData((prev) => ({
+          ...prev,
+          shipping_zone: data.shipping_zone || prev.shipping_zone || "",
+          shipping_address_line_1: sa.address_line_1 || "",
+          shipping_address_line_2: sa.address_line_2 || "",
+          shipping_city: sa.city || "",
+          shipping_state: sa.state || "",
+          shipping_country: sa.country || "",
+          shipping_postal_code: sa.postal_code || "",
+          return_address_line_1: ra.address_line_1 || "",
+          return_address_line_2: ra.address_line_2 || "",
+          return_city: ra.city || "",
+          return_state: ra.state || "",
+          return_country: ra.country || "",
+          return_postal_code: ra.postal_code || "",
+        }));
+        setShippingSameAsBusiness(sa.same_as_business_address ?? false);
+        setReturnSameAsBusiness(ra.same_as_business_address ?? false);
+      },
+    });
   }, [token]);
 
   /* ── Helpers ──────────────────────────────────────────────────────── */
@@ -226,39 +267,110 @@ export default function DocumentsSection() {
       fd.append("address", formData.company_address);
       fd.append("company_address", formData.company_address);
       fd.append("business_registration_location", formData.company_country);
-      Object.entries(newFiles).forEach(([key, file]) => fd.append(key, file));
-    } else if (activeTab === "Shipping information") {
-      fd.append("shipping_zone", formData.shipping_zone);
-      fd.append("shipping_address_line1", formData.shipping_address_line1);
-      fd.append("shipping_address_line2", formData.shipping_address_line2);
-      fd.append("shipping_city", formData.shipping_city);
-      fd.append("shipping_state", formData.shipping_state);
-      fd.append("shipping_country", formData.shipping_country);
-      fd.append("shipping_postal_code", formData.shipping_postal_code);
-      fd.append("return_address_line1", formData.return_address_line1);
-      fd.append("return_city", formData.return_city);
-      fd.append("return_state", formData.return_state);
-      fd.append("return_country", formData.return_country);
-      fd.append("return_postal_code", formData.return_postal_code);
+      
+      Object.entries(newFiles).forEach(([key, file]) => {
+        fd.append(key, file);
+      });
     }
 
-    updateProfileReq({
-      requestConfig: {
-        url: "/accounts/manufacturer/profile-update/",
-        method: "PATCH",
-        token: token ?? undefined,
-        isAuth: true,
-        userType: "seller",
-        body: fd,
-      },
-      successRes: (res: any) => {
-        dispatch(sellerActions.updateSellerData({ profile: res.data }));
-        setShowWarningModal(false);
-        setShowSuccessModal(true);
-        setIsEditing(false);
-        setNewFiles({});
-      },
-    });
+    const submitMainProfile = () => {
+      updateProfileReq({
+        requestConfig: {
+          url: "/accounts/manufacturer/profile-update/",
+          method: "PATCH",
+          token: token ?? undefined,
+          isAuth: true,
+          userType: "seller",
+          body: fd,
+        },
+        successRes: (res: any) => {
+          dispatch(sellerActions.updateSellerData({ profile: res.data }));
+          setShowWarningModal(false);
+          setShowSuccessModal(true);
+          setIsEditing(false);
+          setNewFiles({});
+        },
+      });
+    };
+
+    const submitAddresses = () => {
+      const addressBody: Record<string, any> = {
+        shipping_zone: formData.shipping_zone || null,
+      };
+
+      if (!shippingSameAsBusiness) {
+        addressBody.shipping_address = {
+          same_as_business_address: false,
+          address_line_1: formData.shipping_address_line_1,
+          address_line_2: formData.shipping_address_line_2,
+          city: formData.shipping_city,
+          state: formData.shipping_state,
+          country: formData.shipping_country,
+          postal_code: formData.shipping_postal_code,
+        };
+      } else {
+        addressBody.shipping_address = { same_as_business_address: true };
+      }
+
+      if (!returnSameAsBusiness) {
+        addressBody.return_address = {
+          same_as_business_address: false,
+          address_line_1: formData.return_address_line_1,
+          address_line_2: formData.return_address_line_2,
+          city: formData.return_city,
+          state: formData.return_state,
+          country: formData.return_country,
+          postal_code: formData.return_postal_code,
+        };
+      } else {
+        addressBody.return_address = { same_as_business_address: true };
+      }
+
+      updateAddressesReq({
+        requestConfig: {
+          url: "/accounts/manufacturer/addresses/",
+          method: "PATCH",
+          token: token ?? undefined,
+          isAuth: true,
+          userType: "seller",
+          body: addressBody,
+        },
+        successRes: () => {
+          setShowWarningModal(false);
+          setShowSuccessModal(true);
+          setIsEditing(false);
+        },
+      });
+    };
+
+    if (activeTab === "Business information") {
+      const docUrl =
+        businessType === "Registered company"
+          ? "/accounts/manufacturer/business-documents/"
+          : "/accounts/manufacturer/personal-documents/";
+
+      updateDocReq({
+        requestConfig: {
+          url: docUrl,
+          method: "PATCH",
+          token: token ?? undefined,
+          isAuth: true,
+          userType: "seller",
+          body: fd,
+        },
+        successRes: (res: any) => {
+          dispatch(sellerActions.updateSellerData({ profile: res.data }));
+          setShowWarningModal(false);
+          setShowSuccessModal(true);
+          setIsEditing(false);
+          setNewFiles({});
+        },
+      });
+    } else if (activeTab === "Shipping information") {
+      submitAddresses();
+    } else {
+      submitMainProfile();
+    }
   };
 
   const handleSaveClick = () => {
@@ -281,7 +393,7 @@ export default function DocumentsSection() {
         title="Warning"
         message="Your account will not be live until changes are approved. This process may take up to 48 hours."
         buttenText="Save"
-        loading={updatingProfile}
+        loading={updatingProfile || docLoading || updatingAddresses}
       />
       <ResultModal
         isOpen={showSuccessModal}

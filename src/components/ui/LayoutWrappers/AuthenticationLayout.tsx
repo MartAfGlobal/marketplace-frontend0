@@ -21,22 +21,22 @@ export default function AuthenticationLayout({
   className="max-w-c393",
 }: AuthenticationLayoutProps) {
   return (
-    <div className="w-full relative h-dvh px-6 md:px-0">
+    <div className="w-full relative h-screen overflow-y-auto pb-10  md:pb-10 md:px-0">
       {/* Animated Logo/Link */}
       <motion.div
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 120, damping: 20 }}
-        className="absolute top-6.5 md:top-c42 left-1/2 -translate-x-1/2 md:left-c40 h-fit md:translate-0" 
+        className="fixed py-6 md:py-c40 z-40 items-center bg-ffffff   w-full md:justify-start md:pl-c40   flex justify-center h-13 md:translate-0" 
       >
         <Link href="/" className="flex items-center gap-2 md:gap-4">
           <Image src={authLogo} alt="Logo" width={34.36} height={28} />
-          <p className="text-6a0dad font-MontserratBold text-c20">MARTAF</p>
+          <p className=" font-MontserratBold text-6a0dad text-c20">MARTAF</p>
         </Link>
       </motion.div>
 
       {/* Centered Content */}
-      <div className="flex h-full 0 items-center justify-center">
+      <div className="flex min-h-full sm:px-10 px-6 pt-24 pb-12 items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

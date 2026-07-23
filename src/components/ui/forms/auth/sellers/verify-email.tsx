@@ -20,7 +20,7 @@ export default function EmailVerificationSent() {
       <div className="text-center space-y-2 mb-4">
         <h2 className="font-MontserratSemiBold text-c18 m-0">Email verification sent</h2>
         <p className="font-MontserratNormal text-base m-0">
-          We’ve sent an email verification link to your email at
+          We’ve sent an email verification OTP to your email at
         </p>
       </div>
       <form className="full" onSubmit={handleReturnToSignIn}>
@@ -32,7 +32,7 @@ export default function EmailVerificationSent() {
 
       <div className="mt-3">
         <Button className="text-ff715b bg-transparent border-0 hover:bg-tr">
-          Resend verification link
+          Resend verification OTP
         </Button>
       </div>
 

@@ -14,6 +14,7 @@ import Image from "next/image";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 import ResultModal from "@/components/ui/forms/resultModal";
+import { toast } from "sonner";
 
 interface RegisterFormStep3Props {
   userType: "seller" | "buyer";
@@ -52,7 +53,19 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
       | "certificate_of_registration",
   ) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFormData({ ...formData, [key]: e.target.files[0] });
+      const file = e.target.files[0];
+      const allowedExtensions = /(\.pdf|\.png|\.jpg|\.jpeg)$/i;
+      if (!allowedExtensions.exec(file.name)) {
+        toast.error("Only PDF, PNG, JPG, or JPEG files are allowed.");
+        e.target.value = "";
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error(`"${file.name}" is too large. Max allowed size is 2MB.`);
+        e.target.value = "";
+        return;
+      }
+      setFormData({ ...formData, [key]: file });
     }
   };
 
@@ -101,10 +114,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
     }
 
     if (formData.certificate_of_registration) {
-      payload.append(
-        "certificate_of_registration",
-        formData.certificate_of_registration,
-      );
+      payload.append("certificate_of_registration", formData.certificate_of_registration);
     }
 
     registerUserReq({
@@ -122,12 +132,12 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
   };
 
   return (
-    <div className="w-full h-full text-black/65">
+    <div className="w-full text-black/65">
       {!isOpen && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* ROW 1 */}
-          <div className="flex gap-4 items-center">
-            <div className="flex-1 flex flex-col gap-2">
+          <div className="flex gap-4 items-center md:flex-row flex-col w-full">
+            <div className="flex-1 flex flex-col gap-2 w-full">
               <Label>Business registration number*</Label>
               <Input
                 value={formData.business_registration_number}
@@ -140,7 +150,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
               />
             </div>
 
-            <div className="flex-1 flex flex-col gap-2">
+            <div className="flex-1 flex flex-col gap-2 w-full">
               <Label>CAC Registration Number *</Label>
               <Input
                 value={formData.CAC_No}
@@ -153,20 +163,21 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
 
           {/* ROW 2 */}
           <div className="flex gap-4 items-center md:flex-row flex-col">
-            <div className="flex-1 flex flex-col w-full gap-2">
+            <div className="flex-1 flex flex-col w-full gap-2 min-w-0">
               <Label>CAC02 & CAC07</Label>
 
               <input
                 ref={cacFileRef}
                 type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
                 className="hidden"
                 onChange={(e) => handleFileChange(e, "CAC_No_file")}
               />
 
               <div
-                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12  ${formData.CAC_No_file ? "border-ff715b border-2" : ""}`}
+                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12 overflow-hidden w-full ${formData.CAC_No_file ? "border-ff715b border-2" : ""}`}
               >
-                <span className="text-sm truncate">
+                <span className="text-sm truncate flex-1 min-w-0 mr-2">
                   {formData.CAC_No_file?.name || ""}
                 </span>
 
@@ -174,6 +185,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
                   <button
                     type="button"
                     onClick={() => clearFile("CAC_No_file")}
+                    className="flex-shrink-0"
                   >
                     <Image
                       src={Trash}
@@ -187,6 +199,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
                   <button
                     type="button"
                     onClick={() => cacFileRef.current?.click()}
+                    className="flex-shrink-0"
                   >
                     <Image
                       src={UploadIcon}
@@ -200,12 +213,13 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col gap-2 w-full">
+            <div className="flex-1 flex flex-col gap-2 w-full min-w-0">
               <Label>Certificate of Registration</Label>
 
               <input
                 ref={certFileRef}
                 type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
                 className="hidden"
                 onChange={(e) =>
                   handleFileChange(e, "certificate_of_registration")
@@ -213,9 +227,9 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
               />
 
               <div
-                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12 ${formData.certificate_of_registration ? "border-ff715b border-2" : ""}`}
+                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12 overflow-hidden w-full ${formData.certificate_of_registration ? "border-ff715b border-2" : ""}`}
               >
-                <span className="text-sm truncate">
+                <span className="text-sm truncate flex-1 min-w-0 mr-2">
                   {formData.certificate_of_registration?.name || ""}
                 </span>
 
@@ -223,6 +237,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
                   <button
                     type="button"
                     onClick={() => clearFile("certificate_of_registration")}
+                    className="flex-shrink-0"
                   >
                     <Image
                       src={Trash}
@@ -236,6 +251,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
                   <button
                     type="button"
                     onClick={() => certFileRef.current?.click()}
+                    className="flex-shrink-0"
                   >
                     <Image
                       src={UploadIcon}
@@ -252,19 +268,20 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
 
           {/* ROW 3 */}
           <div className="flex gap-4 items-center md:flex-row flex-col">
-            <div className="flex-1 flex flex-col gap-2 w-full">
+            <div className="flex-1 flex flex-col gap-2 w-full min-w-0">
               <Label>Upload TIN (tax identification number)</Label>
 
               <input
                 ref={tinFileRef}
                 type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
                 className="hidden"
                 onChange={(e) => handleFileChange(e, "tax_identification_file")}
               />
               <div
-                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12 ${formData.tax_identification_file ? "border-ff715b border-2" : ""}`}
+                className={`flex items-center justify-between border rounded-c8 px-3 py-2 h-12 overflow-hidden w-full ${formData.tax_identification_file ? "border-ff715b border-2" : ""}`}
               >
-                <span className="text-sm truncate">
+                <span className="text-sm truncate flex-1 min-w-0 mr-2">
                   {formData.tax_identification_file?.name || ""}
                 </span>
 
@@ -272,6 +289,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
                   <button
                     type="button"
                     onClick={() => clearFile("tax_identification_file")}
+                    className="flex-shrink-0"
                   >
                     <Image
                       src={Trash}
@@ -285,6 +303,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
                   <button
                     type="button"
                     onClick={() => tinFileRef.current?.click()}
+                    className="flex-shrink-0"
                   >
                     <Image
                       src={UploadIcon}

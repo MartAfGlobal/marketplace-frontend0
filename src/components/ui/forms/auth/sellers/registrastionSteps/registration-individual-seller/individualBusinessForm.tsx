@@ -52,7 +52,7 @@ export default function RegisterIndividual3({
   const [isOpen, setIsOpen] = useState(false);
   const [idDropdownOpen, setIdDropdownOpen] = useState(false);
   const certFileRef = useRef<HTMLInputElement | null>(null);
-  const token = useSelector((state:RootState)=>state.token?.token)
+  const token = useSelector((state: RootState) => state.token?.token);
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -112,6 +112,10 @@ export default function RegisterIndividual3({
     key: "id_front_image" | "id_back_image",
     file: File | null,
   ) => {
+    if (file && file.size > 2 * 1024 * 1024) {
+      toast.error(`"${file.name}" is too large. Max allowed size is 2MB.`);
+      return;
+    }
     const ids = [...formData.ids];
     ids[index][key] = file;
     setFormData({ ...formData, ids });
@@ -128,13 +132,13 @@ export default function RegisterIndividual3({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if(!token){
-      toast("token expired please login")
-      router.push("auth/seller/login")
+    if (!token) {
+      toast("token expired please login");
+      router.push("auth/seller/login");
     }
 
     if (formData.ids.length !== 2) {
-      alert("Please select exactly 2 IDs");
+      toast.error("Please select exactly 2 IDs");
       return;
     }
 
@@ -160,12 +164,15 @@ export default function RegisterIndividual3({
         payload.append(`ids[${idx}][id_back_image]`, id.id_back_image);
     });
 
+    for (const [key, value] of payload.entries()) {
+      console.log(key, value);
+    }
     sendHttpRequest({
       requestConfig: {
         url: `/accounts/manufacturer/personal-documents/`,
         method: "PATCH",
         body: payload,
-         token: token ?? undefined,
+        token: token ?? undefined,
         userType,
       },
       successRes: () => setIsOpen(true),
@@ -177,9 +184,12 @@ export default function RegisterIndividual3({
     setFormData({ ...formData, [key]: null });
   };
   return (
-    <div className="w-full h-full text-black/65">
+    <div className="w-full  text-black/65">
       {!isOpen && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 d max-h-[70vh] overflow-y-auto p-4 rounded-c8">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-3 d p-4 rounded-c8"
+        >
           {/* ROW 1: Full Name + ID Selector */}
           <div className="flex md:flex-row flex-col gap-4">
             <div className="flex-1 flex flex-col gap-2">
@@ -256,9 +266,9 @@ export default function RegisterIndividual3({
                       <div
                         className={`w-4 h-4 rounded border ${formData.ids.some((i) => i.means_of_id === ID_TYPE_MAP[id]) ? "bg-ff715b border-ff715b" : "border-gray-400"}`}
                       >
-                        {formData.ids.some((i) => i.means_of_id === ID_TYPE_MAP[id]) && (
-                          <Check size={15} color="white" />
-                        )}
+                        {formData.ids.some(
+                          (i) => i.means_of_id === ID_TYPE_MAP[id],
+                        ) && <Check size={15} color="white" />}
                       </div>
 
                       {id}
@@ -271,8 +281,11 @@ export default function RegisterIndividual3({
 
           {/* ROW 2: ID Number + ID Front/Back Upload */}
           {formData.ids.map((id, idx) => (
-            <div key={id.means_of_id} className="flex gap-4 md:flex-row flex-col">
-              <div className="flex-1 flex flex-col gap-2 ">
+            <div
+              key={id.means_of_id}
+              className="flex gap-4 md:flex-row flex-col w-full min-w-0"
+            >
+              <div className="flex-1 flex flex-col gap-2 min-w-0">
                 <Label> {getIdLabel(id.means_of_id)}</Label>
                 <Input
                   value={id.id_number}
@@ -284,14 +297,14 @@ export default function RegisterIndividual3({
                 />
               </div>
 
-              <div className="flex-1 flex flex-col gap-2 ">
+              <div className="flex-1 flex flex-col gap-2 min-w-0">
                 <Label> Upload {id.means_of_id.toLocaleLowerCase()} </Label>
-                <div className="flex gap-4">
+                <div className="flex gap-4 w-full min-w-0">
                   {(["id_front_image", "id_back_image"] as const).map((key) => (
-                    <div key={key} className="flex-1 flex flex-col gap-2">
+                    <div key={key} className="flex-1 flex flex-col gap-2 w-1/2 min-w-0">
                       <input
                         type="file"
-                        className="hidden"
+                        className="hidden w-full truncate"
                         ref={(el) => {
                           fileRefs.current[`${key}-${idx}`] = el;
                         }}
@@ -304,18 +317,24 @@ export default function RegisterIndividual3({
                         }
                       />
                       <div
-                        className="border rounded-c8 px-3 py-2 flex justify-between cursor-pointer"
+                        className="border rounded-c8 px-3 py-2 flex justify-between items-center cursor-pointer w-full overflow-hidden"
                         onClick={() =>
                           fileRefs.current[`${key}-${idx}`]?.click()
                         }
                       >
-                        <span className="truncate text-sm">
+                        <span className="text-sm truncate flex-1 min-w-0 mr-2">
                           {id[key]?.name ||
                             (key === "id_front_image"
                               ? "Front Image"
                               : "Back Image")}
                         </span>
-                        <Image src={UploadIcon} width={16} height={16} alt="upload" />
+                        <Image
+                          src={UploadIcon}
+                          width={16}
+                          height={16}
+                          alt="upload"
+                          className="flex-shrink-0"
+                        />
                       </div>
                     </div>
                   ))}
@@ -325,8 +344,8 @@ export default function RegisterIndividual3({
           ))}
 
           {/* ROW 3: Tax Number + Tax File */}
-          <div className="flex gap-4 flex-col md:flex-row">
-            <div className="flex-1 flex flex-col gap-2">
+          <div className="flex gap-4 flex-col md:flex-row w-full min-w-0">
+            <div className="flex-1 flex flex-col gap-2 min-w-0">
               <Label>TIN (tax identification number)</Label>
               <Input
                 value={formData.tax_identification_number}
@@ -339,7 +358,7 @@ export default function RegisterIndividual3({
               />
             </div>
 
-            <div className="flex-1 flex flex-col gap-2">
+            <div className="flex-1 flex flex-col gap-2 min-w-0">
               <Label>Upload TIN (tax identification number)</Label>
               <input
                 type="file"
@@ -347,34 +366,53 @@ export default function RegisterIndividual3({
                 ref={(el) => {
                   fileRefs.current["tax_file"] = el;
                 }}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  if (file && file.size > 2 * 1024 * 1024) {
+                    toast.error(`"${file.name}" is too large. Max allowed size is 2MB.`);
+                    return;
+                  }
                   setFormData({
                     ...formData,
-                    tax_identification_file: e.target.files?.[0] ?? null,
-                  })
-                }
+                    tax_identification_file: file,
+                  });
+                }}
               />
               <div
-                className="border rounded-c8 px-3 py-2 flex justify-between cursor-pointer"
+                className="border rounded-c8 px-3 py-2 flex justify-between items-center cursor-pointer w-full overflow-hidden"
                 onClick={() => fileRefs.current["tax_file"]?.click()}
               >
-                <span className="truncate text-sm">
+                <span className="text-sm truncate flex-1 min-w-0 mr-2">
                   {formData.tax_identification_file?.name || "Upload File"}
                 </span>
-                
+
                 {formData.tax_identification_file ? (
                   <button
                     type="button"
                     onClick={() => clearFile("tax_identification_file")}
+                    className="flex-shrink-0"
                   >
-                    <Image src={Trash} alt="Delete" width={16} height={16} className="w-5 h-5" />
+                    <Image
+                      src={Trash}
+                      alt="Delete"
+                      width={16}
+                      height={16}
+                      className="w-5 h-5"
+                    />
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => certFileRef.current?.click()}
+                    className="flex-shrink-0"
                   >
-                    <Image src={UploadIcon} height={16} width={16} alt="Upload" className="w-5 h-5" />
+                    <Image
+                      src={UploadIcon}
+                      height={16}
+                      width={16}
+                      alt="Upload"
+                      className="w-5 h-5"
+                    />
                   </button>
                 )}
               </div>

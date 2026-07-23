@@ -30,6 +30,7 @@ export interface IdEntry {
 interface BusinessInfoTabProps {
   isEditing: boolean;
   businessType: string;
+  identificationSubmitted?: boolean;
   formData: {
     business_registration_number: string;
     CAC_No: string;
@@ -58,6 +59,7 @@ function getIdLabel(value: string): string {
 export default function BusinessInfoTab({
   isEditing,
   businessType,
+  identificationSubmitted = false,
   formData,
   profile,
   newFiles,
@@ -67,6 +69,11 @@ export default function BusinessInfoTab({
   onViewImage,
 }: BusinessInfoTabProps) {
   const [idDropdownOpen, setIdDropdownOpen] = useState(false);
+
+  const existingCACDoc = profile?.documents?.find(
+    (doc: any) => doc.document_type === "CAC_CERTIFICATE"
+  );
+  const cacFileUrl = profile?.certificate_of_registration_url || existingCACDoc?.file || existingCACDoc?.file_url;
 
   const addId = (idLabel: string) => {
     const backendValue = ID_TYPE_MAP[idLabel];
@@ -148,8 +155,8 @@ export default function BusinessInfoTab({
               <FileInput
                 placeholder="upload as jpeg, jpg, png, pdf"
                 disabled={!isEditing}
-                fileName={newFiles["certificate_of_registration"]?.name || (profile?.certificate_of_registration_url ? "Registration_Certificate.jpg" : "")}
-                fileUrl={profile?.certificate_of_registration_url}
+                fileName={newFiles["certificate_of_registration"]?.name || (cacFileUrl ? "Registration_Certificate.jpg" : "")}
+                fileUrl={cacFileUrl}
                 onFileSelect={(file) => onFileSelect("certificate_of_registration", file)}
                 onViewImage={onViewImage}
               />
@@ -169,9 +176,7 @@ export default function BusinessInfoTab({
       {/* ── Individual ─────────────────────────────────────────────── */}
       {businessType === "Individual" && (
         <div className="flex flex-col gap-6">
-          <h3 className="text-[16px] font-MontserratMedium text-[#161616]">Personal identification</h3>
-
-          {isEditing ? (
+          {isEditing && (
             <div className="flex flex-col gap-6">
               {/* ID type selector */}
               <div className="flex md:flex-row flex-col gap-4">
@@ -283,50 +288,24 @@ export default function BusinessInfoTab({
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          ) : (
-            /* View mode */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {formData.ids.map((id, index) => (
-                <div key={index} className="flex flex-col gap-4 p-4 border border-[#f0f0f0] rounded-xl">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[14px] font-MontserratSemiBold text-[#333333]">
-                      {getIdLabel(id.means_of_id)} Document {index + 1}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4">
-                    <TextInput label="ID Number" name={`id_number_view_${index}`} value={id.id_number} disabled />
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-2">
-                        <Label className="">Front view</Label>
-                        <FileInput
-                          placeholder="Front view"
-                          disabled
-                          fileName={id.id_front_image_url ? `Front_ID_${index + 1}.jpg` : ""}
-                          fileUrl={id.id_front_image_url}
-                          onViewImage={onViewImage}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label className="">Back view</Label>
-                        <FileInput
-                          placeholder="Back view"
-                          disabled
-                          fileName={id.id_back_image_url ? `Back_ID_${index + 1}.jpg` : ""}
-                          fileUrl={id.id_back_image_url}
-                          onViewImage={onViewImage}
-                        />
+                {formData.ids.length === 0 && (
+                  identificationSubmitted ? (
+                    <div className="col-span-2 flex items-center gap-3 px-5 py-4 bg-green-50 border border-green-200 rounded-xl">
+                      <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-[13px] font-MontserratSemiBold text-green-700">Identification documents already submitted</p>
+                        <p className="text-[12px] font-MontserratNormal text-green-600 mt-0.5">Your ID documents are under review. To replace them, select a new ID type above.</p>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-              {formData.ids.length === 0 && (
-                <p className="text-[13px] text-[#999999] font-MontserratMedium col-span-2 text-center py-10 bg-gray-50 rounded-xl border border-dashed">
-                  No identification documents found.
-                </p>
-              )}
+                  ) : (
+                    <p className="text-[13px] text-[#999999] font-MontserratMedium col-span-2 text-center py-10 bg-gray-50 rounded-xl border border-dashed">
+                      No identification documents found. Select an ID type above to add one.
+                    </p>
+                  )
+                )}
+              </div>
             </div>
           )}
 
@@ -385,11 +364,11 @@ export default function BusinessInfoTab({
               placeholder="upload as jpeg, jpg, png, pdf"
               disabled={!isEditing}
               fileName={
-                newFiles["proof_of_address"]?.name ||
-                (profile?.proof_of_address ? "proof_of_address.pdf" : "")
+                newFiles["proof_of_address_file"]?.name ||
+                (profile?.proof_of_address_url ? "proof_of_address_file.pdf" : "")
               }
-              fileUrl={profile?.proof_of_address}
-              onFileSelect={(file) => onFileSelect("proof_of_address", file)}
+              fileUrl={profile?.proof_of_address_url}
+              onFileSelect={(file) => onFileSelect("proof_of_address_file", file)}
               onViewImage={onViewImage}
             />
           </div>

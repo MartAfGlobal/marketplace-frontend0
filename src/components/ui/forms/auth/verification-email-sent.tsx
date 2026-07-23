@@ -179,7 +179,7 @@ export default function VerificationEmailSent({ userType }: RegProps) {
   return (
     <div className="w-full flex flex-col items-center">
       {/* Email display */}
-      <p className="text-base font-MontserratSemiBold text-center mt-c8 mb-6 text-161616 break-all">
+      <p className="text-base font-MontserratSemiBold text-center mt-3 mb-8 text-161616 break-all">
         {email}
       </p>
 
@@ -204,7 +204,7 @@ export default function VerificationEmailSent({ userType }: RegProps) {
             onChange={(e) => handleOtpChange(idx, e.target.value)}
             onKeyDown={(e) => handleOtpKeyDown(idx, e)}
             onPaste={idx === 0 ? handleOtpPaste : undefined}
-            className="w-full aspect-square text-center text-xl font-MontserratBold border border-efefef rounded-lg p-0 focus:border-ff715b focus:ring-1 focus:ring-ff715b outline-none transition-all"
+            className="w-full max-w-[47.33px] h-c64 md:w-c56 text-center text-xl font-MontserratBold border border-efefef rounded-c8 p-0 focus:border-ff715b focus:ring-1 focus:ring-ff715b outline-none transition-all"
           />
         ))}
       </div>

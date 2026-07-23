@@ -6,7 +6,7 @@ import FormFooter from "@/assets/images/loginFooter.png"; // your image
 
 export default function ScrollingFooter() {
   return (
-    <div className="absolute bottom-0 left-0 w-full overflow-hidden -z-10">
+    <div className="fixed bottom-0 left-0 w-full overflow-hidden -z-10">
       <motion.div
         className="flex"
         animate={{ x: ["0%", "-50%"] }}

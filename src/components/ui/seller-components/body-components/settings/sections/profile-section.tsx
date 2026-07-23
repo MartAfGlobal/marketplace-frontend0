@@ -129,7 +129,7 @@ export default function ProfileSection() {
             className="bg-transparent border-[#e5e5e5] text-000000/44 cursor-not-allowed transition-all"
           />
         </div>
-        <div className="flex flex-col gap-2">
+        {profile?.is_registered_business && <div className="flex flex-col gap-2">
           <Label className="">Registration number</Label>
           <Input
             type="text"
@@ -143,7 +143,7 @@ export default function ProfileSection() {
                 : "bg-transparent border-[#e5e5e5] text-000000/44 cursor-not-allowed"
             }`}
           />
-        </div>
+        </div>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-6">

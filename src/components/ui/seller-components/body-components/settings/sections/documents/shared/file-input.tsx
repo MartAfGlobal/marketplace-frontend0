@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import UploadIcon from "@/assets/FormIcon/Vector.svg";
+import { toast } from "sonner";
 
 interface FileInputProps {
   placeholder: string;
@@ -11,6 +12,7 @@ interface FileInputProps {
   fileUrl?: string;
   onFileSelect?: (file: File) => void;
   onViewImage?: (url: string) => void;
+  accept?: string;
 }
 
 export const FileInput = ({
@@ -20,6 +22,7 @@ export const FileInput = ({
   fileUrl = "",
   onFileSelect,
   onViewImage,
+  accept = ".pdf,.png,.jpg,.jpeg",
 }: FileInputProps) => {
   const handleButtonClick = () => {
     if (fileUrl && onViewImage) {
@@ -65,8 +68,19 @@ export const FileInput = ({
         {!disabled && (
           <input
             type="file"
+            accept={accept}
             className="absolute inset-0 w-[57px] h-[24px] opacity-0 cursor-pointer"
-            onChange={(e) => e.target.files?.[0] && onFileSelect?.(e.target.files[0])}
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                const file = e.target.files[0];
+                const allowedExtensions = /(\.pdf|\.png|\.jpg|\.jpeg)$/i;
+                if (!allowedExtensions.exec(file.name)) {
+                  toast.error("Only PDF, PNG, JPG, or JPEG files are allowed.");
+                  return;
+                }
+                onFileSelect?.(file);
+              }
+            }}
           />
         )}
       </div>

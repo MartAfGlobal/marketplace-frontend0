@@ -86,7 +86,7 @@ export default function ShopInfoTab({
             <Input
               type="text"
               name="company_name"
-              value={formData.company_name}
+              value={businessType ==="Registered company"? formData.company_name : formData.company_name}
               onChange={(e) => onChange("company_name", e.target.value)}
               disabled={!isEditing}
               placeholder={
