@@ -54,14 +54,22 @@ export default function SellerLogin() {
   const { loading, sendHttpRequest: loginRequest } = useHttp();
 
   const loginSuccess = (res: any) => {
-    // backend sends { access: "..." }
+    // backend sends { access: "...", refresh: "..." }
     const accessToken = res?.data?.access;
+    const refreshToken =
+      res?.data?.refresh || res?.data?.refresh_token || res?.data?.refreshToken;
 
     console.log("Access token:", accessToken);
 
     if (!accessToken) {
       toast.error("Login failed: No token received.");
       return;
+    }
+
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("token", accessToken);
+    if (refreshToken) {
+      localStorage.setItem("refreshToken", refreshToken);
     }
 
     dispatch(tokenActions.setToken(accessToken));

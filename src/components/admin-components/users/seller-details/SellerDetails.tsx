@@ -7,6 +7,7 @@ import PayoutHistoryTab from "./PayoutHistoryTab";
 import ProductsTab from "./ProductsTab";
 import { RootState } from "@/store";
 import { useSelector } from "react-redux";
+import { User } from "lucide-react";
 
 interface SellerDetailsProps {
   userId: string;
@@ -52,13 +53,19 @@ export default function SellerDetails({ userId }: SellerDetailsProps) {
         <div className="w-full flex flex-col items-center ">
           {/* Profile Image */}
           <div className="w-49 h-49 overflow-hidden mb-4 rounded-full ">
-            <Image
-              src={CustomerImage}
-              alt="avatar"
-              width={244}
-              height={244}
-              className="object-cover w-full h-full"
-            />
+            {seller?.company_logo ? (
+              <Image
+                src={seller.company_logo}
+                alt="avatar"
+                width={244}
+                height={244}
+                className="object-cover w-full h-full"
+              />
+            ) : (
+              <div className="w-full h-full bg-[#f0f2f5] flex items-center justify-center">
+                <User className="w-24 h-24 text-[#b0b8c1]" strokeWidth={1.2} />
+              </div>
+            )}
           </div>
 
           <div className="w-full flex flex-col items-center">

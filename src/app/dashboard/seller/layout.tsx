@@ -85,7 +85,7 @@ export default function SellerDashboardLayout({
   const isRegistrationProgress =
     pathname === "/dashboard/seller/registration-progress";
 
-    const RegistrationPercentage = sellerData?.profile.verification_progress?.percentage
+    const RegistrationPercentage = sellerData?.profile?.verification_progress?.percentage
 
   return (
     <div className="min-h-screen flex flex-col w-full ">

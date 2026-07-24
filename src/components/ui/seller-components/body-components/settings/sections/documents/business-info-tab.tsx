@@ -37,7 +37,7 @@ interface BusinessInfoTabProps {
     tax_identification_number: string;
     vat_number: string;
     company_address: string;
-    company_address_line2: string;
+    company_address_line_2: string;
     company_city: string;
     company_state: string;
     company_country: string;
@@ -346,7 +346,7 @@ export default function BusinessInfoTab({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <TextInput label="Address line 1" name="company_address" value={formData.company_address} disabled={!isEditing} onChange={(e) => onFieldChange("company_address", e.target.value)} />
-          <TextInput label="Address line 2" name="company_address_line2" value={formData.company_address_line2} disabled={!isEditing} onChange={(e) => onFieldChange("company_address_line2", e.target.value)} />
+          <TextInput label="Address line 2" name="company_address_line_2" value={formData.company_address_line_2} disabled={!isEditing} onChange={(e) => onFieldChange("company_address_line_2", e.target.value)} />
           <TextInput label="City/Town" name="company_city" value={formData.company_city} disabled={!isEditing} onChange={(e) => onFieldChange("company_city", e.target.value)} />
           <TextInput label="State/Region" name="company_state" value={formData.company_state} disabled={!isEditing} onChange={(e) => onFieldChange("company_state", e.target.value)} />
         </div>

@@ -8,34 +8,92 @@ const axios = Axios.create({
   },
 });
 
-const isTokenExpired = (token: string): boolean => {
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else if (token) {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+export const refreshAccessToken = async (): Promise<string> => {
+  const refreshToken =
+    typeof window !== "undefined"
+      ? localStorage.getItem("refreshToken") ||
+        localStorage.getItem("refresh") ||
+        localStorage.getItem("refresh_token")
+      : null;
+
+  if (!refreshToken) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+    }
+    throw new Error("No refresh token available in storage.");
+  }
+
   try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return true;
-    const payloadDecoded = JSON.parse(
-      atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+    const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+    const res = await Axios.post<{
+      access?: string;
+      access_token?: string;
+      refresh?: string;
+      refresh_token?: string;
+    }>(
+      `${baseURL}/accounts/refresh`,
+      { refresh: refreshToken, refresh_token: refreshToken },
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
     );
-    if (!payloadDecoded.exp) return false;
-    return Date.now() >= payloadDecoded.exp * 1000;
-  } catch (e) {
-    return true;
+
+    const newAccessToken = res?.data?.access || res?.data?.access_token;
+    const newRefreshToken = res?.data?.refresh || res?.data?.refresh_token;
+
+    if (!newAccessToken) {
+      throw new Error("Refresh token endpoint did not return a new access token.");
+    }
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("accessToken", newAccessToken);
+      localStorage.setItem("token", newAccessToken);
+      if (newRefreshToken) {
+        localStorage.setItem("refreshToken", newRefreshToken);
+      }
+    }
+
+    return newAccessToken;
+  } catch (err) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+    }
+    throw err;
   }
 };
 
-// Attach token from localStorage on every request and handle FormData correctly
+// Request Interceptor: Attach bearer token if present
 axios.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
+    const token =
+      localStorage.getItem("accessToken") || localStorage.getItem("token");
     if (token) {
-      if (isTokenExpired(token)) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("token");
-      } else {
-        const isPublicUrl = config.url && config.url.includes("/public/");
-        if (!isPublicUrl) {
-          config.headers = config.headers ?? {};
-          config.headers["Authorization"] = `Bearer ${token}`;
-        }
+      const isPublicUrl = config.url && config.url.includes("/public/");
+      if (!isPublicUrl) {
+        config.headers = config.headers ?? {};
+        config.headers["Authorization"] = `Bearer ${token}`;
       }
     }
   }
@@ -47,14 +105,8 @@ axios.interceptors.request.use((config) => {
       typeof config.data.append === "function");
 
   if (isForm) {
-    // Override transformRequest: pass FormData straight through without
-    // Axios serializing it (which would turn it into url-encoded form).
-    // The browser XHR adapter will then set Content-Type: multipart/form-data
-    // with the correct boundary automatically.
     config.transformRequest = [(data: any) => data];
 
-    // Also explicitly unset any Content-Type that may have been pre-set
-    // so the browser is free to generate the correct multipart header.
     if (config.headers) {
       if (typeof config.headers.delete === "function") {
         config.headers.delete("Content-Type");
@@ -67,5 +119,55 @@ axios.interceptors.request.use((config) => {
 
   return config;
 });
+
+// Response Interceptor: Automatically refresh access token on 401
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    const isAuthRequest =
+      originalRequest?.url?.includes("/accounts/refresh") ||
+      originalRequest?.url?.includes("/accounts/login") ||
+      originalRequest?.url?.includes("/accounts/admin/login/");
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isAuthRequest
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((newToken) => {
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+            return axios(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const newAccessToken = await refreshAccessToken();
+        processQueue(null, newAccessToken);
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        return axios(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default axios;

@@ -23,7 +23,7 @@ interface FormData {
   tax_identification_number: string;
   vat_number: string;
   company_address: string;
-  company_address_line2: string;
+  company_address_line_2: string;
   company_city: string;
   company_state: string;
   company_country: string;
@@ -56,7 +56,7 @@ function buildInitialForm(profile: any): FormData {
     tax_identification_number: profile?.tax_identification_number || "",
     vat_number: profile?.vat_number || "",
     company_address: profile?.company_address || profile?.address || "",
-    company_address_line2: profile?.company_address_line2 || "",
+    company_address_line_2: profile?.company_address_line_2 || "",
     company_city: profile?.company_city || profile?.city || "",
     company_state: profile?.company_state || profile?.state || "",
     company_country: profile?.company_country || profile?.country || "",
@@ -266,6 +266,7 @@ console.log("checjiiiii", sellerData)
       fd.append("company_postal_code", formData.company_postal_code);
       fd.append("address", formData.company_address);
       fd.append("company_address", formData.company_address);
+      fd.append("company_address_line_2", formData.company_address_line_2);
       fd.append("business_registration_location", formData.company_country);
       
       Object.entries(newFiles).forEach(([key, file]) => {

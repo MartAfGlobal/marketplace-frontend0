@@ -114,7 +114,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
             <div className="flex flex-col h-full p-6 md:p-8">
               {/* Header */}
               <div className="flex justify-between items-center mb-11">
-                <Link href="/" className="flex items-center  gap-2">
+                <Link href="/dashboard/seller/overview" className="flex items-center  gap-2">
                   <Image src={Logo} alt="Logo" width={39.27} height={32} />
                 </Link>
                 <button onClick={onClose} className="p-2 -mr-2">
@@ -124,21 +124,27 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
 
               {/* User Info */}
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 border border-gray-100">
-                  {/* {profile? (
-                    <Image src={profile.} alt="User" width={48} height={48} className="object-cover" />
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 border border-gray-100 flex-shrink-0">
+                  {profile?.company_logo_url ? (
+                    <Image
+                      src={profile.company_logo_url}
+                      alt="Company logo"
+                      width={64}
+                      height={64}
+                      className="object-cover w-full h-full"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-6a0dad text-white text-lg font-bold">
-                      {seller?.company_name?.charAt(0) || "S"}
+                      {profile?.company_name?.charAt(0) || "S"}
                     </div>
-                  )} */}
+                  )}
                 </div>
                 <div>
                   <h3 className="font-MontserratBold text-sm text-[#161616]">
-                    {/* {seller?.company_name || "Ankara shoes LTD"} */}
+                    {profile?.company_name || ""}
                   </h3>
                   <p className="text-[10px] text-gray-500 font-MontserratMedium">
-                    {/* {seller?.email || "frankalex022@gmail.com"} */}
+                    {seller?.email || ""}
                   </p>
                 </div>
               </div>

@@ -18,6 +18,7 @@ interface AdminListHeaderProps {
   selectedFilters?: string[];
   onFilterChange?: (filters: string[]) => void;
   onApplyFilters?: () => void;
+  onOptionSelect?: (option: string) => void;
 }
 
 export default function AdminListHeader({
@@ -33,6 +34,7 @@ export default function AdminListHeader({
   selectedFilters = [],
   onFilterChange,
   onApplyFilters,
+  onOptionSelect,
 }: AdminListHeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -98,7 +100,14 @@ export default function AdminListHeader({
             return (
               <button
                 key={option}
-                onClick={() => toggleFilter(option)}
+                onClick={() => {
+                  if (onOptionSelect) {
+                    onOptionSelect(option);
+                    setIsFilterOpen(false);
+                  } else {
+                    toggleFilter(option);
+                  }
+                }}
                 className={`py-2.5 px-2 w-c64 text-sm font-MontserratNormal text-c12 flex items-center justify-center transition-colors ${
                   isSelected 
                     ? "bg-[#FFE8E8] text-[#FF715B]" 

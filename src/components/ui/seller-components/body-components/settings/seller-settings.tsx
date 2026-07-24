@@ -223,9 +223,9 @@ export default function SellerSettings() {
           {/* Profile Image with Camera Icon */}
           <div className="relative mb-8  w-26 h-26">
             <div className="w-26 h-26 rounded-full overflow-hidden border border-gray-100 bg-gray-50">
-              {profile?.profile_picture_url ? (
+              {profile?.company_logo_url ? (
                 <img 
-                  src={profile.profile_picture_url} 
+                  src={profile.company_logo_url} 
                   alt="Profile" 
                   className="w-full h-full object-cover"
                 />

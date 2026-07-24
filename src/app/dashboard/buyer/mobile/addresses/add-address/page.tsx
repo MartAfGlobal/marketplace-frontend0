@@ -204,8 +204,8 @@ export default function AddNewAddreess() {
     console.log("Token in handleSave:", bodyWithoutId);
     sendHttpRequest({
       requestConfig: {
-        url: "shipping/shipping-addresses/",
-        method: "POST",
+        url: "/shipping/shipping-addresses/",
+        method: "PATCH",
         body: payload,
         token: token ?? undefined,
         isAuth: true,

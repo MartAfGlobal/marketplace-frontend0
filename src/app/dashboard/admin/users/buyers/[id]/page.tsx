@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import CustomerImage from "@/assets/admin/customerImage.svg";
 import Phonicon from "@/assets/admin/phone.svg";
-import { Mail, MapPin, Edit, ChevronRight } from "lucide-react";
+import { Mail, MapPin, Edit, ChevronRight, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import EditUserModal from "@/components/ui/Modals/admin/EditUserModal";
@@ -152,6 +152,11 @@ export default function AdminBuyerDetailsPage() {
     );
   };
 
+  const defaultAddr =
+    buyer?.default_address ||
+    buyer?.addresses?.find((a) => a.is_default) ||
+    buyer?.addresses?.[0];
+
   return (
     <div className="space-y-8 mb-[157px]">
       {/* Breadcrumbs */}
@@ -207,13 +212,19 @@ export default function AdminBuyerDetailsPage() {
           <div className="bg-ffffff rounded-c16 p-6 text-center flex flex-col items-center gap-4 h-full w-full max-w-61 animate-in fade-in slide-in-from-left-4 duration-500">
             <div className="w-full flex flex-col items-center">
               <div className="w-full max-w-49 h-49 overflow-hidden mb-4">
-                <Image
-                  src={CustomerImage}
-                  alt="avatar"
-                  width={244}
-                  height={244}
-                  className="object-cover w-full h-full"
-                />
+                {buyer?.profile_picture_url ? (
+                  <Image
+                    src={buyer.profile_picture_url}
+                    alt="avatar"
+                    width={244}
+                    height={244}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-[#f0f2f5] flex items-center justify-center">
+                    <User className="w-24 h-24 text-[#b0b8c1]" strokeWidth={1.2} />
+                  </div>
+                )}
               </div>
               <div className="h-22.5 w-full">
                 <h2 className="text-c18 font-MontserratSemiBold mb-2 w-full truncate">
@@ -237,7 +248,7 @@ export default function AdminBuyerDetailsPage() {
                   height={17.5}
                   className="w-4 h-4 shrink-0"
                 />
-                <span>{buyer?.phone || "—"}</span>
+                <span>{defaultAddr?.phone || buyer?.phone || "—"}</span>
               </div>
               <div className="flex items-center gap-2 w-full justify-center text-c12 font-MontserratNormal text-000000/68">
                 <Image
@@ -256,7 +267,11 @@ export default function AdminBuyerDetailsPage() {
               <div className="flex items-center gap-2 justify-center w-full text-c12 font-MontserratNormal text-000000/68">
                 <MapPin className="w-4 h-4 text-[#343330] shrink-0" />
                 <span>
-                  {[buyer?.city, buyer?.state, buyer?.country]
+                  {[
+                    defaultAddr?.city || defaultAddr?.shipping_location_name || buyer?.city,
+                    defaultAddr?.state || buyer?.state,
+                    defaultAddr?.country_name || defaultAddr?.country || buyer?.country,
+                  ]
                     .filter(Boolean)
                     .join(", ") || "—"}
                 </span>
@@ -302,16 +317,7 @@ export default function AdminBuyerDetailsPage() {
                   </span>
                 </div>
               
-                <div className="flex justify-between">
-                  <span className="text-sm font-MontserratNormal text-000000/68">
-                    Gender
-                  </span>
-                  <span
-                    className={`text-sm font-MontserratNormal ${buyer?.email_verified ? "text-[#2ea37d]" : "text-[#f44336]"}`}
-                  >
-                    {buyer?.gender}
-                  </span>
-                </div>
+              
                 <div className="flex justify-between">
                   <span className="text-sm font-MontserratNormal text-000000/68">
                     Date of Birth
@@ -358,20 +364,30 @@ export default function AdminBuyerDetailsPage() {
                 </button>
               </div>
               <div className="space-y-4">
-                <div className="flex justify-between">
+                {(defaultAddr?.full_address || defaultAddr?.address || buyer?.address) && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-sm font-MontserratNormal text-000000/68 shrink-0">
+                      Address
+                    </span>
+                    <span className="font-MontserratNormal text-sm text-000000 text-right truncate max-w-[220px]">
+                      {defaultAddr?.full_address || defaultAddr?.address || buyer?.address}
+                    </span>
+                  </div>
+                )}
+                {/* <div className="flex justify-between">
                   <span className="text-sm font-MontserratNormal text-000000/68">
                     City
                   </span>
                   <span className="font-MontserratNormal text-sm text-000000">
-                    {buyer?.city || "—"}
+                    {defaultAddr?.city || defaultAddr?.shipping_location_name || buyer?.city || "—"}
                   </span>
-                </div>
+                </div> */}
                 <div className="flex justify-between">
                   <span className="text-sm font-MontserratNormal text-000000/68">
-                    State
+                    State/city
                   </span>
                   <span className="font-MontserratNormal text-sm text-000000">
-                    {buyer?.state || "—"}
+                    {defaultAddr?.state || buyer?.state ||defaultAddr?.city || defaultAddr?.shipping_location_name || buyer?.city || "—"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -379,9 +395,19 @@ export default function AdminBuyerDetailsPage() {
                     Country
                   </span>
                   <span className="font-MontserratNormal text-sm text-000000">
-                    {buyer?.country || "—"}
+                    {defaultAddr?.country_name || defaultAddr?.country || buyer?.country || "—"}
                   </span>
                 </div>
+                {(defaultAddr?.postal_code || buyer?.postal_code) && (
+                  <div className="flex justify-between">
+                    <span className="text-sm font-MontserratNormal text-000000/68">
+                      Zipcode
+                    </span>
+                    <span className="font-MontserratNormal text-sm text-000000">
+                      {defaultAddr?.postal_code || buyer?.postal_code}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -475,11 +501,11 @@ export default function AdminBuyerDetailsPage() {
         onConfirm={handleEditAddressConfirm}
         loading={loading}
         initialData={{
-          address: buyer?.address || "",
-          city: buyer?.city || "",
-          state: buyer?.state || "",
-          country: buyer?.country || "",
-          zipcode: buyer?.postal_code || "",
+          address: defaultAddr?.address || buyer?.address || "",
+          city: defaultAddr?.city || buyer?.city || "",
+          state: defaultAddr?.state || buyer?.state || "",
+          country: defaultAddr?.country_name || defaultAddr?.country || buyer?.country || "",
+          zipcode: defaultAddr?.postal_code || buyer?.postal_code || "",
         }}
       />
       <EditAccountModal

@@ -124,26 +124,31 @@ export const useFetchOrders = (id?: string) => {
 
     sendHttpRequest({
       requestConfig: {
-        url: "shipping/shipping-addresses/",
+        url: "/shipping/shipping-addresses/",
         method: "GET",
         token,
         isAuth: true,
         userType: "buyer",
       },
       successRes: (res) => {
-        const addresses =
-          res?.data?.map((addr: any) => ({
-            id: addr.id,
-            country: addr.country_name,
-            first_name: addr.first_name,
-            last_name: addr.last_name,
-            phone: addr.phone,
-            state: addr.state,
-            city: addr.city,
-            postal_code: addr.postal_code,
-            address: addr.address,
-            defaultAddress: addr.is_default || false,
-          })) || [];
+        const rawAddresses = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.results)
+          ? res.data.results
+          : [];
+
+        const addresses = rawAddresses.map((addr: any) => ({
+          id: addr.id,
+          country: addr.country_name || addr.country,
+          first_name: addr.first_name,
+          last_name: addr.last_name,
+          phone: addr.phone,
+          state: addr.state,
+          city: addr.city,
+          postal_code: addr.postal_code,
+          address: addr.address,
+          defaultAddress: addr.is_default || false,
+        }));
 
         console.log("User address info:", res);
 

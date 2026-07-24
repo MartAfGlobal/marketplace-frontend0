@@ -60,7 +60,7 @@ export default function AllAddressesPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`/shipping/shipping-addresses/delete/${id}`, {
+      const res = await fetch(`/shipping/shipping-addresses/delete/${id}/`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

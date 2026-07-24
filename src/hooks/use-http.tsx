@@ -219,7 +219,7 @@ export const useHttp = () => {
                 message: errorMessage
               }));
             } else {
-              toast.error(errorMessage);
+              toast.error(errorMessage, { id: isTokenError ? "token-expired" : errorMessage });
             }
           }
         }

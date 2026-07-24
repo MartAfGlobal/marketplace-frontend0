@@ -59,7 +59,7 @@ export default function ProfileSection() {
       <SellerProfileImageModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        currentProfile={profile?.profile_picture_url || null}
+        currentProfile={profile?.company_logo_url || null}
         onUpload={(file) => console.log("Uploaded file:", file)}
         onRemove={() => console.log("Removed profile image")}
       />
@@ -68,9 +68,9 @@ export default function ProfileSection() {
       <div className="mb-6 lg:block hidden">
         <div className="relative w-24 h-24">
           <div className="w-full h-full relative rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-[#f0f0f0]">
-            {profile?.profile_picture_url ? (
+            {profile?.company_logo_url ? (
               <img
-                src={profile.profile_picture_url}
+                src={profile.company_logo_url}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />

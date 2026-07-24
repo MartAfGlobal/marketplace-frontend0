@@ -69,7 +69,7 @@ export default function AxiosInterceptor({ children }: { children: React.ReactNo
               localStorage.setItem("sellerRedirectUrl", currentUrl);
             }
 
-            toast.error(errorMessage.toLowerCase().includes("token") ? errorMessage : "Session expired. Please login again.");
+            toast.error(errorMessage.toLowerCase().includes("token") ? errorMessage : "Session expired. Please login again.", { id: "session-expired" });
 
             if (isSeller) {
               router.replace("/auth/seller/login");

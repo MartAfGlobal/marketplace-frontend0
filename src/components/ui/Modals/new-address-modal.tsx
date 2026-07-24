@@ -160,7 +160,7 @@ export default function AddressModal({
     console.log("Token in handleSave:", bodyWithoutId);
     saveRequest({
       requestConfig: {
-        url: "shipping/shipping-addresses/",
+        url: "/shipping/shipping-addresses/",
         method: "POST",
         body: payload,
         token: token ?? undefined,

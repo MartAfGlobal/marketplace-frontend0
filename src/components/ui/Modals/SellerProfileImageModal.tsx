@@ -48,7 +48,7 @@ export default function SellerProfileImageModal({
     }
 
     const form = new FormData();
-    form.append("profile_picture", selectedFile);
+    form.append("company_logo", selectedFile);
 
     const successRes = (res: any) => {
       if (selectedFile) {
@@ -59,7 +59,7 @@ export default function SellerProfileImageModal({
             sellerActions.updateSellerData({
               profile: {
                 ...sellerData.profile,
-                profile_picture_url: profileURL,
+                company_logo_url: profileURL,
               },
             } as any)
           );
@@ -72,8 +72,8 @@ export default function SellerProfileImageModal({
     updateProfileReq({
       successRes,
       requestConfig: {
-        url: "/accounts/manufacturer/profile-update/",
-        method: "PATCH",
+        url: "/accounts/manufacturer/upload-company-logo/",
+        method: "POST",
         body: form,
         token: token ?? undefined,
         isAuth: true,

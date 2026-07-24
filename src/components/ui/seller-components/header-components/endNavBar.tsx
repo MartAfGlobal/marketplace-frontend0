@@ -23,8 +23,8 @@ export default function EndNav() {
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
 
-  // Use seller specific picture or fallback to default user icon
-  const profilePicture = seller?.profile?.profile_picture || User;
+  // Prioritise company logo; fall back to profile picture, then default icon
+  const profilePicture = seller?.profile?.company_logo_url || seller?.profile?.profile_picture || User;
 
   return (
     <nav className="flex items-center gap-6">

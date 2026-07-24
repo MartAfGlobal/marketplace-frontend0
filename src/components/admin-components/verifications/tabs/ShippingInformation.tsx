@@ -2,12 +2,16 @@
 
 import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
+import { AdminSellerDetailsData, KycVerificationData } from "@/types/global";
 
 interface ShippingInformationProps {
-  seller: any;
+  seller: AdminSellerDetailsData | KycVerificationData | any;
 }
 
 export default function ShippingInformation({ seller }: ShippingInformationProps) {
+  const shippingAddr = seller?.shipping_address;
+  const returnAddr = seller?.return_address;
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in">
       {/* Shipping Address */}
@@ -17,9 +21,17 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
         </h3>
 
         <div className="flex items-center gap-2">
-          {/* Custom read-only toggle */}
-          <div className="w-8 h-4 bg-gray-200 rounded-full relative">
-            <div className="w-3.5 h-3.5 bg-white rounded-full absolute left-0.5 top-[1px] shadow-sm"></div>
+          {/* Same as business address toggle (read-only) */}
+          <div
+            className={`w-8 h-4 rounded-full relative transition-colors ${
+              shippingAddr?.same_as_business_address ? "bg-green-500" : "bg-gray-200"
+            }`}
+          >
+            <div
+              className={`w-3.5 h-3.5 bg-white rounded-full absolute top-[1px] shadow-sm transition-transform ${
+                shippingAddr?.same_as_business_address ? "left-[18px]" : "left-0.5"
+              }`}
+            />
           </div>
           <span className="text-xs font-MontserratMedium text-gray-500">
             Same as business address
@@ -32,7 +44,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               Address line 1
             </Label>
             <Input
-              value={seller?.shipping_address_line1 || ""}
+              value={shippingAddr?.address_line_1 || seller?.shipping_address_line1 || ""}
               readOnly
               className=""
             />
@@ -42,7 +54,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               Address line 2
             </Label>
             <Input
-              value={seller?.shipping_address_line2 || ""}
+              value={shippingAddr?.address_line_2 || seller?.shipping_address_line2 || ""}
               readOnly
               className=""
             />
@@ -52,7 +64,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               City/Town
             </Label>
             <Input
-              value={seller?.shipping_city || ""}
+              value={shippingAddr?.city || seller?.shipping_city || ""}
               readOnly
               className=""
             />
@@ -62,7 +74,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               State/Region
             </Label>
             <Input
-              value={seller?.shipping_state || ""}
+              value={shippingAddr?.state || seller?.shipping_state || ""}
               readOnly
               className=""
             />
@@ -72,7 +84,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               Country
             </Label>
             <Input
-              value={seller?.shipping_country || ""}
+              value={shippingAddr?.country || seller?.shipping_country || ""}
               readOnly
               className=""
             />
@@ -82,7 +94,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               Postal code
             </Label>
             <Input
-              value={seller?.shipping_postal_code || ""}
+              value={shippingAddr?.postal_code || seller?.shipping_postal_code || ""}
               readOnly
               className=""
             />
@@ -102,8 +114,16 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-8 h-4 bg-gray-200 rounded-full relative">
-            <div className="w-3.5 h-3.5 bg-white rounded-full absolute left-0.5 top-[1px] shadow-sm"></div>
+          <div
+            className={`w-8 h-4 rounded-full relative transition-colors ${
+              returnAddr?.same_as_business_address ? "bg-green-500" : "bg-gray-200"
+            }`}
+          >
+            <div
+              className={`w-3.5 h-3.5 bg-white rounded-full absolute top-[1px] shadow-sm transition-transform ${
+                returnAddr?.same_as_business_address ? "left-[18px]" : "left-0.5"
+              }`}
+            />
           </div>
           <span className="text-xs font-MontserratMedium text-gray-500">
             Same as business address
@@ -116,7 +136,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               Address line 1
             </Label>
             <Input
-              value={seller?.return_address_line1 || ""}
+              value={returnAddr?.address_line_1 || seller?.return_address_line1 || ""}
               readOnly
               className=""
             />
@@ -126,7 +146,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               Address line 2
             </Label>
             <Input
-              value={seller?.return_address_line2 || ""}
+              value={returnAddr?.address_line_2 || seller?.return_address_line2 || ""}
               readOnly
               className=""
             />
@@ -136,7 +156,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               City/Town
             </Label>
             <Input
-              value={seller?.return_city || ""}
+              value={returnAddr?.city || seller?.return_city || ""}
               readOnly
               className=""
             />
@@ -146,7 +166,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               State/Region
             </Label>
             <Input
-              value={seller?.return_state || ""}
+              value={returnAddr?.state || seller?.return_state || ""}
               readOnly
               className=""
             />
@@ -156,7 +176,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               Country
             </Label>
             <Input
-              value={seller?.return_country || ""}
+              value={returnAddr?.country || seller?.return_country || ""}
               readOnly
               className=""
             />
@@ -166,7 +186,7 @@ export default function ShippingInformation({ seller }: ShippingInformationProps
               Postal code
             </Label>
             <Input
-              value={seller?.return_postal_code || ""}
+              value={returnAddr?.postal_code || seller?.return_postal_code || ""}
               readOnly
               className=""
             />

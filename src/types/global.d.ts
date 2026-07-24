@@ -1174,12 +1174,7 @@ export interface SellerProfile {
   last_login?: string | null;
 }
 
-export interface SellerData {
-  profileId?: number; // manufacturer profile id
-  email?: string;
-  first_name?: string;
-  phone?: string;
-}
+
 
 interface SellerVerification {
   percentage: number;
@@ -1597,6 +1592,30 @@ export interface AdminBuyerData {
   total_orders: number;
   user_id: string;
 }
+export interface BuyerAddress {
+  id: string;
+  user: string;
+  first_name: string;
+  last_name: string;
+  full_name?: string;
+  phone: string;
+  address: string;
+  full_address?: string;
+  city: string;
+  state: string;
+  country: string;
+  country_code?: string;
+  country_name?: string;
+  postal_code: string;
+  is_default?: boolean;
+  shipping_location?: string;
+  shipping_location_name?: string;
+  shipping_zone_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+}
 
 export interface AdminBuyerDetailsData {
   account_status: "Active" | "Inactive" | "Suspended" | string;
@@ -1639,6 +1658,8 @@ export interface AdminBuyerDetailsData {
   last_login_ip: string | null;
   last_order_date: string | null;
   user_id: string;
+  addresses?: BuyerAddress[];
+  default_address?: BuyerAddress | null;
 }
 
 export interface AdminSellerData {
@@ -1675,6 +1696,19 @@ export interface VerificationProgress {
   percentage: number;
   steps: VerificationSteps;
   total_steps: number;
+}
+
+export interface SellerAddress {
+  id: number;
+  address_type: "SHIPPING" | "RETURN" | string;
+  same_as_business_address: boolean;
+  address_line_1: string;
+  address_line_2: string | null;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string;
+  updated_at: string;
 }
 
 export interface AdminSellerDetailsData {
@@ -1717,8 +1751,9 @@ export interface AdminSellerDetailsData {
   nationality: string;
   residence_country: string;
   profile_picture: string | null;
-  shipping_address: string | null;
-  return_address: string | null;
+  shipping_address: SellerAddress | null;
+  return_address: SellerAddress | null;
+  company_address_line_2: string | null;
   shipping_zone: string;
   active_products: number;
   total_products: number;
@@ -1780,6 +1815,8 @@ export interface KycVerificationData {
   time_in_queue_display: string;
   time_in_queue_seconds: number;
   user_id: string;
+  shipping_address?: SellerAddress | null;
+  return_address?: SellerAddress | null;
 }
 
 export interface AdminProductData {

@@ -42,6 +42,8 @@ export default function UnifiedLoginForm({
 
   const loginSuccess = (res: any) => {
     const accessToken = res?.data?.access;
+    const refreshToken =
+      res?.data?.refresh || res?.data?.refresh_token || res?.data?.refreshToken;
 
     if (!accessToken) {
       toast.error("Login failed: No token received.");
@@ -49,6 +51,10 @@ export default function UnifiedLoginForm({
     }
 
     localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("token", accessToken);
+    if (refreshToken) {
+      localStorage.setItem("refreshToken", refreshToken);
+    }
 
     if (userType === "admin") {
       router.push("/dashboard/admin/overview");

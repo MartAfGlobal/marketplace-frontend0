@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
 import { RequestType } from "@/types/global";
 import { setAdminBuyerData } from "@/store/admin/users/buyers/buyerDetailsSlice";
+import { setAdminBuyerStats } from "@/store/admin/users/buyers/buyerStatsSlice";
 import { setAdminSellerData } from "@/store/admin/users/seller/sellerDetailsSlice";
 import { setAdminSellerById } from "@/store/admin/users/seller/sellerByIdSlice";
 import { setAdminKycData } from "@/store/admin/users/kyc/kycDetailsSlice";
@@ -47,6 +48,28 @@ export const AdminDetails = (id?: string) => {
         dispatch(
           setAdminBuyerData({ results: buyersFetched, count: totalCount }),
         );
+      },
+    });
+  };
+
+  const fetchAdminBuyerStats = (callback?: (data: any) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/accounts/admin/customers/stats/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const statsData = responseData?.data;
+        console.log("Buyer stats", statsData);
+        if (statsData) {
+          dispatch(setAdminBuyerStats(statsData));
+        }
+        if (callback) callback(statsData);
       },
     });
   };
@@ -415,6 +438,7 @@ export const AdminDetails = (id?: string) => {
     fetchAdminSellersKycList,
     fetchAdminBuyers,
     fetchAdminBuyerById,
+    fetchAdminBuyerStats,
     toggleAdminBuyerStatus,
     deleteAdminBuyer,
     updateAdminBuyer,

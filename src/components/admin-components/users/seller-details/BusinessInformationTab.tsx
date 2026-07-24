@@ -3,11 +3,22 @@ import { Label } from "@/components/ui/forms/Label";
 import { RootState } from "@/store";
 import React from "react";
 import { useSelector } from "react-redux";
+import { useRouter, useParams } from "next/navigation";
 
 export default function BusinessInformationTab() {
+  const router = useRouter();
+  const params = useParams();
   const seller = useSelector(
     (state: RootState) => state.adminSellerById?.adminSellerById,
   );
+
+  const userId = (params?.id as string) || seller?.user_id || seller?.id;
+
+  const handleViewMoreDetails = () => {
+    if (userId) {
+      router.push(`/dashboard/admin/verifications/${userId}`);
+    }
+  };
   return (
     <div className="w-full">
       <h3 className="font-MontserratNormal text-base  mb-6">
@@ -83,7 +94,9 @@ export default function BusinessInformationTab() {
         </div>
       </div>
 
-      <Button className="max-w-56.5">View more details</Button>
+      <Button className="max-w-56.5" onClick={handleViewMoreDetails}>
+        View more details
+      </Button>
     </div>
   );
 }

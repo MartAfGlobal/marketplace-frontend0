@@ -109,10 +109,16 @@ export default function LoginForm({ userType }: RegProps) {
 
   const loginSuccess = (res: any) => {
     const accessToken = res?.data?.access;
+    const refreshToken =
+      res?.data?.refresh || res?.data?.refresh_token || res?.data?.refreshToken;
 
     if (!accessToken) {
       toast.error("Login failed: No token received.");
       return;
+    }
+
+    if (refreshToken) {
+      localStorage.setItem("refreshToken", refreshToken);
     }
 
     handleLoginSuccess(accessToken);

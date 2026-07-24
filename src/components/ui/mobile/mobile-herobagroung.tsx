@@ -26,7 +26,7 @@ const backgrounds = [
           </p>
           <div className="flex items-center gap-3">
             <Link
-              href="/"
+              href="/auth/seller/sign-up"
               className="w-full h-c48 rounded-c8 border border-ff715b text-ffffff text-c12 text-shadow-ff715b flex items-center justify-center"
             >
               Become a seller

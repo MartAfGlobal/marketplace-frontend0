@@ -108,7 +108,7 @@ export default function EditAddressPage() {
     (async () => {
       try {
         const res = await fetch(
-          `/shipping/shipping-addresses/${addressId}`,
+          `/shipping/shipping-addresses/${addressId}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -190,7 +190,7 @@ export default function EditAddressPage() {
 
     sendHttpRequest({
       requestConfig: {
-        url: `/shipping/shipping-addresses/${addressId}`,
+        url: `/shipping/shipping-addresses/${addressId}/`,
         method: "PATCH",
         body: payload,
         token,
