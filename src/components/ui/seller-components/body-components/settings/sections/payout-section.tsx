@@ -25,6 +25,15 @@ export default function PayoutSection() {
     return `${num.slice(0, 3)}****${num.slice(-5)}`;
   };
 
+  // Extract short alias from parentheses, e.g. "Opay Digital Services Limited (Opay)" → "Opay Bank"
+  const shortenBankName = (name: string) => {
+    if (!name) return name;
+    const match = name.match(/\(([^)]+)\)/);
+    const alias = match ? match[1] : name;
+    // Append "Bank" only if it isn't already there
+    return alias.toLowerCase().endsWith("bank") ? alias : `${alias} Bank`;
+  };
+
   const fetchBankAccounts = () => {
     if (!token) return;
     setFetching(true);
@@ -40,6 +49,7 @@ export default function PayoutSection() {
         setFetching(false);
         const accounts = res?.data?.results || res?.data || [];
         setBankAccounts(accounts);
+        console.log("my account details", accounts)
       },
       errorRes: () => {
         setFetching(false);
@@ -141,42 +151,42 @@ export default function PayoutSection() {
             <p className="text-c12 text-000000/44 font-MontserratMedium">Choose where wallet withdrawals are made to</p>
          </div>
          
-         <div className="relative w-full md:w-64">
+         <div className="relative w-full md:w-[282.15px]">
             {bankAccounts.length > 0 && defaultAccount ? (
               <>
                 {/* Top select button */}
                 <button 
                  onClick={() => setShowBankDropdown(!showBankDropdown)}
-                 className="w-full flex items-center justify-between h-10 border border-[#e5e5e5] rounded-xl px-4 bg-[#f8f9fa] text-[11px] text-[#333333] font-MontserratMedium hover:bg-gray-50 transition-colors"
+                 className="w-full flex items-center gap-3 justify-center h-12  rounded-c8 px-6 py-3.5 bg-000000/4 text-sm text-000000/68 font-MontserratSemiBold hover:bg-gray-50 transition-colors"
                 >
                    <span>
-                     {defaultAccount.bank_name || defaultAccount.bank} - {maskAccountNumber(defaultAccount.account_number || defaultAccount.number)}
+                    {shortenBankName(defaultAccount.bank_name || defaultAccount.bank)} - {maskAccountNumber(defaultAccount.account_number || defaultAccount.number)}
                    </span>
-                   <ChevronDown size={14} className={`text-[#666666] transition-transform ${showBankDropdown ? "rotate-180" : ""}`} />
+                   <ChevronDown size={24.15} className={`text-000000/68 transition-transform ${showBankDropdown ? "rotate-180" : ""}`} />
                 </button>
 
                 {/* Dropdown body */}
                 {showBankDropdown && (
-                  <div className="absolute top-11 left-0 w-full bg-white border border-[#f0f0f0] rounded-xl shadow-lg z-10 overflow-hidden flex flex-col py-1">
+                  <div className="absolute top-14 left-0 w-full bg-white border border-000000/4 rounded-c8  z-10 overflow-hidden flex flex-col py-3">
                      {bankAccounts.map((account, index) => {
                        const isDefault = account.id === defaultAccount.id;
                        return (
                          <button 
                            key={index} 
                            onClick={() => handleSelectDefault(account)}
-                           className={`w-full text-left px-4 py-2.5 text-[10px] transition-colors ${
+                           className={`w-full text-left px-6 py-3.5 text-sm transition-colors ${
                              isDefault 
-                               ? "bg-[#ff715b] text-white font-MontserratSemiBold" 
-                               : "text-[#666666] font-MontserratMedium hover:bg-gray-50"
+                               ? "bg-[#ff715b] text-white font-MontserratNormal" 
+                               : "text-000000/444 font-MontserratNormal hover:bg-gray-50"
                            }`}
                          >
-                           {account.bank_name || account.bank} - {maskAccountNumber(account.account_number || account.number)}
+                           {shortenBankName(account.bank_name || account.bank)} - {maskAccountNumber(account.account_number || account.number)}
                          </button>
                        );
                      })}
                      <button 
                        onClick={handleOpenAddModal}
-                       className="w-full text-left px-4 py-2.5 text-[#ff715b] text-[10px] font-MontserratSemiBold hover:bg-gray-50 transition-colors border-t border-[#f5f5f5] mt-1"
+                       className="w-full text-left px-4 py-2.5 text-[#ff715b] text-[12px] font-MontserratMedium hover:bg-gray-50 transition-colors mt-2.5"
                      >
                         + Add new account
                      </button>
