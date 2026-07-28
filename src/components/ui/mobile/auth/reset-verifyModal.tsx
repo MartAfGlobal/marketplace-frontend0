@@ -15,6 +15,7 @@ export default function ResetVerify({
   email,
 }: MobileLoginProps) {
   const { loading, sendHttpRequest: resendUserReq } = useHttp();
+  const { loading: verifying, sendHttpRequest: verifyOtpReq } = useHttp();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(120);
   const router = useRouter();
@@ -56,8 +57,31 @@ export default function ResetVerify({
       toast.error("Please enter a valid 6-digit OTP");
       return;
     }
-    router.push("?resetToken=" + otpString);
-    setStep("resetPassword");
+
+    if (!email) {
+      toast.error("Email not found. Please start again.");
+      setStep("forgot");
+      return;
+    }
+
+    verifyOtpReq({
+      successRes: (res: any) => {
+        const data = res?.data || res;
+        const resetToken = data?.token;
+        if (resetToken) {
+          toast.success(data?.detail || "Code verified successfully!");
+          router.push("?resetToken=" + encodeURIComponent(resetToken));
+          setStep("resetPassword");
+        } else {
+          toast.error(data?.detail || "OTP verification failed.");
+        }
+      },
+      requestConfig: {
+        url: "/accounts/reset-password/verify-otp/",
+        method: "POST",
+        body: { email, otp: otpString },
+      },
+    });
   };
 
   // ✅ Success handler for resend request
@@ -79,7 +103,7 @@ export default function ResetVerify({
     resendUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/register/resend-otp/",
+        url: "/accounts/reset-password/",
         method: "POST",
         body: { email },
         successMessage: "Verification OTP resent.",

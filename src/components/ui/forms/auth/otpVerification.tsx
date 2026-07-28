@@ -74,10 +74,33 @@ export default function OtpVerification() {
       toast.error("Please enter the full 6-digit OTP.");
       return;
     }
-    // Navigate to create-password page; the OTP is validated server-side on final submit
-    router.push(
-      `/auth/create-password?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`
-    );
+
+    if (!email) {
+      toast.error("Missing email address. Please start again.");
+      router.push("/auth/forgot-password");
+      return;
+    }
+
+    verifyOtp({
+      successRes: (res: any) => {
+        const data = res?.data || res;
+        const resetToken = data?.token;
+        if (resetToken) {
+          toast.success(data?.detail || "Code verified successfully.");
+          router.push(
+            `/auth/create-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(resetToken)}`
+          );
+        } else {
+          toast.error(data?.detail || "Code verification failed.");
+        }
+      },
+      requestConfig: {
+        url: "/accounts/reset-password/verify-otp/",
+        method: "POST",
+        body: { email, otp },
+        userType: "buyer",
+      },
+    });
   };
 
   const handleResend = (e: React.FormEvent) => {

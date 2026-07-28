@@ -192,9 +192,14 @@ export default function AdminCategoriesPage() {
               ? d.toLocaleDateString("en-GB")
               : "N/A";
 
+          const imageUrl = resolveImageUrl(sub.image_url ?? sub.image);
+
           return {
             id: String(sub.id ?? sub.pk ?? ""),
             name: sub.name || sub.title || "Unnamed",
+            imageUrl,
+            image_url: sub.image_url,
+            image: sub.image,
             parentCategory:
               sub.parent?.name || sub.parent_name || sub.parent_category || "—",
             attributes: attributesStr,

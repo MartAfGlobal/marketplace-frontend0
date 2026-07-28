@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch } from "react-redux";
@@ -59,6 +59,10 @@ export default function ResetPasswordForm() {
     router.push("/auth/login");
   };
 
+  const searchParams = useSearchParams();
+  const emailParam = searchParams.get("email") || "";
+  const tokenParam = (Array.isArray(token) ? token[0] : token) || searchParams.get("token") || searchParams.get("resetToken") || "";
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -75,9 +79,14 @@ export default function ResetPasswordForm() {
 
     resetRequest({
       requestConfig: {
-        url: `/accounts/reset-password/confirm/${token}/`,
+        url: "/accounts/reset-password/confirm/",
         method: "POST",
-        body: { password: newPassword },
+        body: {
+          email: emailParam,
+          token: tokenParam,
+          password: newPassword,
+          confirm_password: comfirmPassword,
+        },
         userType: "buyer",
         successMessage: "Password reset successful!",
       },

@@ -21,6 +21,8 @@ function CreateCategoryPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
+  const typeParam = searchParams.get("type");
+  const parentIdParam = searchParams.get("parent_id") || searchParams.get("parent");
   const isEditMode = Boolean(editId);
 
   const token = useSelector((state: RootState) => state.token?.token);
@@ -30,12 +32,25 @@ function CreateCategoryPageInner() {
     fetchAdminCategoryById,
     fetchAdminAttributes,
     fetchAdminCategories,
+    fetchAdminParentCategories,
   } = AdminDetails();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isHidden, setIsHidden] = useState(false);
   const [categoryType, setCategoryType] = useState<"main" | "sub">("main");
+
+  useEffect(() => {
+    if (!isEditMode) {
+      if (typeParam === "sub") {
+        setCategoryType("sub");
+      }
+      if (parentIdParam) {
+        setCategoryType("sub");
+        setSelectedParentCategory({ id: parentIdParam, name: "Parent Category" });
+      }
+    }
+  }, [isEditMode, typeParam, parentIdParam]);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -73,8 +88,8 @@ function CreateCategoryPageInner() {
     if (token) {
       setAttributesLoading(true);
       fetchAdminAttributes(1, (data: any) => {
-        const results = data?.results ?? [];
-        const attrs = results.map((item: any) => ({
+        const results = data?.results ?? data?.data?.results ?? data?.data ?? [];
+        const attrs = (Array.isArray(results) ? results : []).map((item: any) => ({
           id: String(item.id ?? ""),
           name: item.name || "Unnamed",
         }));
@@ -83,17 +98,21 @@ function CreateCategoryPageInner() {
       });
 
       setParentCategoriesLoading(true);
-      fetchAdminCategories(1, (data: any) => {
-        const results = data?.results ?? [];
-        const cats = results.map((item: any) => ({
-          id: String(item.id ?? ""),
-          name: item.name || "Unnamed",
-        }));
+      fetchAdminParentCategories((data: any) => {
+        const rawResults = data?.results ?? data?.data?.results ?? data?.data ?? [];
+        const results = Array.isArray(rawResults) ? rawResults : [];
+        const cats = results
+          .map((item: any) => ({
+            id: String(item.id ?? ""),
+            name: item.name || item.title || "Unnamed",
+          }))
+          // Exclude self if editing to prevent self-reference in dropdown
+          .filter((cat: any) => !isEditMode || cat.id !== editId);
         setParentCategories(cats);
         setParentCategoriesLoading(false);
       });
     }
-  }, [token]);
+  }, [token, isEditMode, editId]);
 
   // In edit mode: fetch the category and pre-fill all fields
   useEffect(() => {
@@ -110,15 +129,16 @@ function CreateCategoryPageInner() {
         setIsHidden(data.is_active === false);
 
         // Determine main vs sub
-        if (data.parent || data.parent_id) {
+        const parentObj = typeof data.parent === "object" && data.parent !== null ? data.parent : null;
+        const parentId = String(data.parent_id ?? parentObj?.id ?? (typeof data.parent === "string" || typeof data.parent === "number" ? data.parent : ""));
+        const parentName = data.parent_name ?? parentObj?.name ?? parentObj?.title ?? data.parent_category ?? "";
+
+        if (parentId && parentId !== "null" && parentId !== "undefined" && parentId.trim() !== "") {
           setCategoryType("sub");
-          const parentId = String(data.parent_id ?? data.parent ?? "");
-          const parentName = data.parent_name ?? "";
-          if (parentId) {
-            setSelectedParentCategory({ id: parentId, name: parentName });
-          }
+          setSelectedParentCategory({ id: parentId, name: parentName || "Parent Category" });
         } else {
           setCategoryType("main");
+          setSelectedParentCategory(null);
         }
 
         // Pre-fill attributes
@@ -133,7 +153,6 @@ function CreateCategoryPageInner() {
         const imgUrl = data.image ?? data.image_url ?? null;
         if (imgUrl) {
           setPreviewUrl(imgUrl);
-          // Show a friendly filename based on the URL
           const parts = (imgUrl as string).split("/");
           setUploadedFileName(parts[parts.length - 1] || "Existing image");
         }
@@ -142,6 +161,28 @@ function CreateCategoryPageInner() {
       });
     }
   }, [isEditMode, editId, token]);
+
+  // Auto-select & synchronize parent category when subcategory is active
+  useEffect(() => {
+    if (categoryType === "sub" && parentCategories.length > 0) {
+      if (selectedParentCategory?.id) {
+        const match = parentCategories.find(
+          (cat) => String(cat.id) === String(selectedParentCategory.id)
+        );
+        if (match) {
+          if (
+            !selectedParentCategory.name ||
+            selectedParentCategory.name === "Parent Category" ||
+            selectedParentCategory.name !== match.name
+          ) {
+            setSelectedParentCategory(match);
+          }
+        }
+      } else if (!selectedParentCategory) {
+        setSelectedParentCategory(parentCategories[0]);
+      }
+    }
+  }, [categoryType, parentCategories, selectedParentCategory]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -183,27 +224,21 @@ function CreateCategoryPageInner() {
     );
   };
 
-  const buildFormData = () => {
-    const formData = new FormData();
-    formData.append("name", name.trim());
-    formData.append("description", description.trim());
-    formData.append("is_active", String(!isHidden));
-
-    if (selectedAttributeIds.length > 0) {
-      selectedAttributeIds.forEach((attrId) => {
-        formData.append("attribute_ids", attrId);
-      });
-    }
-
-    if (categoryType === "sub" && selectedParentCategory?.id) {
-      formData.append("parent", selectedParentCategory.id);
-    }
-
-    if (imageFile) {
-      formData.append("image", imageFile);
-    }
-
-    return formData;
+  const extractErrorMessage = (err: any, fallbackMsg: string) => {
+    const errData = err?.response?.data || err?.data;
+    if (!errData) return fallbackMsg;
+    if (typeof errData === "string") return errData;
+    if (typeof errData.parent_id === "string") return errData.parent_id;
+    if (Array.isArray(errData.parent_id)) return errData.parent_id.join(" ");
+    if (typeof errData.non_field_errors === "string") return errData.non_field_errors;
+    if (Array.isArray(errData.non_field_errors)) return errData.non_field_errors.join(" ");
+    if (typeof errData.detail === "string") return errData.detail;
+    if (typeof errData.message === "string") return errData.message;
+    if (typeof errData.name === "string") return errData.name;
+    if (Array.isArray(errData.name)) return errData.name.join(" ");
+    if (typeof errData.image === "string") return errData.image;
+    if (Array.isArray(errData.image)) return errData.image.join(" ");
+    return fallbackMsg;
   };
 
   const handleSubmit = () => {
@@ -218,13 +253,41 @@ function CreateCategoryPageInner() {
     }
 
     setIsSubmitting(true);
-    const formData = buildFormData();
+    const parentIdValue = categoryType === "sub" ? selectedParentCategory?.id || "" : "";
+
+    let payload: FormData | Record<string, any>;
+
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("description", description.trim());
+      formData.append("is_active", String(!isHidden));
+      formData.append("parent_id", parentIdValue);
+      formData.append("parent", parentIdValue);
+
+      if (selectedAttributeIds.length > 0) {
+        selectedAttributeIds.forEach((attrId) => {
+          formData.append("attribute_ids", attrId);
+        });
+      }
+
+      formData.append("image", imageFile);
+      payload = formData;
+    } else {
+      payload = {
+        name: name.trim(),
+        description: description.trim(),
+        is_active: !isHidden,
+        parent_id: parentIdValue,
+        attribute_ids: selectedAttributeIds,
+      };
+    }
 
     if (isEditMode && editId) {
       // UPDATE
       updateAdminCategory(
         editId,
-        formData,
+        payload,
         (_res: any) => {
           setIsSubmitting(false);
           setResultModalState({
@@ -237,14 +300,7 @@ function CreateCategoryPageInner() {
         },
         (err: any) => {
           setIsSubmitting(false);
-          const errData = err?.response?.data || err?.data;
-          let errMsg = "Failed to update category.";
-          if (errData) {
-            if (typeof errData.image === "string") errMsg = errData.image;
-            else if (Array.isArray(errData.image)) errMsg = errData.image.join(" ");
-            else if (typeof errData.message === "string") errMsg = errData.message;
-            else if (typeof errData.detail === "string") errMsg = errData.detail;
-          }
+          const errMsg = extractErrorMessage(err, "Failed to update category.");
           setResultModalState({
             isOpen: true,
             title: "Failed to Update Category",
@@ -257,7 +313,7 @@ function CreateCategoryPageInner() {
     } else {
       // CREATE
       createAdminCategory(
-        formData,
+        payload,
         (_res: any) => {
           setIsSubmitting(false);
           setResultModalState({
@@ -270,14 +326,7 @@ function CreateCategoryPageInner() {
         },
         (err: any) => {
           setIsSubmitting(false);
-          const errData = err?.response?.data || err?.data;
-          let errMsg = "Failed to create category.";
-          if (errData) {
-            if (typeof errData.image === "string") errMsg = errData.image;
-            else if (Array.isArray(errData.image)) errMsg = errData.image.join(" ");
-            else if (typeof errData.message === "string") errMsg = errData.message;
-            else if (typeof errData.detail === "string") errMsg = errData.detail;
-          }
+          const errMsg = extractErrorMessage(err, "Failed to create category.");
           setResultModalState({
             isOpen: true,
             title: "Failed to Create Category",

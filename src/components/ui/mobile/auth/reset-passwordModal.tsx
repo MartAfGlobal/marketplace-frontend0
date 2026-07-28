@@ -9,23 +9,23 @@ import { MobileLoginProps } from "@/types/global";
 
 
 
-export default function ResetPasswordModal({ onClose, setStep }: MobileLoginProps) {
+export default function ResetPasswordModal({ onClose, setStep, email }: MobileLoginProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("resetToken");
+  const token = searchParams.get("resetToken") || searchParams.get("token") || "";
 
   const { sendHttpRequest } = useHttp();
 
   useEffect(() => {
     if (!token) {
       toast.error("Invalid or missing reset token.");
-      router.push("/");
+      setStep("forgot");
     }
-  }, [token, router]);
+  }, [token, setStep]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,15 +44,19 @@ export default function ResetPasswordModal({ onClose, setStep }: MobileLoginProp
 
     await sendHttpRequest({
       requestConfig: {
-        url: `/accounts/reset-password/confirm/${token}/`,
+        url: "/accounts/reset-password/confirm/",
         method: "POST",
-        body: { password: newPassword },
+        body: {
+          email,
+          token,
+          password: newPassword,
+          confirm_password: confirmPassword,
+        },
         userType: "buyer",
       },
       successRes: () => {
         toast.success("Password reset successful!");
-        setStep("signin") ;
-       
+        setStep("signin");
       },
     });
 

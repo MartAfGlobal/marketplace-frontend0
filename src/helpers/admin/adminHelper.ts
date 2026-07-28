@@ -452,12 +452,15 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
-  const fetchAdminCategories = (page: number = 1, callback?: (data: any) => void) => {
+  const fetchAdminCategories = (
+    page: number = 1,
+    callback?: (data: any) => void
+  ) => {
     if (!token) return;
 
     sendHttpRequest({
       requestConfig: {
-        url: `/products/admin/categories/?page=${page}`,
+        url: `/products/admin/categories/?root_only=true&page_size=20&page=${page}`,
         method: "GET",
         token,
         isAuth: true,
@@ -497,6 +500,33 @@ export const AdminDetails = (id?: string) => {
           dispatch(setAdminCategoryDetail(categoryData));
         }
         if (callback) callback(categoryData);
+      },
+    });
+  };
+
+  const fetchAdminParentCategories = (
+    callback?: (data: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/categories/?root_only=true&page_size=100`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const rawResults =
+          responseData?.data?.results ??
+          responseData?.data ??
+          (Array.isArray(responseData) ? responseData : []);
+        const results = Array.isArray(rawResults) ? rawResults : [];
+        const totalCount =
+          responseData?.data?.count ?? responseData?.count ?? results.length;
+        console.log("Admin parent categories fetched:", results, "Total:", totalCount);
+        if (callback) callback({ results, totalCount });
       },
     });
   };
@@ -778,6 +808,7 @@ export const AdminDetails = (id?: string) => {
     fetchAdminBuyerStats,
     fetchAdminCategoryStats,
     fetchAdminCategories,
+    fetchAdminParentCategories,
     fetchAdminCategoryById,
     createAdminCategory,
     updateAdminCategory,

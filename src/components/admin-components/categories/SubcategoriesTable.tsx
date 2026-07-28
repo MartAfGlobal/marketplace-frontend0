@@ -5,9 +5,14 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import ProductImage from "@/assets/admin/productMainImage.svg";
 import { CheckCircle2, EyeOff } from "lucide-react";
 
+import { resolveImageUrl } from "@/types/admin";
+
 export interface SubcategoryRow {
   id: string;
   name: string;
+  imageUrl?: string;
+  image_url?: any;
+  image?: any;
   parentCategory: string;
   attributes: string;
   productsCount: number;
@@ -88,87 +93,94 @@ export default function SubcategoriesTable({
                 </svg>
               </button>
             </th>
-            <th className="p-3 font-MontserratNormal text-sm">
+            <th className="p-3 font-MontserratSemiBold text-c12">
               Subcategory Name
             </th>
-            <th className="p-3 font-MontserratNormal text-sm">
+            <th className="p-3 font-MontserratSemiBold text-c12">
               Parent Category
             </th>
-            <th className="p-3 font-MontserratNormal text-sm">Attributes</th>
-            <th className="p-3 font-MontserratNormal text-sm">
+            <th className="p-3 font-MontserratSemiBold text-c12">Attributes</th>
+            <th className="p-3 font-MontserratSemiBold text-c12">
               Products Count
             </th>
-            <th className="p-3 font-MontserratNormal text-sm">Status</th>
-            <th className="p-3 font-MontserratNormal text-sm">Date Created</th>
-            <th className="p-3 font-MontserratNormal text-sm text-center"></th>
+            <th className="p-3 font-MontserratSemiBold text-c12 text-center">Status</th>
+            <th className="p-3 font-MontserratSemiBold text-c12">Date Created</th>
+            <th className="p-3 font-MontserratSemiBold text-c12 text-center"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50 text-sm text-000000/68 font-MontserratNormal">
+        <tbody className="divide-y divide-gray-50 text-sm text-000000 font-MontserratNormal">
           {loading ? (
             <tr>
-              <td colSpan={7} className="py-12 text-center">
+              <td colSpan={8} className="py-12 text-center">
                 <div className="flex justify-center items-center">
                   <LoadingSpinner size={32} color="border-ff715b" />
                 </div>
               </td>
             </tr>
           ) : rows.length > 0 ? (
-            rows.map((row) => (
-              <tr
-                key={row.id}
-                onClick={() => onRowClick(row.id)}
-                className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer"
-              >
-                <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleRow(row.id);
-                    }}
-                    className={`flex h-4 w-4 items-center justify-center border duration-200 mx-auto ${
-                      selectedProductIds.includes(row.id)
-                        ? "border-[#ff715b] bg-[#ff715b]"
-                        : "border-[#161616] hover:border-[#ff715b]"
-                    }`}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={`h-2.5 w-2.5 ${
+            rows.map((row) => {
+              const subcategoryImgUrl = resolveImageUrl(row.imageUrl ?? row.image_url ?? row.image);
+
+              return (
+                <tr
+                  key={row.id}
+                  onClick={() => onRowClick(row.id)}
+                  className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer"
+                >
+                  <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleRow(row.id);
+                      }}
+                      className={`flex h-4 w-4 items-center justify-center border duration-200 mx-auto ${
                         selectedProductIds.includes(row.id)
-                          ? "text-white"
-                          : "text-[#ff715b] opacity-0 group-hover:opacity-100 group-hover:text-white"
+                          ? "border-[#ff715b] bg-[#ff715b]"
+                          : "border-[#161616] hover:border-[#ff715b]"
                       }`}
                     >
-                      <path d="M5 12.5 9.5 17 19 7.5" />
-                    </svg>
-                  </button>
-                </td>
-                <td className="py-3 px-4 text-000000/68 text-sm font-MontserratNormal">
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src={ProductImage}
-                      alt={row.name}
-                      width={28}
-                      height={28}
-                      className="rounded object-cover"
-                    />
-                    <span className="block truncate" title={row.name}>
-                      {row.name}
-                    </span>
-                  </div>
-                </td>
-                <td className="py-3 px-4 text-gray-700">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`h-2.5 w-2.5 ${
+                          selectedProductIds.includes(row.id)
+                            ? "text-white"
+                            : "text-[#ff715b] opacity-0 group-hover:opacity-100 group-hover:text-white"
+                        }`}
+                      >
+                        <path d="M5 12.5 9.5 17 19 7.5" />
+                      </svg>
+                    </button>
+                  </td>
+                  <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium max-w-40 truncate">
+                    <div className="flex items-center gap-3">
+                      {subcategoryImgUrl ? (
+                        <Image
+                          src={subcategoryImgUrl}
+                          alt={row.name}
+                          width={24}
+                          height={24}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        "N/A"
+                      )}
+                      <span className="block truncate" title={row.name}>
+                        {row.name}
+                      </span>
+                    </div>
+                  </td>
+                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium truncate max-w-50.25">
                   <span className="block truncate" title={row.parentCategory}>
                     {row.parentCategory}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-gray-700">
+                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">
                   <span
                     className="block max-w-[10rem] truncate"
                     title={row.attributes}
@@ -176,8 +188,8 @@ export default function SubcategoriesTable({
                     {row.attributes}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-gray-700">{row.productsCount}</td>
-                <td className="py-3 px-4">
+                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">{row.productsCount}</td>
+                <td className="py-3 px-3">
                   <div className="flex items-center gap-1.5">
                     {row.status === "Active" && (
                       <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-green-200 text-green-600 bg-green-50 text-[10px] font-MontserratMedium w-fit">
@@ -191,9 +203,9 @@ export default function SubcategoriesTable({
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-4 text-gray-500">{row.date}</td>
-<td
-                  className="py-3 px-4 text-center relative"
+                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">{row.date}</td>
+                <td
+                  className="py-3 px-3 text-center relative"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
@@ -252,7 +264,8 @@ export default function SubcategoriesTable({
                   </AnimatePresence>
                 </td>
               </tr>
-            ))
+            );
+          })
           ) : (
             <tr>
               <td

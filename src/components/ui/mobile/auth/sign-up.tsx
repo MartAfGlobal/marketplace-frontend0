@@ -357,7 +357,7 @@ export default function AuthModal({
                 )}
 
                 {step === "resetPassword" && (
-                  <ResetPasswordModal onClose={onClose} setStep={setStep} />
+                  <ResetPasswordModal onClose={onClose} setStep={setStep} email={email} />
                 )}
 
                 {step === "verificationSent" && (

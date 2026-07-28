@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import ProductImage from "@/assets/admin/productMainImage.svg";
 import { CheckCircle2, EyeOff } from "lucide-react";
 import type { AdminCategoryListItem } from "@/types/admin";
+import { resolveImageUrl } from "@/types/admin";
 
 export type CategoryRow = AdminCategoryListItem;
 
@@ -152,6 +153,8 @@ export default function CategoriesTable({
                   ? d.toLocaleDateString("en-GB")
                   : "N/A";
 
+              const categoryImgUrl = resolveImageUrl(row.image_url ?? row.image);
+
               return (
                 <tr
                   key={row.id}
@@ -191,9 +194,9 @@ export default function CategoriesTable({
                   </td>
                   <td className="py-3 px-3 max-w-40 text-000000 text-c12 font-MontserratMedium truncate">
                     <div className="flex items-center gap-3">
-                      {row.image_url?.thumbnail ? (
+                      {categoryImgUrl ? (
                         <Image
-                          src={row.image_url.thumbnail}
+                          src={categoryImgUrl}
                           alt="Category Image"
                           width={24}
                           height={24}

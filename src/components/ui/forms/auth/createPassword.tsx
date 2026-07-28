@@ -16,7 +16,7 @@ export default function CreatePasswordForm() {
   const searchParams = useSearchParams();
 
   const email = searchParams.get("email") ?? "";
-  const otp = searchParams.get("otp") ?? "";
+  const token = searchParams.get("token") ?? searchParams.get("resetToken") ?? searchParams.get("otp") ?? "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -41,8 +41,8 @@ export default function CreatePasswordForm() {
       return;
     }
 
-    if (!email || !otp) {
-      toast.error("Missing email or OTP. Please start again.");
+    if (!email || !token) {
+      toast.error("Missing email or verification token. Please start again.");
       router.push("/auth/forgot-password");
       return;
     }
@@ -55,7 +55,12 @@ export default function CreatePasswordForm() {
       requestConfig: {
         url: "/accounts/reset-password/confirm/",
         method: "POST",
-        body: { email, otp, password },
+        body: {
+          email,
+          token,
+          password,
+          confirm_password: confirmPassword,
+        },
         userType: "buyer",
         successMessage: "Password reset successful!",
       },
