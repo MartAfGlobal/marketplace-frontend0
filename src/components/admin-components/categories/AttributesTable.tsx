@@ -21,6 +21,8 @@ interface AttributesTableProps {
   onToggleRow: (id: string) => void;
   onRowClick: (id: string) => void;
   onSetActiveRowId: (id: string | null) => void;
+  onToggleHide?: (id: string, currentStatus: "Active" | "Hidden", name: string) => void;
+  onDelete?: (id: string, name: string) => void;
 }
 
 export default function AttributesTable({
@@ -32,6 +34,8 @@ export default function AttributesTable({
   onToggleRow,
   onRowClick,
   onSetActiveRowId,
+  onToggleHide,
+  onDelete,
 }: AttributesTableProps) {
   return (
     <div className="overflow-x-auto min-h-[250px]">
@@ -77,7 +81,7 @@ export default function AttributesTable({
             <th className="p-3 font-MontserratNormal text-sm text-center"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50 text-[11px] text-gray-700 font-MontserratMedium">
+        <tbody className="divide-y divide-gray-50 text-sm text-000000/68 font-MontserratNormal">
           {loading ? (
             <tr>
               <td colSpan={7} className="py-12 text-center">
@@ -124,13 +128,49 @@ export default function AttributesTable({
                     </svg>
                   </button>
                 </td>
-                <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">
+                <td className="py-3 px-4 text-000000/68 text-sm font-MontserratNormal">
                   <span className="block truncate" title={row.name}>{row.name}</span>
                 </td>
                 <td className="py-3 px-4 text-gray-700">
-                  <span className="block max-w-[12rem] truncate" title={row.values}>{row.values}</span>
+                  {(() => {
+                    if (!row.values) {
+                      return <span className="text-gray-400 font-MontserratNormal text-sm">—</span>;
+                    }
+
+                    if (!row.values.includes(",")) {
+                      return (
+                        <span className="text-sm font-MontserratNormal text-000000/68">
+                          {row.values}
+                        </span>
+                      );
+                    }
+
+                    const vals = row.values
+                      .split(",")
+                      .map((v) => v.trim())
+                      .filter(Boolean);
+                    const shown = vals.slice(0, 4);
+                    const extra = vals.length - shown.length;
+                    return (
+                      <span className="flex items-center flex-wrap gap-x-1 gap-y-0.5 text-sm font-MontserratNormal text-000000/68">
+                        {shown.map((v, i) => (
+                          <span key={i} className="flex items-center gap-1">
+                            {i > 0 && (
+                              <span className="w-[2px] h-[2px] rounded-full bg-000000/44 flex-shrink-0 inline-block" />
+                            )}
+                            <span>{v}</span>
+                          </span>
+                        ))}
+                        {extra > 0 && (
+                          <span className="text-000000/68 font-MontserratNormal ml-0.5">
+                            +{extra}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })()}
                 </td>
-                <td className="py-3 px-4 text-gray-700">{row.valuesCount}</td>
+                <td className="py-3 px-4 text-000000/68 text-sm font-MontserratNormal">{row.valuesCount}</td>
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-1.5">
                     {row.status === "Active" && (
@@ -145,7 +185,7 @@ export default function AttributesTable({
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-4 text-gray-500">{row.date}</td>
+                <td className="py-3 px-4 text-000000/68 text-sm font-MontserratNormal">{row.date}</td>
                 <td className="py-3 px-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     className="w-6 h-6 flex flex-col gap-[3px] items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer ml-auto mr-2"
@@ -179,11 +219,24 @@ export default function AttributesTable({
                         <button
                           onClick={() => {
                             onSetActiveRowId(null);
-                            toast.success(`Attribute ${row.name} status toggled.`);
+                            if (onToggleHide) {
+                              onToggleHide(row.id, row.status, row.name);
+                            }
                           }}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer"
                         >
                           {row.status === "Active" ? "Hide" : "Activate"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            onSetActiveRowId(null);
+                            if (onDelete) {
+                              onDelete(row.id, row.name);
+                            }
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 transition-colors cursor-pointer"
+                        >
+                          Delete
                         </button>
                       </motion.div>
                     )}

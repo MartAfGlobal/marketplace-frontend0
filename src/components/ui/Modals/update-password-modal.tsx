@@ -31,8 +31,12 @@ export default function ResetPasswordModal({
   });
 
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    }
 
     return () => {
       document.body.style.overflow = "";
@@ -48,6 +52,11 @@ export default function ResetPasswordModal({
   };
 
   const handleSave = () => {
+    if (!passwords.currentPassword || !passwords.newPassword || !passwords.confirmPassword) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
     if (passwords.newPassword !== passwords.confirmPassword) {
       toast.error("New password and confirm password do not match.");
       return;

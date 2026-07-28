@@ -3,7 +3,11 @@ import { motion, TargetAndTransition } from "framer-motion";
 import Image from "next/image";
 import GoogleIcon from "@/assets/icons/user-dashboard/Flags/google.png";
 import dropdown from "@/assets/icons/dropDown.svg";
-import ResetPasswordModal from "@/components/ui/Modals/update-password-modal"
+import ResetPasswordModal from "@/components/ui/Modals/update-password-modal";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useHttp } from "@/hooks/use-http";
+import { toast } from "sonner";
 
 export default function PassWordSecurity() {
   const [settings, setSettings] = useState<Record<number, boolean>>({
@@ -12,6 +16,9 @@ export default function PassWordSecurity() {
   });
 
   const [isResetModalOpen, setIsResetModalOpen] = useState(false); // modal state
+
+  const token = useSelector((state: RootState) => state.token.token);
+  const { loading, sendHttpRequest: changePasswordReq } = useHttp();
 
   const toggleSetting = (id: number) => {
     setSettings((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -28,8 +35,35 @@ export default function PassWordSecurity() {
   ];
 
   const handleSavePassword = (passwords: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
-    console.log("Passwords submitted:", passwords);
-  
+    const activeToken =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("accessToken") || localStorage.getItem("token")
+        : null);
+
+    if (!activeToken) {
+      toast.error("You must be logged in to change your password.");
+      return;
+    }
+
+    changePasswordReq({
+      requestConfig: {
+        url: "/accounts/password/change",
+        method: "POST",
+        token: activeToken,
+        isAuth: true,
+        userType: "buyer",
+        body: {
+          old_password: passwords.currentPassword,
+          new_password: passwords.newPassword,
+          confirm_password: passwords.confirmPassword,
+        },
+        successMessage: "Password updated successfully.",
+      },
+      successRes: () => {
+        setIsResetModalOpen(false);
+      },
+    });
   };
 
   return (
@@ -97,6 +131,7 @@ export default function PassWordSecurity() {
         isOpen={isResetModalOpen}
         onClose={() => setIsResetModalOpen(false)}
         onSave={handleSavePassword}
+        loading={loading}
       />
     </div>
   );

@@ -1,42 +1,100 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/Button/Button";
 import { X } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/Button/Button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { AdminDetails } from "@/helpers/admin/adminHelper";
+
+export interface AttributeDetailData {
+  id: string;
+  name: string;
+  isActive: boolean;
+  dateCreated: string;
+  lastModified: string;
+  values: string[];
+}
 
 interface AttributeDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  attribute: {
-    name: string;
-    isActive: boolean;
-    dateCreated: string;
-    lastUpdated: string;
-    values: string[];
-  } | null;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onToggleActive?: (val: boolean) => void;
+  attribute: AttributeDetailData | null;
+  isLoading?: boolean;
+  onEdit?: (attribute: AttributeDetailData) => void;
+  onDeleteRequest?: (id: string, name: string) => void;
+  onHideToggled?: (id: string, newIsActive: boolean, name: string) => void;
 }
 
 export default function AttributeDetailsModal({
   isOpen,
   onClose,
   attribute,
+  isLoading = false,
   onEdit,
-  onDelete,
-  onToggleActive,
+  onDeleteRequest,
+  onHideToggled,
 }: AttributeDetailsModalProps) {
-  const [isActive, setIsActive] = useState(attribute?.isActive ?? true);
+  const [isActive, setIsActive] = useState(true);
+  const [isToggling, setIsToggling] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  if (!attribute) return null;
+  const token = useSelector((state: RootState) => state.token?.token);
+  const { deleteAdminAttribute, updateAdminAttribute } = AdminDetails();
 
-  const handleToggle = () => {
-    const newState = !isActive;
-    setIsActive(newState);
-    if (onToggleActive) {
-      onToggleActive(newState);
+  // Sync local active state whenever the attribute prop changes
+  useEffect(() => {
+    if (attribute) {
+      setIsActive(attribute.isActive);
+    }
+  }, [attribute]);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      const w = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (w > 0) document.body.style.paddingRight = `${w}px`;
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  /* ── Hide / Show toggle ── */
+  const handleToggleHide = () => {
+    if (!attribute || isToggling) return;
+    const newIsActive = !isActive;
+    setIsToggling(true);
+
+    updateAdminAttribute(
+      attribute.id,
+      { is_active: newIsActive },
+      () => {
+        setIsActive(newIsActive);
+        setIsToggling(false);
+        if (onHideToggled) onHideToggled(attribute.id, newIsActive, attribute.name);
+      },
+      (err: any) => {
+        setIsToggling(false);
+      }
+    );
+  };
+
+  /* ── Delete ── */
+  const handleDelete = () => {
+    if (!attribute) return;
+    if (onDeleteRequest) {
+      onDeleteRequest(attribute.id, attribute.name);
     }
   };
 
@@ -47,97 +105,151 @@ export default function AttributeDetailsModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/40 flex items-center justify-end z-[9998] p-4 sm:pr-[29px]"
+          onClick={onClose}
         >
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-[9999]">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white shadow-xl flex flex-col w-full max-w-150 rounded-[16px] p-12 relative"
-            >
-              <button 
-                onClick={onClose}
-                className="absolute top-6 right-6 text-[#343330] hover:bg-gray-100 rounded-full p-1 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
-              <h2 className="text-c18 font-MontserratSemiBold mb-8 text-center ">
-                Attribute Details
+          <motion.div
+            initial={{ opacity: 0, x: 160 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 160 }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white shadow-xl flex flex-col w-full max-w-[432px] rounded-[16px] relative overflow-hidden"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-8 pt-8 pb-6">
+              <h2 className="text-c18 font-MontserratSemiBold text-[#161616]">
+                Attribute details
               </h2>
+              <button
+                onClick={onClose}
+                className="text-[#343330] hover:bg-gray-100 rounded-full p-1 transition-colors"
+                aria-label="Close modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              <div className="space-y-8">
-                {/* Name & Active Status */}
+            {/* Body — loading skeleton or real content */}
+            {isLoading || !attribute ? (
+              <div className="px-8 pb-10 flex flex-col items-center justify-center gap-4 min-h-[300px]">
+                <LoadingSpinner size={36} color="border-[#947FFF]" />
+                <p className="text-sm font-MontserratMedium text-[#161616]/50">Loading attribute details...</p>
+              </div>
+            ) : (
+            <div className="px-8 pb-8 space-y-0">
+              {/* Attribute name + active badge */}
+              <div className="flex items-center justify-between pb-5 border-b border-[#F0F0F0]">
+                <span className="text-c20 font-MontserratSemiBold text-[#161616]">
+                  {attribute.name}
+                </span>
+                <span
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-c12 font-MontserratMedium ${
+                    isActive
+                      ? "bg-[#28A745]/10 text-[#28A745]"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isActive ? "bg-[#28A745]" : "bg-gray-400"
+                    }`}
+                  />
+                  {isActive ? "active" : "hidden"}
+                </span>
+              </div>
+
+              {/* Metadata rows */}
+              <div className="py-5 space-y-4 border-b border-[#F0F0F0]">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-8">
-                    <span className="font-MontserratSemiBold text-lg ">Attribute Name</span>
-                    <span className={`px-4 py-1.5 h-8 rounded-c16 text-c12 font-MontserratSemiBold ${isActive ? 'bg-[#28A745]/12  text-[#28A745]' : 'bg-red-50 text-red-600'}`}>
-                      {isActive ? 'Active' : 'Hidden'}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <span className="font-MontserratSemiBold text-base text-black">Hide</span>
-                    <button 
-                      onClick={handleToggle}
-                      className={`w-11.5 h-6 rounded-full flex items-center p-0.5 transition-colors ${!isActive ? 'bg-gray-300' : 'bg-gray-100'}`}
-                    >
-                      <motion.div 
-                        animate={{ x: !isActive ? 24 : 0 }} 
-                        className="w-5 h-5 bg-white rounded-full shadow-[0px_3px_8px_0px_#6A0DAD14]"
-                      />
-                    </button>
-                  </div>
+                  <span className="text-sm font-MontserratNormal text-[#161616]/60">
+                    Date created
+                  </span>
+                  <span className="text-sm font-MontserratMedium text-[#161616]">
+                    {attribute.dateCreated}
+                  </span>
                 </div>
-
-                {/* Dates */}
-                <div className="flex border border-000000/12 rounded-xl overflow-hidden">
-                  <div className="flex-1 px-4 py-3 border-r border-r-000000/12 ">
-                    <p className="text-sm font-MontserratSemiBold mb-4">Date Created</p>
-                    <p className="text-sx font-MontserratNormal">12/12/2025</p>
-                  </div>
-                  <div className="flex-1 px-4 py-3">
-                    <p className="text-sm font-MontserratSemiBold mb-4">Last Updated</p>
-                    <p className="text-sx font-MontserratNormal">12/12/2025</p>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-MontserratNormal text-[#161616]/60">
+                    Last modified
+                  </span>
+                  <span className="text-sm font-MontserratMedium text-[#161616]">
+                    {attribute.lastModified}
+                  </span>
                 </div>
+                {/* Hide toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-MontserratNormal text-[#161616]/60">
+                    Hide
+                  </span>
+                  <button
+                    onClick={handleToggleHide}
+                    disabled={isToggling}
+                    aria-label={isActive ? "Hide attribute" : "Show attribute"}
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
+                      !isActive ? "bg-[#947FFF]" : "bg-gray-200"
+                    } ${isToggling ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+                  >
+                    <motion.span
+                      animate={{ x: !isActive ? 20 : 2 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      className="absolute top-1 left-0 w-4 h-4 bg-white rounded-full shadow-sm"
+                    />
+                  </button>
+                </div>
+              </div>
 
-                {/* Values List */}
-                <div>
-                  <div className="mb-6">
-                    <span className="text-sm font-MontserratSemiBold leading-[20px]">Attribute Values </span>
-                    <span className="text-sm font-MontserratSemiBold leading-[20px] text-000000/68">({attribute.values.length})</span>
-                  </div>
-                  <div className="grid grid-col-4 lg:grid-cols-5  gap-6 max-h-[144px]  overflow-y-auto no-scrollbar ">
-                    {attribute.values.map((val, idx) => (
-                      <div key={idx} className="h-8 bg-947fff/10 truncate rounded-c8 w-20 flex items-center justify-center text-c12 font-MontserratMedium">
-                        {val}
+              {/* Values section */}
+              <div className="pt-5 pb-6">
+                <p className="text-sm font-MontserratMedium text-[#161616]/70 mb-4">
+                  Added values
+                </p>
+                <div className="flex flex-wrap gap-3 max-h-[140px] overflow-y-auto no-scrollbar">
+                  {attribute.values.length > 0 ? (
+                    attribute.values.map((val, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 px-3 py-1.5 h-8 bg-white border border-[#FF715B] rounded-[8px] text-c12 font-MontserratMedium text-[#FF715B]"
+                      >
+                        <span className="max-w-[100px] truncate">{val}</span>
+                        <X className="w-3 h-3 flex-shrink-0" />
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-400 font-MontserratNormal">
+                      No values added yet.
+                    </p>
+                  )}
                 </div>
+              </div>
 
-                {/* Buttons */}
-                <div className="flex gap-6  mt-12 justify-end">
-                  <Button 
-                  variant="secondary"
-                    className="max-w-40 "
-                    onClick={onEdit}
+              {/* Divider */}
+              <div className="border-t border-[#F0F0F0] pt-6">
+                {/* Action buttons */}
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="secondary"
+                    className="flex-1 flex items-center justify-center gap-2 border-[#FF715B] text-[#FF715B] hover:bg-[#FF715B]/5"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
                   >
-                    Edit Attribute
+                    {isDeleting ? (
+                      <LoadingSpinner size={16} color="border-[#FF715B]" />
+                    ) : (
+                      "Delete attribute"
+                    )}
                   </Button>
-                  <Button 
-                    className="max-w-40 bg-ca0202"
-                    onClick={onDelete}
+                  <Button
+                    className="flex-1 bg-[#FF715B] hover:bg-[#e85e4a] text-white"
+                    onClick={() => onEdit && onEdit(attribute)}
                   >
-                    Delete
+                    Edit details
                   </Button>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+            )}
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

@@ -15,6 +15,9 @@ import { setAdminSellerById } from "@/store/admin/users/seller/sellerByIdSlice";
 import { setAdminKycData } from "@/store/admin/users/kyc/kycDetailsSlice";
 import { setAdminProductsData } from "@/store/admin/products/adminProductsSlice";
 import { setAdminProductDetail } from "@/store/admin/products/adminProductDetailSlice";
+import { setAdminCategoryStats } from "@/store/admin/categories/categoryStatsSlice";
+import { setAdminCategoriesData } from "@/store/admin/categories/adminCategoriesSlice";
+import { setAdminCategoryDetail } from "@/store/admin/categories/adminCategoryDetailSlice";
 
 export const AdminDetails = (id?: string) => {
   const dispatch = useDispatch();
@@ -427,6 +430,340 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminCategoryStats = (callback?: (data: any) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/categories/dashboard-stats/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const statsData = responseData?.data;
+        console.log("Category stats", statsData);
+        if (statsData) {
+          dispatch(setAdminCategoryStats(statsData));
+        }
+        if (callback) callback(statsData);
+      },
+    });
+  };
+
+  const fetchAdminCategories = (page: number = 1, callback?: (data: any) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/categories/?page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const rawResults = responseData?.data?.results ?? responseData?.data ?? (Array.isArray(responseData) ? responseData : []);
+        const categoriesFetched = Array.isArray(rawResults) ? rawResults : [];
+        const totalCount = responseData?.data?.count ?? responseData?.count ?? categoriesFetched.length;
+        console.log("Admin categories fetched:", categoriesFetched, "Total:", totalCount);
+        dispatch(
+          setAdminCategoriesData({ results: categoriesFetched, count: totalCount })
+        );
+        if (callback) callback(responseData);
+      },
+    });
+  };
+
+  const fetchAdminCategoryById = (
+    categoryId: string,
+    callback?: (data: any) => void
+  ) => {
+    if (!token || !categoryId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/categories/${categoryId}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const categoryData = responseData?.data ?? responseData;
+        console.log("Admin category detail fetched:", categoryData);
+        if (categoryData) {
+          dispatch(setAdminCategoryDetail(categoryData));
+        }
+        if (callback) callback(categoryData);
+      },
+    });
+  };
+
+  const fetchAdminSubcategories = (
+    page: number = 1,
+    callback?: (data: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/categories/?parent_only=true&page_size=20&page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const rawResults =
+          responseData?.data?.results ??
+          responseData?.data ??
+          (Array.isArray(responseData) ? responseData : []);
+        const results = Array.isArray(rawResults) ? rawResults : [];
+        const totalCount =
+          responseData?.data?.count ?? responseData?.count ?? results.length;
+        console.log("Admin subcategories fetched:", results, "Total:", totalCount);
+        if (callback) callback({ results, totalCount });
+      },
+    });
+  };
+
+  const createAdminCategory = (
+    payload: FormData | Record<string, any>,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/categories/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const createAdminAttribute = (
+    payload: { name: string; values: string[]; is_active?: boolean },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/attributes/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {
+          name: payload.name,
+          values: payload.values,
+          is_active: payload.is_active ?? true,
+        },
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const fetchAdminAttributes = (
+    page: number = 1,
+    callback?: (data: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/attributes/?page_size=20&page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const rawResults =
+          responseData?.data?.results ??
+          responseData?.data ??
+          (Array.isArray(responseData) ? responseData : []);
+        const results = Array.isArray(rawResults) ? rawResults : [];
+        const totalCount =
+          responseData?.data?.count ?? responseData?.count ?? results.length;
+        console.log("Admin attributes fetched:", results, "Total:", totalCount);
+        if (callback) callback({ results, totalCount });
+      },
+    });
+  };
+
+  const fetchAdminAttributeById = (
+    attributeId: string,
+    callback?: (data: any) => void
+  ) => {
+    if (!token || !attributeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/attributes/${attributeId}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+    });
+  };
+
+  const updateAdminAttribute = (
+    attributeId: string,
+    payload: { name?: string; values?: string[]; is_active?: boolean },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/attributes/${attributeId}/`,
+        method: "PATCH",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const deleteAdminAttribute = (
+    attributeId: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/attributes/${attributeId}/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const hideAdminAttribute = (
+    attributeId: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/attributes/${attributeId}/`,
+        method: "PATCH",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { is_active: false },
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const updateAdminCategory = (
+    categoryId: string,
+    payload: FormData | Record<string, any>,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void
+  ) => {
+    if (!token || !categoryId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/categories/${categoryId}/`,
+        method: "PATCH",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const deleteAdminCategory = (
+    categoryId: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void
+  ) => {
+    if (!token || !categoryId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/categories/${categoryId}/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   return {
     fetchAdminSellersProductDetails,
     fetchAdminSellersProductsList,
@@ -439,6 +776,19 @@ export const AdminDetails = (id?: string) => {
     fetchAdminBuyers,
     fetchAdminBuyerById,
     fetchAdminBuyerStats,
+    fetchAdminCategoryStats,
+    fetchAdminCategories,
+    fetchAdminCategoryById,
+    createAdminCategory,
+    updateAdminCategory,
+    deleteAdminCategory,
+    createAdminAttribute,
+    fetchAdminAttributes,
+    fetchAdminAttributeById,
+    updateAdminAttribute,
+    deleteAdminAttribute,
+    hideAdminAttribute,
+    fetchAdminSubcategories,
     toggleAdminBuyerStatus,
     deleteAdminBuyer,
     updateAdminBuyer,
