@@ -134,11 +134,17 @@ export default function AdminCategoryDetailsPage() {
     ? rawSubcategories.map((sub: any, i: number) => ({
         id: sub.id || sub.uuid || `SUB-${i}`,
         name: sub.name || sub.title || "Subcategory",
-        attributes: Array.isArray(sub.attributes)
-          ? sub.attributes.map((a: any) => typeof a === "string" ? a : a.name || a.title).join(" • ")
-          : typeof sub.attributes === "string"
-          ? sub.attributes
-          : "Size • Colour • +1",
+        attributes: sub.attributes_summary?.trim()
+          ? sub.attributes_summary.trim()
+          : sub.attribute_summary?.trim()
+          ? sub.attribute_summary.trim()
+          : Array.isArray(sub.attributes) && sub.attributes.length > 0
+          ? sub.attributes.map((a: any) => typeof a === "string" ? a : a.name || a.title).filter(Boolean).join(" • ")
+          : typeof sub.attributes === "string" && sub.attributes.trim()
+          ? sub.attributes.trim()
+          : sub.attribute_count !== undefined && sub.attribute_count !== null && Number(sub.attribute_count) > 0
+          ? `${sub.attribute_count} attribute${Number(sub.attribute_count) > 1 ? "s" : ""}`
+          : "None",
         productsCount: sub.products_count ?? sub.productsCount ?? sub.product_count ?? 12,
         status: sub.is_active !== undefined ? (sub.is_active ? "Active" : "Hidden") : (sub.status || "Active"),
         date: formatDate(sub.created_at || sub.date_created || sub.date),

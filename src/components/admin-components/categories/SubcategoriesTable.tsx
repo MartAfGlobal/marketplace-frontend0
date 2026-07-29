@@ -15,6 +15,8 @@ export interface SubcategoryRow {
   image?: any;
   parentCategory: string;
   attributes: string;
+  attributes_summary?: string;
+  attribute_count?: number;
   productsCount: number;
   status: "Active" | "Hidden";
   date: string;
@@ -183,9 +185,9 @@ export default function SubcategoriesTable({
                 <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">
                   <span
                     className="block max-w-[10rem] truncate"
-                    title={row.attributes}
+                    title={row.attributes_summary || row.attributes}
                   >
-                    {row.attributes}
+                    {row.attributes_summary || row.attributes}
                   </span>
                 </td>
                 <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">{row.productsCount}</td>

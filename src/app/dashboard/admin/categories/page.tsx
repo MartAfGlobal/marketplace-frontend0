@@ -161,15 +161,24 @@ export default function AdminCategoriesPage() {
       fetchAdminSubcategories(currentPage, (data: any) => {
         const rows: SubcategoryRow[] = (data?.results ?? []).map((sub: any) => {
           let attributesStr = "None";
-          if (Array.isArray(sub.attributes)) {
+          const summaryStr = sub.attributes_summary ?? sub.attribute_summary;
+          if (typeof summaryStr === "string" && summaryStr.trim()) {
+            attributesStr = summaryStr.trim();
+          } else if (Array.isArray(sub.attributes) && sub.attributes.length > 0) {
             const names = sub.attributes
               .map((a: any) =>
                 typeof a === "string" ? a : a.name || a.title
               )
               .filter(Boolean);
             attributesStr = names.length > 0 ? names.join(" • ") : "None";
-          } else if (typeof sub.attributes === "string") {
-            attributesStr = sub.attributes;
+          } else if (typeof sub.attributes === "string" && sub.attributes.trim()) {
+            attributesStr = sub.attributes.trim();
+          } else if (
+            sub.attribute_count !== undefined &&
+            sub.attribute_count !== null &&
+            Number(sub.attribute_count) > 0
+          ) {
+            attributesStr = `${sub.attribute_count} attribute${Number(sub.attribute_count) > 1 ? "s" : ""}`;
           }
 
           let status: "Active" | "Hidden" = "Active";
@@ -203,6 +212,8 @@ export default function AdminCategoriesPage() {
             parentCategory:
               sub.parent?.name || sub.parent_name || sub.parent_category || "—",
             attributes: attributesStr,
+            attributes_summary: summaryStr ?? undefined,
+            attribute_count: sub.attribute_count ?? sub.attributes_count ?? undefined,
             productsCount: Number(sub.products_count ?? sub.product_count ?? 0),
             status,
             date: dateStr,

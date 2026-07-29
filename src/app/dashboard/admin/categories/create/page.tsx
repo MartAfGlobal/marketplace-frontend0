@@ -254,6 +254,7 @@ function CreateCategoryPageInner() {
 
     setIsSubmitting(true);
     const parentIdValue = categoryType === "sub" ? selectedParentCategory?.id || "" : "";
+    const isSubcategory = categoryType === "sub";
 
     let payload: FormData | Record<string, any>;
 
@@ -264,6 +265,13 @@ function CreateCategoryPageInner() {
       formData.append("is_active", String(!isHidden));
       formData.append("parent_id", parentIdValue);
       formData.append("parent", parentIdValue);
+
+      if (isSubcategory) {
+        formData.append(
+          "inherit_parent_attributes",
+          String(selectedAttributeIds.length === 0)
+        );
+      }
 
       if (selectedAttributeIds.length > 0) {
         selectedAttributeIds.forEach((attrId) => {
@@ -280,6 +288,9 @@ function CreateCategoryPageInner() {
         is_active: !isHidden,
         parent_id: parentIdValue,
         attribute_ids: selectedAttributeIds,
+        ...(isSubcategory && {
+          inherit_parent_attributes: selectedAttributeIds.length === 0,
+        }),
       };
     }
 
