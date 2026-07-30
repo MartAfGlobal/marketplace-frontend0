@@ -195,6 +195,7 @@ export default function RegisterIndividual3({
             <div className="flex-1 flex flex-col gap-2">
               <Label>Full Legal Name</Label>
               <Input
+                validateName={true}
                 value={formData.fullname}
                 onChange={(e) =>
                   setFormData({ ...formData, fullname: e.target.value })

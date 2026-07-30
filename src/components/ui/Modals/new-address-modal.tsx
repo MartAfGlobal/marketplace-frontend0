@@ -244,11 +244,12 @@ export default function AddressModal({
                       id="fullname"
                       name="fullname"
                       type="text"
+                      validateName={true}
                       value={formData.first_name}
                       onChange={(e) =>
                         handleChange(
                           "first_name",
-                          e.target.value.replace(/\s/g, ""),
+                          e.target.value,
                         )
                       }
                       placeholder="John"
@@ -263,14 +264,15 @@ export default function AddressModal({
                       id="fullname"
                       name="fullname"
                       type="text"
+                      validateName={true}
                       value={formData.last_name}
                       onChange={(e) =>
                         handleChange(
                           "last_name",
-                          e.target.value.replace(/\s/g, ""),
+                          e.target.value,
                         )
                       }
-                      placeholder="John Doe"
+                      placeholder="John"
                       className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
                     />
                   </div>

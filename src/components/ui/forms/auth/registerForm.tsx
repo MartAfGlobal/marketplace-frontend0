@@ -152,6 +152,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
                       height={17.5}
                     />
                   }
+                  validatePhone={true}
                   value={formData.phone}
                   onChange={(e) =>
                     setFormData({ ...formData, phone: e.target.value })

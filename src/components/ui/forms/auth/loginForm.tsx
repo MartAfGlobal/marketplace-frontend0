@@ -185,6 +185,7 @@ export default function LoginForm({ userType }: RegProps) {
           <div className="flex flex-col gap-2 pt-4">
             <Label className="text-c12 font-MontserratMedium">Email</Label>
             <Input
+              type="email"
               icon={<Image src={Email} alt="email" width={20} height={20} />}
               id="email"
               value={formData.email}

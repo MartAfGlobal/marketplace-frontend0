@@ -168,6 +168,7 @@ export default function ProfileDetailsModal({
                     </Label>
                     <Input
                       type="text"
+                      validateName={true}
                       value={formData.first_name}
                       onChange={(e) =>
                         setFormData({ ...formData, first_name: e.target.value })
@@ -183,6 +184,7 @@ export default function ProfileDetailsModal({
                     </Label>
                     <Input
                       type="text"
+                      validateName={true}
                       value={formData.last_name}
                       onChange={(e) =>
                         setFormData({ ...formData, last_name: e.target.value })
@@ -198,23 +200,25 @@ export default function ProfileDetailsModal({
                     <Label className="text-c12 font-MontserratMedium">
                       Mobile Number
                     </Label>
-                    <div className="relative">
-                      <Input
-                        type="text"
-                        value={formData.phone}
-                        onChange={(e) =>
-                          setFormData({ ...formData, phone: e.target.value })
-                        }
-                        className="border border-efefef rounded-md p-4 w-full text-c12 pl-8 font-MontserratMedium"
-                      />
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <div className="relative flex items-center">
+                      <div className="absolute left-3.5 z-30 flex items-center gap-2 pointer-events-none text-c12 font-MontserratMedium text-gray-700">
                         <Image
                           src={MobileIcon}
                           alt="mobile"
                           width={11.25}
                           height={17.5}
                         />
+                        <span className="select-none">+234</span>
                       </div>
+                      <Input
+                        type="text"
+                        value={(formData.phone || "").replace(/^\+234\s*/, "")}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, "");
+                          setFormData({ ...formData, phone: digitsOnly ? `+234${digitsOnly}` : "" });
+                        }}
+                        className="border border-efefef rounded-md p-4 w-full text-c12 pl-16 font-MontserratMedium"
+                      />
                     </div>
                   </div>
 
@@ -222,23 +226,25 @@ export default function ProfileDetailsModal({
                     <Label className="text-c12 font-MontserratMedium">
                       Home Number
                     </Label>
-                    <div className="relative w-full">
-                      <Input
-                        type="text"
-                        value={formData.phone2}
-                        onChange={(e) =>
-                          setFormData({ ...formData, phone2: e.target.value })
-                        }
-                        className="border border-efefef rounded-md p-4 w-full text-c12 pl-8 font-MontserratMedium"
-                      />
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    <div className="relative w-full flex items-center">
+                      <div className="absolute left-3.5 z-30 flex items-center gap-2 pointer-events-none text-c12 font-MontserratMedium text-gray-700">
                         <Image
                           src={HomeIcon}
                           alt="home"
                           width={15.62}
                           height={15.62}
                         />
+                        <span className="select-none">+234</span>
                       </div>
+                      <Input
+                        type="text"
+                        value={(formData.phone2 || "").replace(/^\+234\s*/, "")}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, "");
+                          setFormData({ ...formData, phone2: digitsOnly ? `+234${digitsOnly}` : "" });
+                        }}
+                        className="border border-efefef rounded-md p-4 w-full text-c12 pl-16 font-MontserratMedium"
+                      />
                     </div>
                   </div>
                 </div>

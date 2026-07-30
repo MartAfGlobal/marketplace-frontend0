@@ -94,6 +94,19 @@ export default function AddNewAddreess() {
   const [stateOpen, setStateOpen] = useState(false);
 
   const [isDefault, setIsDefault] = useState<boolean>(false);
+  const [phoneError, setPhoneError] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
+  const PHONE_REGEX = /^[0-9+\-\s().]*$/;
+
+  const validatePhone = (val: string) => {
+    if (!val || val.trim() === "") { setPhoneError(""); return; }
+    if (!PHONE_REGEX.test(val)) {
+      setPhoneError("Phone number must contain only digits, +");
+    } else {
+      setPhoneError("");
+    }
+  };
 
   const countryRef = useClickOutside<HTMLDivElement>(() =>
     setCountryOpen(false),
@@ -258,7 +271,7 @@ export default function AddNewAddreess() {
                 type="text"
                 className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
                 value={formData.first_name}
-                onChange={(e) => handleChange("first_name", e.target.value)}
+                onChange={(e) => handleChange("first_name", e.target.value.replace(/[^a-zA-Z]/g, ""))}
               />
             </div>
             <div className="pb-3">
@@ -269,7 +282,7 @@ export default function AddNewAddreess() {
                 type="text"
                 className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
                 value={formData.last_name}
-                onChange={(e) => handleChange("last_name", e.target.value)}
+                onChange={(e) => handleChange("last_name", e.target.value.replace(/[^a-zA-Z]/g, ""))}
               />
             </div>
 
@@ -277,7 +290,11 @@ export default function AddNewAddreess() {
               <Label className="text-sm font-MontserratSemiBold">
                 Mobile number
               </Label>
-              <div className="flex items-center p-4 mt-2 border border-gray-300 rounded-lg h-10">
+            
+              <div
+                className="flex items-center p-4 mt-2 rounded-lg h-10"
+                style={{ border: `1px solid ${phoneTouched && phoneError ? "#CA0202" : "#d1d5db"}` }}
+              >
                 <Image
                   src={Phone}
                   alt="phone"
@@ -286,10 +303,17 @@ export default function AddNewAddreess() {
                   className="mr-2"
                 />
                 <input
-                  type="number"
+                  type="tel"
                   className="w-full outline-none"
                   value={formData.phone}
-                  onChange={(e) => handleChange("phone", e.target.value)}
+                  onChange={(e) => {
+                    if (phoneTouched) validatePhone(e.target.value);
+                    handleChange("phone", e.target.value);
+                  }}
+                  onBlur={(e) => {
+                    setPhoneTouched(true);
+                    validatePhone(e.target.value);
+                  }}
                 />
               </div>
             </div>

@@ -110,6 +110,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
             <div className="flex flex-col gap-2 pt-2 mb-c32">
               <Label className="text-c12 font-MontserratMedium ">email</Label>
               <Input
+              type="email"
                 icon={<Image src={Email} alt="email" width={20} height={20} />}
                 value={formData.email}
                 onChange={(e) =>

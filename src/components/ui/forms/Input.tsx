@@ -5,7 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface InputProps extends React.ComponentProps<"input"> {
   icon?: React.ReactNode;
-  valid?: boolean; 
+  valid?: boolean;
+  validatePhone?: boolean;
+  validateName?: boolean;
+  validateEmail?: boolean;
 }
 
 const MONTHS = [
@@ -13,11 +16,108 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, icon, valid = true, value, onChange, onClick, readOnly, placeholder, ...props }, ref) => {
+  ({ className, type, icon, valid = true, validatePhone = false, validateName = false, validateEmail = false, value, onChange, onClick, readOnly, placeholder, onBlur, ...props }, ref) => {
+    const [phoneError, setPhoneError] = React.useState<string>("");
+    const [phoneTouched, setPhoneTouched] = React.useState(false);
+
+    const [emailError, setEmailError] = React.useState<string>("");
+    const [emailTouched, setEmailTouched] = React.useState(false);
+
+    const PHONE_REGEX = /^[0-9+\-\s().]*$/;
+
+    const validatePhoneValue = (val: string) => {
+      if (!val || val.trim() === "") {
+        setPhoneError("");
+        return;
+      }
+      if (!PHONE_REGEX.test(val)) {
+        setPhoneError("Phone number must contain only digits, +");
+      } else {
+        setPhoneError("");
+      }
+    };
+
+    const validateEmailValue = (val: string) => {
+      if (!val || val.trim() === "") {
+        setEmailError("");
+        return;
+      }
+      if (!val.includes("@")) {
+        setEmailError(`Please include an '@' in the email address. '${val}' is missing an '@'.`);
+      } else {
+        const [username, domain] = val.split("@");
+        if (!username || username.trim() === "") {
+          setEmailError(`Please enter a username before the '@' in '${val}'.`);
+        } else if (!domain || domain.trim() === "") {
+          setEmailError(`Please enter a domain after the '@' in '${val}'.`);
+        } else if (!domain.includes(".") || domain.split(".").some((part) => !part)) {
+          setEmailError(`Please enter a valid domain (e.g. gmail.com) after '@' in '${val}'.`);
+        } else if (!EMAIL_REGEX.test(val)) {
+          setEmailError("Please enter a valid email address.");
+        } else {
+          setEmailError("");
+        }
+      }
+    };
+
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      if (val !== "" && !PHONE_REGEX.test(val)) {
+        setPhoneError("Phone number must contain only digits, +");
+        setPhoneTouched(true);
+        return;
+      }
+      if (phoneTouched) validatePhoneValue(val);
+      if (onChange) onChange(e);
+    };
+
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      if (emailTouched) validateEmailValue(val);
+      if (onChange) onChange(e);
+    };
+
+    const handleEmailBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      setEmailTouched(true);
+      validateEmailValue(e.target.value as string);
+      if (onBlur) onBlur(e);
+    };
+
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      const sanitized = val.replace(/[^a-zA-Z\s'-]/g, "");
+      if (onChange) {
+        const syntheticEvent = {
+          ...e,
+          target: {
+            ...e.target,
+            name: e.target.name,
+            value: sanitized,
+          },
+        };
+        onChange(syntheticEvent as React.ChangeEvent<HTMLInputElement>);
+      }
+    };
+
+    const handlePhoneBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      setPhoneTouched(true);
+      validatePhoneValue(e.target.value as string);
+      if (onBlur) onBlur(e);
+    };
+
+    const isPhoneInvalid = validatePhone && phoneTouched && !!phoneError;
+    const isEmailInvalid = (validateEmail || type === "email") && emailTouched && !!emailError;
+
     const inputClasses = cn(
       "h-12 px-3.5 w-full rounded-c8 text-gray-700 border outline-none md:text-sm",
-      valid ? "border-efefef focus:border-ff715b focus:ring-1 focus:ring-ff715b" : "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500",
+      isPhoneInvalid || isEmailInvalid
+        ? "border-[#CA0202] focus:border-[#CA0202] focus:ring-1 focus:ring-[#CA0202]"
+        : valid
+        ? "border-efefef focus:border-ff715b focus:ring-1 focus:ring-ff715b"
+        : "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500",
       "focus:ring-offset-0",
       type === "date-custom" ? "cursor-pointer" : "",
       className
@@ -197,24 +297,53 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       );
     }
 
+    const shouldValidateEmail = validateEmail || type === "email";
+
     return (
-      <div className="relative text-gray-700 w-full">
-        <input
-          type={type}
-          className={inputClasses}
-          ref={ref}
-          value={value}
-          onChange={onChange}
-          onClick={onClick}
-          readOnly={readOnly}
-          placeholder={placeholder}
-          {...props}
-        />
-        {icon && (
-          <div className="absolute z-30 right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {icon}
-          </div>
+      <div className="w-full">
+        {validatePhone && isPhoneInvalid && (
+          <p style={{ fontSize: "11px", color: "#CA0202", marginBottom: "4px" }}>
+            {phoneError}
+          </p>
         )}
+        {shouldValidateEmail && isEmailInvalid && (
+          <p style={{ fontSize: "11px", color: "#CA0202", marginBottom: "4px" }}>
+            {emailError}
+          </p>
+        )}
+        <div className="relative text-gray-700 w-full">
+          <input
+            type={shouldValidateEmail ? "text" : type}
+            className={inputClasses}
+            ref={ref}
+            value={value}
+            onChange={
+              validateName
+                ? handleNameChange
+                : validatePhone
+                ? handlePhoneChange
+                : shouldValidateEmail
+                ? handleEmailChange
+                : onChange
+            }
+            onBlur={
+              validatePhone
+                ? handlePhoneBlur
+                : shouldValidateEmail
+                ? handleEmailBlur
+                : onBlur
+            }
+            onClick={onClick}
+            readOnly={readOnly}
+            placeholder={placeholder}
+            {...props}
+          />
+          {icon && (
+            <div className="absolute z-30 right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+              {icon}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
