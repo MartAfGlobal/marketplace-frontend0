@@ -29,6 +29,7 @@ interface FormData {
   company_country: string;
   company_postal_code: string;
   business_industry: string;
+  fullname: string;
   // Shipping address — keys match nested API body
   shipping_zone: string;
   shipping_address_line_1: string;
@@ -48,6 +49,10 @@ interface FormData {
 }
 
 function buildInitialForm(profile: any): FormData {
+  const firstName = profile?.first_name || "";
+  const lastName = profile?.last_name || "";
+  const fullname = profile?.fullname || [firstName, lastName].filter(Boolean).join(" ") || "";
+
   return {
     company_name: profile?.company_name || "",
     business_type: profile?.business_type || "",
@@ -62,7 +67,10 @@ function buildInitialForm(profile: any): FormData {
     company_country: profile?.company_country || profile?.country || "",
     company_postal_code: profile?.company_postal_code || profile?.postal_code || "",
     business_industry: profile?.business_industry || "",
-    shipping_zone: profile?.shipping_zone || "",
+    fullname,
+    shipping_zone: profile?.shipping_zone && typeof profile.shipping_zone === "object"
+      ? String(profile.shipping_zone.id)
+      : profile?.shipping_zone || "",
     shipping_address_line_1: "",
     shipping_address_line_2: "",
     shipping_city: "",
@@ -90,8 +98,7 @@ export default function DocumentsSection() {
   const profile = sellerData?.profile || ({} as any);
   const token = useSelector((state: RootState) => state.token.token);
 
-console.log("checjiiiii", sellerData)
-  
+
   const [activeTab, setActiveTab] = useState<TabName>("Shop information");
   const [businessType, setBusinessType] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -120,7 +127,29 @@ console.log("checjiiiii", sellerData)
   /* ── Sync profile from Redux ──────────────────────────────────────── */
   useEffect(() => {
     if (profile) {
-      setFormData(buildInitialForm(profile));
+      // Merge only the non-address profile fields so we don't overwrite shipping/return
+      // address data that fetchAddressesReq may have already loaded into state.
+      setFormData((prev) => ({
+        ...buildInitialForm(profile),
+        // Preserve shipping & return fields that were populated by the addresses endpoint
+        shipping_zone: prev.shipping_zone || (
+          profile?.shipping_zone && typeof profile.shipping_zone === "object"
+            ? String(profile.shipping_zone.id)
+            : profile?.shipping_zone || ""
+        ),
+        shipping_address_line_1: prev.shipping_address_line_1,
+        shipping_address_line_2: prev.shipping_address_line_2,
+        shipping_city: prev.shipping_city,
+        shipping_state: prev.shipping_state,
+        shipping_country: prev.shipping_country,
+        shipping_postal_code: prev.shipping_postal_code,
+        return_address_line_1: prev.return_address_line_1,
+        return_address_line_2: prev.return_address_line_2,
+        return_city: prev.return_city,
+        return_state: prev.return_state,
+        return_country: prev.return_country,
+        return_postal_code: prev.return_postal_code,
+      }));
       setBusinessType(profile.is_registered_business ? "Registered company" : "Individual");
     }
   }, [profile]);
@@ -192,9 +221,24 @@ console.log("checjiiiii", sellerData)
         const data = res.data || {};
         const sa = data.shipping_address || {};
         const ra = data.return_address || {};
+
+        console.log("📦 [/accounts/manufacturer/addresses/] Full response:", res.data);
+        console.log("📦 shipping_zone:", data.shipping_zone);
+        console.log("📦 shipping_address:", sa);
+        console.log("📦 return_address:", ra);
+        console.log("📦 same_as_business (shipping):", sa.same_as_business_address);
+        console.log("📦 same_as_business (return):", ra.same_as_business_address);
+
+        // shipping_zone comes back as an object { id, name, code } — extract the UUID string
+        const rawZone = data.shipping_zone;
+        const shippingZoneId =
+          rawZone && typeof rawZone === "object"
+            ? String(rawZone.id)
+            : rawZone || "";
+
         setFormData((prev) => ({
           ...prev,
-          shipping_zone: data.shipping_zone || prev.shipping_zone || "",
+          shipping_zone: shippingZoneId || prev.shipping_zone || "",
           shipping_address_line_1: sa.address_line_1 || "",
           shipping_address_line_2: sa.address_line_2 || "",
           shipping_city: sa.city || "",
@@ -247,6 +291,8 @@ console.log("checjiiiii", sellerData)
         fd.append("business_registration_number", formData.business_registration_number);
         fd.append("CAC_No", formData.CAC_No);
       } else {
+        // fullname is required by the personal-documents endpoint
+        fd.append("fullname", formData.fullname);
         formData.ids.forEach((id, idx) => {
           fd.append(`ids[${idx}][means_of_id]`, id.means_of_id);
           fd.append(`ids[${idx}][id_number]`, id.id_number);
@@ -277,7 +323,7 @@ console.log("checjiiiii", sellerData)
     const submitMainProfile = () => {
       updateProfileReq({
         requestConfig: {
-          url: "/accounts/manufacturer/profile-update/",
+          url: "/accounts/manufacturer/basic-info/",
           method: "PATCH",
           token: token ?? undefined,
           isAuth: true,
@@ -286,6 +332,7 @@ console.log("checjiiiii", sellerData)
         },
         successRes: (res: any) => {
           dispatch(sellerActions.updateSellerData({ profile: res.data }));
+        
           setShowWarningModal(false);
           setShowSuccessModal(true);
           setIsEditing(false);

@@ -51,10 +51,27 @@ export default function RegisterIndividual3({
 
   const [isOpen, setIsOpen] = useState(false);
   const [idDropdownOpen, setIdDropdownOpen] = useState(false);
+  const idDropdownRef = useRef<HTMLDivElement | null>(null);
   const certFileRef = useRef<HTMLInputElement | null>(null);
   const token = useSelector((state: RootState) => state.token?.token);
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        idDropdownRef.current &&
+        !idDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIdDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const [formData, setFormData] = useState<
     IndividualRegisterParams & {
@@ -203,7 +220,7 @@ export default function RegisterIndividual3({
               />
             </div>
 
-            <div className="flex-1 flex flex-col gap-2 relative">
+            <div ref={idDropdownRef} className="flex-1 flex flex-col gap-2 relative">
               <Label>ID type</Label>
               <div
                 className="border rounded-c8 px-3 py-2 min-h-[44px] flex flex-wrap gap-2 cursor-pointer relative items-center"
@@ -318,7 +335,9 @@ export default function RegisterIndividual3({
                         }
                       />
                       <div
-                        className="border rounded-c8 px-3 py-2 flex justify-between items-center cursor-pointer w-full overflow-hidden"
+                        className={`h-12 border border-efefef rounded-c8 px-3.5 flex justify-between items-center cursor-pointer w-full overflow-hidden ${
+                          id[key] ? "border-ff715b border-2" : ""
+                        }`}
                         onClick={() =>
                           fileRefs.current[`${key}-${idx}`]?.click()
                         }
@@ -380,7 +399,9 @@ export default function RegisterIndividual3({
                 }}
               />
               <div
-                className="border rounded-c8 px-3 py-2 flex justify-between items-center cursor-pointer w-full overflow-hidden"
+                className={`h-12 border border-efefef rounded-c8 px-3.5 flex justify-between items-center cursor-pointer w-full overflow-hidden ${
+                  formData.tax_identification_file ? "border-ff715b border-2" : ""
+                }`}
                 onClick={() => fileRefs.current["tax_file"]?.click()}
               >
                 <span className="text-sm truncate flex-1 min-w-0 mr-2">

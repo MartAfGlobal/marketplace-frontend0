@@ -14,6 +14,8 @@ import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { RootState } from "@/store";
 
+import { validatePassword } from "@/utils/passwordValidation";
+
 export default function ChangePasswordModal({
   isOpen,
   onClose,
@@ -28,9 +30,6 @@ export default function ChangePasswordModal({
   });
 
   const token = useSelector((state: RootState) => state.token.token);
-  // const tokenSlice = useSelector((state: any) => state.token);
-
-  // const { token } = tokenSlice;
 
   const { loading, sendHttpRequest: changePasswordUserReq } = useHttp();
 
@@ -41,6 +40,7 @@ export default function ChangePasswordModal({
       document.body.style.overflow = "auto"; // enable scroll
     }
   }, [isOpen]);
+
   const [showPassword, setShowPassword] = useState({
     current: false,
     new: false,
@@ -52,21 +52,36 @@ export default function ChangePasswordModal({
     onClose();
   };
 
+  const [submitted, setSubmitted] = useState(false);
+  const passValidation = validatePassword(formData.newPassword);
+
   const handleSave = () => {
+    setSubmitted(true);
+
     if (!token){
-      return
+      return;
     }
-    const payload = {
-      old_password: formData.currentPassword,
-      new_password: formData.newPassword,
-      confirm_password: formData.confirmPassword,
-    };
+
+    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
+    if (!passValidation.isValid) {
+      toast.error(passValidation.errorMessage || "New password does not meet requirements.");
+      return;
+    }
 
     if (formData.newPassword !== formData.confirmPassword) {
       toast.error("New password and confirm password do not match.");
       return;
     }
-    
+
+    const payload = {
+      old_password: formData.currentPassword,
+      new_password: formData.newPassword,
+      confirm_password: formData.confirmPassword,
+    };
 
     changePasswordUserReq({
       requestConfig: {
@@ -109,7 +124,7 @@ export default function ChangePasswordModal({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="fixed bottom-0 left-0 right-0 z-80 px-3.75"
+            className="fixed bottom-0 left-0 right-0 z-80 px-3.75 max-h-[90vh] overflow-y-auto"
           >
             <div className="bg-white rounded-t-c16 py-6 px-c32 shadow-lg">
               {/* Modal Header */}
@@ -125,7 +140,7 @@ export default function ChangePasswordModal({
               {/* Fieldset wraps the form */}
               <fieldset
                 disabled={loading}
-                className="space-y-4 border-0 p-0 m-0"
+                className="space-y-4 border-0 p-0 m-0 text-left"
               >
                 {/* Current Password */}
                 <div>
@@ -173,6 +188,11 @@ export default function ChangePasswordModal({
                       />
                     </button>
                   </div>
+                  {(submitted || formData.newPassword.length > 0) && !passValidation.isValid && (
+                    <p className="text-c12 text-red-500 font-MontserratMedium mt-1">
+                      {passValidation.errorMessage}
+                    </p>
+                  )}
                 </div>
 
                 {/* Confirm Password */}

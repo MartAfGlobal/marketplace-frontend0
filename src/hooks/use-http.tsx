@@ -7,6 +7,7 @@ import axios from "@/lib/axios";
 import { HttpRequestConfigProps } from "@/types/global";
 import { tokenActions } from "@/store/token/token-slice";
 import { openGlobalResultModal } from "@/store/uiSlice";
+import { clearStoredAuthTokens } from "@/utils/authStorage";
 
 export const useHttp = () => {
   const [loading, setLoading] = useState(false);
@@ -21,7 +22,7 @@ export const useHttp = () => {
       setError(null);
 
       if (!requestConfig.token && requestConfig.isAuth) {
-        // Clear any stored token
+        clearStoredAuthTokens();
         dispatch(tokenActions.deleteToken());
 
         if (typeof window !== "undefined") {
@@ -136,7 +137,21 @@ export const useHttp = () => {
 
             const foundMessage = extractFirstString(data);
             if (foundMessage) {
-              errorMessage = foundMessage;
+              if (typeof foundMessage === "string" && (foundMessage.startsWith("['") || foundMessage.startsWith('["') || (foundMessage.startsWith("[") && foundMessage.endsWith("]")))) {
+                try {
+                  const cleaned = foundMessage.replace(/'/g, '"');
+                  const parsed = JSON.parse(cleaned);
+                  if (Array.isArray(parsed)) {
+                    errorMessage = parsed.join(" ");
+                  } else {
+                    errorMessage = foundMessage;
+                  }
+                } catch {
+                  errorMessage = foundMessage.replace(/[\[\]']/g, "").split(",").map((s) => s.trim()).join(" ");
+                }
+              } else {
+                errorMessage = foundMessage;
+              }
             }
           }
         }
@@ -151,8 +166,7 @@ export const useHttp = () => {
         if (isTokenError) {
           errorMessage = "Token expired";
           dispatch(tokenActions.deleteToken());
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("token");
+          clearStoredAuthTokens();
           console.log(
             "Unauthorized access - cleared token",
             errorMessage

@@ -4,7 +4,7 @@
 import { AppDispatch } from "@/store";
 import { tokenActions } from "@/store/token/token-slice";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import Cookies from "js-cookie";
+import { clearStoredAuthTokens } from "@/utils/authStorage";
 
 // ✅ Plain logout function (no hooks here)
 export const logout = (
@@ -15,10 +15,7 @@ export const logout = (
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
   try {
-    // Remove token from localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("accessToken");
-       Cookies.remove("userAuthId");
+    clearStoredAuthTokens();
        
     // Clear redux token
     dispatch(tokenActions.deleteToken());

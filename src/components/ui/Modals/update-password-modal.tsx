@@ -12,6 +12,8 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../loading-spinner";
 
+import { validatePassword } from "@/utils/passwordValidation";
+
 export default function ResetPasswordModal({
   isOpen,
   onClose,
@@ -51,9 +53,19 @@ export default function ResetPasswordModal({
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
+  const [submitted, setSubmitted] = useState(false);
+  const passValidation = validatePassword(passwords.newPassword);
+
   const handleSave = () => {
+    setSubmitted(true);
+
     if (!passwords.currentPassword || !passwords.newPassword || !passwords.confirmPassword) {
       toast.error("Please fill in all fields.");
+      return;
+    }
+
+    if (!passValidation.isValid) {
+      toast.error(passValidation.errorMessage || "New password does not meet security requirements.");
       return;
     }
 
@@ -86,7 +98,7 @@ export default function ResetPasswordModal({
           role="dialog"
         >
           <motion.div
-            className="bg-white p-8 rounded-2xl max-w-101.5 w-full h-fit max-h-109 relative"
+            className="bg-white p-8 rounded-2xl max-w-101.5 w-full h-fit max-h-[90vh] overflow-y-auto relative"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{
               scale: 1,
@@ -112,7 +124,7 @@ export default function ResetPasswordModal({
               Reset Password
             </h2>
 
-            <div className="flex flex-col gap-c24 text-000000/72">
+            <div className="flex flex-col gap-c24 text-000000/72 text-left">
               {(
                 ["currentPassword", "newPassword", "confirmPassword"] as const
               ).map((field) => (
@@ -149,6 +161,11 @@ export default function ResetPasswordModal({
                       />
                     </button>
                   </div>
+                  {field === "newPassword" && (submitted || passwords.newPassword.length > 0) && !passValidation.isValid && (
+                    <p className="text-c12 text-red-500 font-MontserratMedium mt-1">
+                      {passValidation.errorMessage}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

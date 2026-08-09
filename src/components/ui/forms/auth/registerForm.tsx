@@ -21,6 +21,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { tokenActions } from "@/store/token/token-slice";
 
 
+import { validatePassword } from "@/utils/passwordValidation";
+
 export interface RegProps {
   userType: "seller" | "buyer" | "admin";
   token?: string;
@@ -70,34 +72,28 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
     }
   };
 
-    // useEffect(() => {
-    //   if (!error) return;
-    //   console.log("Error message:", error);
-  
-    //   if (error.includes("No EmailVerificationToken matches the given query")) {
-    //     router.push(
-    //       `/auth/seller/sign-up/email-verification-sent?email=${encodeURIComponent(VerifiedEmail)}`,
-    //     );
-    
-    //   }
-    // }, [error, router]);
+  const [submitted, setSubmitted] = useState(false);
+  const passValidation = validatePassword(formData.password);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (formData.password !== formData.confirm_password) {
-      toast.error("Passwords do not match!");
-      return;
-    }
+    setSubmitted(true);
 
     if (!formData.phone) {
       toast.error("Please enter your phone number!");
       return;
     }
-    console.log("fcfc", token)
 
- 
-     
+    if (!passValidation.isValid) {
+      toast.error(passValidation.errorMessage || "Password does not meet security requirements.");
+      return;
+    }
+
+    if (formData.password !== formData.confirm_password) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+    console.log("fcfc", token)
 
     registerUserReq({
       successRes: registerUserRes,
@@ -127,11 +123,6 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
     formData.phone !== "" &&
     formData.password !== "" &&
     formData.confirm_password !== "";
-
-  //   const handleSubmit = async (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     setIsSubmitting(true);
-  //   };
 
   return (
     <>
@@ -182,6 +173,11 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
                   }
                   className=" "
                 />
+                {(submitted || formData.password.length > 0) && !passValidation.isValid && (
+                  <p className="text-c12 text-red-500 font-MontserratMedium mt-1">
+                    {passValidation.errorMessage}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-2 pt-3 mb-c20">
                 <Label className=" ">

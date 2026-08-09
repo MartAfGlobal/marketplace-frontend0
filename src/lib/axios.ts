@@ -1,4 +1,5 @@
 import Axios from "axios";
+import { clearStoredAuthTokens } from "@/utils/authStorage";
 
 const axios = Axios.create({
   baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
@@ -34,11 +35,7 @@ export const refreshAccessToken = async (): Promise<string> => {
       : null;
 
   if (!refreshToken) {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-    }
+    clearStoredAuthTokens();
     throw new Error("No refresh token available in storage.");
   }
 
@@ -75,11 +72,7 @@ export const refreshAccessToken = async (): Promise<string> => {
 
     return newAccessToken;
   } catch (err) {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-    }
+    clearStoredAuthTokens();
     throw err;
   }
 };

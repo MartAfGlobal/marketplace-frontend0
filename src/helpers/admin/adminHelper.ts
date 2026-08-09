@@ -234,6 +234,7 @@ export const AdminDetails = (id?: string) => {
       },
       successRes: (responseData: any) => {
         setsuccess(true);
+        console.log("Product review checklist response:", responseData);
         if (callback) callback(responseData);
       },
       errorRes: (err: any) => {
@@ -399,6 +400,33 @@ export const AdminDetails = (id?: string) => {
           dispatch(setAdminProductDetail(productData));
         }
         if (callback) callback(productData);
+      },
+    });
+  };
+
+  const updateAdminProductReviewChecklist = (
+    productId: string,
+    items: Record<string, boolean>,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/products/${productId}/review-checklist/`,
+        method: "PATCH",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { items },
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
       },
     });
   };
@@ -796,6 +824,7 @@ export const AdminDetails = (id?: string) => {
 
   return {
     fetchAdminSellersProductDetails,
+    updateAdminProductReviewChecklist,
     fetchAdminSellersProductsList,
     fetchAdminSellers,
     fetchAdminSellerById,

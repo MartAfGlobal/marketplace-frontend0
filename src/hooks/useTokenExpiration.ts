@@ -5,9 +5,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { tokenActions } from "@/store/token/token-slice";
 import { usePathname } from "next/navigation";
+import { clearStoredAuthTokens } from "@/utils/authStorage";
 
 function isTokenExpired(token: string) {
-  return false; // TEMPORARILY DISABLED
   if (!token) return true;
   try {
     const base64Url = token!.split(".")[1];
@@ -69,8 +69,7 @@ export const useTokenExpiration = () => {
 
     if (token && isTokenExpired(token!)) {
       dispatch(tokenActions.deleteToken());
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("token");
+      clearStoredAuthTokens();
       console.log("Token expired on load/navigation - clearing local state.");
 
       const isManagerPage = pathname.startsWith("/info/manager");

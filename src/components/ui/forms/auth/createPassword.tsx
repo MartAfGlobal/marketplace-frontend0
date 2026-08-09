@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
+import { validatePassword } from "@/utils/passwordValidation";
 
 export default function CreatePasswordForm() {
   const router = useRouter();
@@ -22,17 +23,24 @@ export default function CreatePasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const { loading, sendHttpRequest: submitReset } = useHttp();
 
-  const isFormValid =
-    password.length > 0 && confirmPassword.length > 0;
+  const passValidation = validatePassword(password);
+  const isFormValid = password.length > 0 && confirmPassword.length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitted(true);
 
     if (!password || !confirmPassword) {
       toast.error("Please fill in all fields.");
+      return;
+    }
+
+    if (!passValidation.isValid) {
+      toast.error(passValidation.errorMessage || "Password does not meet requirements.");
       return;
     }
 
@@ -94,6 +102,11 @@ export default function CreatePasswordForm() {
                 </button>
               }
             />
+            {(submitted || password.length > 0) && !passValidation.isValid && (
+              <p className="text-c12 text-red-500 font-MontserratMedium mt-1">
+                {passValidation.errorMessage}
+              </p>
+            )}
           </div>
 
           {/* Confirm Password */}

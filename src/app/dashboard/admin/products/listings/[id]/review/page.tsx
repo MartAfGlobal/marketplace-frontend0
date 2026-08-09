@@ -32,7 +32,11 @@ export default function ProductReviewPage({
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [variantIndex, setVariantIndex] = useState(0);
   const variantsScrollRef = useRef<HTMLDivElement>(null);
-  const { fetchAdminSellersProductDetails, loading } = AdminDetails();
+  const {
+    fetchAdminSellersProductDetails,
+    updateAdminProductReviewChecklist,
+    loading,
+  } = AdminDetails();
 
   const productId = unwrappedParams.id;
   const token = useSelector((state: RootState) => state.token?.token);
@@ -178,14 +182,50 @@ export default function ProductReviewPage({
     (acc, section) => acc + section.items.length,
     0,
   );
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(
+    () =>
+      Object.fromEntries(
+        checklistSections.flatMap((section, sectionIndex) =>
+          section.items.map((_, itemIndex) => [
+            `${sectionIndex + 1}-${itemIndex + 1}`,
+            false,
+          ]),
+        ),
+      ),
+  );
 
-  const handleCheck = (item: string) => {
-    setCheckedItems((prev) => ({ ...prev, [item]: !prev[item] }));
+  const handleCheck = (itemKey: string) => {
+    const previousItems = checkedItems;
+    const nextItems = {
+      ...previousItems,
+      [itemKey]: !previousItems[itemKey],
+    };
+
+    setCheckedItems(nextItems);
+    updateAdminProductReviewChecklist(
+      productId,
+      nextItems,
+      undefined,
+      () => setCheckedItems(previousItems),
+    );
   };
 
   const completedCount = Object.values(checkedItems).filter(Boolean).length;
   const percentage = Math.round((completedCount / totalItems) * 100) || 0;
+  const allItemsChecked = completedCount === totalItems;
+
+  const handleApprove = (notes: string) => {
+    if (!allItemsChecked) return;
+
+    updateAdminProductReviewChecklist(
+      productId,
+      checkedItems,
+      () => {
+        setIsApproveModalOpen(false);
+        router.push("/dashboard/admin/products?type=listings");
+      },
+    );
+  };
 
   // SVG parameters for progress circle
   const radius = 30;
@@ -614,19 +654,22 @@ export default function ProductReviewPage({
                     {section.title}
                   </h3>
                   <div className="space-y-3">
-                    {section.items.map((item, iIdx) => (
+                    {section.items.map((item, iIdx) => {
+                      const itemKey = `${sIdx + 1}-${iIdx + 1}`;
+
+                      return (
                       <label
-                        key={iIdx}
+                            key={itemKey}
                         className="flex items-start gap-3 cursor-pointer group"
                       >
                         <div
                           className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-                            checkedItems[item]
+                            checkedItems[itemKey]
                               ? "bg-[#ff715b] border-[#ff715b]"
                               : "border-gray-300 group-hover:border-[#ff715b]"
                           }`}
                         >
-                          {checkedItems[item] && (
+                          {checkedItems[itemKey] && (
                             <div className="w-2 h-2 bg-white rounded-sm" />
                           )}
                         </div>
@@ -637,11 +680,12 @@ export default function ProductReviewPage({
                         <input
                           type="checkbox"
                           className="hidden"
-                          checked={!!checkedItems[item]}
-                          onChange={() => handleCheck(item)}
+                          checked={!!checkedItems[itemKey]}
+                          onChange={() => handleCheck(itemKey)}
                         />
                       </label>
-                    ))}
+                  );
+                })}
                   </div>
                 </div>
               ))}
@@ -654,13 +698,14 @@ export default function ProductReviewPage({
               </Button>
               <Button
                 onClick={() => setIsApproveModalOpen(true)}
-                className="bg-[#2ea37d] text-white hover:bg-[#258264] w-32 h-12"
+                disabled={!allItemsChecked || loading}
+                className="bg-ff715b text-white  w-32"
               >
                 Approve
               </Button>
               <Button
                 onClick={() => setIsRejectModalOpen(true)}
-                className="bg-[#d32f2f] text-white hover:bg-[#b71c1c] w-32 h-12"
+                className=" w-32 "
               >
                 Reject
               </Button>
@@ -671,11 +716,8 @@ export default function ProductReviewPage({
         <ApproveProductModal
           isOpen={isApproveModalOpen}
           onClose={() => setIsApproveModalOpen(false)}
-          onConfirm={(notes) => {
-            console.log("Approved with notes:", notes);
-            setIsApproveModalOpen(false);
-            router.push("/dashboard/admin/products?type=listings");
-          }}
+          onConfirm={handleApprove}
+          loading={loading}
         />
         <RejectProductModal
           isOpen={isRejectModalOpen}

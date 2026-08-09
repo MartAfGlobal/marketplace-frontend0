@@ -12,11 +12,13 @@ import { toast } from "sonner";
 import { tokenActions } from "@/store/token/token-slice";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { validatePassword } from "@/utils/passwordValidation";
 
 export default function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -63,8 +65,11 @@ export default function ResetPasswordForm() {
   const emailParam = searchParams.get("email") || "";
   const tokenParam = (Array.isArray(token) ? token[0] : token) || searchParams.get("token") || searchParams.get("resetToken") || "";
 
+  const passValidation = validatePassword(formData.newPassword);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitted(true);
 
     const { newPassword, comfirmPassword } = formData;
 
@@ -72,6 +77,12 @@ export default function ResetPasswordForm() {
       toast.error("Please fill in all fields!");
       return;
     }
+
+    if (!passValidation.isValid) {
+      toast.error(passValidation.errorMessage || "Password does not meet security requirements.");
+      return;
+    }
+
     if (newPassword !== comfirmPassword) {
       toast.error("Passwords do not match!");
       return;
@@ -113,6 +124,11 @@ export default function ResetPasswordForm() {
               </button>
             }
           />
+          {(submitted || formData.newPassword.length > 0) && !passValidation.isValid && (
+            <p className="text-c12 text-red-500 font-MontserratMedium mt-1">
+              {passValidation.errorMessage}
+            </p>
+          )}
         </div>
 
         {/* Confirm Password */}
@@ -131,7 +147,7 @@ export default function ResetPasswordForm() {
           />
         </div>
 
-        <Button type="submit" disabled={loading || !isFormValid} className="w-full h-c48 mt-6">
+        <Button type="submit" disabled={loading || !isFormValid || formData.newPassword !== formData.comfirmPassword} className="w-full h-c48 mt-6">
           {loading ? <LoadingSpinner /> : "Reset password"}
         </Button>
       </form>

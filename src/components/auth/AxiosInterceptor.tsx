@@ -6,6 +6,7 @@ import { useAppDispatch } from "@/store/Provider";
 import { tokenActions } from "@/store/token/token-slice";
 import axios from "@/lib/axios";
 import { toast } from "sonner";
+import { clearStoredAuthTokens } from "@/utils/authStorage";
 
 export default function AxiosInterceptor({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -44,15 +45,15 @@ export default function AxiosInterceptor({ children }: { children: React.ReactNo
             }
           }
 
-          const isTokenError = false; /*
-            error.response?.status === 401 || 
-            (error.response?.status === 403 && errorMessage.toLowerCase().includes("token") || errorMessage.toLowerCase().includes("credentials were not provided")); */
+          const isTokenError =
+            error.response?.status === 401 ||
+            errorMessage.toLowerCase().includes("token") ||
+            errorMessage.toLowerCase().includes("credentials were not provided");
 
           if (isTokenError) {
             // Token expired or unauthorized
             dispatch(tokenActions.deleteToken());
-            localStorage.removeItem("token");
-            localStorage.removeItem("accessToken");
+            clearStoredAuthTokens();
 
             const currentPath = window.location.pathname;
             const isManagerPage = currentPath.startsWith("/info/manager");

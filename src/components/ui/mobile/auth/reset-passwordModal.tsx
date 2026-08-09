@@ -9,6 +9,8 @@ import { MobileLoginProps } from "@/types/global";
 
 
 
+import { validatePassword } from "@/utils/passwordValidation";
+
 export default function ResetPasswordModal({ onClose, setStep, email }: MobileLoginProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,11 +29,20 @@ export default function ResetPasswordModal({ onClose, setStep, email }: MobileLo
     }
   }, [token, setStep]);
 
+  const [submitted, setSubmitted] = useState(false);
+  const passValidation = validatePassword(newPassword);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitted(true);
 
     if (!newPassword || !confirmPassword) {
       toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (!passValidation.isValid) {
+      toast.error(passValidation.errorMessage || "New password does not meet requirements.");
       return;
     }
 
@@ -70,24 +81,33 @@ export default function ResetPasswordModal({ onClose, setStep, email }: MobileLo
         Enter a new password for your account.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="password"
-          placeholder="New password"
-          className="w-full border border-black/10 rounded-lg px-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-        />
+      <form onSubmit={handleSubmit} className="space-y-4 text-left">
+        <div>
+          <input
+            type="password"
+            placeholder="New password"
+            className="w-full border border-black/10 rounded-lg px-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+          {(submitted || newPassword.length > 0) && !passValidation.isValid && (
+            <p className="text-c12 text-red-500 font-MontserratMedium mt-1">
+              {passValidation.errorMessage}
+            </p>
+          )}
+        </div>
 
-        <input
-          type="password"
-          placeholder="Confirm new password"
-          className="w-full border border-black/10 rounded-lg px-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
+        <div>
+          <input
+            type="password"
+            placeholder="Confirm new password"
+            className="w-full border border-black/10 rounded-lg px-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
 
         <button
           type="submit"
