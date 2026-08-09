@@ -48,11 +48,15 @@ export const useHttp = () => {
       setLoading(true);
 
       try {
-        const isFormData = requestConfig.body && (
-          requestConfig.body instanceof FormData ||
-          requestConfig.body.constructor?.name === "FormData" ||
-          (typeof requestConfig.body === "object" && typeof requestConfig.body.append === "function")
-        );
+        const isFormData =
+          requestConfig.body &&
+          ((typeof FormData !== "undefined" &&
+            requestConfig.body instanceof FormData) ||
+            requestConfig.body?.constructor?.name === "FormData" ||
+            (typeof requestConfig.body === "object" &&
+              typeof requestConfig.body.append === "function") ||
+            (typeof Symbol !== "undefined" &&
+              requestConfig.body?.[Symbol.toStringTag] === "FormData"));
 
         console.log("isFormData:", requestConfig.body instanceof FormData);
         console.log("body:", requestConfig.body);

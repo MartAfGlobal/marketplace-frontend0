@@ -166,18 +166,18 @@ export default function RegisterIndividual3({
       "tax_identification_number",
       formData.tax_identification_number,
     );
-    if (formData.tax_identification_file)
+    if (formData.tax_identification_file && ((formData.tax_identification_file as any) instanceof File || (formData.tax_identification_file as any) instanceof Blob))
       payload.append(
         "tax_identification_file",
         formData.tax_identification_file,
       );
 
     formData.ids.forEach((id, idx) => {
-      payload.append(`ids[${idx}][means_of_id]`, id.means_of_id);
-      payload.append(`ids[${idx}][id_number]`, id.id_number);
-      if (id.id_front_image)
+      if (id.means_of_id) payload.append(`ids[${idx}][means_of_id]`, id.means_of_id);
+      if (id.id_number) payload.append(`ids[${idx}][id_number]`, id.id_number);
+      if (id.id_front_image && ((id.id_front_image as any) instanceof File || (id.id_front_image as any) instanceof Blob))
         payload.append(`ids[${idx}][id_front_image]`, id.id_front_image);
-      if (id.id_back_image)
+      if (id.id_back_image && ((id.id_back_image as any) instanceof File || (id.id_back_image as any) instanceof Blob))
         payload.append(`ids[${idx}][id_back_image]`, id.id_back_image);
     });
 

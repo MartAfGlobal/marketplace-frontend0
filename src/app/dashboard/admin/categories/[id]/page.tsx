@@ -13,6 +13,7 @@ import Image from "next/image";
 import ProductImage from "@/assets/admin/productMainImage.svg";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { toast } from "sonner";
+import { sub } from "framer-motion/client";
 
 // Mock subcategories fallback for table if none present
 const mockSubcategories = Array.from({ length: 5 }, (_, i) => ({
@@ -309,7 +310,11 @@ export default function AdminCategoryDetailsPage() {
                     View all products in the category
                   </p>
                 </div>
-                <Button variant="secondary" className="max-w-30">
+                <Button
+                  variant="secondary"
+                  className="max-w-30"
+                  onClick={() => router.push(`/dashboard/admin/categories/${category?.slug || categoryId}/products`)}
+                >
                   View all
                 </Button>
               </div>

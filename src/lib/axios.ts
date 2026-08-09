@@ -9,6 +9,15 @@ const axios = Axios.create({
   },
 });
 
+// Remove default Content-Type for POST/PUT/PATCH to prevent Axios from defaulting to application/x-www-form-urlencoded
+delete (Axios.defaults.headers as any).post?.["Content-Type"];
+delete (Axios.defaults.headers as any).put?.["Content-Type"];
+delete (Axios.defaults.headers as any).patch?.["Content-Type"];
+
+delete (axios.defaults.headers as any).post?.["Content-Type"];
+delete (axios.defaults.headers as any).put?.["Content-Type"];
+delete (axios.defaults.headers as any).patch?.["Content-Type"];
+
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
@@ -92,21 +101,31 @@ axios.interceptors.request.use((config) => {
   }
 
   const isForm =
-    config.data instanceof FormData ||
+    (typeof FormData !== "undefined" && config.data instanceof FormData) ||
+    config.data?.constructor?.name === "FormData" ||
     (config.data &&
       typeof config.data === "object" &&
-      typeof config.data.append === "function");
+      typeof config.data.append === "function") ||
+    (typeof Symbol !== "undefined" &&
+      config.data &&
+      config.data[Symbol.toStringTag] === "FormData");
 
   if (isForm) {
     config.transformRequest = [(data: any) => data];
 
     if (config.headers) {
-      if (typeof config.headers.delete === "function") {
-        config.headers.delete("Content-Type");
-        config.headers.delete("content-type");
+      if (typeof (config.headers as any).set === "function") {
+        (config.headers as any).set("Content-Type", undefined);
+        (config.headers as any).set("content-type", undefined);
+      }
+      if (typeof (config.headers as any).delete === "function") {
+        (config.headers as any).delete("Content-Type");
+        (config.headers as any).delete("content-type");
+        (config.headers as any).delete("Content-type");
       }
       delete (config.headers as Record<string, any>)["Content-Type"];
       delete (config.headers as Record<string, any>)["content-type"];
+      delete (config.headers as Record<string, any>)["Content-type"];
     }
   }
 

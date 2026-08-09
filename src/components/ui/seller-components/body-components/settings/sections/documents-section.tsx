@@ -97,6 +97,7 @@ export default function DocumentsSection() {
   const sellerData = useSelector((state: RootState) => state.seller.data);
   const profile = sellerData?.profile || ({} as any);
   const token = useSelector((state: RootState) => state.token.token);
+  console.log("Seller profile token:", token);
 
 
   const [activeTab, setActiveTab] = useState<TabName>("Shop information");
@@ -294,10 +295,14 @@ export default function DocumentsSection() {
         // fullname is required by the personal-documents endpoint
         fd.append("fullname", formData.fullname);
         formData.ids.forEach((id, idx) => {
-          fd.append(`ids[${idx}][means_of_id]`, id.means_of_id);
-          fd.append(`ids[${idx}][id_number]`, id.id_number);
-          if (id.id_front_image) fd.append(`ids[${idx}][id_front_image]`, id.id_front_image);
-          if (id.id_back_image) fd.append(`ids[${idx}][id_back_image]`, id.id_back_image);
+          if (id.means_of_id) fd.append(`ids[${idx}][means_of_id]`, id.means_of_id);
+          if (id.id_number) fd.append(`ids[${idx}][id_number]`, id.id_number);
+          if (id.id_front_image && ((id.id_front_image as any) instanceof File || (id.id_front_image as any) instanceof Blob)) {
+            fd.append(`ids[${idx}][id_front_image]`, id.id_front_image);
+          }
+          if (id.id_back_image && ((id.id_back_image as any) instanceof File || (id.id_back_image as any) instanceof Blob)) {
+            fd.append(`ids[${idx}][id_back_image]`, id.id_back_image);
+          }
         });
       }
       fd.append("tax_identification_number", formData.tax_identification_number);

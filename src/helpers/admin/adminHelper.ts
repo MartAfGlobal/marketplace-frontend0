@@ -380,6 +380,33 @@ export const AdminDetails = (id?: string) => {
       },
     });
   };
+
+  const fetchAdminProductsByCategory = (
+    categoryId: string,
+    page: number = 1,
+    callback?: (data: { results: any[]; count: number }) => void
+  ) => {
+    if (!token || !categoryId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `products/admin/products?category=${categoryId}&page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const productsFetched = responseData?.data?.results ?? [];
+        const totalCount = responseData?.data?.count ?? 0;
+        console.log("Category products fetched:", productsFetched, "Total:", totalCount);
+        dispatch(
+          setAdminProductsData({ results: productsFetched, count: totalCount })
+        );
+        if (callback) callback({ results: productsFetched, count: totalCount });
+      },
+    });
+  };
   const fetchAdminSellersProductDetails = (
     productId: string,
     callback?: (data: any) => void,
@@ -508,14 +535,14 @@ export const AdminDetails = (id?: string) => {
   };
 
   const fetchAdminCategoryById = (
-    categoryId: string,
+    categorySlug: string,
     callback?: (data: any) => void
   ) => {
-    if (!token || !categoryId) return;
+    if (!token || !categorySlug) return;
 
     sendHttpRequest({
       requestConfig: {
-        url: `/products/admin/categories/${categoryId}/`,
+        url: `/products/admin/categories/${categorySlug}/`,
         method: "GET",
         token,
         isAuth: true,
@@ -826,6 +853,7 @@ export const AdminDetails = (id?: string) => {
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
     fetchAdminSellersProductsList,
+    fetchAdminProductsByCategory,
     fetchAdminSellers,
     fetchAdminSellerById,
     toggleAdminSellerStatus,
