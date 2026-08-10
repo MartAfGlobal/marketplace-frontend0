@@ -268,6 +268,7 @@ export default function BusinessInfoTab({
                           <Label className="">Front view</Label>
                           <FileInput
                             placeholder="Front view"
+                            accept="image/png,image/jpeg,image/jpg,image/webp"
                             fileName={id.id_front_image?.name || (id.id_front_image_url ? `Front_ID_${index + 1}.jpg` : "")}
                             fileUrl={id.id_front_image_url}
                             onFileSelect={(file) => updateIdField(index, "id_front_image", file)}
@@ -278,6 +279,7 @@ export default function BusinessInfoTab({
                           <Label className="">Back view</Label>
                           <FileInput
                             placeholder="Back view"
+                            accept="image/png,image/jpeg,image/jpg,image/webp"
                             fileName={id.id_back_image?.name || (id.id_back_image_url ? `Back_ID_${index + 1}.jpg` : "")}
                             fileUrl={id.id_back_image_url}
                             onFileSelect={(file) => updateIdField(index, "id_back_image", file)}

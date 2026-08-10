@@ -279,11 +279,29 @@ export default function DocumentsSection() {
     }
   };
 
+  const refreshProfile = () => {
+    fetchUserDetailsReq({
+      requestConfig: {
+        url: "/accounts/manufacturer/user-details/",
+        method: "GET",
+        token: token ?? undefined,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (res: any) => {
+        if (res?.data) {
+          dispatch(sellerActions.updateSellerData(res.data));
+        }
+      },
+    });
+  };
+
   /* ── Submit ───────────────────────────────────────────────────────── */
   const handleUpdateProfile = () => {
     const fd = new FormData();
 
     if (activeTab === "Shop information") {
+      fd.append("fullname", formData.fullname);
       fd.append("company_name", formData.company_name);
       fd.append("is_registered_business", String(businessType === "Registered company"));
       fd.append("business_industry", formData.business_industry);
@@ -336,12 +354,64 @@ export default function DocumentsSection() {
           body: fd,
         },
         successRes: (res: any) => {
-          dispatch(sellerActions.updateSellerData({ profile: res.data }));
-        
-          setShowWarningModal(false);
-          setShowSuccessModal(true);
-          setIsEditing(false);
-          setNewFiles({});
+          const updatedProfile = res?.data?.profile || res?.data;
+          if (updatedProfile) {
+            dispatch(sellerActions.updateSellerData({ profile: updatedProfile }));
+          }
+
+          // If individual seller and fullname is provided, send to /personal-documents/
+          // which splits fullname into first_name and last_name in backend DB
+          if (businessType !== "Registered company" && formData.fullname) {
+            const personalFd = new FormData();
+            personalFd.append("fullname", formData.fullname);
+
+            const userAddress = profile?.address || profile?.company_address || formData.company_address || "";
+            if (userAddress) personalFd.append("address", userAddress);
+
+            const userPhone = profile?.phone || "";
+            if (userPhone) personalFd.append("phone", userPhone);
+
+            if (profile?.dob) personalFd.append("dob", profile.dob);
+            if (profile?.nationality) personalFd.append("nationality", profile.nationality);
+            if (profile?.residence_country) personalFd.append("residence_country", profile.residence_country);
+
+            updateDocReq({
+              requestConfig: {
+                url: "/accounts/manufacturer/personal-documents/",
+                method: "PATCH",
+                token: token ?? undefined,
+                isAuth: true,
+                userType: "seller",
+                body: personalFd,
+              },
+              successRes: (personalRes: any) => {
+                console.log("📦 [/accounts/manufacturer/personal-documents/] Response:", personalRes);
+                const pProf = personalRes?.data?.profile || personalRes?.data;
+                if (pProf) {
+                  dispatch(sellerActions.updateSellerData({ profile: pProf }));
+                }
+                refreshProfile();
+                setShowWarningModal(false);
+                setShowSuccessModal(true);
+                setIsEditing(false);
+                setNewFiles({});
+              },
+              errorRes: (err: any) => {
+                console.error("❌ [/accounts/manufacturer/personal-documents/] Error:", err);
+                refreshProfile();
+                setShowWarningModal(false);
+                setShowSuccessModal(true);
+                setIsEditing(false);
+                setNewFiles({});
+              },
+            });
+          } else {
+            refreshProfile();
+            setShowWarningModal(false);
+            setShowSuccessModal(true);
+            setIsEditing(false);
+            setNewFiles({});
+          }
         },
       });
     };
@@ -389,6 +459,7 @@ export default function DocumentsSection() {
           body: addressBody,
         },
         successRes: () => {
+          refreshProfile();
           setShowWarningModal(false);
           setShowSuccessModal(true);
           setIsEditing(false);
@@ -412,7 +483,11 @@ export default function DocumentsSection() {
           body: fd,
         },
         successRes: (res: any) => {
-          dispatch(sellerActions.updateSellerData({ profile: res.data }));
+          const pProf = res?.data?.profile || res?.data;
+          if (pProf) {
+            dispatch(sellerActions.updateSellerData({ profile: pProf }));
+          }
+          refreshProfile();
           setShowWarningModal(false);
           setShowSuccessModal(true);
           setIsEditing(false);
@@ -525,7 +600,8 @@ export default function DocumentsSection() {
         <ShopInfoTab
           isEditing={isEditing}
           businessType={businessType}
-          formData={{ company_name: formData.company_name, business_industry: formData.business_industry }}
+          fullName={profile?.fullname || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || ""}
+          formData={{ company_name: formData.company_name, business_industry: formData.business_industry, fullname: formData.fullname }}
           industries={industries}
           fetchingIndustries={fetchingIndustries}
           onChange={setField}

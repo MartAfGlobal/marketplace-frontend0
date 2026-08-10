@@ -14,6 +14,8 @@ export default function ProfileSection() {
   const sellerData = useSelector((state: RootState) => state.seller.data);
   const profile = sellerData?.profile;
 
+  console.log("Profile data:", profile);
+
   const [isEditing, setIsEditing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({

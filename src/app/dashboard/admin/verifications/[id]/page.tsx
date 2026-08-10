@@ -94,6 +94,68 @@ export default function VerificationDetailsPage() {
     );
   };
 
+  const getMissingFields = (sellerData: any) => {
+    if (!sellerData) return [];
+
+    const isRegistered = Boolean(sellerData.is_registered_business);
+    const missing: string[] = [];
+
+    const check = (label: string, value: any) => {
+      if (
+        value === null ||
+        value === undefined ||
+        (typeof value === "string" && value.trim() === "")
+      ) {
+        missing.push(label);
+      }
+    };
+
+    // Shop Information fields
+    check("Store name", sellerData.company_name);
+    check("Business type", sellerData.business_type);
+    check("Business industry", sellerData.business_industry);
+    check("Country", sellerData.company_country || sellerData.country);
+    check("State", sellerData.company_state || sellerData.state);
+    check("City", sellerData.company_city || sellerData.city);
+    check("Postal code", sellerData.company_postal_code || sellerData.postal_code);
+
+    // Business Information fields (common to both registered and individual)
+    check("Tax identification number (TIN)", sellerData.tax_identification_number);
+    check("TIN document", sellerData.tax_identification_file);
+    check("VAT number", sellerData.vat_number);
+
+    // Registered Business specific documents/numbers
+    if (isRegistered) {
+      check("Business registration number", sellerData.business_registration_number);
+      check("CAC registration number", sellerData.CAC_No);
+      check("CAC document (CAC02 & CAC07)", sellerData.CAC_No_file);
+      check("Certificate of registration", sellerData.certificate_of_registration);
+    }
+
+    // Shipping Address fields
+    check("Shipping address line 1", sellerData.shipping_address?.address_line_1 || sellerData.shipping_address_line1);
+    check("Shipping city", sellerData.shipping_address?.city || sellerData.shipping_city);
+    check("Shipping state", sellerData.shipping_address?.state || sellerData.shipping_state);
+    check("Shipping country", sellerData.shipping_address?.country || sellerData.shipping_country);
+    check("Shipping postal code", sellerData.shipping_address?.postal_code || sellerData.shipping_postal_code);
+
+    // Return Address fields
+    check("Return address line 1", sellerData.return_address?.address_line_1 || sellerData.return_address_line1);
+    check("Return city", sellerData.return_address?.city || sellerData.return_city);
+    check("Return state", sellerData.return_address?.state || sellerData.return_state);
+    check("Return country", sellerData.return_address?.country || sellerData.return_country);
+    check("Return postal code", sellerData.return_address?.postal_code || sellerData.return_postal_code);
+
+    return missing;
+  };
+
+  const missingFields = getMissingFields(seller);
+  const isApproveDisabled =
+    !seller ||
+    seller?.kyc_status === "VERIFIED" ||
+    seller?.kyc_status === "REJECTED" ||
+    missingFields.length > 0;
+
   return (
     <div className="flex flex-col gap-8 w-full p-6 max-w-5xl">
       {/* Breadcrumbs */}
@@ -111,6 +173,20 @@ export default function VerificationDetailsPage() {
       <h1 className="text-c24 font-MontserratMedium text-[#000000]">{storeName}</h1>
 
       <div className="bg-white rounded-c16 p-6 flex flex-col min-h-[621px]">
+        {/* Missing Fields Banner */}
+        {seller && missingFields.length > 0 && (
+          <div className="mb-6 p-4 rounded-c8 border border-ff715b  text-xs font-MontserratMedium flex flex-col gap-1">
+            <div className="font-MontserratSemiBold text-1a1a1a flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-1a1a1a inline-block" />
+              Approval Disabled — Incomplete Verification Details ({seller?.is_registered_business ? "Registered Business" : "Individual Seller"})
+            </div>
+            <p className="text-ff715b/90">
+              The Approve button is disabled because the following required field(s) are empty: {" "}
+              <span className="font-MontserratMedium text-000000/64">{missingFields.join(", ")}</span>.
+            </p>
+          </div>
+        )}
+
         {/* Tabs Header */}
         {!showAllInfo && (
           <div className="flex flex-col gap-6 mb-8">
@@ -201,10 +277,21 @@ export default function VerificationDetailsPage() {
               </Button>
               <Button 
                 onClick={() => setShowApproveWarning(true)} 
-                disabled={seller?.kyc_status === "VERIFIED" || seller?.kyc_status === "REJECTED"}
+                disabled={isApproveDisabled}
+                title={
+                  missingFields.length > 0
+                    ? `Cannot approve: missing ${missingFields.join(", ")}`
+                    : seller?.kyc_status === "VERIFIED"
+                    ? "Already Approved"
+                    : seller?.kyc_status === "REJECTED"
+                    ? "Already Rejected"
+                    : undefined
+                }
                 className={`px-8 max-w-[157px] h-11 text-xs transition-all ${
                   seller?.kyc_status === "VERIFIED" 
                     ? "bg-[#2D7565]/12 border border-[#2D7565] text-[#2D7565] cursor-not-allowed opacity-60" 
+                    : isApproveDisabled
+                    ? "bg-gray-100 border border-gray-300 text-gray-400 cursor-not-allowed opacity-60 hover:bg-gray-100"
                     : "bg-transparent border border-[#2D7565] text-[#2D7565] hover:bg-green-50"
                 }`}
               >
@@ -251,20 +338,31 @@ export default function VerificationDetailsPage() {
                   </Button>
                   <Button 
                     onClick={() => setShowApproveWarning(true)} 
-                    disabled={seller?.kyc_status === "VERIFIED" || seller?.kyc_status === "REJECTED"}
+                    disabled={isApproveDisabled}
+                    title={
+                      missingFields.length > 0
+                        ? `Cannot approve: missing ${missingFields.join(", ")}`
+                        : seller?.kyc_status === "VERIFIED"
+                        ? "Already Approved"
+                        : seller?.kyc_status === "REJECTED"
+                        ? "Already Rejected"
+                        : undefined
+                    }
                     className={`px-8 max-w-[157px] h-11 text-xs transition-all ${
                       seller?.kyc_status === "VERIFIED" 
                         ? "bg-[#2D7565]/12 border border-[#2D7565] text-[#2D7565] cursor-not-allowed opacity-60" 
-                    : "bg-transparent border border-[#2D7565] text-[#2D7565] hover:bg-green-50"
-                }`}
-              >
-                {seller?.kyc_status === "VERIFIED" ? "Approved" : "Approve"}
-              </Button>
-            </div>
+                        : isApproveDisabled
+                        ? "bg-gray-100 border border-gray-300 text-gray-400 cursor-not-allowed opacity-60 hover:bg-gray-100"
+                        : "bg-transparent border border-[#2D7565] text-[#2D7565] hover:bg-green-50"
+                    }`}
+                  >
+                    {seller?.kyc_status === "VERIFIED" ? "Approved" : "Approve"}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
-    </div>
+        </div>
       </div>
 
       <RejectVerificationModal

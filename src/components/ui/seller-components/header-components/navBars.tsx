@@ -10,7 +10,7 @@ import ProductIcon from "@/assets/Seller/product.png";
 import OrderIcon from "@/assets/Seller/orders.png";
 import FinanceIcon from "@/assets/Seller/finance.png";
 import CustomerIcon from "@/assets/Seller/customers.png";
-import { useSelector } from "react-redux";
+
 
 const navItems = [
   { id: "overview", label: "Overview", icon: OverviewIcon, href: "/dashboard/seller/overview" },
@@ -22,21 +22,17 @@ const navItems = [
 
 export default function NavigationBar() {
   const pathname = usePathname();
-  const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
 
   return (
     <nav className="text-white font-MontserratSemiBold text-sm flex gap-6 relative">
-      {navItems.map((item, index) => {
+      {navItems.map((item) => {
         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-        const isDisabled = isIncomplete && index !== 0; // Only first item active if incomplete
 
         return (
           <Link
             key={item.id}
-            href={isDisabled ? "#" : item.href} // disable link
-            className={`relative flex flex-col items-center justify-center h-18
-              ${isDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : "cursor-pointer"}
-            `}
+            href={item.href}
+            className="relative flex flex-col items-center justify-center h-18 cursor-pointer"
           >
             <p className="flex items-center gap-2">
               <Image
@@ -44,12 +40,12 @@ export default function NavigationBar() {
                 alt={item.label}
                 width={20}
                 height={20}
-                className={`object-contain ${isDisabled ? "grayscale" : ""}`}
+                className="object-contain"
               />
               <span>{item.label}</span>
             </p>
 
-            {isActive && !isDisabled && (
+            {isActive && (
               <motion.div
                 layoutId="underline"
                 className="absolute bottom-0 left-0 right-0 h-1 bg-white rounded"

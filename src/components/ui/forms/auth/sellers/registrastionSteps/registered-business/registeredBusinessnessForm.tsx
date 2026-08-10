@@ -54,9 +54,9 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
   ) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const allowedExtensions = /(\.pdf|\.png|\.jpg|\.jpeg)$/i;
+      const allowedExtensions = /(\.pdf|\.png|\.jpg|\.jpeg|\.webp)$/i;
       if (!allowedExtensions.exec(file.name)) {
-        toast.error("Only PDF, PNG, JPG, or JPEG files are allowed.");
+        toast.error("Only PDF, PNG, JPG, JPEG, or WEBP files are allowed.");
         e.target.value = "";
         return;
       }
@@ -169,7 +169,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
               <input
                 ref={cacFileRef}
                 type="file"
-                accept=".pdf,.png,.jpg,.jpeg"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
                 className="hidden"
                 onChange={(e) => handleFileChange(e, "CAC_No_file")}
               />
@@ -219,7 +219,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
               <input
                 ref={certFileRef}
                 type="file"
-                accept=".pdf,.png,.jpg,.jpeg"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
                 className="hidden"
                 onChange={(e) =>
                   handleFileChange(e, "certificate_of_registration")
@@ -274,7 +274,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
               <input
                 ref={tinFileRef}
                 type="file"
-                accept=".pdf,.png,.jpg,.jpeg"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
                 className="hidden"
                 onChange={(e) => handleFileChange(e, "tax_identification_file")}
               />

@@ -151,19 +151,18 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
 
               {/* Navigation Menu */}
               <div className="mb-8">
-                <h4 className="text-c20 font-MontserratSemiBold text-000000  mb-6">Menu</h4>
+                <h4 className="text-c20 font-MontserratSemiBold text-000000 mb-6">Menu</h4>
                 <div className="space-y-1">
                   {navItems.map((item) => {
                     const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+
                     return (
                       <Link
                         key={item.id}
                         href={item.href}
                         onClick={onClose}
                         className={`flex items-center gap-4 py-3 rounded-xl transition-colors ${
-                          isActive
-                            ? "font-MontserratSemiBold"
-                            : "font-MontserratNormal"
+                          isActive ? "font-MontserratSemiBold" : "font-MontserratNormal"
                         }`}
                         style={{
                           backgroundColor: isActive ? "rgba(106,13,173,0.08)" : "transparent",
@@ -182,7 +181,6 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
                         />
                         <span
                           className={`${ isActive ? "text-6a0dad font-MontserratSemiBold text-base" : "text-000000 font-MontserratNormal text-sm"}`}
-                        
                         >
                           {item.label}
                         </span>

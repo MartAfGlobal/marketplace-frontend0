@@ -8,7 +8,9 @@ interface BusinessInformationProps {
   seller: any;
 }
 
-export default function BusinessInformation({ seller }: BusinessInformationProps) {
+export default function BusinessInformation({
+  seller,
+}: BusinessInformationProps) {
   const getFileName = (url: string | null, fallback: string) => {
     if (!url) return "No file uploaded";
     try {
@@ -28,34 +30,51 @@ export default function BusinessInformation({ seller }: BusinessInformationProps
   return (
     <div className="flex flex-col gap-6 animate-in fade-in">
       <h3 className="font-MontserratNormal  text-base">
-        Company registration
+        {seller?.is_registered_business
+          ? "Company registration"
+          : "Business Details"}
       </h3>
 
       <div className="grid grid-cols-2 gap-x-6 gap-y-4">
         {/* Row 1 */}
-        <div className="flex flex-col gap-1.5">
-          <Label className="">Business registration number*</Label>
-          <Input value={seller?.business_registration_number || ""} readOnly className="" />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label className="">CAC registration number*</Label>
-          <Input value={seller?.CAC_No || ""} readOnly className="" />
-        </div>
+        {seller?.is_registered_business && (
+          <>
+            <div className="flex flex-col gap-1.5">
+              <Label className="">Business registration number*</Label>
+              <Input
+                value={seller?.business_registration_number || ""}
+                readOnly
+                className=""
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="">CAC registration number*</Label>
+              <Input value={seller?.CAC_No || ""} readOnly className="" />
+            </div>
+          </>
+        )}
 
         {/* Row 2 */}
         <div className="flex flex-col gap-1.5">
           <Label className="">TIN (tax identification number)</Label>
-          <Input value={seller?.tax_identification_number || ""} readOnly className="" />
+          <Input
+            value={seller?.tax_identification_number || ""}
+            readOnly
+            className=""
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label className="">Upload TIN (tax identification number)</Label>
           <div className="relative">
             <Input
-              value={getFileName(seller?.tax_identification_file, "TIN_Document.pdf")}
+              value={getFileName(
+                seller?.tax_identification_file,
+                "TIN_Document.pdf",
+              )}
               readOnly
               className="  border-[#ff715b]/30 "
             />
-            <button 
+            <button
               type="button"
               disabled={!seller?.tax_identification_file}
               onClick={() => handleViewFile(seller?.tax_identification_file)}
@@ -75,7 +94,7 @@ export default function BusinessInformation({ seller }: BusinessInformationProps
               readOnly
               className="  border-[#ff715b]  pr-24"
             />
-            <button 
+            <button
               type="button"
               disabled={!seller?.CAC_No_file}
               onClick={() => handleViewFile(seller?.CAC_No_file)}
@@ -89,14 +108,19 @@ export default function BusinessInformation({ seller }: BusinessInformationProps
           <Label className="">Certificate of registration</Label>
           <div className="relative">
             <Input
-              value={getFileName(seller?.certificate_of_registration, "Certificate.pdf")}
+              value={getFileName(
+                seller?.certificate_of_registration,
+                "Certificate.pdf",
+              )}
               readOnly
               className="  border-[#ff715b]/30 text-gray-500 pr-24"
             />
-            <button 
+            <button
               type="button"
               disabled={!seller?.certificate_of_registration}
-              onClick={() => handleViewFile(seller?.certificate_of_registration)}
+              onClick={() =>
+                handleViewFile(seller?.certificate_of_registration)
+              }
               className="absolute right-1.5 bg-ff715b w-[57px] rounded-c4  top-1/2 -translate-y-1/2 text-c10 text-ffffff h-6 max-w-[57px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               View

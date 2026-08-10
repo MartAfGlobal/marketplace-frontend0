@@ -131,8 +131,8 @@ export default function VerificationsTable({
           ) : rows.length > 0 ? (
             rows.map((row) => (
               <tr
-                key={row.id}
-                onClick={() => onRowClick(String(row.id))}
+                key={row.user_id}
+                onClick={() => onRowClick(String(row.user_id))}
                 className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer text-000000/68 font-MontserratNormal"
               >
                 <td className="p-3  text-000000/68 font-MontserratNormal">
@@ -140,10 +140,10 @@ export default function VerificationsTable({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onToggleRow(String(row.id));
+                      onToggleRow(String(row.user_id));
                     }}
                     className={`group flex h-4 w-4 mx-auto items-center justify-center border transition-all duration-200 ${
-                      selectedIds.includes(String(row.id))
+                      selectedIds.includes(String(row.user_id))
                         ? "border-[#ff715b] bg-[#ff715b]"
                         : "border-[#161616] hover:border-[#ff715b]"
                     }`}

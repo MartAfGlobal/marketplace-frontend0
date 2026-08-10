@@ -22,7 +22,7 @@ export const FileInput = ({
   fileUrl = "",
   onFileSelect,
   onViewImage,
-  accept = ".pdf,.png,.jpg,.jpeg",
+  accept = ".pdf,.png,.jpg,.jpeg,.webp",
 }: FileInputProps) => {
   const handleButtonClick = () => {
     if (fileUrl && onViewImage) {
@@ -73,10 +73,24 @@ export const FileInput = ({
             onChange={(e) => {
               if (e.target.files?.[0]) {
                 const file = e.target.files[0];
-                const allowedExtensions = /(\.pdf|\.png|\.jpg|\.jpeg)$/i;
-                if (!allowedExtensions.exec(file.name)) {
-                  toast.error("Only PDF, PNG, JPG, or JPEG files are allowed.");
+                if (file.size > 2 * 1024 * 1024) {
+                  toast.error(`"${file.name}" is too large. Max allowed size is 2MB.`);
                   return;
+                }
+                const isImageOnly = accept.includes("image") && !accept.includes("pdf");
+                if (isImageOnly) {
+                  const isImage = file.type.startsWith("image/") || /(\.png|\.jpg|\.jpeg|\.webp)$/i.test(file.name);
+                  if (!isImage) {
+                    toast.error("Only image files (PNG, JPG, JPEG, WEBP) are allowed for ID documents.");
+                    return;
+                  }
+                } else {
+                  const allowedExtensions = /(\.pdf|\.png|\.jpg|\.jpeg|\.webp)$/i;
+                  const isValid = allowedExtensions.test(file.name) || file.type.startsWith("image/") || file.type === "application/pdf";
+                  if (!isValid) {
+                    toast.error("Only PDF, PNG, JPG, JPEG, or WEBP files are allowed.");
+                    return;
+                  }
                 }
                 onFileSelect?.(file);
               }

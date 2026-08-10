@@ -11,14 +11,14 @@ import { useHttp } from "@/hooks/use-http";
 import UploadIcon from "@/assets/FormIcon/Vector.svg";
 import Image from "next/image";
 import { RootState } from "@/store";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import SelectButton from "@/assets/icons/selectbutton.png";
 import ResultModal from "@/components/ui/forms/resultModal";
 import Xicon from "@/assets/FormIcon/xicon.svg";
 import Trash from "@/assets/FormIcon/Trash.svg";
 import { Check } from "lucide-react";
-import { Root } from "react-dom/client";
 import { toast } from "sonner";
+import { sellerActions } from "@/store/user-data/seller/seller-slice";
 
 interface RegisterIndividual3Props {
   userType: "seller" | "buyer";
@@ -28,8 +28,8 @@ interface RegisterIndividual3Props {
 const ID_TYPE_MAP: Record<string, string> = {
   Passport: "PASSPORT",
   "National ID": "NATIONAL_ID",
-  "Voter’s card": "VOTERS_CARD",
-  "Driver’s license": "DRIVERS_LICENCE",
+  "Voter's card": "VOTERS_CARD",
+  "Driver's license": "DRIVERS_LICENCE",
 };
 
 type IdEntry = {
@@ -37,6 +37,8 @@ type IdEntry = {
   id_number: string;
   id_front_image?: File | null;
   id_back_image?: File | null;
+  id_front_image_url?: string;
+  id_back_image_url?: string;
 };
 
 export default function RegisterIndividual3({
@@ -44,16 +46,32 @@ export default function RegisterIndividual3({
   businessType,
 }: RegisterIndividual3Props) {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { loading, sendHttpRequest, error } = useHttp();
+  const { sendHttpRequest: fetchUserDetailsReq } = useHttp();
+
   const emailVerification = useSelector(
     (state: RootState) => state.registration.email,
   );
+  const regTokenFromState = useSelector(
+    (state: RootState) => state.registration?.token,
+  );
+  const tokenFromState = useSelector(
+    (state: RootState) => state.token?.token,
+  );
+  const activeToken =
+    tokenFromState ||
+    regTokenFromState ||
+    (typeof window !== "undefined"
+      ? localStorage.getItem("accessToken") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("registration_token") ||
+        undefined
+      : undefined);
 
   const [isOpen, setIsOpen] = useState(false);
   const [idDropdownOpen, setIdDropdownOpen] = useState(false);
   const idDropdownRef = useRef<HTMLDivElement | null>(null);
-  const certFileRef = useRef<HTMLInputElement | null>(null);
-  const token = useSelector((state: RootState) => state.token?.token);
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -78,15 +96,65 @@ export default function RegisterIndividual3({
       ids: IdEntry[];
       tax_identification_file?: File | null;
       fullname: string;
+
     }
   >({
     fullname: "",
     vat_number: "",
     tax_identification_number: "",
     tax_identification_file: null,
+   
     ids: [],
     is_registered_business: false,
   });
+
+  /* Fetch user details on mount to sync profile (same as Settings page) */
+  useEffect(() => {
+    if (activeToken) {
+      fetchUserDetailsReq({
+        requestConfig: {
+          url: "/accounts/manufacturer/user-details/",
+          method: "GET",
+          token: activeToken,
+          isAuth: true,
+          userType: "seller",
+        },
+        successRes: (res: any) => {
+          const profile = res.data?.profile || res.data || {};
+          dispatch(sellerActions.updateSellerData(res.data));
+
+          const firstName = profile?.first_name || "";
+          const lastName = profile?.last_name || "";
+          const fullname =
+            profile?.fullname ||
+            [firstName, lastName].filter(Boolean).join(" ") ||
+            "";
+
+          setFormData((prev) => ({
+            ...prev,
+            fullname: prev.fullname || fullname,
+            vat_number: prev.vat_number || profile?.vat_number || "",
+            tax_identification_number:
+              prev.tax_identification_number ||
+              profile?.tax_identification_number ||
+              "",
+        
+            ids:
+              prev.ids.length > 0
+                ? prev.ids
+                : (profile?.identification_verifications || []).map(
+                    (id: any) => ({
+                      means_of_id: id.type || id.means_of_id || "",
+                      id_number: id.id_number || "",
+                      id_front_image_url: id.id_front_image_url || "",
+                      id_back_image_url: id.id_back_image_url || "",
+                    }),
+                  ),
+          }));
+        },
+      });
+    }
+  }, [activeToken]);
 
   const availableIds = Object.keys(ID_TYPE_MAP);
 
@@ -102,7 +170,7 @@ export default function RegisterIndividual3({
       ids: [
         ...formData.ids,
         {
-          means_of_id: backendValue, // ✅ stored as PASSPORT, NATIONAL_ID, etc.
+          means_of_id: backendValue,
           id_number: "",
           id_front_image: null,
           id_back_image: null,
@@ -117,6 +185,7 @@ export default function RegisterIndividual3({
       value
     );
   };
+
   const removeId = (idType: string) => {
     setFormData({
       ...formData,
@@ -129,7 +198,17 @@ export default function RegisterIndividual3({
     key: "id_front_image" | "id_back_image",
     file: File | null,
   ) => {
-    if (file && file.size > 2 * 1024 * 1024) {
+    if (!file) return;
+    const isImage =
+      file.type.startsWith("image/") ||
+      /(\.png|\.jpg|\.jpeg|\.webp)$/i.test(file.name);
+    if (!isImage) {
+      toast.error(
+        "Only image files (PNG, JPG, JPEG, WEBP) are allowed for ID documents.",
+      );
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
       toast.error(`"${file.name}" is too large. Max allowed size is 2MB.`);
       return;
     }
@@ -149,9 +228,10 @@ export default function RegisterIndividual3({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) {
-      toast("token expired please login");
-      router.push("auth/seller/login");
+    if (!activeToken) {
+      toast.error("Token expired, please login");
+      router.push("/auth/seller/login");
+      return;
     }
 
     if (formData.ids.length !== 2) {
@@ -159,49 +239,76 @@ export default function RegisterIndividual3({
       return;
     }
 
+    // Build payload matching Settings page (documents-section.tsx) exactly
     const payload = new FormData();
     payload.append("fullname", formData.fullname);
-    payload.append("vat_number", formData.vat_number);
+    formData.ids.forEach((id, idx) => {
+      if (id.means_of_id)
+        payload.append(`ids[${idx}][means_of_id]`, id.means_of_id);
+      if (id.id_number) payload.append(`ids[${idx}][id_number]`, id.id_number);
+      if (
+        id.id_front_image &&
+        ((id.id_front_image as any) instanceof File ||
+          (id.id_front_image as any) instanceof Blob)
+      ) {
+        payload.append(`ids[${idx}][id_front_image]`, id.id_front_image);
+      }
+      if (
+        id.id_back_image &&
+        ((id.id_back_image as any) instanceof File ||
+          (id.id_back_image as any) instanceof Blob)
+      ) {
+        payload.append(`ids[${idx}][id_back_image]`, id.id_back_image);
+      }
+    });
+
     payload.append(
       "tax_identification_number",
       formData.tax_identification_number,
     );
-    if (formData.tax_identification_file && ((formData.tax_identification_file as any) instanceof File || (formData.tax_identification_file as any) instanceof Blob))
+    payload.append("vat_number", formData.vat_number);
+   
+   
+
+    if (
+      formData.tax_identification_file &&
+      ((formData.tax_identification_file as any) instanceof File ||
+        (formData.tax_identification_file as any) instanceof Blob)
+    ) {
       payload.append(
         "tax_identification_file",
         formData.tax_identification_file,
       );
-
-    formData.ids.forEach((id, idx) => {
-      if (id.means_of_id) payload.append(`ids[${idx}][means_of_id]`, id.means_of_id);
-      if (id.id_number) payload.append(`ids[${idx}][id_number]`, id.id_number);
-      if (id.id_front_image && ((id.id_front_image as any) instanceof File || (id.id_front_image as any) instanceof Blob))
-        payload.append(`ids[${idx}][id_front_image]`, id.id_front_image);
-      if (id.id_back_image && ((id.id_back_image as any) instanceof File || (id.id_back_image as any) instanceof Blob))
-        payload.append(`ids[${idx}][id_back_image]`, id.id_back_image);
-    });
+    }
 
     for (const [key, value] of payload.entries()) {
-      console.log(key, value);
+      console.log("check registration key and value:", key, value);
     }
+
     sendHttpRequest({
       requestConfig: {
         url: `/accounts/manufacturer/personal-documents/`,
         method: "PATCH",
         body: payload,
-        token: token ?? undefined,
-        userType,
+        token: activeToken,
+        isAuth: true,
+        userType: "seller",
       },
-      successRes: () => setIsOpen(true),
+      successRes: (res: any) => {
+        if (res?.data) {
+          dispatch(sellerActions.updateSellerData({ profile: res.data }));
+        }
+        setIsOpen(true);
+      },
     });
   };
-  const clearFile = (
-    key: "id_front_image" | "tax_identification_file" | "id_front_image",
-  ) => {
+
+  const clearFile = (key: "tax_identification_file") => {
     setFormData({ ...formData, [key]: null });
   };
+
   return (
-    <div className="w-full  text-black/65">
+    <div className="w-full text-black/65">
       {!isOpen && (
         <form
           onSubmit={handleSubmit}
@@ -220,14 +327,15 @@ export default function RegisterIndividual3({
               />
             </div>
 
-            <div ref={idDropdownRef} className="flex-1 flex flex-col gap-2 relative">
+            <div
+              ref={idDropdownRef}
+              className="flex-1 flex flex-col gap-2 relative"
+            >
               <Label>ID type</Label>
               <div
                 className="border rounded-c8 px-3 py-2 min-h-[44px] flex flex-wrap gap-2 cursor-pointer relative items-center"
                 onClick={() => setIdDropdownOpen((p) => !p)}
               >
-                {/* LEFT: Dropdown Icon */}
-
                 {/* ID Tags */}
                 <div className="flex flex-wrap gap-2 flex-1 ">
                   {formData.ids.length === 0 && (
@@ -278,11 +386,20 @@ export default function RegisterIndividual3({
                   {availableIds.map((id) => (
                     <div
                       key={id}
-                      onClick={() => addId(id)}
-                      className="py-2.5 flex items-center text-000000/65 text-xs font-MontserratNormal  gap-3 cursor-pointer hover:bg-gray-100"
+                      onClick={() => {
+                        addId(id);
+                        setIdDropdownOpen(false);
+                      }}
+                      className="py-2.5 flex items-center text-000000/65 text-xs font-MontserratNormal gap-3 cursor-pointer hover:bg-gray-100"
                     >
                       <div
-                        className={`w-4 h-4 rounded border ${formData.ids.some((i) => i.means_of_id === ID_TYPE_MAP[id]) ? "bg-ff715b border-ff715b" : "border-gray-400"}`}
+                        className={`w-4 h-4 rounded border ${
+                          formData.ids.some(
+                            (i) => i.means_of_id === ID_TYPE_MAP[id],
+                          )
+                            ? "bg-ff715b border-ff715b"
+                            : "border-gray-400"
+                        }`}
                       >
                         {formData.ids.some(
                           (i) => i.means_of_id === ID_TYPE_MAP[id],
@@ -316,12 +433,16 @@ export default function RegisterIndividual3({
               </div>
 
               <div className="flex-1 flex flex-col gap-2 min-w-0">
-                <Label> Upload {id.means_of_id.toLocaleLowerCase()} </Label>
+                <Label> Upload {getIdLabel(id.means_of_id).toLowerCase()} </Label>
                 <div className="flex gap-4 w-full min-w-0">
                   {(["id_front_image", "id_back_image"] as const).map((key) => (
-                    <div key={key} className="flex-1 flex flex-col gap-2 w-1/2 min-w-0">
+                    <div
+                      key={key}
+                      className="flex-1 flex flex-col gap-2 w-1/2 min-w-0"
+                    >
                       <input
                         type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp"
                         className="hidden w-full truncate"
                         ref={(el) => {
                           fileRefs.current[`${key}-${idx}`] = el;
@@ -382,14 +503,30 @@ export default function RegisterIndividual3({
               <Label>Upload TIN (tax identification number)</Label>
               <input
                 type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
                 className="hidden"
                 ref={(el) => {
                   fileRefs.current["tax_file"] = el;
                 }}
                 onChange={(e) => {
                   const file = e.target.files?.[0] ?? null;
-                  if (file && file.size > 2 * 1024 * 1024) {
-                    toast.error(`"${file.name}" is too large. Max allowed size is 2MB.`);
+                  if (!file) return;
+                  const allowedExtensions =
+                    /(\.pdf|\.png|\.jpg|\.jpeg|\.webp)$/i;
+                  if (
+                    !allowedExtensions.test(file.name) &&
+                    !file.type.startsWith("image/") &&
+                    file.type !== "application/pdf"
+                  ) {
+                    toast.error(
+                      "Only PDF, PNG, JPG, JPEG, or WEBP files are allowed.",
+                    );
+                    return;
+                  }
+                  if (file.size > 2 * 1024 * 1024) {
+                    toast.error(
+                      `"${file.name}" is too large. Max allowed size is 2MB.`,
+                    );
                     return;
                   }
                   setFormData({
@@ -411,7 +548,10 @@ export default function RegisterIndividual3({
                 {formData.tax_identification_file ? (
                   <button
                     type="button"
-                    onClick={() => clearFile("tax_identification_file")}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearFile("tax_identification_file");
+                    }}
                     className="flex-shrink-0"
                   >
                     <Image
@@ -425,7 +565,10 @@ export default function RegisterIndividual3({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => certFileRef.current?.click()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileRefs.current["tax_file"]?.click();
+                    }}
                     className="flex-shrink-0"
                   >
                     <Image

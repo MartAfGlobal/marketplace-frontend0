@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Store } from "lucide-react";
+import { Store, User } from "lucide-react";
 import { Label } from "@/components/ui/forms/Label";
 import { Input } from "@/components/ui/forms/Input";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
@@ -9,9 +9,11 @@ import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionS
 interface ShopInfoTabProps {
   isEditing: boolean;
   businessType: string;
+  fullName?: string;
   formData: {
     company_name: string;
     business_industry: string;
+    fullname: string;
   };
   industries: string[];
   fetchingIndustries: boolean;
@@ -20,6 +22,7 @@ interface ShopInfoTabProps {
 
 export default function ShopInfoTab({
   isEditing,
+ fullName,
   businessType,
   formData,
   industries,
@@ -58,7 +61,9 @@ export default function ShopInfoTab({
           <Label className="flex items-center gap-2 cursor-not-allowed opacity-70">
             <div
               className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${
-                businessType === "Individual" ? "border-[#ff6b6b]" : "border-[#cccccc]"
+                businessType === "Individual"
+                  ? "border-[#ff6b6b]"
+                  : "border-[#cccccc]"
               }`}
             >
               {businessType === "Individual" && (
@@ -67,7 +72,9 @@ export default function ShopInfoTab({
             </div>
             <span
               className={`text-[13px] font-MontserratMedium ${
-                businessType === "Individual" ? "text-[#333333]" : "text-[#666666]"
+                businessType === "Individual"
+                  ? "text-[#333333]"
+                  : "text-[#666666]"
               }`}
             >
               Individual
@@ -80,18 +87,18 @@ export default function ShopInfoTab({
         {/* Business Name / Full Name */}
         <div className="flex flex-col gap-2">
           <Label className="">
-            {businessType === "Registered company" ? "Company name" : "Business name"}
+            {businessType === "Registered company"
+              ? "Company name"
+              : "Business name"}
           </Label>
           <div className="relative">
             <Input
               type="text"
               name="company_name"
-              value={businessType ==="Registered company"? formData.company_name : formData.company_name}
+              value={formData.company_name ?? ""}
               onChange={(e) => onChange("company_name", e.target.value)}
               disabled={!isEditing}
-              placeholder={
-                businessType === "Registered company" ? "e.g Acme" : "Enter your full name"
-              }
+              placeholder="Enter your business name"
               className={`${!isEditing ? "bg-gray-50 text-[#999999]" : "bg-white"}`}
             />
             <Store
@@ -110,11 +117,28 @@ export default function ShopInfoTab({
               loading={fetchingIndustries}
               placeholder="Select business industry"
               options={industries}
-              value={formData.business_industry}
+              value={formData.business_industry ?? ""}
               onChange={(val) => onChange("business_industry", val)}
             />
           </div>
         </div>
+        {businessType === "Individual" && (
+          <div className="relative">
+            <Input
+              type="text"
+              name="fullname"
+              value={isEditing ? (formData.fullname ?? "") : (fullName ?? "")}
+              onChange={(e) => onChange("fullname", e.target.value)}
+              disabled={!isEditing}
+              placeholder="Enter your full name"
+              className={`${!isEditing ? "bg-gray-50 text-[#999999]" : "bg-white"}`}
+            />
+            <User
+              size={18}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#cccccc]"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

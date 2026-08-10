@@ -199,7 +199,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type="text"
             className={inputClasses}
             ref={ref}
-            value={value}
+            value={value ?? ""}
             readOnly={true}
             placeholder={placeholder || "YYYY-MM-DD"}
             onClick={(e) => {
@@ -299,6 +299,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const shouldValidateEmail = validateEmail || type === "email";
 
+    const isControlled =
+      value !== undefined ||
+      onChange !== undefined ||
+      readOnly ||
+      validateName ||
+      validatePhone ||
+      validateEmail;
+    const resolvedValue = isControlled ? (value ?? "") : value;
+
     return (
       <div className="w-full">
         {validatePhone && isPhoneInvalid && (
@@ -316,7 +325,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={shouldValidateEmail ? "text" : type}
             className={inputClasses}
             ref={ref}
-            value={value}
+            value={resolvedValue}
             onChange={
               validateName
                 ? handleNameChange
