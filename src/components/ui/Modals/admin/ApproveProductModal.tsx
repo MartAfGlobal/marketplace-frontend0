@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button/Button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -14,6 +14,9 @@ interface ApproveProductModalProps {
   onClose: () => void;
   onConfirm: (notes: string) => void;
   loading?: boolean;
+  isFlagged?: boolean;
+  isRejected?: boolean;
+  adminName?: string;
 }
 
 export default function ApproveProductModal({
@@ -21,9 +24,35 @@ export default function ApproveProductModal({
   onClose,
   onConfirm,
   loading,
+  isFlagged = false,
+  isRejected = false,
+  adminName = "Admin User",
 }: ApproveProductModalProps) {
   const [notes, setNotes] = useState("");
   const [understood, setUnderstood] = useState(false);
+
+  const currentDateStr = useMemo(() => new Date().toLocaleDateString("en-GB"), []);
+  const currentTimeStr = useMemo(
+    () =>
+      new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    []
+  );
+
+  const modalTitle = isFlagged
+    ? "Resolve Flagged Product"
+    : isRejected
+    ? "Re-Approve Product"
+    : "Approve Product";
+
+  const modalDescription = isFlagged
+    ? "You are about to resolve this flagged product back to Live. This clears the flagged state and reactivates the listing."
+    : isRejected
+    ? "You are about to re-approve a previously rejected product. Note: Re-approving a rejected product requires Super Admin privileges."
+    : "You are about to approve this product. Once approved, the product will be visible to buyers and available for purchase.";
 
   return (
     <AnimatePresence>
@@ -51,11 +80,10 @@ export default function ApproveProductModal({
 
               <div className="text-center mb-8 max-w-124.75 mx-auto">
                 <h2 className="text-c18 font-MontserratSemiBold mb-3">
-                  Approve Product
+                  {modalTitle}
                 </h2>
-                <p className="text-sm font-MontserratNormal ">
-                  You are about to approve this product. Once approved, the product will
-                  be visible to buyers and available for purchase.
+                <p className="text-sm font-MontserratNormal text-000000/68">
+                  {modalDescription}
                 </p>
               </div>
 
@@ -67,7 +95,7 @@ export default function ApproveProductModal({
                   <Input
                     type="text" 
                     readOnly 
-                    value="auto-filled with Admin's name (Role)" 
+                    value={adminName} 
                     className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm font-MontserratMedium text-gray-500 bg-white focus:outline-none"
                   />
                 </div>
@@ -79,17 +107,17 @@ export default function ApproveProductModal({
                     <Input
                       type="text" 
                       readOnly 
-                      value="12/12/2025" 
+                      value={currentDateStr} 
                       className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm font-MontserratMedium text-gray-500 bg-white focus:outline-none"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-MontserratMedium">
-                      12:25 pm
+                      {currentTimeStr}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-12 mb-8">
+              <div className="grid grid-cols-2 gap-12 mb-6">
                 <div>
                   <Label className="">
                     Seller Notification (Read-only)
@@ -97,23 +125,31 @@ export default function ApproveProductModal({
                   <Textarea
                     readOnly 
                     autoResize={false}
-                    value="Your product has been reviewed and approved. It is now live on the platform." 
+                    value={
+                      isFlagged
+                        ? "Your product flag has been cleared and your listing is reactivated."
+                        : "Your product has been reviewed and approved. It is now live on the platform."
+                    } 
                     className="w-full resize-none scrollbar-hide !py-1.5 text-c12 font-MontserratMedium text-000000/68"
-                    style={{ height: '64px' }}
+                    style={{ height: '72px' }}
                   />
                 </div>
                 <div>
-                  <Label className="">
-                    Notes (optional)
+                  <Label className="flex items-center justify-between">
+                    <span>Notes (optional)</span>
+                    <span className="text-[10px] text-gray-400 font-normal">Internal only</span>
                   </Label>
                   <Textarea
                     value={notes}
                     autoResize={false}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Input"
+                    placeholder="Internal moderation notes (moderation_admin_notes, never shown to seller)"
                     className="w-full resize-none scrollbar-hide !py-1.5 text-c12 font-MontserratMedium"
-                    style={{ height: '64px' }}
+                    style={{ height: '72px' }}
                   />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Notes are stored in moderation_admin_notes and never visible to the seller.
+                  </p>
                 </div>
               </div>
 
@@ -125,10 +161,12 @@ export default function ApproveProductModal({
                   {understood && <div className="w-2 h-2 bg-white rounded-sm" />}
                 </div>
                 <Label 
-                  className=""
+                  className="cursor-pointer"
                   onClick={() => setUnderstood(!understood)}
                 >
-                  I understand this product will be visible to buyers once approved.
+                  {isFlagged
+                    ? "I understand this product flag will be cleared and reactivated."
+                    : "I understand this product will be visible to buyers once approved."}
                 </Label>
               </div>
 
@@ -144,9 +182,9 @@ export default function ApproveProductModal({
                 <Button
                   onClick={() => onConfirm(notes)}
                   disabled={loading || !understood}
-                  className=" disabled:cursor-not-allowed"
+                  className="disabled:cursor-not-allowed"
                 >
-                  {loading ? <LoadingSpinner /> : "Approve Product"}
+                  {loading ? <LoadingSpinner /> : modalTitle}
                 </Button>
               </div>
             </motion.div>
@@ -156,3 +194,4 @@ export default function ApproveProductModal({
     </AnimatePresence>
   );
 }
+

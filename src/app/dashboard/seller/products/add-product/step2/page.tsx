@@ -385,7 +385,7 @@ export default function AddProductStep1Page() {
                 <Input
                   type="text"
                   inputMode="decimal"
-                  className="mt-2"
+                  className=""
                   value={variant.price ?? ""}
                   onChange={(e) =>
                     setVariants((prev) =>
@@ -403,7 +403,7 @@ export default function AddProductStep1Page() {
                 <Input
                   type="text"
                   inputMode="numeric"
-                  className="mt-2"
+                  className=""
                   value={variant.stock ?? ""}
                   onChange={(e) =>
                     setVariants((prev) =>

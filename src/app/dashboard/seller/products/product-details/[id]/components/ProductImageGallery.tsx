@@ -27,6 +27,7 @@ export default function ProductImageGallery({
               alt={selectedImage?.alt_text || "Product image"}
               height={304}
               width={392}
+              unoptimized
               className="w-full  h-[266px] lg:max-h-[410px] object-cover "
             />
           </div>
@@ -49,6 +50,7 @@ export default function ProductImageGallery({
                     alt={thumb.alt_text || "Thumbnail"}
                     width={64}
                     height={64}
+                    unoptimized
                     className="object-cover md:w-full md:h-full w-13.5 h-13.5"
                   />
                 </button>

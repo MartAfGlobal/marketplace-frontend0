@@ -1980,6 +1980,8 @@ export interface AdminProductDetail {
   is_active: boolean;
   is_published: boolean;
   is_approved: "approved" | "pending" | "rejected" | "pending_update" | string;
+  is_flagged?: boolean;
+  moderation_admin_notes?: string;
   can_edit: boolean;
 
   activation_requested: boolean;

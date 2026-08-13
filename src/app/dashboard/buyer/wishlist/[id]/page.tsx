@@ -429,6 +429,7 @@ const [selectedSlug, setSelectedSlug] = useState<string>("");
                                 }
                                 width={100}
                                 height={100}
+                                unoptimized
                                 className="w-16 h-16 md:w-25 md:h-25"
                               />
                             </div>

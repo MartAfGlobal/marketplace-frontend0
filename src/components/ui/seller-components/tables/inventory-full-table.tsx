@@ -388,6 +388,7 @@ if (filters.perc) {
                         alt="Product image"
                         width={48}
                         height={48}
+                        unoptimized
                       />
                     </div>
                     <span>{row.name}</span>

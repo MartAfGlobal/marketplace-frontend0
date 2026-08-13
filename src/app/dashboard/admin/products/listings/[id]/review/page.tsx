@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import ApproveProductModal from "@/components/ui/Modals/admin/ApproveProductModal";
 import RejectProductModal from "@/components/ui/Modals/admin/RejectProductModal";
+import ResultModal from "@/components/ui/forms/resultModal";
+import { toast } from "sonner";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -30,11 +32,23 @@ export default function ProductReviewPage({
   const [activeImage, setActiveImage] = useState(0);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [resultModalState, setResultModalState] = useState<{
+    isOpen: boolean;
+    result: "success" | "error";
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    result: "success",
+    title: "",
+    message: "",
+  });
   const [variantIndex, setVariantIndex] = useState(0);
   const variantsScrollRef = useRef<HTMLDivElement>(null);
   const {
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
+    approveAdminProduct,
     loading,
   } = AdminDetails();
 
@@ -101,15 +115,20 @@ export default function ProductReviewPage({
       ];
 
   // ── Status badge ─────────────────────────────────────────────────────────────
+  const isFlagged = Boolean(product?.is_flagged);
+  const isRejected = (product?.is_approved ?? "").toLowerCase() === "rejected";
   const approvalStatus = (product?.is_approved ?? "pending").toLowerCase();
   const statusClass =
-    approvalStatus === "approved"
+    isFlagged
+      ? "bg-amber-100 text-amber-700"
+      : approvalStatus === "approved"
       ? "bg-green-100 text-green-700"
       : approvalStatus === "rejected"
       ? "bg-red-100 text-red-600"
       : "bg-ffaco6/12 text-ffaco6";
   const statusLabel =
-    approvalStatus === "approved" ? "Approved"
+    isFlagged ? "Flagged"
+    : approvalStatus === "approved" ? "Approved"
     : approvalStatus === "rejected" ? "Rejected"
     : "Pending";
 
@@ -217,13 +236,56 @@ export default function ProductReviewPage({
   const handleApprove = (notes: string) => {
     if (!allItemsChecked) return;
 
+    // First save review checklist
     updateAdminProductReviewChecklist(
       productId,
       checkedItems,
       () => {
-        setIsApproveModalOpen(false);
-        router.push("/dashboard/admin/products?type=listings");
+        // Post approval to POST /products/admin/products/{id}/approve/
+        approveAdminProduct(
+          productId,
+          notes,
+          () => {
+            setIsApproveModalOpen(false);
+            setResultModalState({
+              isOpen: true,
+              result: "success",
+              title: isFlagged
+                ? "Flag Cleared & Product Reactivated"
+                : "Product Approved Successfully",
+              message: isFlagged
+                ? "The flagged product has been resolved and is now live on the marketplace."
+                : "The product has been reviewed and approved. It is now live on the marketplace.",
+            });
+          },
+          (err: any) => {
+            const statusCode = err?.response?.status || err?.status;
+            const errorMessage =
+              err?.response?.data?.detail ||
+              err?.response?.data?.message ||
+              err?.message;
+
+            if (
+              statusCode === 403 ||
+              (errorMessage && errorMessage.toLowerCase().includes("super admin"))
+            ) {
+              setIsApproveModalOpen(false);
+              setResultModalState({
+                isOpen: true,
+                result: "error",
+                title: "Super Admin Required",
+                message:
+                  "Re-approving a previously rejected product requires super admin privileges (403 Forbidden).",
+              });
+            } else {
+              toast.error(errorMessage || "Failed to approve product.");
+            }
+          }
+        );
       },
+      () => {
+        toast.error("Failed to update product review checklist before approval.");
+      }
     );
   };
 
@@ -718,6 +780,8 @@ export default function ProductReviewPage({
           onClose={() => setIsApproveModalOpen(false)}
           onConfirm={handleApprove}
           loading={loading}
+          isFlagged={isFlagged}
+          isRejected={isRejected}
         />
         <RejectProductModal
           isOpen={isRejectModalOpen}
@@ -726,6 +790,23 @@ export default function ProductReviewPage({
             console.log("Rejected with reason:", data.reason, "and notes:", data.notes);
             setIsRejectModalOpen(false);
             router.push("/dashboard/admin/products?type=listings");
+          }}
+        />
+        <ResultModal
+          isOpen={resultModalState.isOpen}
+          result={resultModalState.result}
+          title={resultModalState.title}
+          message={resultModalState.message}
+          buttenText={resultModalState.result === "success" ? "Go to Products" : "Close"}
+          onConfirm={() => {
+            const isSuccess = resultModalState.result === "success";
+            setResultModalState((prev) => ({ ...prev, isOpen: false }));
+            if (isSuccess) {
+              router.push("/dashboard/admin/products?type=listings");
+            }
+          }}
+          onCancel={() => {
+            setResultModalState((prev) => ({ ...prev, isOpen: false }));
           }}
         />
       </div>

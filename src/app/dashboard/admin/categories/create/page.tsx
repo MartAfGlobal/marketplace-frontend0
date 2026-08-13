@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, X } from "lucide-react";
-import { motion } from "framer-motion";
+import { ChevronLeft, Image as ImageIcon, X, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -65,6 +65,11 @@ function CreateCategoryPageInner() {
   const [selectedAttributeIds, setSelectedAttributeIds] = useState<string[]>([]);
   const [attributesLoading, setAttributesLoading] = useState(false);
 
+  // Map of attributeId → list of values entered for that attribute
+  const [attributeValues, setAttributeValues] = useState<Record<string, string[]>>({});
+  // Map of attributeId → current input value being typed
+  const [attributeInputs, setAttributeInputs] = useState<Record<string, string>>({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingEdit, setIsLoadingEdit] = useState(false);
   const [isCreateAttributeModalOpen, setIsCreateAttributeModalOpen] = useState(false);
@@ -106,7 +111,6 @@ function CreateCategoryPageInner() {
             id: String(item.id ?? ""),
             name: item.name || item.title || "Unnamed",
           }))
-          // Exclude self if editing to prevent self-reference in dropdown
           .filter((cat: any) => !isEditMode || cat.id !== editId);
         setParentCategories(cats);
         setParentCategoriesLoading(false);
@@ -128,7 +132,6 @@ function CreateCategoryPageInner() {
         setDescription(data.description ?? "");
         setIsHidden(data.is_active === false);
 
-        // Determine main vs sub
         const parentObj = typeof data.parent === "object" && data.parent !== null ? data.parent : null;
         const parentId = String(data.parent_id ?? parentObj?.id ?? (typeof data.parent === "string" || typeof data.parent === "number" ? data.parent : ""));
         const parentName = data.parent_name ?? parentObj?.name ?? parentObj?.title ?? data.parent_category ?? "";
@@ -141,7 +144,6 @@ function CreateCategoryPageInner() {
           setSelectedParentCategory(null);
         }
 
-        // Pre-fill attributes
         if (Array.isArray(data.attributes) && data.attributes.length > 0) {
           const attrIds = data.attributes.map((a: any) => String(a.id ?? a));
           setSelectedAttributeIds(attrIds);
@@ -149,7 +151,6 @@ function CreateCategoryPageInner() {
           setSelectedAttributeIds(data.attribute_ids.map(String));
         }
 
-        // Pre-fill image preview
         const imgUrl = data.image ?? data.image_url ?? null;
         if (imgUrl) {
           setPreviewUrl(imgUrl);
@@ -188,7 +189,6 @@ function CreateCategoryPageInner() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check image dimensions client-side before upload (500x500 to 1080x1080px constraint)
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
     img.src = objectUrl;
@@ -219,9 +219,42 @@ function CreateCategoryPageInner() {
   };
 
   const handleAttributeToggle = (id: string) => {
-    setSelectedAttributeIds((prev) =>
-      prev.includes(id) ? prev.filter((aId) => aId !== id) : [...prev, id]
-    );
+    setSelectedAttributeIds((prev) => {
+      if (prev.includes(id)) {
+        // When unchecking, clear its values too
+        setAttributeValues((vals) => {
+          const copy = { ...vals };
+          delete copy[id];
+          return copy;
+        });
+        setAttributeInputs((inputs) => {
+          const copy = { ...inputs };
+          delete copy[id];
+          return copy;
+        });
+        return prev.filter((aId) => aId !== id);
+      }
+      return [...prev, id];
+    });
+  };
+
+  const handleAddAttributeValue = (attrId: string) => {
+    const raw = (attributeInputs[attrId] ?? "").trim();
+    if (!raw) return;
+    const existing = attributeValues[attrId] ?? [];
+    if (existing.includes(raw)) {
+      setAttributeInputs((prev) => ({ ...prev, [attrId]: "" }));
+      return;
+    }
+    setAttributeValues((prev) => ({ ...prev, [attrId]: [...existing, raw] }));
+    setAttributeInputs((prev) => ({ ...prev, [attrId]: "" }));
+  };
+
+  const handleRemoveAttributeValue = (attrId: string, val: string) => {
+    setAttributeValues((prev) => ({
+      ...prev,
+      [attrId]: (prev[attrId] ?? []).filter((v) => v !== val),
+    }));
   };
 
   const extractErrorMessage = (err: any, fallbackMsg: string) => {
@@ -252,6 +285,42 @@ function CreateCategoryPageInner() {
       return;
     }
 
+    // Auto-commit any typed input into attributeValues before checking
+    const updatedAttributeValues = { ...attributeValues };
+    selectedAttributeIds.forEach((attrId) => {
+      const pendingInput = (attributeInputs[attrId] ?? "").trim();
+      if (pendingInput) {
+        const existing = updatedAttributeValues[attrId] ?? [];
+        if (!existing.includes(pendingInput)) {
+          updatedAttributeValues[attrId] = [...existing, pendingInput];
+        }
+      }
+    });
+
+    // Check if any selected attribute has no value added
+    const unvaluedAttributes = selectedAttributeIds.filter((attrId) => {
+      const values = updatedAttributeValues[attrId] ?? [];
+      return values.length === 0;
+    });
+
+    if (unvaluedAttributes.length > 0) {
+      const attrNames = unvaluedAttributes
+        .map((id) => attributesList.find((a) => a.id === id)?.name || "Selected Attribute")
+        .join(", ");
+
+      setResultModalState({
+        isOpen: true,
+        title: "Attribute Value Required",
+        message: `Please enter at least one value for the selected attribute${
+          unvaluedAttributes.length > 1 ? "s" : ""
+        }: ${attrNames}.`,
+        result: "error",
+        onConfirmRedirect: false,
+      });
+      return;
+    }
+
+    setAttributeValues(updatedAttributeValues);
     setIsSubmitting(true);
     const parentIdValue = categoryType === "sub" ? selectedParentCategory?.id || "" : "";
     const isSubcategory = categoryType === "sub";
@@ -279,6 +348,11 @@ function CreateCategoryPageInner() {
         });
       }
 
+      // Serialize attribute_values as JSON string for FormData
+      if (Object.keys(updatedAttributeValues).length > 0) {
+        formData.append("attribute_values", JSON.stringify(updatedAttributeValues));
+      }
+
       formData.append("image", imageFile);
       payload = formData;
     } else {
@@ -288,6 +362,7 @@ function CreateCategoryPageInner() {
         is_active: !isHidden,
         parent_id: parentIdValue,
         attribute_ids: selectedAttributeIds,
+        attribute_values: updatedAttributeValues,
         ...(isSubcategory && {
           inherit_parent_attributes: selectedAttributeIds.length === 0,
         }),
@@ -295,7 +370,6 @@ function CreateCategoryPageInner() {
     }
 
     if (isEditMode && editId) {
-      // UPDATE
       updateAdminCategory(
         editId,
         payload,
@@ -322,7 +396,6 @@ function CreateCategoryPageInner() {
         }
       );
     } else {
-      // CREATE
       createAdminCategory(
         payload,
         (_res: any) => {
@@ -607,58 +680,138 @@ function CreateCategoryPageInner() {
               </Button>
             </div>
 
-            <div className="border border-000000/12 rounded-c8 p-4">
+            <div className="border border-000000/12 px-4 rounded-c16 overflow-hidden">
               {attributesLoading ? (
                 <div className="py-6 flex justify-center">
                   <LoadingSpinner size={24} color="border-ff715b" />
                 </div>
               ) : attributesList.length > 0 ? (
-                <div className="flex flex-col gap-4 max-h-60 overflow-y-auto">
+                <div className="flex flex-col ">
                   {attributesList.map((attr) => {
                     const isChecked = selectedAttributeIds.includes(attr.id);
+                    const values = attributeValues[attr.id] ?? [];
+                    const inputVal = attributeInputs[attr.id] ?? "";
+
                     return (
-                      <label
-                        key={attr.id}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <div
-                          className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                            isChecked
-                              ? "bg-[#df6b62] border-[#df6b62]"
-                              : "border-gray-300 group-hover:border-gray-400"
-                          }`}
-                        >
+                      <div key={attr.id} className="">
+                        {/* Attribute row */}
+                        <label className="flex items-center gap-3   my-4  cursor-pointer select-none">
+                          <div
+                            className={`w-4 h-4 flex-shrink-0 rounded border flex items-center justify-center transition-colors ${
+                              isChecked
+                                ? "bg-[#df6b62] border-[#df6b62]"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {isChecked && (
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                className="w-3 h-3 text-white"
+                              >
+                                <path
+                                  d="M5 12L10 17L20 7"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <span className="text-c12 tracking-[1%] font-MontserratMedium text-000000/68">
+                            {attr.name}
+                          </span>
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={isChecked}
+                            onChange={() => handleAttributeToggle(attr.id)}
+                          />
+                        </label>
+
+                        {/* Expanded value entry panel */}
+                        <AnimatePresence initial={false}>
                           {isChecked && (
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              className="w-3 h-3 text-white"
+                            <motion.div
+                              key="expanded"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                              className="overflow-hidden"
                             >
-                              <path
-                                d="M5 12L10 17L20 7"
-                                stroke="currentColor"
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
+                              <div className="px-4 pb-6 pt-4  border border-000000/12 rounded-c8">
+                                {/* Added value chips */}
+                                {values.length > 0 && (
+                                  <div className="mb-6">
+                                    <p className="text-[12px] font-MontserratMedium text-000000/68 mb-4">
+                                      Added values
+                                    </p>
+                                    <div className="flex flex-wrap gap-4">
+                                      {values.map((val) => (
+                                        <span
+                                          key={val}
+                                          className="flex items-center gap-3 px-4 py-2   border border-ff715b rounded-c8 text-[12px] font-MontserratMedium text-ff715b"
+                                        >
+                                          {val}
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleRemoveAttributeValue(attr.id, val)
+                                            }
+                                            className="flex-shrink-0 flex items-center justify-center"
+                                          >
+                                            <X className="w-3 h-3" />
+                                          </button>
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Value input */}
+                                <div>
+                                 <Label>Value</Label>
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      placeholder={`e.g. Red, Large…`}
+                                      value={inputVal}
+                                      onChange={(e) =>
+                                        setAttributeInputs((prev) => ({
+                                          ...prev,
+                                          [attr.id]: e.target.value,
+                                        }))
+                                      }
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          handleAddAttributeValue(attr.id);
+                                        }
+                                      }}
+                                      className="flex-1 max-w-174"
+                                    />
+                                    <button
+                                      type="button"
+                                      disabled={!inputVal.trim()}
+                                      onClick={() => handleAddAttributeValue(attr.id)}
+                                      className="flex items-center gap-1 text-ff715b text-[12px] font-MontserratMedium disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap hover:opacity-80 transition-opacity"
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                      Add value
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
                           )}
-                        </div>
-                        <span className="text-c12 tracking-[1%] font-MontserratMedium text-000000/68">
-                          {attr.name}
-                        </span>
-                        <input
-                          type="checkbox"
-                          className="hidden"
-                          checked={isChecked}
-                          onChange={() => handleAttributeToggle(attr.id)}
-                        />
-                      </label>
+                        </AnimatePresence>
+                      </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-c12 text-gray-400 py-2">No attributes found.</p>
+                <p className="text-c12 text-gray-400 py-4 px-4">No attributes found.</p>
               )}
             </div>
           </div>

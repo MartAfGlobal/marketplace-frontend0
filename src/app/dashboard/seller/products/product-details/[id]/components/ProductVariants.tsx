@@ -22,6 +22,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
                     src={variant.main_image_url || variant.images?.[0]?.url || "/placeholder.png"}
                     alt={variant.name || `Variant ${index + 1}`}
                     fill
+                    unoptimized
                     className="object-cover rounded-md"
                   />
                 </div>
@@ -72,6 +73,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
                     src={variant.main_image_url || variant.images?.[0]?.url || "/placeholder.png"}
                     alt={variant.name || `Variant ${index + 1}`}
                     fill
+                    unoptimized
                     className="object-cover rounded-md"
                   />
                 </div>

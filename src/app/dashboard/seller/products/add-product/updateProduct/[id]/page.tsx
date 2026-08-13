@@ -34,6 +34,8 @@ import ResultModal from "@/components/ui/forms/resultModal";
 export interface VariantForm extends Omit<BaseVariantForm, 'images'> {
   images: (File | string | null)[];
   attributeValueIds?: Record<string, string>;
+  rawAttributeValueIds?: string[];
+  isApiVariant?: boolean;
   price?: number | string;
   stock?: number | string;
 }
@@ -127,10 +129,32 @@ export default function UpdateProductPage() {
         setSpecificationsText(draft.specifications_html || draft.specifications_text || draft.draft_data?.specifications_text || "");
 
         const cat = draft.category_info?.category || draft.category;
-        if (cat) setCategory(cat);
+        if (cat) {
+          setCategory(typeof cat === "string" ? { id: cat, name: "" } : cat);
+        }
 
-        const subCat = draft.category_info?.subcategory || draft.subcategory || draft.sub_category || draft.category?.subcategory;
-        if (subCat) setSubCategory(subCat);
+        const subCat =
+          draft.category_info?.subcategory ||
+          draft.subcategory ||
+          draft.sub_category ||
+          draft.category?.subcategory;
+        if (subCat) {
+          const normalizedSub = typeof subCat === "string" ? { id: subCat, name: "", effective_attributes: [] } : subCat;
+          setSubCategory(normalizedSub);
+          // Dispatch attributes immediately if the draft already carries them
+          const earlyAttrs =
+            normalizedSub.effective_attributes ||
+            draft.category_info?.effective_attributes ||
+            draft.effective_attributes;
+          if (earlyAttrs?.length) {
+            dispatch(
+              setStep1Data({
+                id: draft.id ?? "",
+                attributes: earlyAttrs,
+              }),
+            );
+          }
+        }
 
         let draftImages = draft.draft_data?.product_images || draft.product_images || draft.images || [];
         if (!Array.isArray(draftImages)) draftImages = [draftImages];
@@ -172,42 +196,46 @@ export default function UpdateProductPage() {
             vImgs.forEach((img: any, idx: number) => {
               if (idx < 4) {
                  if (typeof img === 'string') variantImages[idx] = img;
-                 else if (img) variantImages[idx] = img.original || img.image || img.image_url || img.url || img.thumbnail || null;
+                 else if (img) variantImages[idx] =
+                   img.original ||
+                   img.image ||
+                   img.image_url ||
+                   img.url ||
+                   img.thumbnail ||
+                   img.image_urls?.original ||
+                   img.image_urls?.medium ||
+                   img.image_urls?.thumbnail ||
+                   null;
               }
             });
             const attrValues: Record<string, string> = {};
+            // Use canonical slug as the only key to avoid duplicate values later
             const attrIds: Record<string, string> = {};
             const summary = v.attribute_summary || v.attribute_values || v.attributes || [];
-            
+
+            // Best source: attribute_value_ids directly from the API
+            const rawAttributeValueIds: string[] = Array.isArray(v.attribute_value_ids)
+              ? v.attribute_value_ids.map(String)
+              : [];
+
             if (summary && !Array.isArray(summary)) {
               Object.entries(summary).forEach(([key, val]: [string, any]) => {
+                const slug = key.replace(/[\s_]+/g, '-').toLowerCase();
                 const valStr = val.value || val.name || val;
-                attrValues[key] = valStr;
-                attrValues[key.toLowerCase()] = valStr;
-                attrValues[key.replace(/[\s_]+/g, '-').toLowerCase()] = valStr;
-                
+                attrValues[slug] = valStr;
                 const idVal = val.id || val.value_id;
-                if (idVal) {
-                   attrIds[key] = idVal;
-                   attrIds[key.toLowerCase()] = idVal;
-                   attrIds[key.replace(/[\s_]+/g, '-').toLowerCase()] = idVal;
-                }
+                if (idVal) attrIds[slug] = String(idVal);
               });
             } else if (Array.isArray(summary)) {
               summary.forEach((val: any) => {
-                 const key = val.attribute?.slug || val.slug || val.name || val.attribute_name || val.attribute?.name;
-                 const valStr = val.value?.name || val.value || val.attribute_value;
-                 if (key && valStr) {
-                    attrValues[key] = valStr;
-                    attrValues[key.toLowerCase()] = valStr;
-                    attrValues[key.replace(/[\s_]+/g, '-').toLowerCase()] = valStr;
-                 }
-                 const idVal = val.id || val.value?.id;
-                 if (key && idVal) {
-                    attrIds[key] = idVal;
-                    attrIds[key.toLowerCase()] = idVal;
-                    attrIds[key.replace(/[\s_]+/g, '-').toLowerCase()] = idVal;
-                 }
+                const slug =
+                  val.attribute?.slug ||
+                  val.slug ||
+                  (val.attribute_name || val.name || "").replace(/[\s_]+/g, '-').toLowerCase();
+                const valStr = val.value?.name || val.value || val.attribute_value;
+                if (slug && valStr) attrValues[slug] = valStr;
+                const idVal = val.value?.id || val.id;
+                if (slug && idVal) attrIds[slug] = String(idVal);
               });
             }
             return {
@@ -215,6 +243,8 @@ export default function UpdateProductPage() {
               name: v.variation_name || v.name || "",
               attributesValues: attrValues,
               attributeValueIds: attrIds,
+              rawAttributeValueIds,
+              isApiVariant: true,
               price: v.base_price || v.price || draft.base_price,
               stock: v.stock || v.inventory || v.quantity || draft.inventory || draft.quantity || 0,
               images: variantImages,
@@ -232,24 +262,39 @@ export default function UpdateProductPage() {
 
   // Sync subcategory attributes to Redux for Variations display
   useEffect(() => {
-    if (!category?.id || !subCategory?.id || !token) return;
+    const catId = category?.id;
+    const subCatId = subCategory?.id;
+    if (!catId || !subCatId || !token) return;
 
     fetchAttributesReq({
       requestConfig: {
-        url: `/products/manufacturer/categories/${category.id}/subcategories/`,
+        url: `/products/manufacturer/categories/${catId}/subcategories/`,
         method: "GET",
         token,
       },
       successRes: (res: any) => {
-        const subs = res.data?.subcategories || [];
-        const fullSub = subs.find((s: any) => s.id === subCategory.id);
-        if (fullSub?.effective_attributes) {
+        const subs: any[] = res.data?.subcategories || (Array.isArray(res.data) ? res.data : []);
+        const fullSub = subs.find(
+          (s: any) =>
+            s.id === subCatId ||
+            s._id === subCatId ||
+            s.uuid === subCatId ||
+            (s.name && subCategory?.name && s.name.toLowerCase() === subCategory.name.toLowerCase())
+        );
+
+        const attrs = fullSub?.effective_attributes || res.data?.effective_attributes;
+        if (attrs?.length) {
           dispatch(
             setStep1Data({
               id: draftId || step1Data.step1.id,
-              attributes: fullSub.effective_attributes,
-            })
+              attributes: attrs,
+            }),
           );
+        }
+
+        // If subCategory was missing details (like name), update it
+        if (fullSub && (!subCategory.name || subCategory.name === "")) {
+          setSubCategory(fullSub);
         }
       },
     });
@@ -345,16 +390,41 @@ export default function UpdateProductPage() {
   };
 
   const getAttributeValueId = (attributeSlug: string, value: string) => {
-    const attribute = step1Data.step1.attributes?.find(
-      (attr) => attr.attribute_slug === attributeSlug,
+    if (!value) return null;
+    const allAttributes = step1Data.step1.attributes || [];
+
+    // 1. Try finding attribute by slug or name
+    const attribute = allAttributes.find(
+      (attr) =>
+        attr.attribute_slug === attributeSlug ||
+        attr.attribute_slug?.toLowerCase() === attributeSlug?.toLowerCase() ||
+        attr.attribute_name?.toLowerCase() === attributeSlug?.toLowerCase(),
     );
-    if (!attribute) return null;
 
-    const foundValue = attribute.values?.find((v: Values) => String(v.value).toLowerCase() === String(value).toLowerCase());
-    if (foundValue) return foundValue.id;
+    if (attribute) {
+      const foundValue = attribute.values?.find(
+        (v: Values) =>
+          String(v.value).toLowerCase().trim() === String(value).toLowerCase().trim() ||
+          String(v.id) === String(value) ||
+          String(v.slug).toLowerCase() === String(value).toLowerCase(),
+      );
+      if (foundValue) return foundValue.id;
+    }
 
-    for (const extra of attribute.extra_fields || []) {
-      if (String(extra.default).toLowerCase() === String(value).toLowerCase() || String(extra.name).toLowerCase() === String(value).toLowerCase()) return extra.name;
+    // 2. Search across ALL attributes in step1Data
+    for (const attr of allAttributes) {
+      const foundValue = attr.values?.find(
+        (v: Values) =>
+          String(v.value).toLowerCase().trim() === String(value).toLowerCase().trim() ||
+          String(v.id) === String(value) ||
+          String(v.slug).toLowerCase() === String(value).toLowerCase(),
+      );
+      if (foundValue) return foundValue.id;
+    }
+
+    // 3. If value is already a UUID string, return it directly
+    if (typeof value === "string" && value.length === 36 && value.includes("-")) {
+      return value;
     }
 
     return null;
@@ -372,14 +442,39 @@ export default function UpdateProductPage() {
       if (file && typeof file !== "string") formData.append("images", file);
     });
 
-    const isNewVariant = (vId: string) => vId.length === 36 && vId.includes("-");
-
     const variationsPayload = variants.map((v, idx) => {
-      let finalIds = v.attributeValueIds ? Object.values(v.attributeValueIds) : [];
-      if (finalIds.length === 0) {
-        finalIds = Object.entries(v.attributesValues)
-          .map(([slug, value]) => getAttributeValueId(slug, value))
-          .filter((valId): valId is string => valId !== null);
+      const idsSet = new Set<string>();
+
+      // 1. Raw IDs from API response
+      if (v.rawAttributeValueIds && v.rawAttributeValueIds.length > 0) {
+        v.rawAttributeValueIds.forEach((id) => id && idsSet.add(id));
+      }
+
+      // 2. attributeValueIds map
+      if (v.attributeValueIds) {
+        Object.values(v.attributeValueIds).forEach((id) => id && idsSet.add(id));
+      }
+
+      // 3. Resolve from attributesValues
+      if (v.attributesValues) {
+        Object.entries(v.attributesValues).forEach(([slug, val]) => {
+          if (val) {
+            const resId = getAttributeValueId(slug, String(val));
+            if (resId) idsSet.add(resId);
+          }
+        });
+      }
+
+      let finalIds = Array.from(idsSet);
+
+      // 4. Fallback to subcategory's default attribute value IDs if still empty
+      if (finalIds.length === 0 && step1Data.step1.attributes?.length) {
+        const fallbackIds = step1Data.step1.attributes
+          .map((attr) => attr.values?.[0]?.id)
+          .filter((id): id is string => !!id);
+        if (fallbackIds.length > 0) {
+          finalIds = fallbackIds;
+        }
       }
 
       return {
@@ -390,7 +485,7 @@ export default function UpdateProductPage() {
         gender: "unisex",
         age_group: "adult",
         low_stock_threshold: 10,
-        ...(isNewVariant(v.id) ? {} : { id: v.id }),
+        ...(v.isApiVariant ? { id: v.id } : {}),
       };
     });
 
@@ -414,18 +509,22 @@ export default function UpdateProductPage() {
       return false;
     }
 
-    const hasAttributesRequired = step1Data.step1.attributes && step1Data.step1.attributes.length > 0;
-    
-    for (const v of variants) {
-      const finalIds = v.attributeValueIds ? Object.values(v.attributeValueIds) : [];
-      const fallbackIds = Object.entries(v.attributesValues)
-        .map(([slug, value]) => getAttributeValueId(slug, value))
-        .filter((valId): valId is string => valId !== null);
-      
-      const currentIdsCount = finalIds.length > 0 ? finalIds.length : fallbackIds.length;
+    const hasAttributesRequired =
+      step1Data.step1.attributes && step1Data.step1.attributes.length > 0;
 
-      if (hasAttributesRequired && currentIdsCount === 0) {
-        setErrorMessage("Please completely select attributes for your variants before publishing.");
+    for (const v of variants) {
+      // API variants are already valid on the server
+      if (v.isApiVariant) continue;
+
+      const hasFilledValues =
+        (v.rawAttributeValueIds && v.rawAttributeValueIds.length > 0) ||
+        (v.attributeValueIds && Object.keys(v.attributeValueIds).length > 0) ||
+        (v.attributesValues && Object.values(v.attributesValues).some((val) => val && String(val).trim() !== ""));
+
+      if (hasAttributesRequired && !hasFilledValues) {
+        setErrorMessage(
+          "Please completely select attributes for your variants before publishing.",
+        );
         setShowErrorModal(true);
         return false;
       }
@@ -560,6 +659,7 @@ export default function UpdateProductPage() {
                       alt={`image-${i}`}
                       width={96}
                       height={96}
+                      unoptimized
                       className="object-cover w-full h-full"
                     />
                     <button
@@ -695,27 +795,30 @@ export default function UpdateProductPage() {
                     </span>
                   </label>
                 )}
-                {variant.images.filter(Boolean).map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="relative h-24 w-24 overflow-hidden rounded-c8 border"
-                  >
-                    <Image
-                      src={typeof img === "string" ? img : URL.createObjectURL(img!)}
-                      alt={`variant-${idx}`}
-                      width={96}
-                      height={96}
-                      className="object-cover w-full h-full"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleVariantImageRemove(variant.id, idx)}
-                      className="absolute top-1 right-1 p-1 bg-white rounded"
+                {variant.images.map((img, originalIdx) =>
+                  img ? (
+                    <div
+                      key={originalIdx}
+                      className="relative h-24 w-24 overflow-hidden rounded-c8 border"
                     >
-                      <Image src={Trash} alt="delete" width={13} height={15} />
-                    </button>
-                  </div>
-                ))}
+                      <Image
+                        src={typeof img === "string" ? img : URL.createObjectURL(img as File)}
+                        alt={`variant-${originalIdx}`}
+                        width={96}
+                        height={96}
+                        unoptimized
+                        className="object-cover w-full h-full"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleVariantImageRemove(variant.id, originalIdx)}
+                        className="absolute top-1 right-1 p-1 bg-white rounded"
+                      >
+                        <Image src={Trash} alt="delete" width={13} height={15} />
+                      </button>
+                    </div>
+                  ) : null
+                )}
               </div>
 
               {/* Variant name and delete */}

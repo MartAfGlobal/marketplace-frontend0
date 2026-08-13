@@ -3,37 +3,58 @@
 
 import { AppDispatch } from "@/store";
 import { tokenActions } from "@/store/token/token-slice";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { clearStoredAuthTokens } from "@/utils/authStorage";
+import axios from "@/lib/axios";
 
 // ✅ Plain logout function (no hooks here)
-export const logout = (
+export const logout = async (
   dispatch: AppDispatch,
   router: any,
-  isSeller?: boolean
+  isSeller?: boolean,
+  isAdmin?: boolean,
+  token?: string | null
 ) => {
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Fire-and-forget the server-side logout — don't block on it
+  if (token) {
+    try {
+      await axios.post(
+        "/accounts/logout/",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch {
+      // Silently ignore — we still clear local state regardless
+    }
+  }
 
   try {
     clearStoredAuthTokens();
-       
+
     // Clear redux token
     dispatch(tokenActions.deleteToken());
-    
+
     // Clear redirect URL on manual logout so next login goes to overview
     if (typeof window !== "undefined") {
       localStorage.removeItem("sellerRedirectUrl");
     }
 
     // Redirect based on role
-    if (isSeller) {
+    if (isAdmin) {
+      router.replace("/auth/admin/login");
+    } else if (isSeller) {
       router.push("/auth/seller/login");
     } else {
       if (isMobile) {
-        // Go to landing page and tell it to open login modal
         router.replace("/?showLogin=true");
       } else {
-        // Desktop → go to dedicated login page
         router.replace("/auth/login");
       }
     }
@@ -47,8 +68,18 @@ export const useLogout = (dispatch: AppDispatch) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // detect seller from URL
   const isSeller = pathname.startsWith("/dashboard/seller");
+  const isAdmin = pathname.startsWith("/dashboard/admin");
 
-  return () => logout(dispatch, router, isSeller);
+  // Read token from localStorage so we can pass it to the API call
+  const getToken = () => {
+    if (typeof window === "undefined") return null;
+    return (
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("token") ||
+      null
+    );
+  };
+
+  return () => logout(dispatch, router, isSeller, isAdmin, getToken());
 };

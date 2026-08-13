@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, CheckCircle2 } from "lucide-react";
+import { X, CheckCircle2 } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
@@ -15,7 +15,7 @@ import { AdminDetails } from "@/helpers/admin/adminHelper";
 interface CreateAttributeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (newAttribute: { name: string; values: string[] }) => void;
+  onSuccess?: (newAttribute: { name: string }) => void;
 }
 
 export default function CreateAttributeModal({
@@ -24,14 +24,9 @@ export default function CreateAttributeModal({
   onSuccess,
 }: CreateAttributeModalProps) {
   const [attributeName, setAttributeName] = useState("");
-  const [currentValue, setCurrentValue] = useState("");
-  const [values, setValues] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [createdAttribute, setCreatedAttribute] = useState<{
-    name: string;
-    values: string[];
-  } | null>(null);
+  const [createdAttributeName, setCreatedAttributeName] = useState("");
 
   const token = useSelector((state: RootState) => state.token?.token);
   const { createAdminAttribute } = AdminDetails();
@@ -56,11 +51,9 @@ export default function CreateAttributeModal({
 
   const resetForm = () => {
     setAttributeName("");
-    setCurrentValue("");
-    setValues([]);
     setIsSubmitting(false);
     setIsSuccess(false);
-    setCreatedAttribute(null);
+    setCreatedAttributeName("");
   };
 
   const handleClose = () => {
@@ -68,23 +61,13 @@ export default function CreateAttributeModal({
     onClose();
   };
 
-  const handleAddValue = () => {
-    const val = currentValue.trim();
-    if (val && !values.includes(val)) {
-      setValues([...values, val]);
-      setCurrentValue("");
-    }
-  };
-
-  const handleRemoveValue = (valToRemove: string) => {
-    setValues(values.filter((v) => v !== valToRemove));
-  };
-
-  const handleSuccess = (name: string, vals: string[]) => {
+  const handleSuccess = (name: string) => {
+    setCreatedAttributeName(name);
     setIsSubmitting(false);
+    setIsSuccess(true);
     handleClose();
     if (onSuccess) {
-      onSuccess({ name, values: vals });
+      onSuccess({ name });
     }
   };
 
@@ -96,7 +79,6 @@ export default function CreateAttributeModal({
 
     const payload = {
       name: attributeName.trim(),
-      values: [...values],
       is_active: true,
     };
 
@@ -105,7 +87,7 @@ export default function CreateAttributeModal({
     if (!token) {
       // Fallback for offline / mock state
       setTimeout(() => {
-        handleSuccess(payload.name, payload.values);
+        handleSuccess(payload.name);
       }, 800);
       return;
     }
@@ -113,14 +95,14 @@ export default function CreateAttributeModal({
     createAdminAttribute(
       payload,
       (_res: any) => {
-        handleSuccess(payload.name, payload.values);
+        handleSuccess(payload.name);
       },
       (err: any) => {
         setIsSubmitting(false);
         const errMsg =
           err?.data?.message || err?.message || "Failed to create attribute.";
         toast.error(errMsg);
-      }
+      },
     );
   };
 
@@ -151,184 +133,57 @@ export default function CreateAttributeModal({
               <X className="w-6 h-6" />
             </button>
 
-            {/* ── SUCCESS SCREEN ── */}
             <AnimatePresence mode="wait">
-              {isSuccess ? (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -24 }}
-                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex flex-col items-center justify-center py-8 text-center"
-                >
-                  {/* Animated check icon */}
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 18,
-                      delay: 0.1,
+              {/* ── FORM SCREEN ── */}
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -24 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <h2 className="text-c18 font-MontserratSemiBold mb-8 text-black">
+                  Create new attribute
+                </h2>
+
+                <div className="space-y-2">
+                  <Label>Name of Attribute</Label>
+                  <Input
+                    placeholder="e.g. Colour"
+                    value={attributeName}
+                    onChange={(e) => setAttributeName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleCreate();
+                      }
                     }}
-                    className="w-20 h-20 rounded-full bg-[#28A745]/10 flex items-center justify-center mb-6"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-4 mt-8 justify-end border-t border-000000/4 pt-12">
+                  <Button
+                    variant="secondary"
+                    className="w-44"
+                    onClick={handleClose}
+                    disabled={isSubmitting}
                   >
-                    <CheckCircle2 className="w-10 h-10 text-[#28A745]" />
-                  </motion.div>
-
-                  <h2 className="text-c18 font-MontserratSemiBold text-black mb-2">
-                    Attribute Created!
-                  </h2>
-                  <p className="text-c12 font-MontserratNormal text-000000/60 mb-8">
-                    <span className="font-MontserratSemiBold text-black">
-                      {createdAttribute?.name}
-                    </span>{" "}
-                    has been created successfully.
-                  </p>
-
-                  {/* Values summary */}
-                  {createdAttribute && createdAttribute.values.length > 0 && (
-                    <div className="w-full mb-8">
-                      <p className="text-c12 font-MontserratMedium text-000000/60 mb-3">
-                        Values added ({createdAttribute.values.length})
-                      </p>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {createdAttribute.values.map((val) => (
-                          <span
-                            key={val}
-                            className="px-3 py-1 h-8 flex items-center bg-947fff/10 rounded-c8 text-c12 font-MontserratMedium text-gray-700"
-                          >
-                            {val}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-4 w-full">
-                    <Button
-                      variant="secondary"
-                      className="flex-1"
-                      onClick={() => {
-                        setIsSuccess(false);
-                        resetForm();
-                      }}
-                    >
-                      Create Another
-                    </Button>
-                    <Button className="flex-1" onClick={handleClose}>
-                      Done
-                    </Button>
-                  </div>
-                </motion.div>
-              ) : (
-                /* ── FORM SCREEN ── */
-                <motion.div
-                  key="form"
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -24 }}
-                  transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  {/* Title */}
-                  <h2 className="text-c18 font-MontserratSemiBold mb-8 text-black">
-                    Create new attribute
-                  </h2>
-
-                  {/* Form Content */}
-                  <div>
-                    <div className="space-y-2">
-                      <Label>Name of Attribute</Label>
-                      <Input
-                        placeholder="e.g. Colour"
-                        value={attributeName}
-                        onChange={(e) => setAttributeName(e.target.value)}
-                      />
-                    </div>
-
-                    {/* Display Values */}
-                    {values.length > 0 && (
-                      <div>
-                        <h3 className="text-c12 font-MontserratMedium text-000000/68 mb-4 mt-8">
-                          Added values
-                        </h3>
-                        <div className="flex flex-wrap gap-3 max-h-36 overflow-y-auto no-scrollbar">
-                          {values.map((val) => (
-                            <div
-                              key={val}
-                              className="flex items-center gap-3 px-4 py-2 h-8 bg-ffffff border border-ff715b rounded-c8 justify-center text-c12 font-MontserratMedium text-ff715b"
-                            >
-                              <span className="max-w-[120px] truncate">
-                                {val}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveValue(val)}
-                                className="text-ff715b flex-shrink-0 h-3 w-3 flex justify-center items-center transition-colors"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                    Cancel
+                  </Button>
+                  <Button
+                    className="w-44 flex items-center justify-center"
+                    onClick={handleCreate}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <LoadingSpinner size={18} color="border-white" />
+                    ) : (
+                      "Create Attribute"
                     )}
-
-                    <div className="w-full flex gap-4 items-end mt-6">
-                      <div className="flex-1 space-y-2">
-                        <Label>Enter Value</Label>
-                        <Input
-                          placeholder="Enter value"
-                          value={currentValue}
-                          onChange={(e) => setCurrentValue(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleAddValue();
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="w-full flex pt-4 justify-end">
-                      <button
-                        type="button"
-                        disabled={!attributeName.trim() || !currentValue.trim()}
-                        onClick={handleAddValue}
-                        className="gap-2 flex items-center justify-center text-ff715b text-c12 font-MontserratMedium hover:opacity-90 transition-opacity disabled:text-ff715b/44 disabled:cursor-not-allowed flex-shrink-0"
-                      >
-                        <Plus className="w-4 h-4 text-ff715b" />
-                        Add value
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-4 mt-8 justify-end border-t border-000000/4 pt-12">
-                    <Button
-                      variant="secondary"
-                      className="w-44"
-                      onClick={handleClose}
-                      disabled={isSubmitting}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      className="w-44 flex items-center justify-center"
-                      onClick={handleCreate}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <LoadingSpinner size={18} color="border-white" />
-                      ) : (
-                        "Create Attribute"
-                      )}
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
+                  </Button>
+                </div>
+              </motion.div>
             </AnimatePresence>
           </motion.div>
         </motion.div>

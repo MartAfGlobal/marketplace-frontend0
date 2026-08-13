@@ -33,6 +33,112 @@ export type DraftProductDataTableProps = {
   deletingId?: string | null;
 };
 
+export function getDraftImageUrl(row: any): string | null {
+  if (!row) return null;
+
+  // 1. first_image
+  if (typeof row.first_image === "string" && row.first_image.trim()) {
+    return row.first_image.trim();
+  }
+  if (row.first_image && typeof row.first_image === "object") {
+    const candidate =
+      row.first_image.url ||
+      row.first_image.original ||
+      row.first_image.medium ||
+      row.first_image.thumbnail ||
+      row.first_image.image;
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  // 2. main_image_url
+  if (typeof row.main_image_url === "string" && row.main_image_url.trim()) {
+    return row.main_image_url.trim();
+  }
+
+  // 3. main_image
+  if (typeof row.main_image === "string" && row.main_image.trim()) {
+    return row.main_image.trim();
+  }
+  if (row.main_image && typeof row.main_image === "object") {
+    const candidate =
+      row.main_image.medium ||
+      row.main_image.original ||
+      row.main_image.url ||
+      row.main_image.thumbnail ||
+      row.main_image.image ||
+      row.main_image.image_urls?.original ||
+      row.main_image.image_urls?.thumbnail;
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate.trim();
+    }
+  }
+
+  // 4. images array
+  if (Array.isArray(row.images) && row.images.length > 0) {
+    const first = row.images[0];
+    if (typeof first === "string" && first.trim()) {
+      return first.trim();
+    }
+    if (first && typeof first === "object") {
+      const candidate =
+        first.url ||
+        first.image ||
+        first.original ||
+        first.medium ||
+        first.thumbnail;
+      if (typeof candidate === "string" && candidate.trim()) {
+        return candidate.trim();
+      }
+    }
+  }
+
+  // 5. image
+  if (typeof row.image === "string" && row.image.trim()) {
+    return row.image.trim();
+  }
+
+  return null;
+}
+
+const DraftItemImage = ({
+  row,
+  width = 48,
+  height = 48,
+}: {
+  row: any;
+  width?: number;
+  height?: number;
+}) => {
+  const [hasError, setHasError] = useState(false);
+  const imageUrl = getDraftImageUrl(row);
+
+  if (imageUrl && !hasError) {
+    return (
+      <Image
+        src={imageUrl}
+        alt={row?.name || "Product image"}
+        width={width}
+        height={height}
+        unoptimized
+        onError={() => setHasError(true)}
+        className="w-full h-full object-cover"
+      />
+    );
+  }
+
+  return (
+    <Image
+      src={ProductImage}
+      alt={row?.name || "Product image"}
+      width={width}
+      height={height}
+      className="w-full h-full object-cover"
+    />
+  );
+};
+
 export default function DraftProductDataTable({
   currentPage,
   rowsPerPage,
@@ -169,7 +275,17 @@ const router = useRouter()
                 className="flex pl-4 items-center justify-between cursor-pointer"
                 onClick={() => setActiveRowId(activeRowId === row.id ? null : row.id)}
               >
-                <h3 className="font-MontserratSemiBold text-sm text-[#000000]">{row.name}</h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-gray-100">
+                    <DraftItemImage row={row} width={40} height={40} />
+                  </div>
+                  <button
+                    className="font-MontserratSemiBold text-sm text-[#000000] cursor-pointer text-left"
+                    onClick={(e) => { e.stopPropagation(); handleViewDetails(row.id); }}
+                  >
+                    {row.name}
+                  </button>
+                </div>
                 <ChevronRight 
                   size={18} 
                   className={`text-000000/40 transition-transform duration-200 ${activeRowId === row.id ? "rotate-90" : ""}`} 
@@ -339,17 +455,17 @@ const router = useRouter()
                 </td>
                 <td className="px-4 text-center">{index + 1}</td>
                 <td className="px-4 max-w-70 align-middle">
-                  <div className="inline-flex items-center gap-2">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden">
-                      {row.first_image? <Image
-                        src={row.first_image || ProductImage}
-                        alt="Product image"
-                        width={48}
-                        height={48}
-                        className="w-full h-full object-cover"
-                      />: "No image"}
+                  <div className="inline-flex items-center gap-3 max-w-70">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-gray-100">
+                      <DraftItemImage row={row} width={48} height={48} />
                     </div>
-                    <span>{row.name}</span>
+                    <button
+                      className="max-w-40 truncate text-000000 font-MontserratNormal cursor-pointer text-left"
+                      title={row.name}
+                      onClick={() => handleViewDetails(row.id)}
+                    >
+                      {row.name}
+                    </button>
                   </div>
                 </td>
                 <td className="px-4 text-center">{row.quantity || 0}</td>

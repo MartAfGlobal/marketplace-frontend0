@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useHttp } from "@/hooks/use-http";
 import { Label } from "@/components/ui/forms/Label";
+import { Input } from "@/components/ui/forms/Input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -89,7 +90,7 @@ export function Dropdown<
       <button
         type="button"
         onClick={handleClick}
-        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-[12px] font-MontserratMedium text-gray-900 focus:outline-none focus:border-ff715b hover:scale-100"
+        className="flex w-full mt-2 items-center justify-between rounded-c8 border border-gray-300 bg-white px-4 h-12 text-[12px] font-MontserratMedium text-gray-900 focus:outline-none focus:border-ff715b hover:scale-100"
       >
         <span className={selected ? "text-gray-900" : "text-black/60"}>
           {selected || placeholder}
@@ -288,9 +289,9 @@ export function AttributesSection({
               placeholder={attr.attribute_name}
             /> 
           ) : (
-            <input
+            <Input
               type="text"
-              className="w-full rounded-c8 border border-gray-300 bg-white px-4 py-2.5 text-[12px] font-MontserratMedium focus:outline-none focus:border-ff715b"
+              className=""
               placeholder={`Enter ${attr.attribute_name}`}
               value={values[attr.attribute_slug] || ""}
               onChange={(e) => onChange(attr.attribute_slug, e.target.value)}

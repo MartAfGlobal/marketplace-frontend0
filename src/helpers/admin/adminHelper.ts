@@ -458,6 +458,34 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const approveAdminProduct = (
+    productId: string,
+    notes?: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `products/admin/products/${productId}/approve/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: notes ? { notes } : {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+
   const rejectAdminSeller = (
     manufacturerId: string,
     payload: { reason: string },
@@ -641,7 +669,7 @@ export const AdminDetails = (id?: string) => {
   };
 
   const createAdminAttribute = (
-    payload: { name: string; values: string[]; is_active?: boolean },
+    payload: { name: string; values?: string[]; is_active?: boolean },
     callback?: (response?: any) => void,
     errorCallback?: (err?: any) => void
   ) => {
@@ -656,7 +684,7 @@ export const AdminDetails = (id?: string) => {
         userType: "admin",
         body: {
           name: payload.name,
-          values: payload.values,
+          ...(payload.values !== undefined && { values: payload.values }),
           is_active: payload.is_active ?? true,
         },
       },
@@ -852,6 +880,7 @@ export const AdminDetails = (id?: string) => {
   return {
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
+    approveAdminProduct,
     fetchAdminSellersProductsList,
     fetchAdminProductsByCategory,
     fetchAdminSellers,
