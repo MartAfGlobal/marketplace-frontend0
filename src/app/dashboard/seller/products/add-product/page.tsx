@@ -317,7 +317,7 @@ export default function AddProductStep1Page() {
               <div className="w-full mb-6 md:mb-0 ">
                 <Label>Name of Product</Label>
                 <Input
-                  className="mt-2"
+                  className=""
                   placeholder="Ankara shorts and blouse"
                   type="text"
                   value={productName}
@@ -328,7 +328,7 @@ export default function AddProductStep1Page() {
               <div className="w-full">
                 <Label>Price</Label>
                 <Input
-                  className="mt-2"
+                  className=""
                   placeholder="Product base price"
                   type="text"
                   inputMode="decimal"

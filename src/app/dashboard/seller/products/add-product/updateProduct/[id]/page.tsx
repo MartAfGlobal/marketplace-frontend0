@@ -638,7 +638,7 @@ export default function UpdateProductPage() {
   return (
     <AddProductLayout stage={4} title="Upload Image">
       <form>
-        <p className="text-c12 font-MontserratNormal lg:mt-3 mt-2">
+        <p className="text-c12 font-MontserratNormal lg:mt-3 ">
           Images need to be between 500x500 and 1080x1080. White backgrounds are
           advised.
         </p>
@@ -705,7 +705,7 @@ export default function UpdateProductPage() {
               <div className="w-full">
                 <Label>Name of Product</Label>
                 <Input
-                  className="mt-2"
+                  className=""
                   placeholder="Ankara shorts and blouse"
                   type="text"
                   value={productName}
@@ -716,7 +716,7 @@ export default function UpdateProductPage() {
               <div className="w-full">
                 <Label>Price</Label>
                 <Input
-                  className="mt-2"
+                  className=""
                   placeholder="Product base price"
                   type="text"
                   inputMode="decimal"
@@ -862,7 +862,7 @@ export default function UpdateProductPage() {
                   <Input
                     type="text"
                     inputMode="decimal"
-                    className="mt-2"
+                    className=""
                     value={variant.price ?? ""}
                     onChange={(e) =>
                       setVariants((prev) =>
@@ -880,7 +880,7 @@ export default function UpdateProductPage() {
                   <Input
                     type="text"
                     inputMode="numeric"
-                    className="mt-2"
+                    className=""
                     value={variant.stock ?? ""}
                     onChange={(e) =>
                       setVariants((prev) =>

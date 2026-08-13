@@ -351,7 +351,7 @@ export default function AddToDraftPage() {
               <div className="w-full">
                 <Label>Name of Product</Label>
                 <Input
-                  className="mt-2"
+                  className=""
                   placeholder="Ankara shorts and blouse"
                   type="text"
                   value={productName}
@@ -362,7 +362,7 @@ export default function AddToDraftPage() {
               <div className="w-full">
                 <Label>Price</Label>
                 <Input
-                  className="mt-2"
+                  className=""
                   placeholder="Product base price"
                   type="number"
                   value={basePrice ?? ""}
@@ -493,7 +493,7 @@ export default function AddToDraftPage() {
                   <Label>Price</Label>
                   <Input
                     type="number"
-                    className="mt-2"
+                    className=""
                     value={variant.price ?? ""}
                     onChange={(e) =>
                       setVariants((prev) =>
@@ -510,7 +510,7 @@ export default function AddToDraftPage() {
                   <Label>Quantity</Label>
                   <Input
                     type="number"
-                    className="mt-2"
+                    className=""
                     value={variant.stock ?? ""}
                     onChange={(e) =>
                       setVariants((prev) =>

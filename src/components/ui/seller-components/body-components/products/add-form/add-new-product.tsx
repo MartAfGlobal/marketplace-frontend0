@@ -87,7 +87,7 @@ export default function AddProductForm() {
 
             <div className="text-c12 font-MontserratMedium w-full">
               <label>Name of Product</label>
-              <Input placeholder="Enter product name" className="mt-2" />
+              <Input placeholder="Enter product name" className="" />
             </div>
 
             <div className="text-c12 font-MontserratMedium space-y-2 w-full">
@@ -158,7 +158,7 @@ export default function AddProductForm() {
               <div className="w-full flex items-center gap-6 mt-c32">
                 <div className="text-c12 font-MontserratMedium w-full">
                   <label>Add Price</label>
-                  <Input placeholder="Enter product name" className="mt-2" />
+                  <Input placeholder="Enter product name" className="" />
                 </div>
 
                 <div className="text-c12 font-MontserratMedium w-full">
@@ -177,7 +177,7 @@ export default function AddProductForm() {
               <div className="w-full flex gap-6 mt-c32">
                 <div className="text-c12 font-MontserratMedium w-full">
                   <label>Stock</label>
-                  <Input placeholder="Enter quantity" className="mt-2" />
+                  <Input placeholder="Enter quantity" className="" />
                 </div>
                 <div className="w-full h-fit text-c12 font-MontserratMedium">
                   <label>Discount Type</label>
@@ -287,7 +287,7 @@ export default function AddProductForm() {
                 <label>Add Colour</label>
                 <Input
                   placeholder="Enter Colour"
-                  className="mt-2"
+                  className=""
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
                 />
