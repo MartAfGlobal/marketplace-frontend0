@@ -351,10 +351,20 @@ export default function AdminCategoriesPage() {
     });
   };
 
+  // ── Edit Attribute State ──
+  const [selectedAttributeCategoryId, setSelectedAttributeCategoryId] = useState<string | undefined>(undefined);
+  const [selectedAttributeCategoryValues, setSelectedAttributeCategoryValues] = useState<string[] | undefined>(undefined);
+
   // ── Attribute CRUD handlers ───────────────────────────────────────────────
-  const handleEditAttribute = (attr: AttributeDetailData) => {
+  const handleEditAttribute = (
+    attr: AttributeDetailData,
+    selectedCatId?: string,
+    catValues?: string[]
+  ) => {
     setIsAttributeModalOpen(false);
     setSelectedAttribute(attr);
+    setSelectedAttributeCategoryId(selectedCatId);
+    setSelectedAttributeCategoryValues(catValues);
     setIsEditAttributeModalOpen(true);
   };
 
@@ -723,6 +733,8 @@ export default function AdminCategoriesPage() {
         isOpen={isEditAttributeModalOpen}
         onClose={() => setIsEditAttributeModalOpen(false)}
         attribute={selectedAttribute}
+        initialCategoryId={selectedAttributeCategoryId}
+        initialCategoryValues={selectedAttributeCategoryValues}
         onSuccess={handleAttributeUpdated}
       />
 

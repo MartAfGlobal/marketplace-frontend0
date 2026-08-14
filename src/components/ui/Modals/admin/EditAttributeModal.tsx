@@ -11,12 +11,15 @@ import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
-import type { AttributeDetailData } from "./AttributeDetailsModal";
+import type { AttributeDetailData, AttributeCategoryData } from "./AttributeDetailsModal";
+import { Dropdown } from "@/components/ui/seller-components/body-components/products/add-form/categorySelector";
 
 interface EditAttributeModalProps {
   isOpen: boolean;
   onClose: () => void;
   attribute: AttributeDetailData | null;
+  initialCategoryId?: string;
+  initialCategoryValues?: string[];
   onSuccess?: (updated: AttributeDetailData) => void;
 }
 
@@ -24,27 +27,98 @@ export default function EditAttributeModal({
   isOpen,
   onClose,
   attribute,
+  initialCategoryId,
+  initialCategoryValues,
   onSuccess,
 }: EditAttributeModalProps) {
   const [attributeName, setAttributeName] = useState("");
   const [currentValue, setCurrentValue] = useState("");
   const [values, setValues] = useState<string[]>([]);
+  const [categories, setCategories] = useState<AttributeCategoryData[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [isFetchingCategories, setIsFetchingCategories] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const token = useSelector((state: RootState) => state.token?.token);
-  const { updateAdminAttribute } = AdminDetails();
+  const { updateAdminAttribute, fetchAdminAttributeCategories } = AdminDetails();
 
   /* Pre-fill form whenever the attribute prop or isOpen changes */
   useEffect(() => {
     if (isOpen && attribute) {
       setAttributeName(attribute.name);
-      setValues([...attribute.values]);
+      setValues(initialCategoryValues ?? [...attribute.values]);
+      setSelectedCategoryId(initialCategoryId ?? "");
       setCurrentValue("");
       setIsSubmitting(false);
       setIsSuccess(false);
+
+      if (token && attribute.id) {
+        setIsFetchingCategories(true);
+        fetchAdminAttributeCategories(
+          attribute.id,
+          (data: any) => {
+            setIsFetchingCategories(false);
+            const rawList = Array.isArray(data)
+              ? data
+              : Array.isArray(data?.results)
+              ? data.results
+              : Array.isArray(data?.categories)
+              ? data.categories
+              : [];
+
+            const parsedCats: AttributeCategoryData[] = rawList.map((item: any) => {
+              const catId = String(
+                item.id ?? item.category_id ?? item.pk ?? item.category?.id ?? ""
+              );
+              const catName =
+                item.name ??
+                item.title ??
+                item.category_name ??
+                item.category?.name ??
+                "Category";
+
+              let vals: string[] = [];
+              const rawVals =
+                item.values ??
+                item.attribute_values ??
+                item.values_list ??
+                item.category?.values;
+
+              if (Array.isArray(rawVals)) {
+                vals = rawVals.map((v: any) =>
+                  typeof v === "string" ? v : v.name || v.value || v.val || String(v)
+                );
+              } else if (typeof rawVals === "string" && rawVals.trim()) {
+                vals = rawVals
+                  .split(",")
+                  .map((v: string) => v.trim())
+                  .filter(Boolean);
+              }
+
+              return { id: catId, name: catName, values: vals };
+            });
+
+            setCategories(parsedCats);
+
+            if (parsedCats.length > 0) {
+              if (initialCategoryId && parsedCats.some((c) => c.id === initialCategoryId)) {
+                setSelectedCategoryId(initialCategoryId);
+              } else {
+                setSelectedCategoryId(parsedCats[0].id);
+                if (!initialCategoryValues || initialCategoryValues.length === 0) {
+                  setValues(parsedCats[0].values);
+                }
+              }
+            }
+          },
+          (err: any) => {
+            setIsFetchingCategories(false);
+          }
+        );
+      }
     }
-  }, [isOpen, attribute]);
+  }, [isOpen, attribute, initialCategoryId, initialCategoryValues, token]);
 
   /* Lock body scroll when open */
   useEffect(() => {
@@ -67,6 +141,14 @@ export default function EditAttributeModal({
     onClose();
   };
 
+  const handleCategorySelectChange = (catId: string) => {
+    setSelectedCategoryId(catId);
+    const cat = categories.find((c) => c.id === catId);
+    if (cat) {
+      setValues(cat.values);
+    }
+  };
+
   const handleAddValue = () => {
     const val = currentValue.trim();
     if (val && !values.includes(val)) {
@@ -86,18 +168,27 @@ export default function EditAttributeModal({
       return;
     }
 
+    if (values.length > 0 && !selectedCategoryId && categories.length > 0) {
+      toast.error("Please select a category for the attribute values.");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    const payload = {
+    const payload: { name: string; values: string[]; category_id?: string } = {
       name: attributeName.trim(),
       values: [...values],
     };
+
+    if (selectedCategoryId) {
+      payload.category_id = selectedCategoryId;
+    }
 
     if (!token) {
       // Offline / mock fallback
       setTimeout(() => {
         setIsSubmitting(false);
-        handleClose();
+        setIsSuccess(true);
         if (onSuccess) {
           onSuccess({
             ...attribute,
@@ -114,7 +205,7 @@ export default function EditAttributeModal({
       payload,
       (_res: any) => {
         setIsSubmitting(false);
-        handleClose();
+        setIsSuccess(true);
         if (onSuccess) {
           onSuccess({
             ...attribute,
@@ -148,7 +239,7 @@ export default function EditAttributeModal({
             exit={{ opacity: 0, x: 160 }}
             transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white shadow-xl flex flex-col w-full max-w-[432px] rounded-[16px] p-6 sm:p-8 relative overflow-hidden"
+            className="bg-white shadow-xl flex flex-col w-full max-w-[432px] rounded-[16px] p-6 sm:p-8 relative overflow-hidden max-h-[90vh] overflow-y-auto"
           >
             {/* Close Button */}
             <button
@@ -203,7 +294,7 @@ export default function EditAttributeModal({
                         {values.map((val) => (
                           <span
                             key={val}
-                            className="px-3 py-1 h-8 flex items-center bg-947fff/10 rounded-c8 text-c12 font-MontserratMedium text-gray-700"
+                            className="px-3 py-1 h-8 flex items-center bg-[#947FFF]/10 rounded-[8px] text-c12 font-MontserratMedium text-gray-700"
                           >
                             {val}
                           </span>
@@ -226,12 +317,12 @@ export default function EditAttributeModal({
                   transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {/* Title */}
-                  <h2 className="text-c18 font-MontserratSemiBold mb-8 text-black">
+                  <h2 className="text-c18 font-MontserratSemiBold mb-6 text-black">
                     Update attribute
                   </h2>
 
                   {/* Form Content */}
-                  <div>
+                  <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Name of Attribute</Label>
                       <Input
@@ -241,23 +332,39 @@ export default function EditAttributeModal({
                       />
                     </div>
 
+                    {/* Category Dropdown */}
+                    <div className="space-y-2">
+                      <Label>Select Category</Label>
+                      <div>
+                        <Dropdown<AttributeCategoryData>
+                          label=""
+                          selected={categories.find((c) => c.id === selectedCategoryId)?.name || (isFetchingCategories ? "Loading categories..." : "Select Category")}
+                          onSelect={(item) => handleCategorySelectChange(item.id)}
+                          fetchItems={() => {}}
+                          items={categories}
+                          loading={isFetchingCategories}
+                          placeholder="Select Category"
+                        />
+                      </div>
+                    </div>
+
                     {/* Display Values */}
                     {values.length > 0 && (
                       <div>
-                        <h3 className="text-c12 font-MontserratMedium text-000000/68 mb-4 mt-8">
+                        <h3 className="text-c12 font-MontserratMedium text-000000/68 mb-3 mt-6">
                           Added values
                         </h3>
                         <div className="flex flex-wrap gap-3 max-h-36 overflow-y-auto no-scrollbar">
                           {values.map((val) => (
                             <div
                               key={val}
-                              className="flex items-center gap-3 px-4 py-2 h-8 bg-ffffff border border-ff715b rounded-c8 justify-center text-c12 font-MontserratMedium text-ff715b"
+                              className="flex items-center gap-3 px-4 py-2 h-8 bg-white border border-[#FF715B] rounded-[8px] justify-center text-c12 font-MontserratMedium text-[#FF715B]"
                             >
                               <span className="max-w-[120px] truncate">{val}</span>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveValue(val)}
-                                className="text-ff715b flex-shrink-0 h-3 w-3 flex justify-center items-center transition-colors"
+                                className="text-[#FF715B] flex-shrink-0 h-3 w-3 flex justify-center items-center transition-colors"
                               >
                                 <X className="w-3 h-3" />
                               </button>
@@ -267,7 +374,7 @@ export default function EditAttributeModal({
                       </div>
                     )}
 
-                    <div className="w-full flex gap-4 items-end mt-6">
+                    <div className="w-full flex gap-4 items-end mt-4">
                       <div className="flex-1 space-y-2">
                         <Label>Enter Value</Label>
                         <Input
@@ -284,21 +391,21 @@ export default function EditAttributeModal({
                       </div>
                     </div>
 
-                    <div className="w-full flex pt-4 justify-end">
+                    <div className="w-full flex pt-2 justify-end">
                       <button
                         type="button"
                         disabled={!currentValue.trim()}
                         onClick={handleAddValue}
-                        className="gap-2 flex items-center justify-center text-ff715b text-c12 font-MontserratMedium hover:opacity-90 transition-opacity disabled:text-ff715b/44 disabled:cursor-not-allowed flex-shrink-0"
+                        className="gap-2 flex items-center justify-center text-[#FF715B] text-c12 font-MontserratMedium hover:opacity-90 transition-opacity disabled:text-[#FF715B]/44 disabled:cursor-not-allowed flex-shrink-0"
                       >
-                        <Plus className="w-4 h-4 text-ff715b" />
+                        <Plus className="w-4 h-4 text-[#FF715B]" />
                         Add value
                       </button>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-4 mt-8 justify-end border-t border-000000/4 pt-12">
+                  <div className="flex items-center gap-4 mt-8 justify-end border-t border-000000/4 pt-6">
                     <Button
                       variant="secondary"
                       className="w-44"
@@ -308,7 +415,7 @@ export default function EditAttributeModal({
                       Cancel
                     </Button>
                     <Button
-                      className="w-44 flex items-center justify-center"
+                      className="w-44 flex items-center justify-center bg-[#FF715B] hover:bg-[#e85e4a] text-white"
                       onClick={handleUpdate}
                       disabled={isSubmitting}
                     >
@@ -328,3 +435,4 @@ export default function EditAttributeModal({
     </AnimatePresence>
   );
 }
+

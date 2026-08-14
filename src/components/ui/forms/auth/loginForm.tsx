@@ -27,6 +27,8 @@ export default function LoginForm({ userType }: RegProps) {
   // Get the previous page if passed
   const fromPage = searchParams.get("from");
 
+  const rememberKey = `rememberLogin_${userType ?? "buyer"}`;
+
   const [formData, setFormData] = useState<LoginParams>({
     email: "",
     password: "",
@@ -35,29 +37,51 @@ export default function LoginForm({ userType }: RegProps) {
 
   const { loading, sendHttpRequest: loginRequest } = useHttp();
 
-  // Load saved credentials
+  // Load saved credentials for this specific user type only
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberEmail");
-    const savedPassword = localStorage.getItem("rememberPassword");
-    if (savedEmail && savedPassword) {
-      setFormData({
-        email: savedEmail,
-        password: savedPassword,
-        rememberMe: true,
-      });
+    if (typeof window === "undefined") return;
+
+    const stored = localStorage.getItem(rememberKey);
+    if (!stored) {
+      localStorage.removeItem("rememberEmail");
+      localStorage.removeItem("rememberPassword");
+      return;
     }
-  }, []);
+
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed?.email && parsed?.password) {
+        setFormData({
+          email: parsed.email,
+          password: parsed.password,
+          rememberMe: true,
+        });
+      }
+    } catch {
+      localStorage.removeItem(rememberKey);
+    }
+  }, [rememberKey]);
 
   const toggleVisibility = () => {
     setShowPassword((prev) => !prev);
   };
 
   const handleLoginSuccess = (accessToken: string) => {
-    // Save email & password if "Remember me" is checked
+    if (typeof window === "undefined") return;
+
+    // Save email & password for this specific user type only
     if (formData.rememberMe) {
-      localStorage.setItem("rememberEmail", formData.email);
-      localStorage.setItem("rememberPassword", formData.password);
+      localStorage.setItem(
+        rememberKey,
+        JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      );
+      localStorage.removeItem("rememberEmail");
+      localStorage.removeItem("rememberPassword");
     } else {
+      localStorage.removeItem(rememberKey);
       localStorage.removeItem("rememberEmail");
       localStorage.removeItem("rememberPassword");
     }

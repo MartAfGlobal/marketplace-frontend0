@@ -9,6 +9,13 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
+import { Dropdown } from "@/components/ui/seller-components/body-components/products/add-form/categorySelector";
+
+export interface AttributeCategoryData {
+  id: string;
+  name: string;
+  values: string[];
+}
 
 export interface AttributeDetailData {
   id: string;
@@ -17,6 +24,7 @@ export interface AttributeDetailData {
   dateCreated: string;
   lastModified: string;
   values: string[];
+  categories?: AttributeCategoryData[];
 }
 
 interface AttributeDetailsModalProps {
@@ -24,7 +32,7 @@ interface AttributeDetailsModalProps {
   onClose: () => void;
   attribute: AttributeDetailData | null;
   isLoading?: boolean;
-  onEdit?: (attribute: AttributeDetailData) => void;
+  onEdit?: (attribute: AttributeDetailData, selectedCategoryId?: string, categoryValues?: string[]) => void;
   onDeleteRequest?: (id: string, name: string) => void;
   onHideToggled?: (id: string, newIsActive: boolean, name: string) => void;
 }
@@ -42,15 +50,100 @@ export default function AttributeDetailsModal({
   const [isToggling, setIsToggling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Category state
+  const [categories, setCategories] = useState<AttributeCategoryData[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [isFetchingCategories, setIsFetchingCategories] = useState(false);
+  const [categoryValues, setCategoryValues] = useState<string[]>([]);
+
   const token = useSelector((state: RootState) => state.token?.token);
-  const { deleteAdminAttribute, updateAdminAttribute } = AdminDetails();
+  const { deleteAdminAttribute, updateAdminAttribute, fetchAdminAttributeCategories } = AdminDetails();
 
   // Sync local active state whenever the attribute prop changes
   useEffect(() => {
     if (attribute) {
       setIsActive(attribute.isActive);
+      setCategoryValues(attribute.values ?? []);
     }
   }, [attribute]);
+
+  // Fetch categories when modal opens and attribute is available
+  useEffect(() => {
+    if (isOpen && attribute?.id && token) {
+      setIsFetchingCategories(true);
+      fetchAdminAttributeCategories(
+        attribute.id,
+        (data: any) => {
+          setIsFetchingCategories(false);
+          const rawList = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.results)
+            ? data.results
+            : Array.isArray(data?.categories)
+            ? data.categories
+            : [];
+
+          const parsedCats: AttributeCategoryData[] = rawList.map((item: any) => {
+            const catId = String(
+              item.id ?? item.category_id ?? item.pk ?? item.category?.id ?? ""
+            );
+            const catName =
+              item.name ??
+              item.title ??
+              item.category_name ??
+              item.category?.name ??
+              "Category";
+
+            let vals: string[] = [];
+            const rawVals =
+              item.values ??
+              item.attribute_values ??
+              item.values_list ??
+              item.category?.values;
+
+            if (Array.isArray(rawVals)) {
+              vals = rawVals.map((v: any) =>
+                typeof v === "string" ? v : v.name || v.value || v.val || String(v)
+              );
+            } else if (typeof rawVals === "string" && rawVals.trim()) {
+              vals = rawVals
+                .split(",")
+                .map((v: string) => v.trim())
+                .filter(Boolean);
+            }
+
+            return { id: catId, name: catName, values: vals };
+          });
+
+          setCategories(parsedCats);
+
+          if (parsedCats.length > 0) {
+            const defaultCat = parsedCats[0];
+            setSelectedCategoryId(defaultCat.id);
+            setCategoryValues(defaultCat.values);
+          } else {
+            setSelectedCategoryId("");
+            setCategoryValues(attribute.values ?? []);
+          }
+        },
+        (err: any) => {
+          setIsFetchingCategories(false);
+          console.error("Failed to fetch attribute categories:", err);
+        }
+      );
+    }
+  }, [isOpen, attribute?.id, token]);
+
+  // Handle category dropdown selection change
+  const handleCategoryChange = (catId: string) => {
+    setSelectedCategoryId(catId);
+    const selected = categories.find((c) => c.id === catId);
+    if (selected) {
+      setCategoryValues(selected.values);
+    } else {
+      setCategoryValues(attribute?.values ?? []);
+    }
+  };
 
   // Lock body scroll when open
   useEffect(() => {
@@ -199,14 +292,30 @@ export default function AttributeDetailsModal({
                 </div>
               </div>
 
+              {/* Select Category Dropdown */}
+              <div className="pt-5 pb-5 border-b border-[#F0F0F0]">
+                <Dropdown<AttributeCategoryData>
+                  label=""
+                  selected={
+                    categories.find((c) => c.id === selectedCategoryId)?.name ||
+                    (isFetchingCategories ? "Loading categories..." : "Select Category")
+                  }
+                  onSelect={(item) => handleCategoryChange(item.id)}
+                  fetchItems={() => {}}
+                  items={categories}
+                  loading={isFetchingCategories}
+                  placeholder="Select Category"
+                />
+              </div>
+
               {/* Values section */}
               <div className="pt-5 pb-6">
                 <p className="text-sm font-MontserratMedium text-[#161616]/70 mb-4">
                   Added values
                 </p>
                 <div className="flex flex-wrap gap-3 max-h-[140px] overflow-y-auto no-scrollbar">
-                  {attribute.values.length > 0 ? (
-                    attribute.values.map((val, idx) => (
+                  {categoryValues.length > 0 ? (
+                    categoryValues.map((val, idx) => (
                       <div
                         key={idx}
                         className="flex items-center gap-2 px-3 py-1.5 h-8 bg-white border border-[#FF715B] rounded-[8px] text-c12 font-MontserratMedium text-[#FF715B]"
@@ -241,7 +350,7 @@ export default function AttributeDetailsModal({
                   </Button>
                   <Button
                     className="flex-1 bg-[#FF715B] hover:bg-[#e85e4a] text-white"
-                    onClick={() => onEdit && onEdit(attribute)}
+                    onClick={() => onEdit && onEdit(attribute, selectedCategoryId, categoryValues)}
                   >
                     Edit details
                   </Button>
@@ -255,3 +364,4 @@ export default function AttributeDetailsModal({
     </AnimatePresence>
   );
 }
+

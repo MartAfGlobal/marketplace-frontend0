@@ -747,9 +747,34 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminAttributeCategories = (
+    attributeId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err?: any) => void
+  ) => {
+    if (!token || !attributeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/attributes/${attributeId}/categories`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   const updateAdminAttribute = (
     attributeId: string,
-    payload: { name?: string; values?: string[]; is_active?: boolean },
+    payload: { name?: string; values?: string[]; is_active?: boolean; category_id?: string },
     callback?: (response?: any) => void,
     errorCallback?: (err?: any) => void
   ) => {
@@ -902,6 +927,7 @@ export const AdminDetails = (id?: string) => {
     createAdminAttribute,
     fetchAdminAttributes,
     fetchAdminAttributeById,
+    fetchAdminAttributeCategories,
     updateAdminAttribute,
     deleteAdminAttribute,
     hideAdminAttribute,

@@ -150,7 +150,7 @@ export default function AddProductStep1Page() {
     console.log("saving draft", step1Data);
 
     const formData = new FormData();
-    formData.append("specifications_text", specificationsText);
+    formData.append("specifications", specificationsText);
 
     savingToDraftReq({
       requestConfig: {

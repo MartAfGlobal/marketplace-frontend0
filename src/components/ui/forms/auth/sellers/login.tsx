@@ -21,6 +21,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 export default function SellerLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const rememberKey = "rememberLogin_seller";
 
   const [formData, setFormData] = useState<LoginParams>({
     email: "",
@@ -36,20 +37,31 @@ export default function SellerLogin() {
 
   const dispatch = useDispatch();
 
-  // ✅ Prefill form on mount if stored
+  // ✅ Prefill form on mount if stored for the seller flow only
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberEmail");
-    const savedPassword = localStorage.getItem("rememberPassword");
+    if (typeof window === "undefined") return;
 
-    if (savedEmail && savedPassword) {
-      setFormData({
-        email: savedEmail,
-        password: savedPassword,
-        rememberMe: true,
-      });
-      setRememberMe(true);
+    const stored = localStorage.getItem(rememberKey);
+    if (!stored) {
+      localStorage.removeItem("rememberEmail");
+      localStorage.removeItem("rememberPassword");
+      return;
     }
-  }, []);
+
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed?.email && parsed?.password) {
+        setFormData({
+          email: parsed.email,
+          password: parsed.password,
+          rememberMe: true,
+        });
+        setRememberMe(true);
+      }
+    } catch {
+      localStorage.removeItem(rememberKey);
+    }
+  }, [rememberKey]);
 
   const { loading, sendHttpRequest: loginRequest } = useHttp();
 
@@ -86,12 +98,22 @@ export default function SellerLogin() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (rememberMe) {
-      localStorage.setItem("rememberEmail", formData.email);
-      localStorage.setItem("rememberPassword", formData.password);
-    } else {
-      localStorage.removeItem("rememberEmail");
-      localStorage.removeItem("rememberPassword");
+    if (typeof window !== "undefined") {
+      if (rememberMe) {
+        localStorage.setItem(
+          rememberKey,
+          JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        );
+        localStorage.removeItem("rememberEmail");
+        localStorage.removeItem("rememberPassword");
+      } else {
+        localStorage.removeItem(rememberKey);
+        localStorage.removeItem("rememberEmail");
+        localStorage.removeItem("rememberPassword");
+      }
     }
     // Validation
     if (!formData.email || !formData.password) {

@@ -310,13 +310,7 @@ export default function ProductDetailsPage({
               />
             ) : (
               <p className="text-xs  font-MontserratNormal">
-                Lorem ipsum dolor sit amet consectetur. Et id in non arcu eu elit
-                facilisi ut tellus. Habitant pellentesque turpis turpis vel vitae
-                vestibulum. Congue nunc tempus eget mi. Placerat laoreet in
-                ultricies at. Lorem hac pharetra ullamcorper maecenas purus. Et
-                ornare sollicitudin eget est volutpat fames dictumst scelerisque
-                mattis. Dui scelerisque fermentum sapien cras id dignissim aenean.
-                Etiam ultrices sed diam odio ligula ornare augue posuere.
+                No disription available for this product.
               </p>
             )}
           </div>
@@ -331,13 +325,7 @@ export default function ProductDetailsPage({
               />
             ) : (
               <p className="text-xs  font-MontserratNormal">
-                Lorem ipsum dolor sit amet consectetur. Et id in non arcu eu elit
-                facilisi ut tellus. Habitant pellentesque turpis turpis vel vitae
-                vestibulum. Congue nunc tempus eget mi. Placerat laoreet in
-                ultricies at. Lorem hac pharetra ullamcorper maecenas purus. Et
-                ornare sollicitudin eget est volutpat fames dictumst scelerisque
-                mattis. Dui scelerisque fermentum sapien cras id dignissim aenean.
-                Etiam ultrices sed diam odio ligula ornare augue posuere.
+                No specifications available for this product.
               </p>
             )}
           </div>

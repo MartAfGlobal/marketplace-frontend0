@@ -15,6 +15,8 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  const rememberKey = "rememberLogin_buyer";
+
   const [formData, setFormData] = useState<LoginParams>({
     email: "",
     password: "",
@@ -36,16 +38,28 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
 
   
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberEmail");
-    const savedPassword = localStorage.getItem("rememberPassword");
-    if (savedEmail && savedPassword) {
-      setFormData({
-        email: savedEmail,
-        password: savedPassword,
-        rememberMe: true,
-      });
+    if (typeof window === "undefined") return;
+
+    const stored = localStorage.getItem(rememberKey);
+    if (!stored) {
+      localStorage.removeItem("rememberEmail");
+      localStorage.removeItem("rememberPassword");
+      return;
     }
-  }, []);
+
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed?.email && parsed?.password) {
+        setFormData({
+          email: parsed.email,
+          password: parsed.password,
+          rememberMe: true,
+        });
+      }
+    } catch {
+      localStorage.removeItem(rememberKey);
+    }
+  }, [rememberKey]);
 
   const loginSuccess = (res: any) => {
     const accessToken = res?.data?.access;
@@ -55,10 +69,20 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       return;
     }
 
+    if (typeof window === "undefined") return;
+
     if (formData.rememberMe) {
-      localStorage.setItem("rememberEmail", formData.email);
-      localStorage.setItem("rememberPassword", formData.password);
+      localStorage.setItem(
+        rememberKey,
+        JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      );
+      localStorage.removeItem("rememberEmail");
+      localStorage.removeItem("rememberPassword");
     } else {
+      localStorage.removeItem(rememberKey);
       localStorage.removeItem("rememberEmail");
       localStorage.removeItem("rememberPassword");
     }

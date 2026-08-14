@@ -80,8 +80,34 @@ export default function AddProductStep1Page() {
   };
 
   const step1Data = useSelector((state: RootState) => state.addProduct);
+  const savedStep1 = step1Data.step1;
 
   const [draftId, setDraftId] = useState("");
+
+  useEffect(() => {
+    if (!productName && savedStep1.name) {
+      setProductName(savedStep1.name);
+    }
+
+    if (!description && savedStep1.description) {
+      setDescription(savedStep1.description);
+    }
+
+    if (basePrice === undefined || basePrice === "") {
+      const savedBasePrice = savedStep1.base_price;
+      if (savedBasePrice !== undefined && savedBasePrice !== "") {
+        setBasePrice(savedBasePrice);
+      }
+    }
+
+    if (!category && savedStep1.category) {
+      setCategory(savedStep1.category);
+    }
+
+    if (!subCategory && savedStep1.sub_category) {
+      setSubCategory(savedStep1.sub_category);
+    }
+  }, [savedStep1, productName, description, basePrice, category, subCategory]);
 
   //   useEffect(() => {
   //   const existingId = draftId || step1Data.step1.id;
@@ -180,10 +206,13 @@ export default function AddProductStep1Page() {
 
             dispatch(
               setStep1Data({
-              id: draft.id ?? id,
-                
-                attributes: subCategory?.effective_attributes ?? []
-                // images: images.filter((i): i is File => i !== null), // File[]
+                id: draft.id ?? id,
+                name: productName,
+                description,
+                base_price: basePrice,
+                category: category ?? null,
+                sub_category: subCategory ?? null,
+                attributes: subCategory?.effective_attributes ?? [],
               }),
             );
 
@@ -237,6 +266,11 @@ export default function AddProductStep1Page() {
             dispatch(
               setStep1Data({
                 id: draft.id ?? id,
+                name: productName,
+                description,
+                base_price: basePrice,
+                category: category ?? null,
+                sub_category: subCategory ?? null,
                 attributes: subCategory?.effective_attributes ?? [],
               }),
             );
@@ -345,6 +379,13 @@ export default function AddProductStep1Page() {
                   setCategory(cat);
                   setSubCategory(undefined);
                   setAttributesValues({});
+                  dispatch(
+                    setStep1Data({
+                      category: cat,
+                      sub_category: null,
+                      attributes: [],
+                    }),
+                  );
                 }}
               />
 
@@ -354,6 +395,12 @@ export default function AddProductStep1Page() {
                 onSelect={(sub: SubCategory) => {
                   setSubCategory(sub);
                   setAttributesValues({});
+                  dispatch(
+                    setStep1Data({
+                      sub_category: sub,
+                      attributes: sub.effective_attributes ?? [],
+                    }),
+                  );
                 }}
               />
             </div>

@@ -1,5 +1,9 @@
 // store/productFormSlice.ts
-import { EffectiveAttribute } from "@/components/ui/seller-components/body-components/products/add-form/categorySelector";
+import {
+  Category,
+  EffectiveAttribute,
+  SubCategory,
+} from "@/components/ui/seller-components/body-components/products/add-form/categorySelector";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 /* ---------- Types ---------- */
@@ -30,8 +34,12 @@ export interface Specification {
 
 interface ProductFormState {
   step1: {
-   
     id?: string;
+    name?: string;
+    description?: string;
+    base_price?: number | string;
+    category?: Category | null;
+    sub_category?: SubCategory | null;
     attributes?: EffectiveAttribute[];
   };
 
@@ -57,6 +65,11 @@ interface ProductFormState {
 const initialState: ProductFormState = {
   step1: {
     id: "",
+    name: "",
+    description: "",
+    base_price: "",
+    category: null,
+    sub_category: null,
     attributes: [],
   },
 

@@ -235,7 +235,7 @@ export default function AddToDraftPage() {
     formData.append("base_price", String(basePrice));
     formData.append("category_id", subCategory?.id || "");
 
-    formData.append("specifications_text", specificationsText);
+    formData.append("specifications", specificationsText);
     formData.append("variations", JSON.stringify(variationsPayload));
 
     // send images per variation

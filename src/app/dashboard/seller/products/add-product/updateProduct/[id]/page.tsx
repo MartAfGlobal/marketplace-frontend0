@@ -123,10 +123,20 @@ export default function UpdateProductPage() {
         const draft = responseData.data;
         if (!draft) return;
 
+        const resolvedDraftId = draft.id ?? id;
+        if (resolvedDraftId) {
+          setDraftId(resolvedDraftId);
+          dispatch(
+            setStep1Data({
+              id: resolvedDraftId,
+            }),
+          );
+        }
+
         setProductName(draft.name ?? "");
         setDescription(draft.description_html || draft.description || draft.draft_data?.description || "");
         setBasePrice(draft.base_price ?? undefined);
-        setSpecificationsText(draft.specifications_html || draft.specifications_text || draft.draft_data?.specifications_text || "");
+        setSpecificationsText(draft.specifications_html || draft.specifications_text || draft.specifications || "");
 
         const cat = draft.category_info?.category || draft.category;
         if (cat) {
@@ -375,13 +385,15 @@ export default function UpdateProductPage() {
     );
   };
 
+  const resolvedDraftId = draftId || step1Data.step1.id || id;
+
   const url = isLiveMode
     ? `/products/manufacturer/products/${id}/`
-    : draftId === "" || step1Data.step1.id === ""
+    : !resolvedDraftId
       ? "/products/manufacturer/drafts/"
-      : `/products/manufacturer/drafts/${draftId || step1Data.step1.id}/`;
+      : `/products/manufacturer/drafts/${resolvedDraftId}/`;
 
-  const method = isLiveMode ? "PUT" : draftId === "" || step1Data.step1.id === "" ? "POST" : "PUT";
+  const method = isLiveMode ? "PUT" : !resolvedDraftId ? "POST" : "PUT";
 
   const handleImageRemove = (index: number) => {
     const newImages = [...images];
@@ -575,8 +587,11 @@ export default function UpdateProductPage() {
         userType: "seller",
       },
       successRes: (responseData: any) => {
-        const id = responseData.data?.id || draftId;
-        setDraftId(id);
+        const nextDraftId = responseData.data?.id || draftId || step1Data.step1.id || id;
+        if (nextDraftId) {
+          setDraftId(nextDraftId);
+          dispatch(setStep1Data({ id: nextDraftId }));
+        }
 
         fetchNextDraftDetails({
           requestConfig: {
@@ -609,8 +624,11 @@ export default function UpdateProductPage() {
         userType: "seller",
       },
       successRes: (responseData: any) => {
-        const id = responseData.data?.id || draftId;
-        if(id) setDraftId(id);
+        const nextDraftId = responseData.data?.id || draftId || step1Data.step1.id || id;
+        if (nextDraftId) {
+          setDraftId(nextDraftId);
+          dispatch(setStep1Data({ id: nextDraftId }));
+        }
         
         sendHttpRequest({
           requestConfig: {
