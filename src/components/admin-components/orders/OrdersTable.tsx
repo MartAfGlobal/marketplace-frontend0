@@ -186,18 +186,25 @@ export default function OrdersTable({
                     </svg>
                   </button>
                 </td>
-                <td className="py-3 px-4  ">
-                  {row.date}
+                <td className="py-3 px-4">
+                  <span className="block max-w-[90px] truncate" title={row.date}>
+                    {row.date}
+                  </span>
                 </td>
-                <td className="py-3 px-4 ">
-                  {row.id}
+                <td className="py-3 px-4">
+                  <span className="block max-w-[90px] truncate" title={row.id}>
+                    {row.id}
+                  </span>
                 </td>
-                <td className="py-3 px-4 text-000000/68">
-                  {row.buyer}
-                 
+                <td className="py-3 px-4">
+                  <span className="block max-w-[120px] truncate" title={row.buyer}>
+                    {row.buyer}
+                  </span>
                 </td>
-                <td className="py-3 px-4 ">
-                  {row.vendors}
+                <td className="py-3 px-4">
+                  <span className="block max-w-[120px] truncate" title={row.vendors}>
+                    {row.vendors}
+                  </span>
                 </td>
                
                 <td className="py-3 px-4">
@@ -217,8 +224,16 @@ export default function OrdersTable({
                     );
                   })()}
                 </td>
-                <td className="py-3 px-4 text-gray-500">{row.amount}</td>
-                <td className="py-3 px-4 text-gray-500">{row.location}</td>
+                <td className="py-3 px-4">
+                  <span className="block max-w-[80px] truncate" title={row.amount}>
+                    {row.amount}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="block max-w-[80px] truncate" title={row.location}>
+                    {row.location}
+                  </span>
+                </td>
                 <td
                   className="py-3 px-4 text-center relative"
                   onClick={(e) => e.stopPropagation()}

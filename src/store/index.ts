@@ -22,6 +22,7 @@ import AdminProductDetailReducer from "@/store/admin/products/adminProductDetail
 import AdminCategoryStatsReducer from "@/store/admin/categories/categoryStatsSlice"
 import AdminCategoriesReducer from "@/store/admin/categories/adminCategoriesSlice"
 import AdminCategoryDetailReducer from "@/store/admin/categories/adminCategoryDetailSlice"
+import AdminOrdersReducer from "@/store/admin/orders/adminOrdersSlice"
 
 import productReducer from "./user-data/products/product-slice";
 import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice";
@@ -167,6 +168,10 @@ const AdminCategoryDetailPersistConfig = {
   key: "adminCategoryDetail",
   storage,
 };
+const AdminOrdersPersistConfig = {
+  key: "adminOrders",
+  storage,
+};
 
 const rootReducer = combineReducers({
   productDetails: persistReducer(
@@ -183,6 +188,7 @@ const rootReducer = combineReducers({
  adminKycDetails:persistReducer(AdminKycDetailsPersistConfig, AdminKycDetailsReducer),
  adminProducts:persistReducer(AdminProductsPersistConfig, AdminProductsReducer),
  adminProductDetail:persistReducer(AdminProductDetailPersistConfig, AdminProductDetailReducer),
+ adminOrders:persistReducer(AdminOrdersPersistConfig, AdminOrdersReducer),
   sellerProduct: persistReducer(SellerPersistConfig, SellerProductReducer),
   tracking: persistReducer(trackingPersistCobfig, trackingReducer),
   token: persistReducer(tokenPersistConfig, tokenReducer),

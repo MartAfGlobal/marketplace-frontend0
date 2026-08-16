@@ -42,26 +42,40 @@ export default function PasswordSection() {
   }, [sellerData]);
 
   const handleSavePassword = (passwords: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
+    const activeToken =
+      token ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("accessToken") || localStorage.getItem("token")
+        : null);
+
     updatePasswordReq({
       requestConfig: {
-        url: "/accounts/manufacturer/profile-update/",
-        method: "PATCH",
-        token: token ?? undefined,
+        url: "/accounts/password/change",
+        method: "POST",
+        token: activeToken ?? undefined,
         isAuth: true,
         userType: "seller",
         body: {
-          password: passwords.newPassword,
           old_password: passwords.currentPassword,
+          new_password: passwords.newPassword,
+          confirm_password: passwords.confirmPassword,
         },
       },
       successRes: (res: any) => {
         setIsResetModalOpen(false);
         setSuccessTitle("Success");
-        setSuccessMsg("Your password was successfully updated.");
+        setSuccessMsg(res?.message || res?.data?.message || "Your password was successfully updated.");
         setShowSuccessModal(true);
       },
       errorRes: (err: any) => {
-        setErrorMessage(err.response?.data?.message || err.message || "Failed to update password.");
+        const errorMsg =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.response?.data?.detail ||
+          (typeof err.response?.data === "string" ? err.response?.data : null) ||
+          err.message ||
+          "Failed to update password.";
+        setErrorMessage(errorMsg);
         setShowErrorModal(true);
       }
     });

@@ -18,6 +18,7 @@ import { setAdminProductDetail } from "@/store/admin/products/adminProductDetail
 import { setAdminCategoryStats } from "@/store/admin/categories/categoryStatsSlice";
 import { setAdminCategoriesData } from "@/store/admin/categories/adminCategoriesSlice";
 import { setAdminCategoryDetail } from "@/store/admin/categories/adminCategoryDetailSlice";
+import { setAdminOrdersData } from "@/store/admin/orders/adminOrdersSlice";
 
 export const AdminDetails = (id?: string) => {
   const dispatch = useDispatch();
@@ -902,7 +903,62 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  //order management Api
+
+   const fetchOrdersList = (
+    page: number = 1,
+    callback?: (data: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/orderslist?page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const rawResults =
+          responseData?.data?.results ??
+          responseData?.data ??
+          (Array.isArray(responseData) ? responseData : []);
+        const results = Array.isArray(rawResults) ? rawResults : [];
+        const totalCount =
+          responseData?.data?.count ?? responseData?.count ?? results.length;
+        console.log("Admin orders fetched:", results, "Total:", totalCount);
+        dispatch(setAdminOrdersData({ results, count: totalCount }));
+        if (callback) callback({ results, totalCount });
+      },
+    });
+  };
+
+  const fetchOrdersSummary = (
+    range: string = "this_month",
+    callback?: (data: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/order/admin/summary?range=${range}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData ?? {};
+        console.log("Admin orders summary:", data);
+        if (callback) callback(data);
+      },
+    });
+  };
+
   return {
+    fetchOrdersList,
+    fetchOrdersSummary,
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
     approveAdminProduct,
