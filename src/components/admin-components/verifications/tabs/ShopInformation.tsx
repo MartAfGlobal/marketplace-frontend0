@@ -11,7 +11,7 @@ export default function ShopInformation({ seller }: ShopInformationProps) {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in">
       <h3 className="font-MontserratNormal text-base">Business details</h3>
-      <div className="flex flex-col gap-4">
+      {/* <div className="flex flex-col gap-4">
         <Label className="">Business type</Label>
         <div className="flex items-center gap-6">
           <Label className="flex items-center gap-2 cursor-not-allowed opacity-70">
@@ -60,7 +60,7 @@ export default function ShopInformation({ seller }: ShopInformationProps) {
             </span>
           </Label>
         </div>
-      </div>
+      </div> */}
       <div className="grid grid-cols-3 gap-x-4 gap-y-6 items-center">
         <div className="flex flex-col gap-1.5">
           <Label className="">Store name</Label>
@@ -75,7 +75,7 @@ export default function ShopInformation({ seller }: ShopInformationProps) {
             Business type
           </Label>
           <Input
-            value={seller?.business_type || ""}
+            value={seller?.is_registered_business? "Registered Business":"Individua"}
             readOnly
             className="-allowed"
           />

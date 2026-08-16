@@ -35,7 +35,7 @@ export default function AddProductStep1Page() {
 
   const hasImage = images.some((img) => img !== null);
 
-  const isNextEnabled = specificationsText;
+  const isNextEnabled = specificationsText.trim().length > 0;
 
   const token = useSelector((state: RootState) => state.token?.token);
 
@@ -94,9 +94,17 @@ export default function AddProductStep1Page() {
     console.log("unknow", step1Data);
   }, [step1Data]);
 
-  const formData = new FormData();
+  const buildSpecificationsFormData = () => {
+    const payload = new FormData();
+    const normalizedText = specificationsText.trim();
 
-  formData.append("specifications_text", specificationsText);
+    if (!normalizedText) return payload;
+
+    payload.append("specifications", normalizedText);
+    payload.append("specifications_text", normalizedText);
+
+    return payload;
+  };
 
   // PRODUCT IMAGES (FILES)
 
@@ -112,6 +120,8 @@ export default function AddProductStep1Page() {
 
   const handleNext = () => {
     if (!isNextEnabled || !token || !step1Data.id) return;
+
+    const formData = buildSpecificationsFormData();
 
     console.log("new results", step1Data);
 
@@ -149,8 +159,7 @@ export default function AddProductStep1Page() {
     if (!token) return;
     console.log("saving draft", step1Data);
 
-    const formData = new FormData();
-    formData.append("specifications", specificationsText);
+    const formData = buildSpecificationsFormData();
 
     savingToDraftReq({
       requestConfig: {
