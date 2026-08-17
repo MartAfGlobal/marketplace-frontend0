@@ -32,40 +32,51 @@ export default function CategoriesGrid() {
   const [subLoading, setSubLoading] = useState(false);
   const [categorySubcategories, setCategorySubcategories] = useState<Record<string, subcategory[]>>({});
 
-  const fetchSubcategories = useCallback((categoryId: string) => {
+  const fetchSubcategories = useCallback((parentSlug: string, cacheKey: string) => {
     setSubLoading(true);
     sendHttpRequest({
       requestConfig: {
-        url: `/products/public/categories/${categoryId}/subcategories/`,
+        url: `products/public/categories/subcategories/?parent=${encodeURIComponent(parentSlug)}`,
         method: "GET",
       },
       successRes: (res: any) => {
-        const subs = res?.data?.subcategories || res?.data?.results || res?.data || [];
-        setCategorySubcategories(prev => ({
+        const subs =
+          res?.data?.results ||
+          res?.data?.subcategories ||
+          (Array.isArray(res?.data) ? res?.data : []) ||
+          (Array.isArray(res) ? res : []);
+
+        const finalSubs: subcategory[] = Array.isArray(subs) ? subs : [];
+
+        setCategorySubcategories((prev) => ({
           ...prev,
-          [categoryId]: Array.isArray(subs) ? subs : []
+          [cacheKey]: finalSubs,
+          [parentSlug]: finalSubs,
         }));
         setSubLoading(false);
       },
       errorRes: () => {
         setSubLoading(false);
-      }
+      },
     });
   }, [sendHttpRequest]);
 
   const handleCategoryClick = useCallback((cat: Category) => {
     setSelectedCategory(cat);
-    
+
+    const parentSlug = cat.slug || cat.name?.toLowerCase().replace(/\s+/g, "-") || cat.id;
+    const cacheKey = cat.id || parentSlug;
+
     // Check if subcategories already exist in any common field
-    const existingSubs = 
-      (cat.children && cat.children.length > 0) || 
+    const existingSubs =
+      (cat.children && cat.children.length > 0) ||
       ((cat as any).sub_categories && (cat as any).sub_categories.length > 0) ||
       ((cat as any).subcategories && (cat as any).subcategories.length > 0) ||
       (cat.subcategory && (Array.isArray(cat.subcategory) ? cat.subcategory.length > 0 : Object.keys(cat.subcategory).length > 0));
-    
-    if (!existingSubs && !categorySubcategories[cat.id]) {
-      console.log(`Fetching subcategories for category: ${cat.name} (${cat.id})`);
-      fetchSubcategories(cat.id);
+
+    if (!existingSubs && !categorySubcategories[cacheKey] && !categorySubcategories[parentSlug] && !categorySubcategories[cat.id]) {
+      console.log(`Fetching subcategories for parent: ${parentSlug}`);
+      fetchSubcategories(parentSlug, cacheKey);
     }
   }, [categorySubcategories, fetchSubcategories]);
 
@@ -154,14 +165,20 @@ export default function CategoriesGrid() {
   // Extract subcategories for selected category safely
   const subcategories: subcategory[] = (() => {
     if (!selectedCategory) return [];
-    
+
+    const parentSlug = selectedCategory.slug || selectedCategory.name?.toLowerCase().replace(/\s+/g, "-") || selectedCategory.id;
+    const cacheKey = selectedCategory.id || parentSlug;
+
     // Check various common field names for subcategories array from backend
-    const possible = 
-      selectedCategory.children || 
-      (selectedCategory as any).sub_categories || 
-      (selectedCategory as any).subcategories || 
-      selectedCategory.subcategory ||
-      categorySubcategories[selectedCategory.id];
+    const possible =
+      categorySubcategories[cacheKey] ||
+      categorySubcategories[parentSlug] ||
+      categorySubcategories[selectedCategory.id] ||
+      categorySubcategories[selectedCategory.slug] ||
+      selectedCategory.children ||
+      (selectedCategory as any).sub_categories ||
+      (selectedCategory as any).subcategories ||
+      selectedCategory.subcategory;
 
     if (Array.isArray(possible)) return possible;
     // Handle single object response if necessary
@@ -226,7 +243,7 @@ export default function CategoriesGrid() {
 
     </div>
       <AnimatePresence>
-        {selectedCategory && (subLoading || subcategories.length > 0) && (
+        {selectedCategory && (
           <motion.div
             className="fixed top-0 inset-0 bg-black/50 flex items-center justify-start z-50 w-full h-full"
             initial={{ opacity: 0 }}
@@ -235,31 +252,44 @@ export default function CategoriesGrid() {
             onClick={() => setSelectedCategory(null)}
           >
             <motion.div
-              className="absolute top-[104px] left-[320px]"
+              className="absolute top-[104px] left-[400px] "
               initial={{ y: "-100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "-100%", opacity: 0 }}
               transition={{ type: "spring", stiffness: 100, damping: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
-               <div className="bg-white p-8 shadow-customW w-full max-w-181.75 pointer-events-auto min-h-[200px]">
+               <div className="bg-white p-8 shadow-customW w-full lg:w-181.75 max-w-181.75 pointer-events-auto min-h-[200px] relative rounded-lg">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+
                 {subLoading ? (
                   <div className="flex items-center justify-center h-full w-full py-10">
                     <LoadingSpinner color="border-ff715b" size={40} />
+                  </div>
+                ) : subcategories.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+                    <p className="font-MontserratMedium text-sm">No subcategories available</p>
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-x-[26px] gap-y-[27px]">
                     {subcategories.map((sub) => (
                       <button
-                        key={sub.id}
-                        onClick={() =>
+                        key={sub.id || sub.slug || sub.name}
+                        onClick={() => {
+                          setSelectedCategory(null);
                           router.push(
                             `/categories/${encodeURIComponent(
-                              selectedCategory.slug
-                            )}/${encodeURIComponent(sub.slug)}`
-                          )
-                        }
-                        className="flex flex-col w-22 items-center cursor-pointer hover:shadow-md"
+                              selectedCategory.slug || selectedCategory.id
+                            )}/${encodeURIComponent(sub.slug || sub.id)}`
+                          );
+                        }}
+                        className="flex flex-col w-22 items-center cursor-pointer hover:shadow-md transition-shadow"
                       >
                         <span className="w-22 h-22 bg-gray-100 flex items-center justify-center rounded-md overflow-hidden">
                           {sub.image ? (

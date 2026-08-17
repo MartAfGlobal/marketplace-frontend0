@@ -936,13 +936,14 @@ export const AdminDetails = (id?: string) => {
 
   const fetchOrdersSummary = (
     range: string = "this_month",
-    callback?: (data: any) => void
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void
   ) => {
     if (!token) return;
 
     sendHttpRequest({
       requestConfig: {
-        url: `/order/admin/summary?range=${range}`,
+        url: `/orders/admin/summary/?range=${range}`,
         method: "GET",
         token,
         isAuth: true,
@@ -952,6 +953,10 @@ export const AdminDetails = (id?: string) => {
         const data = responseData?.data ?? responseData ?? {};
         console.log("Admin orders summary:", data);
         if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin orders summary error:", err);
+        if (errorCallback) errorCallback(err);
       },
     });
   };

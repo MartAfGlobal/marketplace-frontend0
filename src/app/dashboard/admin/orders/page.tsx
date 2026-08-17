@@ -113,14 +113,20 @@ export default function AdminOrdersPage() {
   const onMonthChange = (value: string) => {
     setSelectedMonth(value);
     if (token) {
-      fetchOrdersSummary(getRangeParam(value), (data: any) => {
-        setSummaryStats({
-          total: data?.total_orders ?? data?.total,
-          delivered: data?.delivered_orders ?? data?.delivered,
-          ongoing: data?.ongoing_orders ?? data?.ongoing,
-          disputed: data?.disputed_orders ?? data?.disputed,
-        });
-      });
+      fetchOrdersSummary(
+        getRangeParam(value),
+        (data: any) => {
+          setSummaryStats({
+            total: data?.total_orders ?? data?.total,
+            delivered: data?.delivered_orders ?? data?.delivered,
+            ongoing: data?.ongoing_orders ?? data?.ongoing,
+            disputed: data?.disputed_orders ?? data?.disputed,
+          });
+        },
+        () => {
+          setSummaryStats({});
+        }
+      );
     }
   };
 
@@ -136,14 +142,20 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     if (token) {
       fetchOrdersList(currentPage);
-      fetchOrdersSummary(getRangeParam(selectedMonth), (data: any) => {
-        setSummaryStats({
-          total: data?.total_orders ?? data?.total,
-          delivered: data?.delivered_orders ?? data?.delivered,
-          ongoing: data?.ongoing_orders ?? data?.ongoing,
-          disputed: data?.disputed_orders ?? data?.disputed,
-        });
-      });
+      fetchOrdersSummary(
+        getRangeParam(selectedMonth),
+        (data: any) => {
+          setSummaryStats({
+            total: data?.total_orders ?? data?.total,
+            delivered: data?.delivered_orders ?? data?.delivered,
+            ongoing: data?.ongoing_orders ?? data?.ongoing,
+            disputed: data?.disputed_orders ?? data?.disputed,
+          });
+        },
+        () => {
+          setSummaryStats({});
+        }
+      );
     }
   }, [token, currentPage]);
 
