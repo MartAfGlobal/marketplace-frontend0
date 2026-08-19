@@ -21,6 +21,90 @@ interface RegisterFormStep3Props {
   businessType: "registered" | "unregistered";
 }
 
+// ── Validation regexes & rules ───────────────────────────────────
+
+/**
+ * Business Registration Number (BRN)
+ * Distinct from CAC number: general registration code, certificate number,
+ * or state/entity business ID (alphanumeric, 6–20 characters, allowing hyphens and slashes).
+ * Examples: BRN-12345678, 1234567890, RC/2022/12345, BN-987654
+ */
+const BIZ_REG_REGEX = /^[A-Z0-9\/-]{6,20}$/i;
+
+/**
+ * CAC Registration Number
+ * Specific Corporate Affairs Commission registration code (RC, BN, IT, LP, LLP prefix + digits, or numeric CAC number).
+ * Examples: RC1234567, BN1234567, IT123456, RC-1234567, 12345678
+ */
+const CAC_REGEX = /^((RC|BN|IT|LP|LLP)[-\s]?\d{5,8}|\d{6,10})$/i;
+
+/**
+ * Tax Identification Number (TIN)
+ * Nigerian FIRS format: 8 digits or 8 digits + hyphen + 4 digits (e.g. 12345678 or 12345678-0001)
+ */
+const TIN_REGEX = /^\d{8}(-\d{4})?$/;
+
+/**
+ * VAT Number
+ * 8–14 characters (e.g. 12345678-0001, NG12345678, or standard 8-digit TIN/VAT)
+ */
+const VAT_REGEX = /^([A-Z]{2})?\d{8}(-\d{4})?$/i;
+
+function validateBizReg(val: string): string {
+  const v = val.trim();
+  if (!v) return "Business registration number is required";
+  if (v.length < 6 || v.length > 20) {
+    return "Business registration number must be between 6 and 20 characters";
+  }
+  if (!BIZ_REG_REGEX.test(v)) {
+    return "Invalid format. Only letters, numbers, hyphens (-) and slashes (/) are allowed";
+  }
+  return "";
+}
+
+function validateCAC(val: string): string {
+  const v = val.trim();
+  if (!v) return "CAC registration number is required";
+  if (v.length < 6 || v.length > 14) {
+    return "CAC registration number must be between 6 and 14 characters";
+  }
+  if (!CAC_REGEX.test(v)) {
+    return "Invalid CAC format. Expected RC, BN, IT, LP, LLP followed by 5–8 digits (e.g. RC1234567) or 6–10 digits";
+  }
+  return "";
+}
+
+function validateTIN(val: string): string {
+  const v = val.trim();
+  if (!v) return "";
+  if (v.length < 8 || v.length > 14) {
+    return "TIN must be between 8 and 14 characters";
+  }
+  if (!TIN_REGEX.test(v)) {
+    return "Invalid TIN format. Expected 8 digits or 8 digits-4 digits (e.g. 12345678-0001)";
+  }
+  return "";
+}
+
+function validateVAT(val: string): string {
+  const v = val.trim();
+  if (!v) return "";
+  if (v.length < 8 || v.length > 14) {
+    return "VAT number must be between 8 and 14 characters";
+  }
+  if (!VAT_REGEX.test(v)) {
+    return "Invalid VAT format. Expected e.g. 12345678-0001 or NG12345678";
+  }
+  return "";
+}
+
+interface FormErrors {
+  business_registration_number?: string;
+  CAC_No?: string;
+  tax_identification_number?: string;
+  vat_number?: string;
+}
+
 export default function RegisterFormStep3({}: RegisterFormStep3Props) {
   const router = useRouter();
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
@@ -45,6 +129,8 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
     is_registered_business: true,
   });
 
+  const [errors, setErrors] = useState<FormErrors>({});
+
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     key:
@@ -65,7 +151,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
         e.target.value = "";
         return;
       }
-      setFormData({ ...formData, [key]: file });
+      setFormData((prev) => ({ ...prev, [key]: file }));
     }
   };
 
@@ -75,7 +161,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
       | "tax_identification_file"
       | "certificate_of_registration",
   ) => {
-    setFormData({ ...formData, [key]: null });
+    setFormData((prev) => ({ ...prev, [key]: null }));
   };
 
   const handleConfirm = () => {
@@ -85,18 +171,44 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // ── Validate Required & Optional Fields ─────────────────────────
+    const newErrors: FormErrors = {};
+
+    const bizRegErr = validateBizReg(formData.business_registration_number || "");
+    if (bizRegErr) newErrors.business_registration_number = bizRegErr;
+
+    const cacErr = validateCAC(formData.CAC_No || "");
+    if (cacErr) newErrors.CAC_No = cacErr;
+
+    if (formData.tax_identification_number?.trim()) {
+      const tinErr = validateTIN(formData.tax_identification_number);
+      if (tinErr) newErrors.tax_identification_number = tinErr;
+    }
+
+    if (formData.vat_number?.trim()) {
+      const vatErr = validateVAT(formData.vat_number);
+      if (vatErr) newErrors.vat_number = vatErr;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      const firstError = Object.values(newErrors)[0];
+      toast.error(firstError);
+      return;
+    }
+
     const payload = new FormData();
 
     payload.append(
       "business_registration_number",
-      formData.business_registration_number ?? "",
+      formData.business_registration_number?.trim() ?? "",
     );
-    payload.append("CAC_No", formData.CAC_No ?? "");
+    payload.append("CAC_No", formData.CAC_No?.trim() ?? "");
     payload.append(
       "tax_identification_number",
-      formData.tax_identification_number ?? "",
+      formData.tax_identification_number?.trim() ?? "",
     );
-    payload.append("vat_number", formData.vat_number ?? "");
+    payload.append("vat_number", formData.vat_number?.trim() ?? "");
     payload.append(
       "is_registered_business",
       String(formData.is_registered_business),
@@ -114,12 +226,22 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
     }
 
     if (formData.certificate_of_registration) {
-      payload.append("certificate_of_registration", formData.certificate_of_registration);
+      payload.append(
+        "certificate_of_registration",
+        formData.certificate_of_registration,
+      );
     }
 
     registerUserReq({
       successRes: () => {
         setIsOpen(true);
+      },
+      errorRes: (err: any) => {
+        const msg =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          "Failed to submit documents. Please try again.";
+        toast.error(msg);
       },
       requestConfig: {
         url: `/accounts/manufacturer/business-documents/`,
@@ -135,33 +257,71 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
     <div className="w-full text-black/65">
       {!isOpen && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* ROW 1 */}
-          <div className="flex gap-4 items-center md:flex-row flex-col w-full">
-            <div className="flex-1 flex flex-col gap-2 w-full">
+          {/* ROW 1: Business Registration Number & CAC Registration Number */}
+          <div className="flex gap-4 items-start md:flex-row flex-col w-full">
+            {/* Business Registration Number (BRN) */}
+            <div className="flex-1 flex flex-col gap-1.5 w-full">
               <Label>Business registration number*</Label>
               <Input
+                type="text"
+                minLength={6}
+                maxLength={20}
+                placeholder="e.g. BRN-12345678 or 1234567"
                 value={formData.business_registration_number}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    business_registration_number: e.target.value,
-                  })
-                }
+                valid={!errors.business_registration_number}
+                onChange={(e) => {
+                  const sanitized = e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9\/-]/g, "")
+                    .slice(0, 20);
+                  setFormData((prev) => ({
+                    ...prev,
+                    business_registration_number: sanitized,
+                  }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    business_registration_number: sanitized ? validateBizReg(sanitized) : "",
+                  }));
+                }}
               />
+              {errors.business_registration_number && (
+                <p className="text-[11px] text-[#CA0202] font-MontserratMedium">
+                  {errors.business_registration_number}
+                </p>
+              )}
             </div>
 
-            <div className="flex-1 flex flex-col gap-2 w-full">
+            {/* CAC Registration Number */}
+            <div className="flex-1 flex flex-col gap-1.5 w-full">
               <Label>CAC Registration Number *</Label>
               <Input
+                type="text"
+                minLength={6}
+                maxLength={14}
+                placeholder="e.g. RC1234567 or BN1234567"
                 value={formData.CAC_No}
-                onChange={(e) =>
-                  setFormData({ ...formData, CAC_No: e.target.value })
-                }
+                valid={!errors.CAC_No}
+                onChange={(e) => {
+                  const sanitized = e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9-]/g, "")
+                    .slice(0, 14);
+                  setFormData((prev) => ({ ...prev, CAC_No: sanitized }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    CAC_No: sanitized ? validateCAC(sanitized) : "",
+                  }));
+                }}
               />
+              {errors.CAC_No && (
+                <p className="text-[11px] text-[#CA0202] font-MontserratMedium">
+                  {errors.CAC_No}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* ROW 2 */}
+          {/* ROW 2: CAC02 & CAC07 + Certificate of Registration */}
           <div className="flex gap-4 items-center md:flex-row flex-col">
             <div className="flex-1 flex flex-col w-full gap-2 min-w-0">
               <Label>CAC02 & CAC07</Label>
@@ -266,8 +426,8 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
             </div>
           </div>
 
-          {/* ROW 3 */}
-          <div className="flex gap-4 items-center md:flex-row flex-col">
+          {/* ROW 3: Upload TIN & TIN (Tax Identification Number) */}
+          <div className="flex gap-4 items-start md:flex-row flex-col">
             <div className="flex-1 flex flex-col gap-2 w-full min-w-0">
               <Label>Upload TIN (tax identification number)</Label>
 
@@ -316,33 +476,66 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
                 )}
               </div>
             </div>
-            <div className="flex-1 flex flex-col gap-2 w-full">
+
+            <div className="flex-1 flex flex-col gap-1.5 w-full">
               <Label>TIN (tax identification number)</Label>
               <Input
+                type="text"
+                minLength={8}
+                maxLength={14}
+                placeholder="e.g. 12345678-0001"
                 value={formData.tax_identification_number}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    tax_identification_number: e.target.value,
-                  })
-                }
+                valid={!errors.tax_identification_number}
+                onChange={(e) => {
+                  const sanitized = e.target.value
+                    .replace(/[^\d-]/g, "")
+                    .slice(0, 14);
+                  setFormData((prev) => ({
+                    ...prev,
+                    tax_identification_number: sanitized,
+                  }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    tax_identification_number: sanitized ? validateTIN(sanitized) : "",
+                  }));
+                }}
               />
+              {errors.tax_identification_number && (
+                <p className="text-[11px] text-[#CA0202] font-MontserratMedium">
+                  {errors.tax_identification_number}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* ROW 4 */}
-          <div className="flex gap-4 items-center w-full md:flex-row flex-col">
-            <div className="flex-1 flex flex-col gap-2 w-full">
+          {/* ROW 4: VAT number */}
+          <div className="flex gap-4 items-start w-full md:flex-row flex-col">
+            <div className="flex-1 flex flex-col gap-1.5 w-full">
               <Label>VAT number</Label>
               <Input
+                type="text"
+                minLength={8}
+                maxLength={14}
+                placeholder="e.g. 12345678-0001 or NG12345678"
                 value={formData.vat_number}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    vat_number: e.target.value,
-                  })
-                }
+                valid={!errors.vat_number}
+                onChange={(e) => {
+                  const sanitized = e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9-]/g, "")
+                    .slice(0, 14);
+                  setFormData((prev) => ({ ...prev, vat_number: sanitized }));
+                  setErrors((prev) => ({
+                    ...prev,
+                    vat_number: sanitized ? validateVAT(sanitized) : "",
+                  }));
+                }}
               />
+              {errors.vat_number && (
+                <p className="text-[11px] text-[#CA0202] font-MontserratMedium">
+                  {errors.vat_number}
+                </p>
+              )}
             </div>
 
             <div className="flex-1" />

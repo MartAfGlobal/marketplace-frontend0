@@ -8,13 +8,37 @@ import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Link from "next/link";
 
+const DEFAULT_RESEND_TIMEOUT = 120;
+
+function extractRetryAfter(data: any): number | null {
+  const raw =
+    data?.retry_after ??
+    data?.retry_after_seconds ??
+    data?.resend_after ??
+    data?.cooldown ??
+    data?.wait_seconds ??
+    data?.expires_in ??
+    null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 export default function OtpVerification() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
 
+  const initialRetryAfter =
+    extractRetryAfter({
+      retry_after: searchParams.get("retry_after"),
+      retry_after_seconds: searchParams.get("retry_after_seconds"),
+      resend_after: searchParams.get("resend_after"),
+      cooldown: searchParams.get("cooldown"),
+    }) ?? DEFAULT_RESEND_TIMEOUT;
+
   const OTP_LENGTH = 6;
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [timer, setTimer] = useState(initialRetryAfter);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const { loading, sendHttpRequest: verifyOtp } = useHttp();
@@ -27,6 +51,15 @@ export default function OtpVerification() {
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
+
+  // Timer countdown
+  useEffect(() => {
+    if (timer <= 0) return;
+    const interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const handleChange = (index: number, value: string) => {
     // Allow only single digit
@@ -105,12 +138,24 @@ export default function OtpVerification() {
 
   const handleResend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || timer > 0) return;
+
     resendOtp({
-      successRes: () => {
+      successRes: (res: any) => {
         toast.success("OTP resent to your email.");
         setDigits(Array(OTP_LENGTH).fill(""));
         inputRefs.current[0]?.focus();
+        const backendRetry =
+          extractRetryAfter(res?.data) ??
+          extractRetryAfter(res) ??
+          DEFAULT_RESEND_TIMEOUT;
+        setTimer(backendRetry);
+      },
+      errorRes: (err: any) => {
+        const backendRetry = extractRetryAfter(err?.response?.data);
+        if (backendRetry) {
+          setTimer(backendRetry);
+        }
       },
       requestConfig: {
         url: "/accounts/reset-password/",
@@ -121,6 +166,10 @@ export default function OtpVerification() {
       },
     });
   };
+
+  const minutes = Math.floor(timer / 60);
+  const seconds = timer % 60;
+  const formattedTimer = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   return (
     <div className="w-full">
@@ -172,10 +221,14 @@ export default function OtpVerification() {
       <div className="flex flex-col items-center gap-2 mt-c24 font-MontserratMedium text-c12">
         <button
           onClick={handleResend}
-          disabled={resendLoading}
+          disabled={resendLoading || timer > 0}
           className="text-ff715b hover:underline disabled:opacity-50 transition-opacity"
         >
-          {resendLoading ? "Resending…" : "Resend OTP"}
+          {resendLoading
+            ? "Resending…"
+            : timer > 0
+            ? `Resend OTP in (${formattedTimer})`
+            : "Resend OTP"}
         </button>
         <Link href="/auth/login" className="text-161616/60 hover:text-ff715b transition-colors">
           Return to login

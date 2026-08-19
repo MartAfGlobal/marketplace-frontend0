@@ -25,6 +25,21 @@ interface VerifyBankOtpModalProps {
   onBack?: () => void;
 }
 
+function extractRetryAfter(data: any): number | null {
+  const raw =
+    data?.retry_after ??
+    data?.retry_after_seconds ??
+    data?.resend_after ??
+    data?.cooldown ??
+    data?.wait_seconds ??
+    data?.expires_in ??
+    null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+const DEFAULT_BANK_OTP_TIMEOUT = 60;
+
 const VerifyBankOtpModal = ({
   isOpen,
   onClose,
@@ -33,7 +48,7 @@ const VerifyBankOtpModal = ({
   onBack,
 }: VerifyBankOtpModalProps) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [timer, setTimer] = useState(60);
+  const [timer, setTimer] = useState(DEFAULT_BANK_OTP_TIMEOUT);
   const [canResend, setCanResend] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -122,14 +137,23 @@ const VerifyBankOtpModal = ({
           account_number: bankDetails?.account_number,
         },
       },
-      successRes: () => {
+      successRes: (res: any) => {
         setSubmitting(false);
-        setTimer(60);
+        const backendRetry =
+          extractRetryAfter(res?.data) ??
+          extractRetryAfter(res) ??
+          DEFAULT_BANK_OTP_TIMEOUT;
+        setTimer(backendRetry);
         setCanResend(false);
         toast.success("New OTP sent successfully");
       },
       errorRes: (err: any) => {
         setSubmitting(false);
+        const backendRetry = extractRetryAfter(err?.response?.data);
+        if (backendRetry) {
+          setTimer(backendRetry);
+          setCanResend(false);
+        }
         toast.error(err?.message || "Failed to resend OTP");
       }
     });

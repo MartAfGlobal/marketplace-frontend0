@@ -15,7 +15,22 @@ export interface RegProps {
   userType: "seller" | "buyer";
 }
 
-const RESEND_TIMEOUT = 120; // 2 minutes in seconds
+/** Default cooldown in seconds — used only when the backend doesn't supply one */
+const DEFAULT_RESEND_TIMEOUT = 120;
+
+/** Extract the retry delay from any response shape the backend might use */
+function extractRetryAfter(data: any): number | null {
+  const raw =
+    data?.retry_after ??
+    data?.resend_after ??
+    data?.cooldown ??
+    data?.wait_seconds ??
+    data?.expires_in ??
+    null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 
 export default function VerificationEmailSent({ userType }: RegProps) {
   const router = useRouter();
@@ -29,10 +44,19 @@ export default function VerificationEmailSent({ userType }: RegProps) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Prefer backend-supplied retry_after in searchParams if provided from signup
+  const initialRetryAfter =
+    extractRetryAfter({
+      retry_after: searchParams.get("retry_after"),
+      retry_after_seconds: searchParams.get("retry_after_seconds"),
+      resend_after: searchParams.get("resend_after"),
+      cooldown: searchParams.get("cooldown"),
+    }) ?? DEFAULT_RESEND_TIMEOUT;
+
   /* ===============================
      TIMER STATE
   =============================== */
-  const [secondsLeft, setSecondsLeft] = useState(RESEND_TIMEOUT);
+  const [secondsLeft, setSecondsLeft] = useState(initialRetryAfter);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -158,13 +182,21 @@ export default function VerificationEmailSent({ userType }: RegProps) {
         body: { email },
         userType,
       },
-      successRes: () => {
+      successRes: (res: any) => {
         toast.success("A new verification code has been sent to your email.");
         setOtp(["", "", "", "", "", ""]);
-        setSecondsLeft(RESEND_TIMEOUT);
+        const backendRetry =
+          extractRetryAfter(res?.data) ??
+          extractRetryAfter(res) ??
+          DEFAULT_RESEND_TIMEOUT;
+        setSecondsLeft(backendRetry);
         document.getElementById("reg-otp-0")?.focus();
       },
       errorRes: (err: any) => {
+        const backendRetry = extractRetryAfter(err?.response?.data);
+        if (backendRetry) {
+          setSecondsLeft(backendRetry);
+        }
         const msg =
           err?.response?.data?.message ||
           err?.response?.data?.error ||

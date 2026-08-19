@@ -100,7 +100,6 @@ export default function AddProductStep1Page() {
 
     if (!normalizedText) return payload;
 
-    payload.append("specifications", normalizedText);
     payload.append("specifications_text", normalizedText);
 
     return payload;

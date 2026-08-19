@@ -74,4 +74,6 @@ export interface SellerData {
   wallet_balance: string;
   warehouse: string | null;
   website: string | null;
+  /** Returned by GET /accounts/2fa/toggle/ */
+  two_factor_enabled: boolean;
 }

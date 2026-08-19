@@ -12,6 +12,27 @@ import { Button } from "@/components/ui/Button/Button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Link from "next/link";
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+/** Extract retry_after from any response shape the backend might use. */
+function extractRetryAfter(data: any): number | null {
+  const raw =
+    data?.retry_after ??
+    data?.resend_after ??
+    data?.cooldown ??
+    data?.wait_seconds ??
+    data?.expires_in ??
+    null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function formatTimer(time: number): string {
+  const mins = Math.floor(time / 60);
+  const secs = time % 60;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 function Verify2faContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -20,6 +41,9 @@ function Verify2faContent() {
   const userId = searchParams.get("user_id") || "";
   const email = searchParams.get("email") || "";
   const userType = searchParams.get("userType") || "seller";
+
+  // Prefer the backend-supplied retry_after from the URL (set when navigating here
+  // after login); fall back to 300 s if absent.
   const initialRetryAfter = Number(searchParams.get("retry_after") || "300");
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -31,50 +55,50 @@ function Verify2faContent() {
 
   const { sendHttpRequest } = useHttp();
 
+  // Sync if the URL param ever changes (e.g. back/forward navigation)
   useEffect(() => {
     setTimer(initialRetryAfter);
     setCanResend(initialRetryAfter <= 0);
   }, [initialRetryAfter]);
 
+  // Countdown tick
   useEffect(() => {
-    let interval: any;
-    if (timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => {
-          if (prev <= 1) {
-            setCanResend(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (timer <= 0) {
+      setCanResend(true);
+      return;
     }
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(interval);
   }, [timer]);
 
+  // ── OTP input handlers ──────────────────────────────────────────────────────
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1);
     if (!/^\d*$/.test(value)) return;
-
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
     setErrorMsg(null);
-
-    // Auto-focus next input
     if (value && index < 5) {
-      const nextInput = document.getElementById(`page-otp-${index + 1}`);
-      nextInput?.focus();
+      document.getElementById(`page-otp-${index + 1}`)?.focus();
     }
   };
 
   const handleOtpKeyDown = (index: number, e: any) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`page-otp-${index - 1}`);
-      prevInput?.focus();
+      document.getElementById(`page-otp-${index - 1}`)?.focus();
     }
   };
 
+  // ── Verify ──────────────────────────────────────────────────────────────────
   const handleVerifyOtp = () => {
     const otpString = otp.join("");
     if (otpString.length < 6) {
@@ -90,7 +114,7 @@ function Verify2faContent() {
         body: {
           user_id: userId,
           otp: otpString,
-          code: otpString, // send both for resilience
+          code: otpString,
         },
       },
       successRes: (res: any) => {
@@ -100,8 +124,6 @@ function Verify2faContent() {
           localStorage.setItem("accessToken", accessToken);
           dispatch(tokenActions.setToken(accessToken));
           toast.success("Login successful!");
-
-          // Redirect based on userType
           if (userType === "admin") {
             router.push("/info/manager/update");
           } else if (userType === "seller") {
@@ -121,12 +143,16 @@ function Verify2faContent() {
       },
       errorRes: (err: any) => {
         setVerifying(false);
-        const backendError = err?.response?.data?.message || err?.response?.data?.error || "Wrong Code, Try again.";
-        setErrorMsg(backendError);
+        setErrorMsg(
+          err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            "Wrong Code, Try again."
+        );
       },
     });
   };
 
+  // ── Resend — uses backend retry_after ──────────────────────────────────────
   const handleResendOtp = () => {
     if (!canResend) return;
     setResending(true);
@@ -136,18 +162,25 @@ function Verify2faContent() {
       requestConfig: {
         url: "/accounts/login/resend-otp/",
         method: "POST",
-        body: {
-          user_id: userId,
-        },
+        body: { user_id: userId },
       },
-      successRes: () => {
+      successRes: (res: any) => {
         setResending(false);
-        setTimer(300);
+
+        // ── Use the backend's retry_after if provided; fall back to 300 s ──
+        const backendRetryAfter = extractRetryAfter(res?.data) ?? 300;
+        setTimer(backendRetryAfter);
         setCanResend(false);
+
         toast.success("A new 2FA code has been sent.");
       },
       errorRes: (err: any) => {
         setResending(false);
+        const backendRetry = extractRetryAfter(err?.response?.data);
+        if (backendRetry) {
+          setTimer(backendRetry);
+          setCanResend(false);
+        }
         const msg =
           err?.response?.data?.error ||
           err?.response?.data?.message ||
@@ -155,12 +188,6 @@ function Verify2faContent() {
         setErrorMsg(msg);
       },
     });
-  };
-
-  const formatTimer = (time: number) => {
-    const mins = Math.floor(time / 60);
-    const secs = time % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -176,7 +203,6 @@ function Verify2faContent() {
           </p>
         )}
 
-        {/* Error Message */}
         {errorMsg && (
           <p className="text-red-500 font-MontserratSemiBold text-sm mb-6 text-center">
             {errorMsg}
@@ -234,7 +260,6 @@ function Verify2faContent() {
           </Link>
         </div>
 
-        {/* Footer */}
         <p className="text-xs text-000000/44 font-MontserratMedium text-center leading-relaxed mt-8">
           If you haven't received the email, check your spam folder
         </p>
@@ -245,7 +270,13 @@ function Verify2faContent() {
 
 export default function Verify2faPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-MontserratMedium">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center font-MontserratMedium">
+          Loading...
+        </div>
+      }
+    >
       <Verify2faContent />
     </Suspense>
   );

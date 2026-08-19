@@ -12,10 +12,64 @@ import ShopInfoTab from "./documents/shop-info-tab";
 import BusinessInfoTab, { IdEntry } from "./documents/business-info-tab";
 import ShippingInfoTab from "./documents/shipping-info-tab";
 
+// ── Validation helpers (mirrors business-info-tab.tsx) ────────────────────────
+const BIZ_REG_REGEX = /^[A-Z0-9\/-]{6,20}$/i;
+const CAC_REGEX = /^((RC|BN|IT|LP|LLP)[-\s]?\d{5,8}|\d{6,10})$/i;
+const TIN_REGEX = /^\d{8}(-\d{4})?$/;
+const VAT_REGEX = /^([A-Z]{2})?\d{8}(-\d{4})?$/i;
+
+const ID_NUMBER_RULES: Record<string, { regex: RegExp; minLength: number; maxLength: number; label: string }> = {
+  PASSPORT:       { regex: /^[A-Z]{1}\d{8}$/i, minLength: 9,  maxLength: 9,  label: "Passport (1 letter + 8 digits)" },
+  NATIONAL_ID:    { regex: /^\d{11}$/,          minLength: 11, maxLength: 11, label: "NIN (11 digits)" },
+  VOTERS_CARD:    { regex: /^[A-Z0-9]{11,19}$/i,minLength: 11, maxLength: 19, label: "Voter's Card (11–19 chars)" },
+  DRIVERS_LICENCE:{ regex: /^[A-Z]{3}[0-9A-Z]{5,12}$/i, minLength: 8, maxLength: 15, label: "Driver's Licence (8–15 chars)" },
+};
+
+function validateBusinessInfoFields(formData: SellerFormData, businessType: string): string[] {
+  const msgs: string[] = [];
+
+  if (businessType === "Registered company") {
+    if (
+      formData.business_registration_number &&
+      (!BIZ_REG_REGEX.test(formData.business_registration_number.trim()) ||
+        formData.business_registration_number.trim().length < 6 ||
+        formData.business_registration_number.trim().length > 20)
+    )
+      msgs.push("Business registration number must be 6–20 characters (letters, numbers, - or /).");
+    if (
+      formData.CAC_No &&
+      (!CAC_REGEX.test(formData.CAC_No.trim()) ||
+        formData.CAC_No.trim().length < 6 ||
+        formData.CAC_No.trim().length > 14)
+    )
+      msgs.push("CAC registration number format is invalid (e.g. RC1234567 or BN1234567).");
+  } else {
+    // Individual: validate each ID number
+    formData.ids.forEach((id, i) => {
+      const rule = ID_NUMBER_RULES[id.means_of_id];
+      if (!rule) return;
+      const v = id.id_number.trim();
+      if (v && (v.length < rule.minLength || v.length > rule.maxLength || !rule.regex.test(v)))
+        msgs.push(`ID #${i + 1} number is invalid. Expected: ${rule.label}.`);
+    });
+  }
+
+  if (formData.tax_identification_number && !TIN_REGEX.test(formData.tax_identification_number.trim()))
+    msgs.push("TIN format is invalid. Expected: 8 digits or 12345678-0001.");
+  if (formData.vat_number && !TIN_REGEX.test(formData.vat_number.trim()))
+    msgs.push("VAT number format is invalid. Expected: 8 digits or 12345678-0001.");
+
+  if (formData.company_postal_code && !/^\d{6}$/.test(formData.company_postal_code.trim()))
+    msgs.push("Postal code must be exactly 6 digits.");
+
+  return msgs;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const TABS = ["Shop information", "Business information", "Shipping information"] as const;
 type TabName = (typeof TABS)[number];
 
-interface FormData {
+interface SellerFormData {
   company_name: string;
   business_type: string;
   business_registration_number: string;
@@ -48,7 +102,7 @@ interface FormData {
   ids: IdEntry[];
 }
 
-function buildInitialForm(profile: any): FormData {
+function buildInitialForm(profile: any): SellerFormData {
   const firstName = profile?.first_name || "";
   const lastName = profile?.last_name || "";
   const fullname = profile?.fullname || [firstName, lastName].filter(Boolean).join(" ") || "";
@@ -109,7 +163,7 @@ export default function DocumentsSection() {
   const [returnSameAsBusiness, setReturnSameAsBusiness] = useState(false);
   const [newFiles, setNewFiles] = useState<Record<string, File>>({});
   const [viewerImage, setViewerImage] = useState<string | null>(null);
-  const [formData, setFormData] = useState<FormData>(() => buildInitialForm(profile));
+  const [formData, setFormData] = useState<SellerFormData>(() => buildInitialForm(profile));
 
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -503,6 +557,15 @@ export default function DocumentsSection() {
 
   const handleSaveClick = () => {
     if (isEditing) {
+      // Run validation before showing the confirm modal
+      if (activeTab === "Business information") {
+        const validationErrors = validateBusinessInfoFields(formData, businessType);
+        if (validationErrors.length > 0) {
+          setErrorMessage(validationErrors.join("\n"));
+          setShowErrorModal(true);
+          return;
+        }
+      }
       setShowWarningModal(true);
     } else {
       setIsEditing(true);

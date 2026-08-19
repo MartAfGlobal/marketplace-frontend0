@@ -9,6 +9,21 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/forms/Input";
 import { useRouter } from "next/navigation";
 
+function extractRetryAfter(data: any): number | null {
+  const raw =
+    data?.retry_after ??
+    data?.retry_after_seconds ??
+    data?.resend_after ??
+    data?.cooldown ??
+    data?.wait_seconds ??
+    data?.expires_in ??
+    null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+const DEFAULT_RESET_TIMEOUT = 120;
+
 export default function ResetVerify({
   onClose,
   setStep,
@@ -17,7 +32,7 @@ export default function ResetVerify({
   const { loading, sendHttpRequest: resendUserReq } = useHttp();
   const { loading: verifying, sendHttpRequest: verifyOtpReq } = useHttp();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [timer, setTimer] = useState(120);
+  const [timer, setTimer] = useState(DEFAULT_RESET_TIMEOUT);
   const router = useRouter();
 
   useEffect(() => {
@@ -87,21 +102,33 @@ export default function ResetVerify({
   // ✅ Success handler for resend request
   const registerUserRes = (res: any) => {
     toast.success("Verification OTP resent successfully!");
-    setTimer(120);
+    const backendRetry =
+      extractRetryAfter(res?.data) ??
+      extractRetryAfter(res) ??
+      DEFAULT_RESET_TIMEOUT;
+    setTimer(backendRetry);
   };
 
   // ✅ Handle resend link
   const handleResendLink = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email) {
-      toast.error("Email not found. Please go back and re-enter it.");
-      setStep("forgot");
+    if (!email || timer > 0) {
+      if (!email) {
+        toast.error("Email not found. Please go back and re-enter it.");
+        setStep("forgot");
+      }
       return;
     }
 
     resendUserReq({
       successRes: registerUserRes,
+      errorRes: (err: any) => {
+        const backendRetry = extractRetryAfter(err?.response?.data);
+        if (backendRetry) {
+          setTimer(backendRetry);
+        }
+      },
       requestConfig: {
         url: "/accounts/reset-password/",
         method: "POST",

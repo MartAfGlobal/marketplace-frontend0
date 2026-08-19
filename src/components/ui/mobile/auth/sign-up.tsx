@@ -49,20 +49,34 @@ export default function AuthModal({
 
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
 
+function extractRetryAfter(data: any): number | null {
+  const raw =
+    data?.retry_after ??
+    data?.retry_after_seconds ??
+    data?.resend_after ??
+    data?.cooldown ??
+    data?.wait_seconds ??
+    data?.expires_in ??
+    null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+const DEFAULT_RESEND_TIMEOUT = 120;
+
   const [formData, setFormData] = useState({
     email: "",
   });
 
-  const RESEND_TIMEOUT = 120;
-  const [secondsLeft, setSecondsLeft] = useState(RESEND_TIMEOUT);
+  const [secondsLeft, setSecondsLeft] = useState(DEFAULT_RESEND_TIMEOUT);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const { loading: resendLoading, sendHttpRequest: resendUserReq } = useHttp();
   const { loading: verifying, sendHttpRequest: verifyOtpReq } = useHttp();
 
   useEffect(() => {
-    if (step === "verificationSent") {
-      setSecondsLeft(RESEND_TIMEOUT);
+    if (step === "verificationSent" && secondsLeft <= 0) {
+      setSecondsLeft(DEFAULT_RESEND_TIMEOUT);
     }
   }, [step]);
 
@@ -76,8 +90,8 @@ export default function AuthModal({
     return () => clearInterval(interval);
   }, [secondsLeft, step]);
 
-  const resetTimer = () => {
-    setSecondsLeft(RESEND_TIMEOUT);
+  const resetTimer = (customTime?: number) => {
+    setSecondsLeft(customTime ?? DEFAULT_RESEND_TIMEOUT);
   };
 
   const handleOtpChange = (index: number, value: string) => {
@@ -150,9 +164,19 @@ export default function AuthModal({
     e.preventDefault();
 
     resendUserReq({
-      successRes: () => {
+      successRes: (res: any) => {
         setShowSuccessModal(true);
-        resetTimer();
+        const backendRetry =
+          extractRetryAfter(res?.data) ??
+          extractRetryAfter(res) ??
+          DEFAULT_RESEND_TIMEOUT;
+        resetTimer(backendRetry);
+      },
+      errorRes: (err: any) => {
+        const backendRetry = extractRetryAfter(err?.response?.data);
+        if (backendRetry) {
+          resetTimer(backendRetry);
+        }
       },
       requestConfig: {
         url: "/accounts/register/resend-otp/",
@@ -179,12 +203,21 @@ export default function AuthModal({
 
   const registerUserRes = (res: any) => {
     dispatch(registrationActions.setEmail(formData.email));
+    const backendRetry =
+      extractRetryAfter(res?.data) ??
+      extractRetryAfter(res) ??
+      DEFAULT_RESEND_TIMEOUT;
+    resetTimer(backendRetry);
     console.log("new res", res);
     setStep("verificationSent");
   };
 
   const handleRegisterError = (err: any) => {
     const data = err?.response?.data;
+    const backendRetry = extractRetryAfter(data);
+    if (backendRetry) {
+      resetTimer(backendRetry);
+    }
     const errorMsg = typeof data === "string" ? data : JSON.stringify(data);
     const lowerError = errorMsg.toLowerCase();
     if (

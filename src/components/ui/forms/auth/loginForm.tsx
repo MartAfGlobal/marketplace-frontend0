@@ -187,8 +187,14 @@ export default function LoginForm({ userType }: RegProps) {
           params.set("user_id", data.user_id);
           params.set("email", formData.email);
           params.set("userType", userType);
-          if (data.retry_after_seconds !== undefined) {
-            params.set("retry_after", String(data.retry_after_seconds));
+          const retryAfter =
+            data.retry_after ??
+            data.retry_after_seconds ??
+            data.resend_after ??
+            data.cooldown ??
+            data.wait_seconds;
+          if (retryAfter !== undefined && retryAfter !== null) {
+            params.set("retry_after", String(retryAfter));
           }
           if (formData.rememberMe) {
             params.set("remember", "true");
