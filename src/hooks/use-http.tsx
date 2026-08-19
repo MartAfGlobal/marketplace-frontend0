@@ -139,7 +139,8 @@ export const useHttp = () => {
               return null;
             };
 
-            const foundMessage = extractFirstString(data);
+            const targetData = data.details || data.errors || data;
+            const foundMessage = extractFirstString(targetData) || extractFirstString(data);
             if (foundMessage) {
               if (typeof foundMessage === "string" && (foundMessage.startsWith("['") || foundMessage.startsWith('["') || (foundMessage.startsWith("[") && foundMessage.endsWith("]")))) {
                 try {

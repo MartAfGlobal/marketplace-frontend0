@@ -103,27 +103,51 @@ export default function AdminCategoryDetailsPage() {
 
   // Normalize attributes
   const getAttributes = () => {
-    if (!category?.attributes) {
-      return [
-        { name: "Colour", value: "Red • Blue • Blue • Blue" },
-        { name: "Size", value: "37 • 38 • 39 • 40" },
-        { name: "Material", value: "Silk • Polyester • Cotton • Wool" },
-      ];
+    // 1. Check attribute_values_summary from backend
+    if (Array.isArray(category?.attribute_values_summary) && category.attribute_values_summary.length > 0) {
+      return category.attribute_values_summary.map((item: any) => {
+        const name = item.attribute_name || item.name || item.title || "Attribute";
+        const rawVals = item.values || item.attribute_values || item.value || [];
+        const valStr = Array.isArray(rawVals)
+          ? rawVals.map((v: any) => (typeof v === "string" ? v : v.name || v.value || String(v))).join(" • ")
+          : typeof rawVals === "string" && rawVals.trim()
+          ? rawVals
+          : "-";
+        return { name, value: valStr || "-" };
+      });
     }
-    if (Array.isArray(category.attributes)) {
+
+    // 2. Check attributes array
+    if (Array.isArray(category?.attributes) && category.attributes.length > 0) {
       return category.attributes.map((attr: any) => {
         if (typeof attr === "string") return { name: attr, value: "-" };
         const attrName = attr.name || attr.title || attr.attribute_name || "Attribute";
-        let val = attr.value || attr.values || attr.attribute_values || "-";
-        if (Array.isArray(val)) val = val.join(" • ");
+        let val = attr.values || attr.value || attr.attribute_values;
+        if (Array.isArray(val)) {
+          val = val.map((v: any) => (typeof v === "string" ? v : v.name || v.value || String(v))).join(" • ");
+        } else if (!val) {
+          val = "-";
+        }
         return { name: attrName, value: String(val) };
       });
-    } else if (typeof category.attributes === "object") {
+    }
+
+    // 3. Check attributes object
+    if (category?.attributes && typeof category.attributes === "object" && !Array.isArray(category.attributes)) {
       return Object.entries(category.attributes).map(([key, val]) => ({
         name: key,
         value: Array.isArray(val) ? val.join(" • ") : String(val),
       }));
     }
+
+    // 4. Check attribute_values object
+    if (category?.attribute_values && typeof category.attribute_values === "object" && !Array.isArray(category.attribute_values)) {
+      return Object.entries(category.attribute_values).map(([key, val]) => ({
+        name: key,
+        value: Array.isArray(val) ? val.join(" • ") : String(val),
+      }));
+    }
+
     return [];
   };
 

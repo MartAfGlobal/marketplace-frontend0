@@ -201,31 +201,59 @@ export default function SellerProductDetailsPage() {
 
   const isDraftComplete = () => {
     if (!productDetails) return false;
+    const pd = productDetails as any;
+    const dd = productDetails.draft_data as any;
 
     // Core fields
-    const hasName = !!productDetails.name;
-    const hasPrice = !!productDetails.base_price;
-    const hasCategory = !!(
-      productDetails.category?.id || productDetails.category_info?.category?.id
+    const hasName = Boolean(pd.name || dd?.name);
+    const hasPrice =
+      (pd.base_price !== undefined && pd.base_price !== null && pd.base_price !== "") ||
+      pd.price !== undefined ||
+      dd?.base_price !== undefined;
+
+    const hasCategory = Boolean(
+      pd.category?.id ||
+      pd.category_id ||
+      (typeof pd.category === "string" && pd.category) ||
+      pd.category_info?.category?.id ||
+      pd.category_info?.subcategory?.id ||
+      pd.subcategory?.id ||
+      pd.subcategory_id ||
+      (typeof pd.subcategory === "string" && pd.subcategory) ||
+      dd?.category_id ||
+      dd?.category
     );
-    const hasDesc = !!(
-      productDetails.description || productDetails.description_html
+
+    const hasDesc = Boolean(
+      pd.description ||
+      pd.description_html ||
+      dd?.description ||
+      pd.specifications_text ||
+      pd.specifications_html
     );
 
     // Images
-    const imagesCount =
-      productDetails.images?.length ||
-      productDetails.draft_data?.product_images?.length ||
-      0;
-    const hasImages = imagesCount > 0;
+    const hasImages =
+      (images && images.length > 0) ||
+      Boolean(pd.images?.length) ||
+      Boolean(pd.product_images?.length) ||
+      Boolean(dd?.product_images?.length) ||
+      Boolean(dd?.images?.length);
 
     // Variants or specs
     const variantsCount =
-      productDetails.variations?.length ||
-      productDetails.draft_data?.variations?.length ||
+      variations?.length ||
+      pd.variations?.length ||
+      dd?.variations?.length ||
       0;
-    const hasInventory = !!productDetails.inventory;
-    const hasVariantsOrInventory = variantsCount > 0 || hasInventory;
+    const hasInventory =
+      pd.inventory !== undefined ||
+      pd.stock !== undefined ||
+      pd.quantity !== undefined ||
+      dd?.inventory !== undefined ||
+      dd?.stock !== undefined;
+    const hasVariantsOrInventory =
+      variantsCount > 0 || hasInventory || pd.has_variations !== undefined;
 
     return (
       hasName &&

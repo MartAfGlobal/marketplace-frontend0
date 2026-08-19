@@ -207,15 +207,13 @@ export default function SellersTable({
                   <span
                     className="block max-w-[8rem] truncate"
                     title={
-                      row.shipping_zone ||
                       row.location ||
                       row.company_country_name ||
                       "N/A"
                     }
                   >
                     {truncateText(
-                      row.shipping_zone ||
-                        row.location ||
+                      row.location ||
                         row.company_country_name ||
                         "N/A",
                     )}

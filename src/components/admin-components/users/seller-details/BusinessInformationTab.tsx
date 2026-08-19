@@ -19,9 +19,22 @@ export default function BusinessInformationTab() {
       router.push(`/dashboard/admin/verifications/${userId}`);
     }
   };
+
+  const email =
+    seller?.company_email ||
+    seller?.user_email ||
+    (seller as any)?.email ||
+    "—";
+
+  const phone =
+    seller?.phone ||
+    seller?.phone2 ||
+    (seller as any)?.phone_number ||
+    "—";
+
   return (
     <div className="w-full">
-      <h3 className="font-MontserratNormal text-base  mb-6">
+      <h3 className="font-MontserratNormal text-base mb-6">
         Business details
       </h3>
 
@@ -29,8 +42,8 @@ export default function BusinessInformationTab() {
         <div className="flex flex-col gap-2">
           <Label className="">Store name</Label>
           <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
-            <span className="font-MontserratMedium text-c12 text-000000/44">
-              {seller?.company_name}
+            <span className="font-MontserratMedium text-c12 text-000000/44 truncate">
+              {seller?.company_name || "—"}
             </span>
           </div>
         </div>
@@ -38,15 +51,43 @@ export default function BusinessInformationTab() {
           <Label className="">Business type</Label>
           <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
             <span className="font-MontserratMedium text-c12 text-000000/44">
-             {seller?.is_registered_business? "Registered":"Individual"}
+              {seller?.is_registered_business ? "Registered" : "Individual"}
             </span>
           </div>
         </div>
         <div className="flex flex-col gap-2">
           <Label className="">Registration number</Label>
           <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
-            <span className="font-MontserratMedium text-c12 text-000000/44">
-              {seller?.business_registration_number || seller?.CAC_No}
+            <span className="font-MontserratMedium text-c12 text-000000/44 truncate">
+              {seller?.business_registration_number || seller?.CAC_No || "—"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label className="">Email</Label>
+          <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
+            <span
+              className="font-MontserratMedium text-c12 text-000000/44 truncate"
+              title={email !== "—" ? email : undefined}
+            >
+              {email}
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label className="">Phone number</Label>
+          <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
+            <span className="font-MontserratMedium text-c12 text-000000/44 truncate">
+              {phone}
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label className="">Business Industry</Label>
+          <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
+            <span className="font-MontserratMedium text-c12 text-000000/44 truncate">
+              {seller?.business_industry || "—"}
             </span>
           </div>
         </div>
@@ -54,41 +95,32 @@ export default function BusinessInformationTab() {
         <div className="flex flex-col gap-2">
           <Label className="">Country</Label>
           <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
-            <span className="font-MontserratMedium text-c12 text-000000/44">
-              {seller?.company_country}
+            <span className="font-MontserratMedium text-c12 text-000000/44 truncate">
+              {seller?.company_country || seller?.country || "—"}
             </span>
           </div>
         </div>
         <div className="flex flex-col gap-2">
           <Label className="">State</Label>
           <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
-            <span className="font-MontserratMedium text-c12 text-000000/44">
-              {seller?.company_state}
+            <span className="font-MontserratMedium text-c12 text-000000/44 truncate">
+              {seller?.company_state || seller?.state || "—"}
             </span>
           </div>
         </div>
-        <div className="flex flex-col gap-2">
-          <Label className="">Business Industry</Label>
-          <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
-            <span className="font-MontserratMedium text-c12 text-000000/44">
-              {seller?.business_industry}
-            </span>
-          </div>
-        </div>
-
         <div className="flex flex-col gap-2">
           <Label className="">City</Label>
           <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
-            <span className="font-MontserratMedium text-c12 text-000000/44">
-             {seller?.company_city}
+            <span className="font-MontserratMedium text-c12 text-000000/44 truncate">
+              {seller?.company_city || seller?.city || "—"}
             </span>
           </div>
         </div>
         <div className="flex flex-col gap-2">
           <Label className="">Postal code</Label>
           <div className="h-12 w-full rounded-c8 border border-000000/12 flex items-center px-4 bg-white">
-            <span className="font-MontserratMedium text-c12 text-000000/44">
-             {seller?.company_postal_code}
+            <span className="font-MontserratMedium text-c12 text-000000/44 truncate">
+              {seller?.company_postal_code || seller?.postal_code || "—"}
             </span>
           </div>
         </div>

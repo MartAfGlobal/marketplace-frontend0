@@ -144,11 +144,68 @@ function CreateCategoryPageInner() {
           setSelectedParentCategory(null);
         }
 
+        const attrIds: string[] = [];
+        const prefilledValues: Record<string, string[]> = {};
+
+        // 1. Process attribute_values_summary from backend
+        if (Array.isArray(data.attribute_values_summary) && data.attribute_values_summary.length > 0) {
+          data.attribute_values_summary.forEach((item: any) => {
+            const attrId = String(item.attribute_id || item.id || "");
+            if (attrId) {
+              if (!attrIds.includes(attrId)) attrIds.push(attrId);
+              const vals = item.values || item.attribute_values || [];
+              if (Array.isArray(vals)) {
+                prefilledValues[attrId] = vals.map((v: any) => typeof v === "string" ? v : v.name || v.value || String(v)).filter(Boolean);
+              } else if (typeof vals === "string" && vals.trim()) {
+                prefilledValues[attrId] = vals.split(/[,•]/).map((s) => s.trim()).filter(Boolean);
+              }
+            }
+          });
+        }
+
+        // 2. Process data.attributes
         if (Array.isArray(data.attributes) && data.attributes.length > 0) {
-          const attrIds = data.attributes.map((a: any) => String(a.id ?? a));
-          setSelectedAttributeIds(attrIds);
+          data.attributes.forEach((a: any) => {
+            const id = String(a.id ?? a);
+            if (id && !attrIds.includes(id)) {
+              attrIds.push(id);
+            }
+            const rawVals = a.values ?? a.attribute_values ?? a.value;
+            if (rawVals && (!prefilledValues[id] || prefilledValues[id].length === 0)) {
+              if (Array.isArray(rawVals)) {
+                prefilledValues[id] = rawVals.map((v: any) => (typeof v === "string" ? v : v.name || v.value || String(v))).filter(Boolean);
+              } else if (typeof rawVals === "string" && rawVals.trim()) {
+                prefilledValues[id] = rawVals.split(/[,•]/).map((s) => s.trim()).filter(Boolean);
+              }
+            }
+          });
         } else if (Array.isArray(data.attribute_ids)) {
-          setSelectedAttributeIds(data.attribute_ids.map(String));
+          data.attribute_ids.forEach((id: any) => {
+            const sId = String(id);
+            if (sId && !attrIds.includes(sId)) attrIds.push(sId);
+          });
+        }
+
+        // 3. Process data.attribute_values if present as object
+        if (data.attribute_values && typeof data.attribute_values === "object" && !Array.isArray(data.attribute_values)) {
+          Object.entries(data.attribute_values).forEach(([attrId, rawVals]: [string, any]) => {
+            const sId = String(attrId);
+            if (sId && !attrIds.includes(sId)) attrIds.push(sId);
+            if (!prefilledValues[sId] || prefilledValues[sId].length === 0) {
+              if (Array.isArray(rawVals)) {
+                prefilledValues[sId] = rawVals.map(String).filter(Boolean);
+              } else if (typeof rawVals === "string" && rawVals.trim()) {
+                prefilledValues[sId] = rawVals.split(/[,•]/).map((s) => s.trim()).filter(Boolean);
+              }
+            }
+          });
+        }
+
+        if (attrIds.length > 0) {
+          setSelectedAttributeIds(attrIds);
+        }
+        if (Object.keys(prefilledValues).length > 0) {
+          setAttributeValues(prefilledValues);
         }
 
         const imgUrl = data.image ?? data.image_url ?? null;
@@ -285,6 +342,21 @@ function CreateCategoryPageInner() {
       return;
     }
 
+    // Every category or subcategory must have at least one attribute
+    if (selectedAttributeIds.length === 0) {
+      setResultModalState({
+        isOpen: true,
+        title: "Attribute Required",
+        message: `Please select and configure at least one attribute for this ${
+          categoryType === "sub" ? "subcategory" : "category"
+        }. Every category and subcategory must have at least one attribute.`,
+        result: "error",
+        onConfirmRedirect: false,
+      });
+      toast.error(`A ${categoryType === "sub" ? "subcategory" : "category"} must have at least one attribute.`);
+      return;
+    }
+
     // Auto-commit any typed input into attributeValues before checking
     const updatedAttributeValues = { ...attributeValues };
     selectedAttributeIds.forEach((attrId) => {
@@ -311,12 +383,11 @@ function CreateCategoryPageInner() {
       setResultModalState({
         isOpen: true,
         title: "Attribute Value Required",
-        message: `Please enter at least one value for the selected attribute${
-          unvaluedAttributes.length > 1 ? "s" : ""
-        }: ${attrNames}.`,
+        message: `Please enter at least one value for each selected attribute. Missing values for: ${attrNames}.`,
         result: "error",
         onConfirmRedirect: false,
       });
+      toast.error(`Please enter at least one value for: ${attrNames}`);
       return;
     }
 
@@ -666,10 +737,15 @@ function CreateCategoryPageInner() {
 
           {/* Select Attribute */}
           <div className="mb-20">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-c12 font-MontserratMedium text-black">
-                Select Attribute
-              </h2>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h2 className="text-c12 font-MontserratSemiBold text-black flex items-center gap-1">
+                  Select Attribute <span className="text-[#ca0202]">*</span>
+                </h2>
+                <p className="text-[11px] font-MontserratNormal text-000000/68 mt-0.5">
+                  Every category or subcategory must have at least one attribute with at least one value.
+                </p>
+              </div>
               <Button
                 type="button"
                 onClick={() => setIsCreateAttributeModalOpen(true)}
@@ -680,7 +756,9 @@ function CreateCategoryPageInner() {
               </Button>
             </div>
 
-            <div className="border border-000000/12 px-4 rounded-c16 overflow-hidden">
+            <div className={`border px-4 rounded-c16 overflow-hidden transition-colors ${
+              selectedAttributeIds.length === 0 ? "border-[#ca0202]/30" : "border-000000/12"
+            }`}>
               {attributesLoading ? (
                 <div className="py-6 flex justify-center">
                   <LoadingSpinner size={24} color="border-ff715b" />
@@ -691,11 +769,12 @@ function CreateCategoryPageInner() {
                     const isChecked = selectedAttributeIds.includes(attr.id);
                     const values = attributeValues[attr.id] ?? [];
                     const inputVal = attributeInputs[attr.id] ?? "";
+                    const isMissingValues = isChecked && values.length === 0 && !inputVal.trim();
 
                     return (
                       <div key={attr.id} className="">
                         {/* Attribute row */}
-                        <label className="flex items-center gap-3   my-4  cursor-pointer select-none">
+                        <label className="flex items-center gap-3 my-4 cursor-pointer select-none">
                           <div
                             className={`w-4 h-4 flex-shrink-0 rounded border flex items-center justify-center transition-colors ${
                               isChecked
@@ -722,6 +801,16 @@ function CreateCategoryPageInner() {
                           <span className="text-c12 tracking-[1%] font-MontserratMedium text-000000/68">
                             {attr.name}
                           </span>
+                          {isChecked && values.length > 0 && (
+                            <span className="text-[11px] font-MontserratMedium text-[#00BE5C] bg-[#00BE5C]/10 px-2 py-0.5 rounded-full ml-2">
+                              {values.length} value{values.length > 1 ? "s" : ""}
+                            </span>
+                          )}
+                          {isMissingValues && (
+                            <span className="text-[11px] font-MontserratMedium text-[#ca0202] bg-[#ca0202]/10 px-2 py-0.5 rounded-full ml-2">
+                              Value required
+                            </span>
+                          )}
                           <input
                             type="checkbox"
                             className="hidden"
@@ -741,7 +830,9 @@ function CreateCategoryPageInner() {
                               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                               className="overflow-hidden"
                             >
-                              <div className="px-4 pb-6 pt-4  border border-000000/12 rounded-c8">
+                              <div className={`px-4 pb-6 pt-4 border rounded-c8 transition-colors ${
+                                values.length === 0 ? "border-[#ca0202]/40 bg-[#fff5f5]/30" : "border-000000/12"
+                              }`}>
                                 {/* Added value chips */}
                                 {values.length > 0 && (
                                   <div className="mb-6">
@@ -752,7 +843,7 @@ function CreateCategoryPageInner() {
                                       {values.map((val) => (
                                         <span
                                           key={val}
-                                          className="flex items-center gap-3 px-4 py-2   border border-ff715b rounded-c8 text-[12px] font-MontserratMedium text-ff715b"
+                                          className="flex items-center gap-3 px-4 py-2 border border-ff715b rounded-c8 text-[12px] font-MontserratMedium text-ff715b"
                                         >
                                           {val}
                                           <button
@@ -768,6 +859,12 @@ function CreateCategoryPageInner() {
                                       ))}
                                     </div>
                                   </div>
+                                )}
+
+                                {values.length === 0 && (
+                                  <p className="text-[12px] font-MontserratMedium text-[#ca0202] mb-3">
+                                    * Please enter at least one value for {attr.name}
+                                  </p>
                                 )}
 
                                 {/* Value input */}
