@@ -116,7 +116,15 @@ export default function ProductReviewPage({
         const colorVal = v.attribute_summary?.["Color"] ?? v.attribute_summary?.["Colour"] ?? "—";
         const sizeVal = v.attribute_summary?.["Size"] ?? "—";
         const materialVal = v.attribute_summary?.["Material"] ?? "—";
-        const imgUrl = v.main_image || v.image || v.thumbnail || (Array.isArray(v.images) ? v.images[0]?.thumbnail || v.images[0]?.url : null);
+        const imgUrl =
+          (typeof v.main_image_url === "string" ? v.main_image_url : v.main_image_url?.medium || v.main_image_url?.url || v.main_image_url?.thumbnail) ||
+          (typeof v.main_image === "string" ? v.main_image : v.main_image?.medium || v.main_image?.url || v.main_image?.thumbnail) ||
+          (typeof v.image === "string" ? v.image : v.image?.medium || v.image?.url || v.image?.thumbnail) ||
+          (typeof v.image_url === "string" ? v.image_url : v.image_url?.medium || v.image_url?.url || v.image_url?.thumbnail) ||
+          v.thumbnail ||
+          (Array.isArray(v.images) && v.images.length > 0 ? (typeof v.images[0] === "string" ? v.images[0] : v.images[0]?.medium || v.images[0]?.url || v.images[0]?.thumbnail || v.images[0]?.image) : null) ||
+          (galleryUrls.length > 0 ? galleryUrls[0] : null);
+
         return {
           id: v.id,
           sku: v.sku || "—",
@@ -126,7 +134,7 @@ export default function ProductReviewPage({
           size: sizeVal,
           material: materialVal,
           attributesList: attrList,
-          thumb: imgUrl,
+          thumb: imgUrl || (galleryUrls.length > 0 ? galleryUrls[0] : null),
         };
       })
     : [
