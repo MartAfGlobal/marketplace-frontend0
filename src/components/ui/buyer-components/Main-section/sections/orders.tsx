@@ -20,6 +20,7 @@ import { useFetchOrders } from "@/helpers/fetchOrders";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-order-modal";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
+import CartWithBoxesIcon from "@/components/ui/buyer-components/orders/CartWithBoxesIcon";
 
 export default function Orders() {
   const { orders, loading } = useSelector((state: any) => state.orders);
@@ -30,7 +31,6 @@ export default function Orders() {
 
   const [loadingIds, setLoadingIds] = useState<string | null>(null);
 
-  console.log("orders from redux store:", orders);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addressOpen, setAddressOpen] = useState(false);
@@ -129,20 +129,30 @@ export default function Orders() {
 
   const handleRepay = (repay_order_id: any) => {
     console.log("checking item to pay", repay_order_id);
+    setSelectedId(repay_order_id);
     repayReq({
       requestConfig: {
-        url: "/orders/repay/",
+        url: "/checkout/repay/",
         method: "POST",
         token,
-        body: { repay_order_id: repay_order_id },
+        body: {
+          payment_id: repay_order_id,
+          order_id: repay_order_id,
+          repay_order_id: repay_order_id,
+        },
         isAuth: true,
         userType: "buyer",
       },
       successRes: (res) => {
         console.log("✅ User tracking info:", res);
-
-        if (res.data?.paystack_payment_url) {
-          window.location.href = res.data.paystack_payment_url;
+        const paymentUrl =
+          res.data?.paystack_payment_url ||
+          res.data?.payment_url ||
+          res.data?.authorization_url ||
+          res.data?.checkout_url ||
+          res.data?.url;
+        if (paymentUrl) {
+          window.location.href = paymentUrl;
         } else {
           return;
         }
@@ -150,7 +160,7 @@ export default function Orders() {
     });
   };
 
-  console.log("ordersssssssssssss", orders);
+  ;
   // const handleTrackOrder = (orderId: string) => {
   //   router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
   // };
@@ -209,76 +219,106 @@ export default function Orders() {
             )} */}
           </div>
           <div className="w-full space-y-c24 mt-c32">
-            {orders.slice(-2).map((item: OrderItem) => (
-              <div key={item.id}>
-                <div className="w-full flex justify-between mb-c32">
-                  <p
-                    className={`font-MontserratSemiBold text-c16  ${
-                      item.status === "CANCELLED"
-                        ? "text-ca0202"
-                        : item.status === "DELIVERED"
-                          ? "text-2d7565"
-                          : "text-161616"
-                    }`}
-                  >
-                    {item.status === "TO_SHIP"
-                      ? "Received at Central hub"
-                      : item.status === "SHIPPED"
-                        ? "Order on its way"
-                        : item.status === "DELIVERED"
-                          ? "Delivered"
-                          : item.status === "Confirmed"
-                            ? "Delivered"
-                            : item.status === "AWAITING_PAYMENT"
-                              ? "Awaiting payment"
-                              : item.status === "PENDING"
-                                ? "Order is being processed"
-                                : item.status === "CANCELLED"
-                                  ? "Cancelled"
-                                  : item.status}
-                  </p>
-                  <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                    {item.estimated_delivery_date || "pending"}
-                  </p>
-                </div>
-                <div className="w-full justify-between flex">
-                  <Link
-                    href={`/dashboard/buyer/orders/${item.id}`}
-                    className="flex flex-col md:flex-row gap-4 items-start  "
-                  >
-                    <div className="flex gap-4 items-start">
-                      <Image
-                        src={
-                          item.order_items?.[0]?.product_image ||
-                          "/placeholder.png"
-                        }
-                        alt={
-                          item.order_items?.[0]?.product_name || "Product Image"
-                        }
-                        width={96}
-                        height={96}
-                        className="rounded-lg"
-                      />
+            {orders.slice(-2).map((item: OrderItem) => {
+              const orderItems = item.order_items || (item as any).items || [];
+              const hasOrderItems = orderItems.length > 0;
+              const firstItem = orderItems[0] as any;
+              const productImage =
+                firstItem?.product_image ||
+                firstItem?.image ||
+                firstItem?.product?.image ||
+                null;
+              const productName =
+                firstItem?.product_name ||
+                firstItem?.name ||
+                firstItem?.product?.name ||
+                (item.order_no || (item as any).payment_no ? `Order #${item.order_no || (item as any).payment_no}` : "Order");
+              const sellerName =
+                item.manufacturer ||
+                item.seller_name ||
+                (item as any).seller?.store_name ||
+                "";
+              const variationName =
+                firstItem?.variation_name ||
+                firstItem?.variation_display ||
+                "";
+              const totalPrice =
+                item.total_price ??
+                (item as any).total ??
+                (item as any).subtotal ??
+                0;
+              const itemsCount = (item as any).items_count ?? (hasOrderItems ? orderItems.length : 1);
 
-                      <div className="w-full max-w-143.75">
-                        <p className="font-MontserratSemiBold text-base leading-c24 pb-1 text-000000">
-                          {item.order_items?.[0]?.product_name}
-                        </p>
-                        <p className="font-MontserratMedium text-c12 leading-c16 pb-3 text-000000">
-                          {item.manufacturer}
-                        </p>
-                        <div className="w-fit p-2 justify-center rounded-c12 bg-black/3 flex items-center">
-                          <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
-                            {item.order_items?.length}PC,{" "}
-                            {item.order_items?.[0]?.variation_name}
-                          </span>
+              return (
+                <div key={item.id}>
+                  <div className="w-full flex justify-between mb-c32">
+                    <p
+                      className={`font-MontserratSemiBold text-c16  ${
+                        item.status === "CANCELLED"
+                          ? "text-ca0202"
+                          : item.status === "DELIVERED"
+                            ? "text-2d7565"
+                            : "text-161616"
+                      }`}
+                    >
+                      {item.status === "TO_SHIP"
+                        ? "Received at Central hub"
+                        : item.status === "SHIPPED"
+                          ? "Order on its way"
+                          : item.status === "DELIVERED"
+                            ? "Delivered"
+                            : item.status === "Confirmed"
+                              ? "Delivered"
+                              : item.status === "AWAITING_PAYMENT"
+                                ? "Awaiting payment"
+                                : item.status === "PENDING"
+                                  ? "Order is being processed"
+                                  : item.status === "CANCELLED"
+                                    ? "Cancelled"
+                                    : item.status}
+                    </p>
+                    <p className="text-c12 font-MontserratNormal leading-4 text-000000">
+                      {item.estimated_delivery_date || (item.created_at ? new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "pending")}
+                    </p>
+                  </div>
+                  <div className="w-full justify-between flex">
+                    <Link
+                      href={`/dashboard/buyer/orders/${item.id}`}
+                      className="flex flex-col md:flex-row gap-4 items-start  "
+                    >
+                      <div className="flex gap-4 items-start">
+                        {productImage ? (
+                          <Image
+                            src={productImage}
+                            alt={productName}
+                            width={96}
+                            height={96}
+                            className="rounded-lg h-24 w-24 object-cover"
+                          />
+                        ) : (
+                          <CartWithBoxesIcon className="h-24 w-24" itemsCount={itemsCount} />
+                        )}
+
+                        <div className="w-full max-w-143.75">
+                          <p className="font-MontserratSemiBold text-base leading-c24 pb-1 text-000000">
+                            {productName}
+                          </p>
+                          {sellerName && (
+                            <p className="font-MontserratMedium text-c12 leading-c16 pb-3 text-000000">
+                              {sellerName}
+                            </p>
+                          )}
+                          <div className="w-fit p-2 justify-center rounded-c12 bg-black/3 flex items-center">
+                            <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
+                              {itemsCount}PC{variationName ? `, ${variationName}` : ""}
+                            </span>
+                          </div>
+                          <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
+                            ₦{Number(totalPrice).toLocaleString()}
+                          </p>
                         </div>
-                        <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
-                          ₦{item.total_price}
-                        </p>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
                   <div className="w-full gap-4 pl hidden  md:flex md:flex-col md:max-w-50 xl:max-w-70 space-y-4">
                     {item.status === "SHIPPED" && (
                       <>
@@ -379,7 +419,8 @@ export default function Orders() {
                   </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         </div>
       ) : (

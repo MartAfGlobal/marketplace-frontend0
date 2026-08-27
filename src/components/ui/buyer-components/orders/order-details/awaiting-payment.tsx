@@ -68,19 +68,31 @@ export default function AwaitingPaymentOrderDetails({ id }: { id: string }) {
 
   const handleRepay = (repay_order_id: any) => {
     console.log("checking item to pay", repay_order_id);
+    const amountNum = Number(order?.total_price || 0);
     repayReq({
       requestConfig: {
-        url: "/orders/repay/",
+        url: "/checkout/repay/",
         method: "POST",
         token,
-        body: { repay_order_id: repay_order_id },
+        body: {
+          payment_id: repay_order_id,
+          order_id: repay_order_id,
+          repay_order_id: repay_order_id,
+          expected_amount: amountNum > 0 ? amountNum.toFixed(2) : undefined,
+        },
         isAuth: true,
         userType: "buyer",
       },
       successRes: (res) => {
         console.log("✅ User tracking info:", res);
-        if (res.data?.paystack_payment_url) {
-          window.location.href = res.data.paystack_payment_url;
+        const paymentUrl =
+          res.data?.paystack_payment_url ||
+          res.data?.payment_url ||
+          res.data?.authorization_url ||
+          res.data?.checkout_url ||
+          res.data?.url;
+        if (paymentUrl) {
+          window.location.href = paymentUrl;
         } else {
           return;
         }

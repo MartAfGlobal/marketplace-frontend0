@@ -91,7 +91,8 @@ const buyerSlice = createSlice({
     setDefaultBuyerAddress(state, action: PayloadAction<string>) {
       state.BuyerAddresses = state.BuyerAddresses.map((addr) => {
         if (!addr.id) return addr;
-        return { ...addr, defaultAddress: addr.id === action.payload };
+        const isDef = addr.id === action.payload;
+        return { ...addr, defaultAddress: isDef, is_default: isDef };
       });
     },
 

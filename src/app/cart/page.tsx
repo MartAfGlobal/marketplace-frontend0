@@ -220,19 +220,21 @@ export default function CartPage() {
           console.log("🟩 Backend cart items:", backendItems);
 
           const mappedBackend: CartItem[] = backendItems.map(
-            (item: CartItem) => {
+            (item: any) => {
               return {
-                variation_id: item.variation_id,
-                product_id: item.id || "",
-                product_name: item.product_name || "",
-                price: item.price || 0,
+                id: item.id || item.product_id || "",
+                product_id: item.product_id || item.id || "",
+                variation_id: item.variation_id || null,
+                product_name: item.product_name || item.name || "",
+                price: item.price || item.unit_price || 0,
+                price_at_purchase: item.price_at_purchase || item.price || item.unit_price || 0,
                 quantity: item.quantity ?? 1,
-                product_slug: item.product_slug,
+                product_slug: item.product_slug || "",
                 variation_display: (
-                  item.variation_display || "default"
+                  item.variation_display || item.variation_name || ""
                 ).toLowerCase(),
 
-                product_image: item.product_image || "/placeholder.png",
+                product_image: item.product_image || item.image || "/placeholder.png",
                 checked:
                   typeof item.checked === "boolean" ? item.checked : true,
               };
@@ -242,7 +244,7 @@ export default function CartPage() {
           console.log("cartItems local:", cartItems);
 
           const mapKey = (item: CartItem) =>
-            `${item.variation_id} || "default"}`;
+            `${item.product_id || item.id || "prod"}-${item.variation_id || "novar"}`;
 
           const mergedMap: Record<string, CartItem> = {};
           for (const item of mappedBackend) {
@@ -327,7 +329,7 @@ export default function CartPage() {
     try {
       await toggleReq({
         requestConfig: {
-          url: `/cart/item/${item.variation_id}/`,
+          url: `/cart/item/${item.variation_id || item.id || item.product_id}/`,
           method: "PATCH",
           token,
           isAuth: true,
@@ -341,7 +343,7 @@ export default function CartPage() {
     } catch (error) {
       console.error("Error toggling item on server:", error);
       toast.error("Failed to update item selection on server. Reverting...");
-      applyCheckedToLocal(item.id, !newChecked);
+      applyCheckedToLocal(item.variation_id || item.id, !newChecked);
     }
   };
 
@@ -431,7 +433,7 @@ export default function CartPage() {
     try {
       await deleteReq({
         requestConfig: {
-          url: `/cart/item/${item.variation_id}/remove/`,
+          url: `/cart/item/${item.variation_id || item.id || item.product_id}/remove/`,
           method: "DELETE",
           token,
           isAuth: true,
@@ -521,9 +523,9 @@ export default function CartPage() {
     });
 
   const handleCheckout = () => {
-    if (!token) {
-      dispatch(setCheckoutItems(checkoutItems));
+    dispatch(setCheckoutItems(checkoutItems));
 
+    if (!token) {
       dispatch(
         setCheckoutSummary({
           all_addresses: [],
@@ -561,7 +563,6 @@ export default function CartPage() {
     console.log("item clicked", item, variationId);
   };
 
-  console.log("why name missing", cartItems);
   return (
     <>
       {hydratingCart ? (

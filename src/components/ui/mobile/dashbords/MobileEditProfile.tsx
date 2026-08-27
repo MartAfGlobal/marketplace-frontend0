@@ -204,9 +204,15 @@ export default function MobileEditProfile() {
             <input
               type="text"
               name="first_name"
+              autoComplete="given-name"
               placeholder="First Name"
               value={formData.first_name}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  first_name: e.target.value.replace(/[^a-zA-Z]/g, ""),
+                })
+              }
               className="w-full outline-none"
             />
           </div>
@@ -228,9 +234,15 @@ export default function MobileEditProfile() {
             <input
               type="text"
               name="last_name"
+              autoComplete="family-name"
               placeholder="Surname"
               value={formData.last_name}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  last_name: e.target.value.replace(/[^a-zA-Z]/g, ""),
+                })
+              }
               className="w-full outline-none"
             />
           </div>
@@ -250,11 +262,17 @@ export default function MobileEditProfile() {
               className="mr-2"
             />
             <input
-              type="text"
+              type="tel"
               name="phone"
+              autoComplete="tel"
               placeholder="Phone Number"
               value={formData.phone}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  phone: e.target.value.replace(/[^0-9+]/g, ""),
+                })
+              }
               className="w-full outline-none"
             />
           </div>
@@ -274,11 +292,17 @@ export default function MobileEditProfile() {
               className="mr-2"
             />
             <input
-              type="text"
+              type="tel"
               name="phone2"
+              autoComplete="tel"
               placeholder="Mobile Number"
               value={formData.phone2}
-              onChange={handleChange}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  phone2: e.target.value.replace(/[^0-9+]/g, ""),
+                })
+              }
               className="w-full outline-none"
             />
           </div>

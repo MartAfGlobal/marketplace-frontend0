@@ -7,6 +7,52 @@ interface OrderItemsListProps {
   setMobileTab: (tab: "items" | "inventory") => void;
 }
 
+// Helper to get true accepted and rejected quantities for an item
+const getItemQuantities = (item: any, order: any) => {
+  const isOrderRejected =
+    (order?.status ?? "").toUpperCase() === "REJECTED" ||
+    (order?.order_timeline_stage ?? "").toUpperCase() === "REJECTED";
+  const isOrderCancelled =
+    (order?.status ?? "").toUpperCase() === "CANCELLED" ||
+    (order?.order_timeline_stage ?? "").toUpperCase() === "CANCELLED";
+
+  if (isOrderRejected) {
+    return {
+      acceptedQty: 0,
+      rejectedQty: Number(
+        item.rejected_quantity ??
+          (order.items?.length === 1 ? order.rejected_quantity : item.quantity) ??
+          item.quantity
+      ),
+    };
+  }
+
+  if (isOrderCancelled) {
+    return {
+      acceptedQty: 0,
+      rejectedQty: 0,
+    };
+  }
+
+  const acceptedQty =
+    item.accepted_quantity !== undefined && item.accepted_quantity !== null
+      ? Number(item.accepted_quantity)
+      : order.accepted_quantity !== undefined && order.accepted_quantity !== null && order.items?.length === 1
+      ? Number(order.accepted_quantity)
+      : order.accepted_at
+      ? Number(item.fulfilled_quantity ?? item.quantity)
+      : 0;
+
+  const rejectedQty =
+    item.rejected_quantity !== undefined && item.rejected_quantity !== null
+      ? Number(item.rejected_quantity)
+      : order.rejected_quantity !== undefined && order.rejected_quantity !== null && order.items?.length === 1
+      ? Number(order.rejected_quantity)
+      : 0;
+
+  return { acceptedQty, rejectedQty };
+};
+
 export const OrderItemsList = ({
   order,
   mobileTab,
@@ -42,6 +88,7 @@ export const OrderItemsList = ({
           {/* Mobile View: Cards */}
           <div className="lg:hidden flex flex-col gap-6">
             {order.items?.map((item: any, idx: number) => {
+              const { acceptedQty, rejectedQty } = getItemQuantities(item, order);
               const inStock = (item.product_stock || 0) >= item.quantity;
               const isLow = (item.product_stock || 0) > 0 && (item.product_stock || 0) < 5;
               
@@ -85,20 +132,24 @@ export const OrderItemsList = ({
                         ₦{(Number(item.price_at_purchase || item.price) * item.quantity).toLocaleString()}
                       </span>
                     </div>
-                    {( (item.fulfilled_quantity || 0) > 0 || (item.rejected_quantity || 0) > 0 ) && (
+                    {(acceptedQty > 0 || rejectedQty > 0) && (
                       <div className="bg-[#ffffff] px-3 py-2 flex flex-col gap-1 border-t border-gray-50">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#161616]">Accepted Qty</span>
-                          <span className="font-MontserratSemiBold text-green-600">
-                            {item.fulfilled_quantity || 0}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-[#161616]">Rejected Qty</span>
-                          <span className="font-MontserratSemiBold text-red-500">
-                            {item.rejected_quantity || 0}
-                          </span>
-                        </div>
+                        {acceptedQty > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-[#161616]">Accepted Qty</span>
+                            <span className="font-MontserratSemiBold text-green-600">
+                              {acceptedQty}
+                            </span>
+                          </div>
+                        )}
+                        {rejectedQty > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-[#161616]">Rejected Qty</span>
+                            <span className="font-MontserratSemiBold text-red-500">
+                              {rejectedQty}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -120,78 +171,85 @@ export const OrderItemsList = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 font-MontserratNormal">
-                {order.items?.map((item: any, idx: number) => (
-                  <tr key={idx} className="">
-                    <td className="pl-3 pr-1 py-3 text-sm font-MontserratNormal">
-                      {item.variation_sku || item.product_sku || "N/A"}
-                    </td>
-                    <td className="pl-3 pr-1 py-3">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded bg-gray-50 flex-shrink-0 overflow-hidden">
-                          <Image
-                            src={item.product_image || productIcon}
-                            alt="item"
-                            width={64}
-                            height={64}
-                            unoptimized={true}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span className="text-sm font-MontserratNormal line-clamp-1">
-                          {item.product_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="pl-3 pr-1 py-3 text-center text-sm">
-                      ₦
-                      {Number(
-                        item.price_at_purchase || item.price
-                      ).toLocaleString()}
-                    </td>
-                    <td className="pl-3 pr-1 py-3 text-center text-sm">
-                      <div className="flex flex-col items-center">
-                        <span>{item.quantity}</span>
-                        {( (item.fulfilled_quantity || 0) > 0 ||
-                          (item.rejected_quantity || 0) > 0) && (
-                          <div className="text-[10px] flex flex-col items-center leading-tight">
-                            <span className="text-green-600 font-MontserratMedium">
-                              Acc: {item.fulfilled_quantity || 0}
-                            </span>
-                            <span className="text-red-500 font-MontserratMedium">
-                              Rej: {item.rejected_quantity || 0}
-                            </span>
+                {order.items?.map((item: any, idx: number) => {
+                  const { acceptedQty, rejectedQty } = getItemQuantities(item, order);
+                  
+                  return (
+                    <tr key={idx} className="">
+                      <td className="pl-3 pr-1 py-3 text-sm font-MontserratNormal">
+                        {item.variation_sku || item.product_sku || "N/A"}
+                      </td>
+                      <td className="pl-3 pr-1 py-3">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded bg-gray-50 flex-shrink-0 overflow-hidden">
+                            <Image
+                              src={item.product_image || productIcon}
+                              alt="item"
+                              width={64}
+                              height={64}
+                              unoptimized={true}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="pl-3 pr-1 py-3 text-right text-sm font-MontserratNormal">
-                      <div className="flex flex-col items-end">
-                        <span
-                          className={
-                            (item.fulfilled_quantity || 0) < item.quantity
-                              ? "line-through text-gray-400 text-xs"
-                              : ""
-                          }
-                        >
-                          ₦
-                          {(
-                            Number(item.price_at_purchase || item.price) *
-                            item.quantity
-                          ).toLocaleString()}
-                        </span>
-                        {(item.fulfilled_quantity || 0) < item.quantity && (
-                          <span className="text-green-600 font-MontserratSemiBold">
+                          <span className="text-sm font-MontserratNormal line-clamp-1">
+                            {item.product_name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="pl-3 pr-1 py-3 text-center text-sm">
+                        ₦
+                        {Number(
+                          item.price_at_purchase || item.price
+                        ).toLocaleString()}
+                      </td>
+                      <td className="pl-3 pr-1 py-3 text-center text-sm">
+                        <div className="flex flex-col items-center">
+                          <span>{item.quantity}</span>
+                          {(acceptedQty > 0 || rejectedQty > 0) && (
+                            <div className="text-[10px] flex flex-col items-center leading-tight">
+                              {acceptedQty > 0 && (
+                                <span className="text-green-600 font-MontserratMedium">
+                                  Acc: {acceptedQty}
+                                </span>
+                              )}
+                              {rejectedQty > 0 && (
+                                <span className="text-red-500 font-MontserratMedium">
+                                  Rej: {rejectedQty}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="pl-3 pr-1 py-3 text-right text-sm font-MontserratNormal">
+                        <div className="flex flex-col items-end">
+                          <span
+                            className={
+                              acceptedQty < item.quantity && (acceptedQty > 0 || rejectedQty > 0)
+                                ? "line-through text-gray-400 text-xs"
+                                : ""
+                            }
+                          >
                             ₦
                             {(
                               Number(item.price_at_purchase || item.price) *
-                              (item.fulfilled_quantity || 0)
+                              item.quantity
                             ).toLocaleString()}
                           </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {acceptedQty < item.quantity && (acceptedQty > 0 || rejectedQty > 0) && (
+                            <span className={`${acceptedQty > 0 ? "text-green-600" : "text-red-500"} font-MontserratSemiBold`}>
+                              ₦
+                              {(
+                                Number(item.price_at_purchase || item.price) *
+                                acceptedQty
+                              ).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

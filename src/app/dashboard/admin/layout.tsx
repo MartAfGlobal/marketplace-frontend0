@@ -24,6 +24,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { useLogout } from "@/utils/logout";
+import { useTokenExpiration } from "@/hooks/useTokenExpiration";
 import Image from "next/image";
 import LogoPurple from "@/assets/images/logo-purple.svg";
 import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
@@ -101,6 +102,7 @@ export default function AdminLayout({
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useDispatch();
+  useTokenExpiration();
   const logout = useLogout(dispatch);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -434,13 +436,13 @@ export default function AdminLayout({
       }}
     >
       <header
-        className=" fixed top-0  h-16 md:h-26 flex items-center justify-between px-4 md:px-8 z-20"
+        className="fixed top-0 left-0 right-0 w-full h-16 md:h-26 flex items-center justify-between px-4 md:px-8 z-20"
         style={{
           background:
             "linear-gradient(0deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.92) 100%), linear-gradient(0deg, #947FFF 0%, #947FFF 100%)",
         }}
       >
-        <div className="h-16 md:h-20 flex items-center px-8  ">
+        <div className="hidden lg:flex h-16 md:h-20 items-center px-8">
           <Link href="/dashboard/admin" className="flex items-center gap-3">
             <Image
               src={LogoPurple}
@@ -546,7 +548,7 @@ export default function AdminLayout({
       <div className="flex-1 flex mt-28 gap-8 min-w-0">
         {/* Top Header */}
         <aside
-          className=" lg:block w-64 sticky top-30 border-r-[0.5px] border-6a0dad/44  self-start h-[calc(100vh-120px)] flex-shrink-0 flex flex-col"
+          className="hidden lg:flex w-64 sticky top-30 border-r-[0.5px] border-6a0dad/44 self-start h-[calc(100vh-120px)] flex-shrink-0 flex-col"
           style={{ width: "16rem" }}
         >
           {/* Brand / Logo exactly aligned with sidebar */}

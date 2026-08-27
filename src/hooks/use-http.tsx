@@ -27,21 +27,19 @@ export const useHttp = () => {
 
         if (typeof window !== "undefined") {
           const currentUrl = window.location.pathname + window.location.search;
-          console.log(
-            "Auto-redirect to login disabled. Current URL:",
-            currentUrl,
-          );
-          // if (window.location.pathname.startsWith("/dashboard/admin")) {
-          //   router.replace(`/auth/admin/login?from=${encodeURIComponent(currentUrl)}`);
-          // } else if (window.location.pathname.startsWith("/dashboard/seller")) {
-          //   router.replace(`/auth/seller/login?from=${encodeURIComponent(currentUrl)}`);
-          // } else {
-          //   router.replace(`/auth/login?from=${encodeURIComponent(currentUrl)}`);
-          // }
+          const pathname = window.location.pathname;
+
+          if (pathname.startsWith("/dashboard/admin")) {
+            router.replace(`/auth/admin/login?from=${encodeURIComponent(currentUrl)}`);
+          } else if (pathname.startsWith("/dashboard/seller")) {
+            localStorage.setItem("sellerRedirectUrl", currentUrl);
+            router.replace(`/auth/seller/login?from=${encodeURIComponent(currentUrl)}`);
+          } else {
+            router.replace(`/auth/login?from=${encodeURIComponent(currentUrl)}`);
+          }
         }
 
         setError("Please login!");
-        // toast.error("Please login!");
         return;
       }
 

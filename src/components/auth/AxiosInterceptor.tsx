@@ -64,18 +64,26 @@ export default function AxiosInterceptor({ children }: { children: React.ReactNo
             }
 
             const isSeller = currentPath.startsWith("/dashboard/seller");
-            
+            const isAdmin = currentPath.startsWith("/dashboard/admin");
+            const currentUrl = currentPath + window.location.search;
+
             if (isSeller) {
-              const currentUrl = currentPath + window.location.search;
               localStorage.setItem("sellerRedirectUrl", currentUrl);
             }
 
-            toast.error(errorMessage.toLowerCase().includes("token") ? errorMessage : "Session expired. Please login again.", { id: "session-expired" });
+            toast.error(
+              errorMessage.toLowerCase().includes("token")
+                ? errorMessage
+                : "Session expired. Please login again.",
+              { id: "session-expired" }
+            );
 
-            if (isSeller) {
-              router.replace("/auth/seller/login");
+            if (isAdmin) {
+              router.replace(`/auth/admin/login?from=${encodeURIComponent(currentUrl)}`);
+            } else if (isSeller) {
+              router.replace(`/auth/seller/login?from=${encodeURIComponent(currentUrl)}`);
             } else {
-              router.replace("/auth/login");
+              router.replace(`/auth/login?from=${encodeURIComponent(currentUrl)}`);
             }
           }
         }

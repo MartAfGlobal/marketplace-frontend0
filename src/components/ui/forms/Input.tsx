@@ -8,6 +8,7 @@ interface InputProps extends React.ComponentProps<"input"> {
   valid?: boolean;
   validatePhone?: boolean;
   validateName?: boolean;
+  validateDigits?: boolean;
   validateEmail?: boolean;
 }
 
@@ -19,7 +20,7 @@ const MONTHS = [
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, icon, valid = true, validatePhone = false, validateName = false, validateEmail = false, value, onChange, onClick, readOnly, placeholder, onBlur, ...props }, ref) => {
+  ({ className, type, icon, valid = true, validatePhone = false, validateName = false, validateDigits = false, validateEmail = false, value, onChange, onClick, readOnly, placeholder, onBlur, ...props }, ref) => {
     const [phoneError, setPhoneError] = React.useState<string>("");
     const [phoneTouched, setPhoneTouched] = React.useState(false);
 
@@ -65,13 +66,24 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
+      const sanitized = val.replace(/[^0-9+\-\s().]/g, "");
       if (val !== "" && !PHONE_REGEX.test(val)) {
         setPhoneError("Phone number must contain only digits, +");
         setPhoneTouched(true);
         return;
       }
-      if (phoneTouched) validatePhoneValue(val);
-      if (onChange) onChange(e);
+      if (phoneTouched) validatePhoneValue(sanitized);
+      if (onChange) {
+        const syntheticEvent = {
+          ...e,
+          target: {
+            ...e.target,
+            name: e.target.name,
+            value: sanitized,
+          },
+        };
+        onChange(syntheticEvent as React.ChangeEvent<HTMLInputElement>);
+      }
     };
 
     const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +100,23 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
-      const sanitized = val.replace(/[^a-zA-Z\s'-]/g, "");
+      const sanitized = val.replace(/[^a-zA-Z]/g, "");
+      if (onChange) {
+        const syntheticEvent = {
+          ...e,
+          target: {
+            ...e.target,
+            name: e.target.name,
+            value: sanitized,
+          },
+        };
+        onChange(syntheticEvent as React.ChangeEvent<HTMLInputElement>);
+      }
+    };
+
+    const handleDigitsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      const sanitized = val.replace(/[^0-9]/g, "");
       if (onChange) {
         const syntheticEvent = {
           ...e,
@@ -304,6 +332,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       onChange !== undefined ||
       readOnly ||
       validateName ||
+      validateDigits ||
       validatePhone ||
       validateEmail;
     const resolvedValue = isControlled ? (value ?? "") : value;
@@ -329,6 +358,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onChange={
               validateName
                 ? handleNameChange
+                : validateDigits
+                ? handleDigitsChange
                 : validatePhone
                 ? handlePhoneChange
                 : shouldValidateEmail

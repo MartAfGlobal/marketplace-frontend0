@@ -4,16 +4,15 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { tokenActions } from "@/store/token/token-slice";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clearStoredAuthTokens } from "@/utils/authStorage";
 
 function isTokenExpired(token: string) {
   if (!token) return true;
   try {
-    const base64Url = token!.split(".")[1];
+    const base64Url = token.split(".")[1];
     if (!base64Url) return true;
-    
-    // Polyfill for React Native/Node base64 decoding (though Window.atob is generally available in browsers)
+
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     const jsonPayload = decodeURIComponent(
       window
@@ -27,14 +26,12 @@ function isTokenExpired(token: string) {
 
     const { exp } = JSON.parse(jsonPayload);
     // Add a 5 minute buffer so we don't use tokens about to expire
-    const currentTime = Math.floor(Date.now() / 1000) + 300; 
+    const currentTime = Math.floor(Date.now() / 1000) + 300;
     return exp < currentTime;
-  } catch (error) {
-    return true; // if we can't parse it, treat as expired
+  } catch {
+    return true;
   }
 }
-
-import { useRouter } from "next/navigation";
 
 export const useTokenExpiration = () => {
   const dispatch = useDispatch();
@@ -58,26 +55,38 @@ export const useTokenExpiration = () => {
   };
 
   useEffect(() => {
-    if (!token) {
-      if (pathname.startsWith("/dashboard/admin") || pathname.startsWith("/dashboard/seller")) {
-        const loginPath = getLoginPath();
-        const currentUrl = getCurrentUrl();
-        router.replace(`${loginPath}?from=${encodeURIComponent(currentUrl)}`);
-      }
-      return;
-    }
+    const isProtectedPath =
+      pathname.startsWith("/dashboard/admin") ||
+      pathname.startsWith("/dashboard/seller") ||
+      pathname.startsWith("/dashboard/buyer") ||
+      pathname.startsWith("/cart/checkout");
 
-    if (token && isTokenExpired(token!)) {
-      dispatch(tokenActions.deleteToken());
+    if (!isProtectedPath) return;
+
+    // Check if token exists in localStorage/cookies as a fallback
+    const storedToken =
+      typeof window !== "undefined"
+        ? localStorage.getItem("accessToken") ||
+          localStorage.getItem("token") ||
+          null
+        : null;
+
+    const effectiveToken = token || storedToken;
+
+    if (!effectiveToken || isTokenExpired(effectiveToken)) {
       clearStoredAuthTokens();
-      console.log("Token expired on load/navigation - clearing local state.");
+      dispatch(tokenActions.deleteToken());
 
-      const isManagerPage = pathname.startsWith("/info/manager");
-      if (isManagerPage) return;
+      const currentUrl = getCurrentUrl();
+      if (pathname.startsWith("/dashboard/seller")) {
+        localStorage.setItem("sellerRedirectUrl", currentUrl);
+      }
 
       const loginPath = getLoginPath();
-      const currentUrl = getCurrentUrl();
       router.replace(`${loginPath}?from=${encodeURIComponent(currentUrl)}`);
+    } else if (!token && storedToken) {
+      // Sync stored token to Redux
+      dispatch(tokenActions.setToken(storedToken));
     }
   }, [token, dispatch, pathname, router]);
 };

@@ -53,30 +53,34 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!buyerAddresses.length) return;
 
-    if (!selectedAddressId) {
-      const defaultAddr = buyerAddresses.find((a) => a.is_default);
-      dispatch(
-        buyerActions.setSelectedAddress(
-          defaultAddr?.id ?? buyerAddresses[0].id,
-        ),
-      );
+    // Use String() comparison to avoid number vs string mismatch (backend returns numeric IDs)
+    const exists = buyerAddresses.some((a) => String(a.id) === String(selectedAddressId));
+    if (!selectedAddressId || !exists) {
+      const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
+      const newId = defaultAddr?.id ?? buyerAddresses[0].id;
+      dispatch(buyerActions.setSelectedAddress(String(newId)));
     }
   }, [buyerAddresses, selectedAddressId, dispatch]);
 
   const handleSelectAddress = (addressId: string) => {
-    dispatch(buyerActions.setSelectedAddress(addressId));
+    dispatch(buyerActions.setSelectedAddress(String(addressId)));
   };
 
   // 3. Fetch summary when address is selected
   useEffect(() => {
     if (!token || !selectedAddressId) return;
 
+    // Send as a number — backend expects integer address ID
+    const addressIdNum = Number(selectedAddressId);
+    if (!addressIdNum) return; // guard against NaN / 0
+
     sendHttpRequest({
       requestConfig: {
         url: "/checkout/summary/",
         method: "POST",
         body: {
-          address_id: selectedAddressId,
+          shipping_address_id: addressIdNum,
+          address_id: addressIdNum,
           discount_amount: "0.00",
         },
         token,

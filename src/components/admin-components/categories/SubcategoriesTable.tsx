@@ -159,7 +159,7 @@ export default function SubcategoriesTable({
                       </svg>
                     </button>
                   </td>
-                  <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium max-w-40 truncate">
+                  <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium max-w-40 truncate">
                     <div className="flex items-center gap-3">
                       {subcategoryImgUrl ? (
                         <Image
@@ -177,12 +177,12 @@ export default function SubcategoriesTable({
                       </span>
                     </div>
                   </td>
-                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium truncate max-w-50.25">
+                <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium truncate max-w-50.25">
                   <span className="block truncate" title={row.parentCategory}>
                     {row.parentCategory}
                   </span>
                 </td>
-                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">
+                <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">
                   <span
                     className="block max-w-[10rem] truncate"
                     title={row.attributes_summary || row.attributes}
@@ -190,7 +190,7 @@ export default function SubcategoriesTable({
                     {row.attributes_summary || row.attributes}
                   </span>
                 </td>
-                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">{row.productsCount}</td>
+                <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">{row.productsCount}</td>
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-1.5">
                     {row.status === "Active" && (
@@ -205,7 +205,7 @@ export default function SubcategoriesTable({
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">{row.date}</td>
+                <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">{row.date}</td>
                 <td
                   className="py-3 px-3 text-center relative"
                   onClick={(e) => e.stopPropagation()}

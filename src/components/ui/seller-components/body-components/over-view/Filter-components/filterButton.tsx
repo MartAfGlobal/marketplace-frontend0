@@ -35,8 +35,8 @@ export default function FilterDropdown({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled ={isIncomplete}
-        className={`flex circle-shadow text-c12 font-MontserratNormal text-ff715b bg-ffffff 
-        items-center w-full max-w-fit p-3 text-nowrap rounded-xl justify-center flex-shrink-0 gap-4.5 h-10  ${isIncomplete? "cursor-not-allowed" : "cursor-pointer"} ${className}`}
+        className={`flex  text-c12 font-MontserratNormal text-ff715b bg-ffffff border-[0.5px] border-ff715b
+        items-center w-full max-w-fit p-3 text-nowrap rounded-c8 justify-center flex-shrink-0 gap-4.5 h-10  ${isIncomplete? "cursor-not-allowed" : "cursor-pointer"} ${className}`}
       >
         <span>{selected}</span>
         <Image src={CaretDown} alt="dropdown" width={11} height={6} />

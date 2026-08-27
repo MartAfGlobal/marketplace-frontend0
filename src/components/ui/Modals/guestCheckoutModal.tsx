@@ -302,13 +302,18 @@ export default function GuestCheckoutModal({
                     <Input
                       id="guest_first_name"
                       name="guest_first_name"
+                      autoComplete="given-name"
                       type="text"
+                      validateName={true}
                       value={formData.guest_first_name}
                       onChange={(e) =>
-                        handleChange("guest_first_name", e.target.value)
+                        handleChange(
+                          "guest_first_name",
+                          e.target.value.replace(/[^a-zA-Z]/g, "")
+                        )
                       }
                       placeholder="Truth"
-                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                      className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                     />
                   </div>
 
@@ -317,15 +322,20 @@ export default function GuestCheckoutModal({
                       Last Name
                     </Label>
                     <Input
-                      id="lastName"
-                      name="lastName"
+                      id="guest_last_name"
+                      name="guest_last_name"
+                      autoComplete="family-name"
                       type="text"
+                      validateName={true}
                       value={formData.guest_last_name}
                       onChange={(e) =>
-                        handleChange("guest_last_name", e.target.value)
+                        handleChange(
+                          "guest_last_name",
+                          e.target.value.replace(/[^a-zA-Z]/g, "")
+                        )
                       }
-                      placeholder="john"
-                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                      placeholder="John"
+                      className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                     />
                   </div>
                 </div>
@@ -336,15 +346,17 @@ export default function GuestCheckoutModal({
                       Email Address
                     </Label>
                     <Input
-                      id="email"
+                      id="guest_email"
                       name="email"
+                      autoComplete="email"
                       type="email"
+                      validateEmail={true}
                       value={formData.guest_email}
                       onChange={(e) =>
                         handleChange("guest_email", e.target.value)
                       }
-                      placeholder="truthokoye@gamil.com"
-                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                      placeholder="truthokoye@gmail.com"
+                      className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                     />
                   </div>
 
@@ -362,12 +374,14 @@ export default function GuestCheckoutModal({
                         />
                       </div>
                       <Input
-                        id="phone"
+                        id="guest_phone"
                         name="phone"
-                        type="text"
+                        autoComplete="tel"
+                        type="tel"
+                        validatePhone={true}
                         value={formData.guest_phone}
                         onChange={(e) =>
-                          handleChange("guest_phone", e.target.value)
+                          handleChange("guest_phone", e.target.value.replace(/[^0-9+]/g, ""))
                         }
                         placeholder="+2347058675432"
                         className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
@@ -394,13 +408,20 @@ export default function GuestCheckoutModal({
                         Zip Code
                       </Label>
                       <Input
+                        id="guest_postal_code"
+                        name="postal_code"
+                        autoComplete="postal-code"
                         type="text"
+                        validateDigits={true}
                         value={formData.guest_shipping_address.postal_code}
                         onChange={(e) =>
-                          handleChange("postal_code", e.target.value)
+                          handleChange(
+                            "postal_code",
+                            e.target.value.replace(/[^0-9]/g, "")
+                          )
                         }
                         placeholder="100001"
-                        className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                        className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                       />
                     </div>
                   </div>
@@ -411,6 +432,9 @@ export default function GuestCheckoutModal({
                         Street / House / Apartment / Unit
                       </Label>
                       <Input
+                        id="guest_address_line1"
+                        name="address_line1"
+                        autoComplete="address-line1"
                         type="text"
                         value={formData.guest_shipping_address.line1}
                         onChange={(e) => handleChange("line1", e.target.value)}
@@ -432,11 +456,12 @@ export default function GuestCheckoutModal({
                       <Input
                         id="guest_address_line2"
                         name="guest_address_line2"
+                        autoComplete="address-line2"
                         type="text"
                         value={formData.guest_shipping_address.line2}
                         onChange={(e) => handleChange("line2", e.target.value)}
                         placeholder="12 Broad Street"
-                        className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                        className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                       />
                     </div>
                   </div>

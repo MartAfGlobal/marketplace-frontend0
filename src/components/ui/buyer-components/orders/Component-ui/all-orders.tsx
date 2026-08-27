@@ -24,6 +24,7 @@ import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-or
 import { useFetchOrders } from "@/helpers/fetchOrders";
 
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
+import CartWithBoxesIcon from "../CartWithBoxesIcon";
 
 interface OrdersProps {
   searchTerm: string;
@@ -77,20 +78,32 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
   const handleRepay = (order_id: any, expected_amount: any) => {
     console.log("checking item to pay", order_id);
+    setSelectedId(order_id);
+    const amountNum = Number(expected_amount) || 0;
     repayReq({
       requestConfig: {
         url: "/checkout/repay/",
         method: "POST",
         token,
-        body: { order_id, expected_amount: expected_amount.toFixed(2) },
+        body: {
+          payment_id: order_id,
+          order_id: order_id,
+          repay_order_id: order_id,
+          expected_amount: amountNum.toFixed(2),
+        },
         isAuth: true,
         userType: "buyer",
       },
       successRes: (res) => {
         console.log("✅ User tracking info:", res);
-
-        if (res.data?.paystack_payment_url) {
-          window.location.href = res.data.paystack_payment_url;
+        const paymentUrl =
+          res.data?.paystack_payment_url ||
+          res.data?.payment_url ||
+          res.data?.authorization_url ||
+          res.data?.checkout_url ||
+          res.data?.url;
+        if (paymentUrl) {
+          window.location.href = paymentUrl;
         } else {
           return;
         }
@@ -224,54 +237,74 @@ export default function Orders({ searchTerm }: OrdersProps) {
                 }}
                 className="space-y-c24"
               >
-                {filteredOrders.map((item: OrderItem) => {
+                {filteredOrders.map((item: any) => {
                   const orderItems = item.order_items || (item as any).items || [];
+                  const hasOrderItems = orderItems.length > 0;
                   const isSingleItemOrder = orderItems.length === 1;
+
+                  const itemsCount =
+                    (item as any).items_count ??
+                    (hasOrderItems
+                      ? orderItems.reduce(
+                          (sum: number, i: any) =>
+                            sum + (i.fulfilled_quantity ?? i.quantity ?? 1),
+                          0,
+                        )
+                      : 1);
+
+                  const totalPrice = Number(
+                    item.total_price ??
+                      (hasOrderItems
+                        ? orderItems.reduce(
+                            (sum: number, i: any) =>
+                              sum +
+                              (Number(i.price_at_purchase || 0) *
+                                Number(i.fulfilled_quantity ?? i.quantity ?? 1)),
+                            0,
+                          )
+                        : 0),
+                  );
+
+                  const orderNo =
+                    (item as any).payment_no ||
+                    item.order_no ||
+                    (item as any).payment_reference ||
+                    item.id;
+
+                  const storeName =
+                    item.manufacturer ||
+                    item.seller_name ||
+                    ((item as any).sellers_count
+                      ? `${(item as any).sellers_count} Store${(item as any).sellers_count > 1 ? "s" : ""}`
+                      : "MartAf Order");
+
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
                       {(item.status?.toLowerCase() === "shipped" || item.status?.toLowerCase() === "shipped_to_buyer") && (
                         <>
                           <div className="w-full"></div>
-                          <Button
-                            
-                            onClick={() => handleTrackOrder(item.id)}
-                          >
-                            Track order
-                          </Button>
+                          <Button onClick={() => handleTrackOrder(item.id)}>Track order</Button>
                         </>
                       )}
                       {item.status === "DELIVERED" && (
                         <>
-                          <Button onClick={() => handleClick(item.id)}>
-                            Confirm delivery
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => handleTrackOrder(item.id)}
-                          >
+                          <Button onClick={() => handleClick(item.id)}>Confirm delivery</Button>
+                          <Button variant="secondary" onClick={() => handleTrackOrder(item.id)}>
                             Track order
                           </Button>
                         </>
                       )}
-                      {item.status === "TO_SHIP"   && (
+                      {item.status === "TO_SHIP" && (
                         <>
                           <div className="w-full"></div>
-                          <Button
-                          
-                            onClick={() => handleTrackOrder(item.id)}
-                          >
+                          <Button variant="secondary" onClick={() => handleTrackOrder(item.id)}>
                             Track order
                           </Button>
                         </>
                       )}
-
                       {item.status === "PENDING" && (
                         <>
-                          <Button
-                            onClick={() => handleEditAddress(item.id)}
-                          >
-                            Edit address
-                          </Button>
+                          <Button onClick={() => handleEditAddress(item.id)}>Edit address</Button>
                           <Button
                             variant="secondary"
                             onClick={() => {
@@ -283,30 +316,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
-
                       {item.status === "AWAITING_PAYMENT" && (
                         <>
-                          <Button
-                            disabled={repaying}
-                            onClick={() =>
-                              handleRepay(item.id, item.total_price)
-                            }
-                          >
-                            {repaying ? <LoadingSpinner /> : "Confirm & pay"}
+                          <Button disabled={repaying} onClick={() => handleRepay(item.id, totalPrice)}>
+                            {selectedId === item.id && repaying ? <LoadingSpinner /> : "Confirm & pay"}
                           </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => handleEditAddress(item.id)}
-                          >
+                          <Button variant="secondary" onClick={() => handleEditAddress(item.id)}>
                             Edit address
                           </Button>
-                        </>
-                      )}
-
-                      {item.status === "Confirmed" && (
-                        <>
-                          <Button>Add to cart</Button>
-                          <Button variant="secondary">Leave a review</Button>
                         </>
                       )}
                     </div>
@@ -319,9 +336,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.8 }}
-                      className="h-64 border-b border-b-000000/10"
+                      className="min-h-64 pb-6 border-b border-b-000000/10"
                     >
-                      <div className="w-full   flex items-center justify-between md:gap-0 md:justify-between mb-3 md:mb-c32">
+                      <div className="w-full flex items-center justify-between md:gap-0 md:justify-between mb-3 md:mb-c32">
                         <div>
                           <p
                             className={`font-MontserratSemiBold text-c16  ${
@@ -332,7 +349,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                   : "text-161616"
                             }`}
                           >
-                            {item.status === "TO_SHIP"  
+                            {item.status === "TO_SHIP"
                               ? "Received at Central hub"
                               : item.status === "SHIPPED" || item.status === "SHIPPED_TO_BUYER"
                                 ? "Order on its way"
@@ -349,19 +366,11 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                           : item.status}
                           </p>
                           <div className="md:flex hidden gap-2 mt-2">
-                            <p className="text-c12  font-MontserratNormal">
-                              Order ID: {item.order_no || item.id || "Not available"}
+                            <p className="text-c12 font-MontserratNormal">
+                              Order ID: {orderNo || "Not available"}
                             </p>
-                            <button
-                              key={item.id}
-                              onClick={() => handleCopy(item.order_no ?? "")}
-                            >
-                              <Image
-                                src={Copy}
-                                alt="copy"
-                                width={16}
-                                height={16}
-                              />
+                            <button key={item.id} onClick={() => handleCopy(orderNo ?? "")}>
+                              <Image src={Copy} alt="copy" width={16} height={16} />
                             </button>
                             {copied && (
                               <span className="text-green-600 text-c12 font-MontserratMedium">
@@ -372,50 +381,91 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         </div>
                         {item.status !== "CANCELLED" && (
                           <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                            Delivery:{" "}
-                            {item.estimated_delivery_date || " May 15, 2025"}
+                            {item.estimated_delivery_date
+                              ? `Delivery: ${item.estimated_delivery_date}`
+                              : item.created_at
+                                ? new Date(item.created_at).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })
+                                : ""}
                           </p>
                         )}
                       </div>
 
-                      <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
-                        {isSingleItemOrder ? (
+                      <div className="w-full md:justify-between flex-col pb-c32 flex md:flex-row">
+                        {!hasOrderItems ? (
+                          <>
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="flex flex-col md:flex-row gap-4 items-start flex-1"
+                            >
+                              <div className="flex gap-4 items-start w-full">
+                                <CartWithBoxesIcon className="h-24 w-24" itemsCount={itemsCount} />
+                                <div className="w-full">
+                                  <p className="font-MontserratSemiBold text-base mb-1 text-000000">
+                                    Order #{orderNo}
+                                  </p>
+                                  <p className="text-c12 font-MontserratMedium mb-2 text-000000/70">
+                                    {storeName}
+                                  </p>
+                                  <div className="flex flex-wrap gap-2 items-center">
+                                    <p className="rounded-c12 bg-000000/10 text-000000/60 h-fit py-1.5 px-3 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
+                                      {itemsCount} {itemsCount === 1 ? "Item" : "Items"}
+                                    </p>
+                                    {(item as any).shipping_cost > 0 && (
+                                      <p className="text-c12 font-MontserratMedium text-000000/50">
+                                        + ₦{Number((item as any).shipping_cost).toLocaleString()}{" "}
+                                        Shipping
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="font-MontserratSemiBold text-c16 pt-3 text-000000">
+                                    ₦{totalPrice.toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+                            {MobileActions}
+                          </>
+                        ) : isSingleItemOrder ? (
                           <>
                             <Link
                               href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
                               {orderItems.map((prod: any) => (
-                                <div
-                                  key={prod.id}
-                                  className="flex gap-4 items-start  w-full"
-                                >
+                                <div key={prod.id} className="flex gap-4 items-start  w-full">
                                   <Image
                                     src={prod?.product_image || "/placeholder.png"}
                                     alt={prod.product_name || "Product Image"}
                                     width={96}
                                     height={96}
-                                    className="h-24 w-24 "
+                                    className="h-24 w-24 object-cover rounded-lg"
                                   />
                                   <div className="w-full">
                                     <p className="font-MontserratSemiBold text-base mb-1">
                                       {prod.product_name}
                                     </p>
                                     <p className=" text-c12 font-MontserratMedium mb-3">
-                                       {item.manufacturer}
+                                      {item.manufacturer || item.seller_name}
                                     </p>
                                     <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
                                       {prod.fulfilled_quantity ?? prod.quantity}Pc,
                                       {prod.variation_name || prod.product_name}
                                     </p>
                                     <p className="font-MontserratSemiBold text-c16 pt-3">
-                                      ₦{(prod.price_at_purchase * (prod.fulfilled_quantity ?? prod.quantity ?? 0)).toLocaleString()}
+                                      ₦
+                                      {(
+                                        (prod.price_at_purchase || 0) *
+                                        (prod.fulfilled_quantity ?? prod.quantity ?? 1)
+                                      ).toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
                               ))}
                             </Link>
-
                             {MobileActions}
                           </>
                         ) : (
@@ -435,19 +485,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                   }`}
                                 >
                                   {orderItems.slice(0, 3).map((prod: any) => (
-                                    <div
-                                      key={prod.id}
-                                      className="flex flex-col items-center"
-                                    >
+                                    <div key={prod.id} className="flex flex-col items-center">
                                       <div className="w-24 h-24 relative">
                                         <Image
                                           src={prod.product_image || "/placeholder.png"}
-                                          alt={
-                                            prod.product_name || "Product Image"
-                                          }
+                                          alt={prod.product_name || "Product Image"}
                                           width={96}
                                           height={96}
-                                          className="w-24 h-24 object-cover"
+                                          className="w-24 h-24 object-cover rounded-lg"
                                         />
                                         <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
                                           x{prod.fulfilled_quantity ?? prod.quantity}
@@ -456,86 +501,56 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                     </div>
                                   ))}
                                 </div>
-
                                 <div>
                                   <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                    {orderItems
-                                      ?.slice(0, 3)
-                                      .map((prod: any, index: number) => (
+                                    {orderItems.slice(0, 3).map((prod: any, index: number) => (
+                                      <span key={prod.id} className="flex items-center">
                                         <span
-                                          key={prod.id}
-                                          className="flex items-center"
+                                          className="max-w-[110px] truncate inline-block align-middle"
+                                          title={prod.product_name}
                                         >
-                                          <span
-                                            className="max-w-[110px] truncate inline-block align-middle"
-                                            title={prod.product_name}
-                                          >
-                                            {prod.product_name}
-                                          </span>
-                                          {index <
-                                            Math.min(
-                                              orderItems.length,
-                                              3,
-                                            ) -
-                                              1 && <span>,&nbsp;</span>}
+                                          {prod.product_name}
                                         </span>
-                                      ))}
-                                    {orderItems.length > 3 && (
-                                      <span>...</span>
-                                    )}
+                                        {index < Math.min(orderItems.length, 3) - 1 && (
+                                          <span>,&nbsp;</span>
+                                        )}
+                                      </span>
+                                    ))}
+                                    {orderItems.length > 3 && <span>...</span>}
                                   </p>
-
                                   <p className="text-c12 font-MontserratMedium mb-3">
-                                    {item.manufacturer}
+                                    {item.manufacturer || item.seller_name}
                                   </p>
-
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {orderItems.reduce(
-                                      (sum, i) => sum + (i.fulfilled_quantity ?? i.quantity ?? 0),
-                                      0,
-                                    )}{" "}
-                                    <span className="pl-0.5">Items</span>
+                                    {itemsCount} <span className="pl-0.5">Items</span>
                                   </p>
-
                                   <p className="font-MontserratSemiBold text-c16 pt-3">
-                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
+                                    ₦{totalPrice.toLocaleString()}
                                   </p>
                                 </div>
                               </div>
-
                               <div className="flex sm:hidden w-full items-start gap-4">
                                 {orderItems[0] && (
                                   <Image
-                                    src={
-                                      orderItems[0].product_image ||
-                                      "/placeholder.png"
-                                    }
-                                    alt={
-                                      orderItems[0].product_name ||
-                                      "Product Image"
-                                    }
+                                    src={orderItems[0].product_image || "/placeholder.png"}
+                                    alt={orderItems[0].product_name || "Product Image"}
                                     width={96}
                                     height={96}
-                                    className="w-24 h-24"
+                                    className="w-24 h-24 object-cover rounded-lg"
                                   />
                                 )}
-
                                 <div className="w-full ">
                                   <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
                                     {orderItems[0]?.product_name}
                                   </p>
-
                                   <p className="text-c12 font-MontserratMedium mb-2">
-                                    {item.manufacturer}
+                                    {item.manufacturer || item.seller_name}
                                   </p>
-
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {orderItems.length}{" "}
-                                    <span className="pl-0.5">Items</span>
+                                    {itemsCount} <span className="pl-0.5">Items</span>
                                   </p>
-
                                   <p className="font-MontserratSemiBold text-c16 pt-2">
-                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
+                                    ₦{totalPrice.toLocaleString()}
                                   </p>
                                 </div>
                               </div>
@@ -546,7 +561,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         <div className="hidden w-full gap-4 pl-4 md:flex md:flex-col md:max-w-70 space-y-4">
                           {(item.status?.toLowerCase() === "shipped" || item.status?.toLowerCase() === "shipped_to_buyer") && (
                             <>
-                               <div className="w-full"></div>
+                              <div className="w-full"></div>
                               <Button
                                 variant="secondary"
                                 key={item.id}

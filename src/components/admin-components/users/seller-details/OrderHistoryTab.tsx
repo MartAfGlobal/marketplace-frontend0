@@ -72,7 +72,7 @@ export default function OrderHistoryTab() {
               <th className="p-3 font-MontserratNormal text-sm text-center"></th>
             </tr>
           </thead>
-          <tbody className="text-[14px] text-[#000000]/68 font-MontserratNormal">
+          <tbody className="text-sm text-[#000000]/68 font-MontserratNormal">
             {mockData.map((row) => (
               <tr key={row.id} className="transition-colors h-10.5 text-[#000000]/68 cursor-pointer hover:bg-gray-50">
                 <td className="py-3 px-4">

@@ -12,7 +12,7 @@ export interface OrderRow {
   extraVendors?: number;
   amount: string;
   location: string;
-  status: "Delivered" | "Ongoing" | "Disputed";
+  status: string;
   date: string;
 }
 
@@ -51,6 +51,82 @@ const statusConfig: Record<
       </svg>
     ),
   },
+  Pending: {
+    pill: "text-[#FFAC06] bg-[#FFAC06]/10",
+    label: "Pending",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="6.5" stroke="#FFAC06" strokeWidth="1.2" />
+        <path
+          d="M7 4v3.5l2 1"
+          stroke="#FFAC06"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  Processing: {
+    pill: "text-[#318af7] bg-[#318af7]/10",
+    label: "Processing",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="6.5" stroke="#318af7" strokeWidth="1.2" />
+        <path
+          d="M7 3.5v3.5h3"
+          stroke="#318af7"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  Shipped: {
+    pill: "text-[#947FFF] bg-[#947FFF]/10",
+    label: "Shipped",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="6.5" stroke="#947FFF" strokeWidth="1.2" />
+        <path
+          d="M4 7h6M7 4l3 3-3 3"
+          stroke="#947FFF"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  Rejected: {
+    pill: "text-[#E8334A] bg-[#E8334A]/10",
+    label: "Rejected",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="6.5" stroke="#E8334A" strokeWidth="1.2" />
+        <path
+          d="M5 5l4 4M9 5l-4 4"
+          stroke="#E8334A"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  Cancelled: {
+    pill: "text-[#807C79] bg-[#807C79]/10",
+    label: "Cancelled",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="6.5" stroke="#807C79" strokeWidth="1.2" />
+        <path
+          d="M5 5l4 4M9 5l-4 4"
+          stroke="#807C79"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
   Disputed: {
     pill: "text-[#E8334A] bg-[#E8334A]/10",
     label: "Disputed",
@@ -60,6 +136,21 @@ const statusConfig: Record<
         <path
           d="M5 5l4 4M9 5l-4 4"
           stroke="#E8334A"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  "Partially Accepted": {
+    pill: "text-[#FFAC06] bg-[#FFAC06]/10",
+    label: "Partially Accepted",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="6.5" stroke="#FFAC06" strokeWidth="1.2" />
+        <path
+          d="M5 7h4"
+          stroke="#FFAC06"
           strokeWidth="1.4"
           strokeLinecap="round"
         />
@@ -141,7 +232,7 @@ export default function OrdersTable({
             <th className="p-3 font-MontserratNormal text-sm leading-[1%] text-center"></th>
           </tr>
         </thead>
-        <tbody className=" text-[11px]  text-000000/68 font-MontserratNormal">
+        <tbody className="text-sm text-000000/68 font-MontserratNormal">
           {loading ? (
             <tr>
               <td colSpan={9} className="py-12 text-center">
@@ -154,7 +245,7 @@ export default function OrdersTable({
             rows.map((row) => (
               <tr
                 key={row.id}
-                className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer"
+                className="hover:bg-gray-50/50 transition-colors h-14"
               >
                 <td className="py-3 px-4  font-MontserratMedium">
                   <button
@@ -163,7 +254,7 @@ export default function OrdersTable({
                       e.stopPropagation();
                       onToggleRow(row.id);
                     }}
-                    className={`group flex h-4 w-4 mx-auto items-center justify-center border transition-all duration-200 ${
+                    className={`group flex h-4 w-4 mx-auto items-center justify-center border transition-all duration-200 cursor-pointer ${
                       selectedIds.includes(row.id)
                         ? "border-[#ff715b] bg-[#ff715b]"
                         : "border-[#161616] hover:border-[#ff715b]"
@@ -192,9 +283,14 @@ export default function OrdersTable({
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <span className="block max-w-[90px] truncate" title={row.id}>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/dashboard/admin/orders/${row.id}`)}
+                    className="block max-w-[120px] truncate text-left font-MontserratMedium cursor-pointer"
+                    title={row.id}
+                  >
                     {row.id}
-                  </span>
+                  </button>
                 </td>
                 <td className="py-3 px-4">
                   <span className="block max-w-[120px] truncate" title={row.buyer}>
@@ -225,12 +321,12 @@ export default function OrdersTable({
                   })()}
                 </td>
                 <td className="py-3 px-4">
-                  <span className="block max-w-[80px] truncate" title={row.amount}>
+                  <span className="block max-w-[120px] truncate" title={row.amount}>
                     {row.amount}
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <span className="block max-w-[80px] truncate" title={row.location}>
+                  <span className="block max-w-[140px] truncate" title={row.location}>
                     {row.location}
                   </span>
                 </td>
@@ -268,7 +364,7 @@ export default function OrdersTable({
                         <button
                           onClick={() => {
                             onSetActiveRowId(null);
-                            toast.info(`Tracking order: ${row.id}`);
+                            router.push(`/dashboard/admin/orders/track/${row.id}`);
                           }}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer"
                         >

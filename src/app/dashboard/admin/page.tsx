@@ -344,7 +344,7 @@ export default function AdminOverviewPage() {
                   <th className=" pb-6">Date created</th>
                 </tr>
               </thead>
-              <tbody className="space-x-4 text-c12 font-MontserratMedium">
+              <tbody className="space-x-4 text-sm font-MontserratMedium">
                 {mockTickets.map((ticket, i) => (
                   <tr key={i} className=" transition-colors">
                     <td className="pb-6 ">{ticket.id}</td>
@@ -404,7 +404,7 @@ export default function AdminOverviewPage() {
                   <th className=" pb-6">Country</th>
                 </tr>
               </thead>
-              <tbody className="space-x-4 text-c12 font-MontserratMedium">
+              <tbody className="space-x-4 text-sm font-MontserratMedium">
                 {mockKYBs.map((kyb, i) => (
                   <tr key={i} className="pb-6">
                     <td className="pb-6">{kyb.name}</td>

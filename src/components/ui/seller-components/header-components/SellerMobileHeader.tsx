@@ -36,7 +36,7 @@ export const SellerMobileHeader = ({
         {showBackButton && (
           <button
             onClick={handleBack}
-            className="flex items-center lg:mt-1.75"
+            className="flex items-center "
           >
             <span className="h-6 w-6 flex items-center justify-center mr-4">
               <Image src={navBack} width={9} height={16.5} alt="Back" />

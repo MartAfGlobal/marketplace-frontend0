@@ -92,7 +92,7 @@ export default function AdminStaffPage() {
                 <th className="py-3 px-4 font-bold text-right"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 text-[11px] text-gray-700 font-MontserratMedium">
+            <tbody className="divide-y divide-gray-50 text-sm text-gray-700 font-MontserratMedium">
               {filteredStaff.length > 0 ? (
                 filteredStaff.map((row, index) => (
                   <tr 

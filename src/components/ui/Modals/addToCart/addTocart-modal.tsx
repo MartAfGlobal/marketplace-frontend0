@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { Button } from "../../Button/Button";
 
 import close from "@/assets/Icons2/cancel.svg";
@@ -12,7 +13,6 @@ import Plus from "@/assets/icons/plus.svg";
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
-
 
 import { setProduct } from "@/store/productDetails/productDetailsSlice";
 import { LoadingSpinner } from "../../loading-spinner";
@@ -61,7 +61,7 @@ export default function AddCartModal({
     [key: string]: boolean;
   }>({});
   const dispatch = useDispatch();
- 
+
   const { loading: loadingDetails, sendHttpRequest: fetchDetailsReq } =
     useHttp();
 
@@ -118,32 +118,38 @@ export default function AddCartModal({
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
                 onClick={(e) => e.stopPropagation()}
-                className=" bg-white shadow-xl flex flex-col items-center gap-8 w-full max-w-md md:max-w-4xl rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-[90vh] overflow-y-auto"
+                className="relative bg-white shadow-xl flex flex-col items-center w-full max-w-md md:max-w-4xl rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-[90vh] overflow-y-auto"
               >
+                {/* Always visible top right close button */}
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 md:top-6 md:right-6 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors z-30"
+                  aria-label="Close modal"
+                >
+                  <X className="w-5 h-5 stroke-[2]" />
+                </button>
+
                 {loadingDetails ? (
-                  <div className="h-fullw-full flex justify-center items-center">
-                    <LoadingSpinner size={60} color="border-ff715b" />
+                  <div className="py-20 w-full flex justify-center items-center">
+                    <LoadingSpinner size={50} color="border-[#ff715b]" />
                   </div>
                 ) : (
                   <motion.div
                     key="modal-content"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="overflow-hidden w-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="w-full"
                   >
-                    <div className="flex items-center justify-between w-full mb-4">
-                      <h2 className="text-base font-MontserratSemiBold text-gray-800">
+                    <div className="flex items-center justify-between w-full mb-4 pr-8">
+                      <h2 className="text-base md:text-lg font-MontserratSemiBold text-gray-800 line-clamp-1">
                         Select variation for {productDetails?.name || "Product"}
                       </h2>
-                      <button onClick={onClose}>
-                        <Image src={close} alt="close" width={15} height={15} />
-                      </button>
                     </div>
 
-                    <div className="flex w-full flex-col md:flex-row gap-6 h-fit overflow-y-auto  md:overflow-x-auto md:overflow-y-hidden p-4 custom-scrollrailes">
-                      <div className="w-full h-fit max-h-c55">
+                    <div className="flex w-full flex-col md:flex-row gap-6 h-fit overflow-y-auto md:overflow-x-auto md:overflow-y-hidden p-1 custom-scrollrailes">
+                      <div className="w-full h-fit">
                         <ProductVariation isModal={true} />
                       </div>
                     </div>
@@ -154,7 +160,6 @@ export default function AddCartModal({
           </>
         )}
       </AnimatePresence>
-   
     </>
   );
 }

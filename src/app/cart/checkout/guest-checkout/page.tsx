@@ -390,8 +390,9 @@ export default function AddNewAddreess() {
                     className="w-full outline-none"
                     value={formData.guest_phone}
                     onChange={(e) => {
-                      if (phoneTouched) validatePhone(e.target.value);
-                      handleChange("guest_phone", e.target.value);
+                      const sanitized = e.target.value.replace(/[^0-9+]/g, "");
+                      if (phoneTouched) validatePhone(sanitized);
+                      handleChange("guest_phone", sanitized);
                     }}
                     onBlur={(e) => {
                       setPhoneTouched(true);
@@ -454,7 +455,7 @@ export default function AddNewAddreess() {
                   className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
                   value={formData.guest_shipping_address.postal_code}
                   onChange={(e) =>
-                    handleChange("postal_code", e.target.value)
+                    handleChange("postal_code", e.target.value.replace(/[^0-9]/g, ""))
                   }
                 />
               </div>

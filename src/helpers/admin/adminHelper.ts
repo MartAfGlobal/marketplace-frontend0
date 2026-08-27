@@ -385,7 +385,7 @@ export const AdminDetails = (id?: string) => {
   const fetchAdminProductsByCategory = (
     categoryId: string,
     page: number = 1,
-    callback?: (data: { results: any[]; count: number }) => void
+    callback?: (data: { results: any[]; count: number }) => void,
   ) => {
     if (!token || !categoryId) return;
 
@@ -400,9 +400,14 @@ export const AdminDetails = (id?: string) => {
       successRes: (responseData: any) => {
         const productsFetched = responseData?.data?.results ?? [];
         const totalCount = responseData?.data?.count ?? 0;
-        console.log("Category products fetched:", productsFetched, "Total:", totalCount);
+        console.log(
+          "Category products fetched:",
+          productsFetched,
+          "Total:",
+          totalCount,
+        );
         dispatch(
-          setAdminProductsData({ results: productsFetched, count: totalCount })
+          setAdminProductsData({ results: productsFetched, count: totalCount }),
         );
         if (callback) callback({ results: productsFetched, count: totalCount });
       },
@@ -486,7 +491,6 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
-
   const rejectAdminSeller = (
     manufacturerId: string,
     payload: { reason: string },
@@ -538,7 +542,7 @@ export const AdminDetails = (id?: string) => {
 
   const fetchAdminCategories = (
     page: number = 1,
-    callback?: (data: any) => void
+    callback?: (data: any) => void,
   ) => {
     if (!token) return;
 
@@ -551,12 +555,26 @@ export const AdminDetails = (id?: string) => {
         userType: "admin",
       },
       successRes: (responseData: any) => {
-        const rawResults = responseData?.data?.results ?? responseData?.data ?? (Array.isArray(responseData) ? responseData : []);
+        const rawResults =
+          responseData?.data?.results ??
+          responseData?.data ??
+          (Array.isArray(responseData) ? responseData : []);
         const categoriesFetched = Array.isArray(rawResults) ? rawResults : [];
-        const totalCount = responseData?.data?.count ?? responseData?.count ?? categoriesFetched.length;
-        console.log("Admin categories fetched:", categoriesFetched, "Total:", totalCount);
+        const totalCount =
+          responseData?.data?.count ??
+          responseData?.count ??
+          categoriesFetched.length;
+        console.log(
+          "Admin categories fetched:",
+          categoriesFetched,
+          "Total:",
+          totalCount,
+        );
         dispatch(
-          setAdminCategoriesData({ results: categoriesFetched, count: totalCount })
+          setAdminCategoriesData({
+            results: categoriesFetched,
+            count: totalCount,
+          }),
         );
         if (callback) callback(responseData);
       },
@@ -565,7 +583,7 @@ export const AdminDetails = (id?: string) => {
 
   const fetchAdminCategoryById = (
     categorySlug: string,
-    callback?: (data: any) => void
+    callback?: (data: any) => void,
   ) => {
     if (!token || !categorySlug) return;
 
@@ -588,9 +606,7 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
-  const fetchAdminParentCategories = (
-    callback?: (data: any) => void
-  ) => {
+  const fetchAdminParentCategories = (callback?: (data: any) => void) => {
     if (!token) return;
 
     sendHttpRequest({
@@ -609,7 +625,12 @@ export const AdminDetails = (id?: string) => {
         const results = Array.isArray(rawResults) ? rawResults : [];
         const totalCount =
           responseData?.data?.count ?? responseData?.count ?? results.length;
-        console.log("Admin parent categories fetched:", results, "Total:", totalCount);
+        console.log(
+          "Admin parent categories fetched:",
+          results,
+          "Total:",
+          totalCount,
+        );
         if (callback) callback({ results, totalCount });
       },
     });
@@ -617,7 +638,7 @@ export const AdminDetails = (id?: string) => {
 
   const fetchAdminSubcategories = (
     page: number = 1,
-    callback?: (data: any) => void
+    callback?: (data: any) => void,
   ) => {
     if (!token) return;
 
@@ -637,7 +658,12 @@ export const AdminDetails = (id?: string) => {
         const results = Array.isArray(rawResults) ? rawResults : [];
         const totalCount =
           responseData?.data?.count ?? responseData?.count ?? results.length;
-        console.log("Admin subcategories fetched:", results, "Total:", totalCount);
+        console.log(
+          "Admin subcategories fetched:",
+          results,
+          "Total:",
+          totalCount,
+        );
         if (callback) callback({ results, totalCount });
       },
     });
@@ -646,7 +672,7 @@ export const AdminDetails = (id?: string) => {
   const createAdminCategory = (
     payload: FormData | Record<string, any>,
     callback?: (response?: any) => void,
-    errorCallback?: (err?: any) => void
+    errorCallback?: (err?: any) => void,
   ) => {
     if (!token) return;
 
@@ -672,7 +698,7 @@ export const AdminDetails = (id?: string) => {
   const createAdminAttribute = (
     payload: { name: string; values?: string[]; is_active?: boolean },
     callback?: (response?: any) => void,
-    errorCallback?: (err?: any) => void
+    errorCallback?: (err?: any) => void,
   ) => {
     if (!token) return;
 
@@ -701,7 +727,7 @@ export const AdminDetails = (id?: string) => {
 
   const fetchAdminAttributes = (
     page: number = 1,
-    callback?: (data: any) => void
+    callback?: (data: any) => void,
   ) => {
     if (!token) return;
 
@@ -729,7 +755,7 @@ export const AdminDetails = (id?: string) => {
 
   const fetchAdminAttributeById = (
     attributeId: string,
-    callback?: (data: any) => void
+    callback?: (data: any) => void,
   ) => {
     if (!token || !attributeId) return;
 
@@ -751,7 +777,7 @@ export const AdminDetails = (id?: string) => {
   const fetchAdminAttributeCategories = (
     attributeId: string,
     callback?: (data: any) => void,
-    errorCallback?: (err?: any) => void
+    errorCallback?: (err?: any) => void,
   ) => {
     if (!token || !attributeId) return;
 
@@ -775,9 +801,14 @@ export const AdminDetails = (id?: string) => {
 
   const updateAdminAttribute = (
     attributeId: string,
-    payload: { name?: string; values?: string[]; is_active?: boolean; category_id?: string },
+    payload: {
+      name?: string;
+      values?: string[];
+      is_active?: boolean;
+      category_id?: string;
+    },
     callback?: (response?: any) => void,
-    errorCallback?: (err?: any) => void
+    errorCallback?: (err?: any) => void,
   ) => {
     if (!token) return;
 
@@ -803,7 +834,7 @@ export const AdminDetails = (id?: string) => {
   const deleteAdminAttribute = (
     attributeId: string,
     callback?: (response?: any) => void,
-    errorCallback?: (err?: any) => void
+    errorCallback?: (err?: any) => void,
   ) => {
     if (!token) return;
 
@@ -828,7 +859,7 @@ export const AdminDetails = (id?: string) => {
   const hideAdminAttribute = (
     attributeId: string,
     callback?: (response?: any) => void,
-    errorCallback?: (err?: any) => void
+    errorCallback?: (err?: any) => void,
   ) => {
     if (!token) return;
 
@@ -855,7 +886,7 @@ export const AdminDetails = (id?: string) => {
     categoryId: string,
     payload: FormData | Record<string, any>,
     callback?: (response?: any) => void,
-    errorCallback?: (err?: any) => void
+    errorCallback?: (err?: any) => void,
   ) => {
     if (!token || !categoryId) return;
 
@@ -881,7 +912,7 @@ export const AdminDetails = (id?: string) => {
   const deleteAdminCategory = (
     categoryId: string,
     callback?: (response?: any) => void,
-    errorCallback?: (err?: any) => void
+    errorCallback?: (err?: any) => void,
   ) => {
     if (!token || !categoryId) return;
 
@@ -905,12 +936,13 @@ export const AdminDetails = (id?: string) => {
 
   //order management Api
 
-   const fetchOrdersList = (
+  const fetchOrdersList = (
     page: number = 1,
-    callback?: (data: any) => void
+    callback?: (data: any) => void,
   ) => {
     if (!token) return;
 
+    console.log("Fetching orders token for admin...", token);
     sendHttpRequest({
       requestConfig: {
         url: `/orders/admin/orderslist?page=${page}`,
@@ -937,7 +969,7 @@ export const AdminDetails = (id?: string) => {
   const fetchOrdersSummary = (
     range: string = "this_month",
     callback?: (data: any) => void,
-    errorCallback?: (err: any) => void
+    errorCallback?: (err: any) => void,
   ) => {
     if (!token) return;
 
@@ -961,9 +993,37 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminOrderDetail = (
+    orderId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !orderId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/orderslist/${orderId}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin order details fetched:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin order details error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   return {
     fetchOrdersList,
     fetchOrdersSummary,
+    fetchAdminOrderDetail,
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
     approveAdminProduct,

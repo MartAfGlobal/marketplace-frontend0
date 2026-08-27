@@ -39,7 +39,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
 
   useEffect(() => {
     if (buyerAddresses.length > 0 && !selectedAddressId) {
-      const defaultAddr = buyerAddresses.find((a) => a.is_default);
+      const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
       dispatch(
         buyerActions.setSelectedAddress(
           defaultAddr?.id ?? buyerAddresses[0].id,

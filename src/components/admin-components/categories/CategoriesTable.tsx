@@ -192,7 +192,7 @@ export default function CategoriesTable({
                       </svg>
                     </button>
                   </td>
-                  <td className="py-3 px-3 max-w-40 text-000000 text-c12 font-MontserratMedium truncate">
+                  <td className="py-3 px-3 max-w-40 text-000000 text-sm font-MontserratMedium truncate">
                     <div className="flex items-center gap-3">
                       {categoryImgUrl ? (
                         <Image
@@ -210,7 +210,7 @@ export default function CategoriesTable({
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium truncate max-w-50.25">
+                  <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium truncate max-w-50.25">
                     <span
                       className="block max-w-[12rem] truncate"
                       title={subcategoriesStr}
@@ -218,7 +218,7 @@ export default function CategoriesTable({
                       {subcategoriesStr}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">
+                  <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">
                     <span
                       className="block max-w-[10rem] truncate"
                       title={attributesStr}
@@ -226,7 +226,7 @@ export default function CategoriesTable({
                       {attributesStr}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">
+                  <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">
                     {row.products_count ?? 0}
                   </td>
                   <td className="py-3 px-3">
@@ -242,7 +242,7 @@ export default function CategoriesTable({
                       )}
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">
+                  <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">
                     {dateStr}
                   </td>
                   <td

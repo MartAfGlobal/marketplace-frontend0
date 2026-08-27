@@ -80,27 +80,64 @@ const dispatch = useDispatch() as AppDispatch;
 
   const subCategorySlug = productDetails?.category?.subcategory?.slug;
 
-useEffect(() => {
-  if (!selectedVariaton || !productDetails?.variations) return;
+  /* ---------------- SCROLL TO VARIATIONS ---------------- */
+  const scrollToVariations = () => {
+    setTimeout(() => {
+      const container = detailsContainerRef.current;
+      const section = variationSectionRef.current;
+      if (!section) return;
 
-  // Find the variation that matches the given ID
-  const match = productDetails.variations.find(
-    (v) => v.id === selectedVariaton // IDs in your data are strings
-  );
+      if (container && isModal) {
+        const containerRect = container.getBoundingClientRect();
+        const sectionRect = section.getBoundingClientRect();
 
-  if (!match) return;
+        container.scrollTo({
+          top: container.scrollTop + (sectionRect.top - containerRect.top) - 24,
+          behavior: "smooth",
+        });
+      } else {
+        section.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 80);
+  };
 
-  // Set the selected attributes
-  setSelectedAttributes({ ...match.attribute_summary });
+  /* ---------------- SCROLL TO OPEN PANEL ---------------- */
+  const scrollToPanel = () => {
+    setTimeout(() => {
+      const container = detailsContainerRef.current;
+      const panel = attributePanelRef.current;
+      if (!container || !panel) return;
 
-  // Set the selected variation
-  setSelectedVariation(match);
+      const containerRect = container.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
 
-  // Scroll to variation section if needed
-  scrollToVariations();
-}, [selectedVariaton, productDetails]);
+      container.scrollTo({
+        top: container.scrollTop + (panelRect.top - containerRect.top) - 24,
+        behavior: "smooth",
+      });
+    }, 80);
+  };
 
-  
+  useEffect(() => {
+    if (!selectedVariaton || !productDetails?.variations) return;
+
+    // Find the variation that matches the given ID
+    const match = productDetails.variations.find(
+      (v) => v.id === selectedVariaton // IDs in your data are strings
+    );
+
+    if (!match) return;
+
+    // Set the selected attributes
+    setSelectedAttributes({ ...match.attribute_summary });
+
+    // Set the selected variation
+    setSelectedVariation(match);
+
+    // Scroll to variation section if needed
+    scrollToVariations();
+  }, [selectedVariaton, productDetails]);
+
   useEffect(() => {
     if (!subCategorySlug) return;
 
@@ -131,23 +168,6 @@ useEffect(() => {
       setActiveSlide(0);
     }
   }, [images]);
-
-  /* ---------------- SCROLL TO OPEN PANEL ---------------- */
-  const scrollToPanel = () => {
-    setTimeout(() => {
-      const container = detailsContainerRef.current;
-      const panel = attributePanelRef.current;
-      if (!container || !panel) return;
-
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-
-      container.scrollTo({
-        top: container.scrollTop + (panelRect.top - containerRect.top) - 24,
-        behavior: "smooth",
-      });
-    }, 80);
-  };
 
   useEffect(() => {
     if (openAttribute) scrollToPanel();
@@ -224,101 +244,127 @@ useEffect(() => {
       scrollToVariations();
   };
 
-  const selectedImage = images.find((img) => img.id === selectedImageId);
+  /* ── Image Helpers ── */
+  const getImageUrl = (img: any): string => {
+    if (!img) return "";
+    if (typeof img === "string") return img;
+    return (
+      img.large ||
+      img.medium ||
+      img.image ||
+      img.url ||
+      img.thumbnail ||
+      ""
+    );
+  };
 
-const scrollToVariations = () => {
-  if (!variationSectionRef.current) return;
+  const getThumbUrl = (thumb: any): string => {
+    if (!thumb) return "";
+    if (typeof thumb === "string") return thumb;
+    return (
+      thumb.thumbnail ||
+      thumb.medium ||
+      thumb.image ||
+      thumb.url ||
+      thumb.large ||
+      ""
+    );
+  };
 
-  const yOffset = 120; // 🔧 adjust this value (px)
-  const y =
-    variationSectionRef.current.getBoundingClientRect().top +
-    window.pageYOffset -
-    yOffset;
+  const fallbackProductImage =
+    (productDetails as any)?.thumbnail ||
+    (productDetails as any)?.image ||
+    (productDetails as any)?.cover_image ||
+    productDetails?.main_image ||
+    (Array.isArray(productDetails?.images) && productDetails.images.length > 0
+      ? getImageUrl(productDetails.images[0])
+      : "") ||
+    "/placeholder.png";
 
-  window.scrollTo({
-    top: y,
-    behavior: "smooth",
-  });
-};
-
-useEffect(() => {
-  if (!productDetails?.slug) return;
-
-  dispatch(
-    setSelectedVariationAction({
-      productSlug: productDetails.slug,
-      variationId: selectedVariation?.id ?? null,
-      attributes: selectedAttributes,
-    })
+  const selectedImage = images.find(
+    (img: any) =>
+      (typeof img === "object" ? img?.id === selectedImageId : img === selectedImageId)
   );
-}, [selectedVariation, selectedAttributes, productDetails?.slug, dispatch]);
 
-
+  const mainImageSrc = getImageUrl(selectedImage) || fallbackProductImage;
 
   return (
     <div
-      className={`flex w-full md:gap-10 lg:gap-23 flex-col md:flex-row justify-center  ${
+      className={`flex w-full gap-6 md:gap-8 lg:gap-10 xl:gap-23 flex-col md:flex-row justify-center  ${
         !isModal ? "mt-c32" : "mt-0"
       }`}
     >
-      <div className="md:flex-1 w-full">
-        <div className="w-full flex md:flex-row gap-c32 flex-col h-fit md:gap-c48 relative">
+      <div className="md:flex-1 w-full min-w-0">
+        <div className="w-full flex md:flex-row gap-6 md:gap-8 xl:gap-c48 flex-col h-fit relative">
           {/* IMAGES */}
           <div
-            className={`w-full md:max-w-xs lg:max-w-94.75 md:pb-12 ${
-              isModal ? "h-127.25 overflow-scroll no-scrollbar" : ""
+            className={`w-full md:max-w-[280px] lg:max-w-[320px] xl:max-w-94.75 md:pb-12 flex-shrink-0 ${
+              isModal ? "h-fit overflow-visible" : ""
             }`}
           >
-            <Image
-              src={selectedImage?.large || "/placeholder.png"}
-              alt={productDetails?.name || ""}
-              height={410}
-              width={397}
-              className={`w-full  md:max-w-full lg:max-w-92.25 ${isModal ? "h-60" : "h-92.25"} rounded-c12`}
-            />
-
-            <div className="flex gap-2 mt-4">
-              {images.map((img, i) => (
-                <button
-                  key={img.id}
-                  onMouseEnter={() => {
-                    setSelectedImageId(img.id);
-                    setActiveSlide(i);
-                  }}
-                  className={`h-1 rounded-full ${
-                    activeSlide === i
-                      ? "w-c117 bg-gray-700"
-                      : "w-c40 bg-gray-300"
-                  }`}
-                />
-              ))}
+            <div className="relative w-full rounded-c12 overflow-hidden bg-gray-50 flex items-center justify-center">
+              <Image
+                src={mainImageSrc}
+                alt={productDetails?.name || "Product image"}
+                height={410}
+                width={397}
+                priority={true}
+                className={`w-full object-cover md:max-w-full lg:max-w-[320px] xl:max-w-92.25 ${
+                  isModal ? "h-60" : "h-92.25"
+                } rounded-c12`}
+              />
             </div>
+
+            {images.length > 0 && (
+              <div className="flex gap-2 mt-4">
+                {images.map((img: any, i: number) => {
+                  const imgId = typeof img === "object" ? img?.id : img;
+                  return (
+                    <button
+                      key={imgId || i}
+                      onMouseEnter={() => {
+                        setSelectedImageId(imgId);
+                        setActiveSlide(i);
+                      }}
+                      className={`h-1 rounded-full transition-all ${
+                        activeSlide === i
+                          ? "w-c117 bg-gray-700"
+                          : "w-c40 bg-gray-300"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
             {images.length > 1 && (
-              <div className="flex gap-4 mt-8 mb-4 h-19 w-full overflow-x-auto hcustom-scroll">
-                {" "}
-                {images.map((thumb, index) => (
-                  <button
-                    key={thumb.id}
-                    onMouseEnter={() => {
-                      setSelectedImageId(thumb.id);
-                      setActiveSlide(index);
-                    }}
-                    className={`w-c66-81 h-17 flex-shrink-0 border-2 rounded-c12 ${
-                      activeSlide === index
-                        ? "my-gradient-border"
-                        : "border-transparent"
-                    } transition-all duration-200`}
-                  >
-                    {" "}
-                    <Image
-                      src={thumb.thumbnail}
-                      alt={thumb.alt_text}
-                      width={64}
-                      height={64}
-                      className="object-cover w-c66-81 c66-81"
-                    />{" "}
-                  </button>
-                ))}{" "}
+              <div className="flex gap-4 mt-6 mb-4 h-19 w-full overflow-x-auto hcustom-scroll">
+                {images.map((thumb: any, index: number) => {
+                  const thumbId = typeof thumb === "object" ? thumb?.id : thumb;
+                  const thumbSrc = getThumbUrl(thumb) || "/placeholder.png";
+                  return (
+                    <button
+                      key={thumbId || index}
+                      onMouseEnter={() => {
+                        setSelectedImageId(thumbId);
+                        setActiveSlide(index);
+                      }}
+                      className={`w-c66-81 h-17 flex-shrink-0 border-2 rounded-c12 overflow-hidden ${
+                        activeSlide === index
+                          ? "my-gradient-border"
+                          : "border-transparent"
+                      } transition-all duration-200`}
+                    >
+                      <Image
+                        src={thumbSrc}
+                        alt={thumb?.alt_text || "Thumbnail"}
+                        width={64}
+                        height={64}
+                        className="object-cover w-full h-full"
+                      />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -326,8 +372,8 @@ useEffect(() => {
           {/* DETAILS */}
           <div
             ref={detailsContainerRef}
-            className={`w-full  md:pb-40 relative ${
-              isModal ? "h-c557-39 w-full  overflow-y-auto no-scrollbar" : "md:flex-1"
+            className={`w-full min-w-0 md:pb-40 relative ${
+              isModal ? "h-c557-39 w-full overflow-y-auto no-scrollbar" : "md:flex-1"
             }`}
           >
             <div className="flex justify-between">
@@ -405,7 +451,7 @@ useEffect(() => {
             </div>
             {(productDetails?.has_variations || (productDetails?.variations && productDetails.variations.length > 0)) && (
 
-              <div ref={variationSectionRef} className="flex flex-col gap-6 mt-6">
+              <div ref={variationSectionRef} className="flex flex-col gap-4 mt-6">
                 <h2 className="font-MontserratSemiBold">
                   Variations available
                 </h2>
@@ -416,73 +462,80 @@ useEffect(() => {
                   </p>
                 )}
 
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-4 flex-wrap items-start">
                   {Object.values(productDetails.variation_options).map(
                     (variation: VariationOption) => {
                       const name = variation.attribute_name;
+                      const isOpen = openAttribute === name;
+                      const selectedVal = selectedAttributes[name];
 
                       return (
-                        <button
-                          key={variation.attribute_id}
-                          onClick={() =>
-                            setOpenAttribute(
-                              openAttribute === name ? null : name
-                            )
-                          }
-                          className={`px-4 py-2 rounded-lg border text-sm ${
-                            openAttribute === name
-                              ? "border-ff715b bg-ff715b/10"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {name} ▾
-                        </button>
+                        <div key={variation.attribute_id} className="flex flex-col gap-2">
+                          <button
+                            onClick={() =>
+                              setOpenAttribute(
+                                isOpen ? null : name
+                              )
+                            }
+                            className={`px-4 py-2 rounded-lg border text-sm flex items-center gap-1.5 transition-colors ${
+                              isOpen
+                                ? "border-ff715b bg-ff715b/10 text-ff715b font-MontserratMedium"
+                                : selectedVal
+                                ? "border-ff715b text-161616 bg-ff715b/5 font-MontserratMedium"
+                                : "border-gray-300 text-gray-700 hover:border-gray-400 bg-white"
+                            }`}
+                          >
+                            <span>{selectedVal ? `${name}: ${selectedVal}` : name}</span>
+                            <span className={`text-xs transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>▾</span>
+                          </button>
+
+                          <AnimatePresence>
+                            {isOpen && (
+                              <motion.div
+                                ref={attributePanelRef}
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -4 }}
+                                className="flex gap-2 flex-wrap pt-1 max-w-[260px]"
+                              >
+                                {getAvailableValues(name).map((value) => {
+                                  const isSelected =
+                                    selectedAttributes[name] === value;
+
+                                  return (
+                                    <motion.button
+                                      key={value}
+                                      onClick={() =>
+                                        setSelectedAttributes((prev) => ({
+                                          ...prev,
+                                          [name]: value,
+                                        }))
+                                      }
+                                      className={`px-3 py-1 text-xs md:text-sm border rounded-md transition-all ${
+                                        isSelected
+                                          ? "border-ff715b bg-ff715b text-white font-MontserratMedium shadow-sm"
+                                          : "border-gray-300 text-gray-700 hover:border-gray-400 bg-white"
+                                      }`}
+                                    >
+                                      {value}
+                                    </motion.button>
+                                  );
+                                })}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       );
                     }
                   )}
                 </div>
-
-                <AnimatePresence>
-                  {openAttribute && (
-                    <motion.div
-                      ref={attributePanelRef}
-                      initial={{ opacity: 0, y: -6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                    >
-                      <div className="flex gap-2 flex-wrap">
-                        {getAvailableValues(openAttribute).map((value) => {
-                          const isSelected =
-                            selectedAttributes[openAttribute] === value;
-
-                          return (
-                            <motion.button
-                              key={value}
-                              onClick={() =>
-                                setSelectedAttributes((prev) => ({
-                                  ...prev,
-                                  [openAttribute]: value,
-                                }))
-                              }
-                              className={`px-3 py-1 border rounded ${
-                                isSelected ? "border-ff715b" : "border-gray-300"
-                              }`}
-                            >
-                              {value}
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             )}
             {hasSelectedAttributes && (
-              <div className="w-full flex items-center justify-end">
+              <div className="w-full flex items-center justify-end pt-2">
                 <button
                   onClick={() => setSelectedAttributes({})}
-                  className="text-ff715b font-MontserratNormal text-sm"
+                  className="text-ff715b font-MontserratNormal text-sm hover:underline"
                 >
                   Reset
                 </button>
@@ -523,7 +576,7 @@ useEffect(() => {
       </div>
       {!isModal && (
         <>
-          <div className="w-full md:max-w-[280px] lg:max-w-110.5 hidden md:block  h-screen sticky top-24 ">
+          <div className="w-full md:max-w-[260px] lg:max-w-[300px] xl:max-w-110.5 hidden md:block h-screen sticky top-24 ">
             <div className="">
               <div className=" flex flex-col mt-c32 m  gap-c24 pb-4 md:border-b md:border-gray-100">
                 <div className="w-full flex justify-between items-start">

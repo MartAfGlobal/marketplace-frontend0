@@ -455,7 +455,7 @@ export default function AdminCategoryDetailsPage() {
                       <th className="p-3 font-MontserratNormal text-sm text-center"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50 text-[11px] text-gray-700 font-MontserratMedium">
+                  <tbody className="divide-y divide-gray-50 text-sm text-gray-700 font-MontserratMedium">
                     {subcategoriesList.map((sub) => (
                       <tr
                         key={sub.id}

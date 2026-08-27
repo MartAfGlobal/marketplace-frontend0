@@ -117,13 +117,28 @@ export const OrderSummary = ({
             })}
           </p>
           <div className="space-y-1">
-            {order.items?.reduce(
+            {order.status === "REJECTED" || order.order_timeline_stage === "REJECTED" ? (
+              <>
+                <p className="font-MontserratNormal text-sm text-gray-500">
+                  Original Order amount:{" "}
+                  <span className="text-sm font-MontserratMedium line-through">
+                    ₦{Number(order.total || order.subtotal).toLocaleString()}
+                  </span>
+                </p>
+                <p className="font-MontserratNormal text-sm">
+                  Order amount:{" "}
+                  <span className="text-base font-MontserratSemiBold text-red-500">
+                    ₦0
+                  </span>
+                </p>
+              </>
+            ) : order.items?.reduce(
               (acc: number, item: any) =>
                 acc +
                 Number(item.price_at_purchase || item.price) *
-                  (item.fulfilled_quantity || 0),
+                  (item.accepted_quantity ?? (order.accepted_at ? (item.fulfilled_quantity ?? item.quantity) : 0)),
               0
-            ) !== Number(order.total || order.subtotal) ? (
+            ) !== Number(order.total || order.subtotal) && order.accepted_at ? (
               <>
                 <p className="font-MontserratNormal text-sm text-gray-500">
                   Original Order amount:{" "}
@@ -140,7 +155,7 @@ export const OrderSummary = ({
                         (acc: number, item: any) =>
                           acc +
                           Number(item.price_at_purchase || item.price) *
-                            (item.fulfilled_quantity || 0),
+                            (item.accepted_quantity ?? item.fulfilled_quantity ?? 0),
                         0
                       ) || 0
                     ).toLocaleString()}

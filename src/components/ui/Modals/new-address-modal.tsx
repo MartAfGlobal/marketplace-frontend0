@@ -41,25 +41,60 @@ export default function AddressModal({
   onClose,
   onSave,
   isEdit,
+  currentAddress,
   id,
 }: AddressModalProps) {
   const [formData, setFormData] = useState<Address>({
-    id: "",
-    country: "",
-    first_name: "",
-    last_name: "",
-    phone: "",
-    state: "",
-    city: "",
-    postal_code: "",
-    address: "",
-    shipping_location: "",
-    is_default: false,
+    id: currentAddress?.id || id || "",
+    country: currentAddress?.country || "",
+    first_name: currentAddress?.first_name || "",
+    last_name: currentAddress?.last_name || "",
+    phone: currentAddress?.phone || "",
+    state: currentAddress?.state || "",
+    city: currentAddress?.city || "",
+    postal_code: currentAddress?.postal_code || "",
+    address: currentAddress?.address || "",
+    shipping_location: currentAddress?.shipping_location || "",
+    is_default: currentAddress?.is_default || false,
   });
   const selectedCountryIdRef = useRef<string | null>(null);
 
   const router = useRouter();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isOpen) {
+      if (currentAddress) {
+        setFormData({
+          id: currentAddress.id || id || "",
+          country: currentAddress.country || "",
+          first_name: currentAddress.first_name || "",
+          last_name: currentAddress.last_name || "",
+          phone: currentAddress.phone || "",
+          state: currentAddress.state || "",
+          city: currentAddress.city || "",
+          postal_code: currentAddress.postal_code || "",
+          address: currentAddress.address || "",
+          shipping_location: currentAddress.shipping_location || "",
+          is_default: currentAddress.is_default || false,
+        });
+      } else if (!isEdit) {
+        setFormData({
+          id: "",
+          country: "",
+          first_name: "",
+          last_name: "",
+          phone: "",
+          state: "",
+          city: "",
+          postal_code: "",
+          address: "",
+          shipping_location: "",
+          is_default: false,
+        });
+      }
+    }
+  }, [isOpen, currentAddress, isEdit, id]);
 
   const [streetError, setStreetError] = useState("");
 
@@ -232,7 +267,7 @@ export default function AddressModal({
               </div>
 
               <div>
-                <p className="font-MontserratSemiBold text-c12 mb-3  text-000000">
+                <p className="font-MontserratSemiBold text-c12 mb-3 text-000000">
                   Contact information
                 </p>
                 <div className="flex gap-c24 w-full">
@@ -241,15 +276,16 @@ export default function AddressModal({
                       First Name
                     </Label>
                     <Input
-                      id="fullname"
-                      name="fullname"
+                      id="first_name"
+                      name="first_name"
+                      autoComplete="given-name"
                       type="text"
                       validateName={true}
                       value={formData.first_name}
                       onChange={(e) =>
                         handleChange(
                           "first_name",
-                          e.target.value,
+                          e.target.value.replace(/[^a-zA-Z]/g, "")
                         )
                       }
                       placeholder="John"
@@ -261,19 +297,20 @@ export default function AddressModal({
                       Last Name
                     </Label>
                     <Input
-                      id="fullname"
-                      name="fullname"
+                      id="last_name"
+                      name="last_name"
+                      autoComplete="family-name"
                       type="text"
                       validateName={true}
                       value={formData.last_name}
                       onChange={(e) =>
                         handleChange(
                           "last_name",
-                          e.target.value,
+                          e.target.value.replace(/[^a-zA-Z]/g, "")
                         )
                       }
-                      placeholder="John"
-                      className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                      placeholder="Doe"
+                      className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                     />
                   </div>
                 </div>
@@ -293,10 +330,12 @@ export default function AddressModal({
                     <Input
                       id="phone"
                       name="phone"
-                      type="text"
+                      autoComplete="tel"
+                      type="tel"
+                      validatePhone={true}
                       value={formData.phone}
                       onChange={(e) =>
-                        handleChange("phone", e.target.value.replace(/\s/g, ""))
+                        handleChange("phone", e.target.value.replace(/[^0-9+]/g, ""))
                       }
                       placeholder="+2347058675432"
                       className="border border-efefef rounded-c8 p-4 pl-8 w-full text-c12 font-MontserratMedium"
@@ -329,13 +368,17 @@ export default function AddressModal({
                         Zip Code
                       </Label>
                       <Input
+                        id="postal_code"
+                        name="postal_code"
+                        autoComplete="postal-code"
                         type="text"
+                        validateDigits={true}
                         value={formData.postal_code}
                         onChange={(e) =>
-                          handleChange("postal_code", e.target.value)
+                          handleChange("postal_code", e.target.value.replace(/[^0-9]/g, ""))
                         }
                         placeholder="100001"
-                        className="border border-efefef rounded-c8 p-4  w-full text-c12 font-MontserratMedium"
+                        className="border border-efefef rounded-c8 p-4 w-full text-c12 font-MontserratMedium"
                       />
                     </div>
 
@@ -344,6 +387,9 @@ export default function AddressModal({
                         Street / House / Apartment / Unit
                       </Label>
                       <Input
+                        id="address"
+                        name="address"
+                        autoComplete="street-address"
                         type="text"
                         value={formData.address}
                         onChange={(e) =>

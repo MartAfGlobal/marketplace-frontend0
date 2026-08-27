@@ -325,8 +325,9 @@ export default function EditAddressPage() {
                   className="w-full outline-none"
                   value={formData.phone}
                   onChange={(e) => {
-                    if (phoneTouched) validatePhone(e.target.value);
-                    handleChange("phone", e.target.value);
+                    const sanitized = e.target.value.replace(/[^0-9+]/g, "");
+                    if (phoneTouched) validatePhone(sanitized);
+                    handleChange("phone", sanitized);
                   }}
                   onBlur={(e) => {
                     setPhoneTouched(true);
@@ -407,7 +408,7 @@ export default function EditAddressPage() {
               type="text"
               className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
               value={formData.city}
-              onChange={(e) => handleChange("city", e.target.value)}
+              onChange={(e) => handleChange("city", e.target.value.replace(/[^a-zA-Z\s-]/g, ""))}
               placeholder="Enter city"
             />
           </div>
@@ -420,7 +421,7 @@ export default function EditAddressPage() {
                 type="text"
                 className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
                 value={formData.postal_code}
-                onChange={(e) => handleChange("postal_code", e.target.value)}
+                onChange={(e) => handleChange("postal_code", e.target.value.replace(/[^0-9]/g, ""))}
               />
             </div>
 

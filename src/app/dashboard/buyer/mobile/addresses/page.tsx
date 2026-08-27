@@ -40,7 +40,7 @@ export default function AllAddressesPage() {
 
   useEffect(() => {
     if (buyerAddresses.length > 0 && !selectedAddressId) {
-      const defaultAddr = buyerAddresses.find((a) => a.is_default);
+      const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
       dispatch(
         buyerActions.setSelectedAddress(defaultAddr?.id ?? buyerAddresses[0].id)
       );
@@ -52,7 +52,7 @@ export default function AllAddressesPage() {
   };
 
   useEffect(() => {
-    const defaultAddr = buyerAddresses.find((a) => a.is_default);
+    const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
     setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0]?.id ?? "");
   }, [buyerAddresses]);
 

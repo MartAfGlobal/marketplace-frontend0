@@ -128,18 +128,18 @@ export default function AttributesTable({
                     </svg>
                   </button>
                 </td>
-                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium max-w-40 truncate">
+                <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium max-w-40 truncate">
                   <span className="block truncate" title={row.name}>{row.name}</span>
                 </td>
-                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">
+                <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">
                   {(() => {
                     if (!row.values) {
-                      return <span className="text-gray-400 font-MontserratMedium text-c12">—</span>;
+                      return <span className="text-gray-400 font-MontserratMedium text-sm">—</span>;
                     }
 
                     if (!row.values.includes(",")) {
                       return (
-                        <span className="text-c12 font-MontserratMedium text-000000">
+                        <span className="text-sm font-MontserratMedium text-000000">
                           {row.values}
                         </span>
                       );
@@ -152,7 +152,7 @@ export default function AttributesTable({
                     const shown = vals.slice(0, 4);
                     const extra = vals.length - shown.length;
                     return (
-                      <span className="flex items-center flex-wrap gap-x-1 gap-y-0.5 text-c12 font-MontserratMedium text-000000">
+                      <span className="flex items-center flex-wrap gap-x-1 gap-y-0.5 text-sm font-MontserratMedium text-000000">
                         {shown.map((v, i) => (
                           <span key={i} className="flex items-center gap-1">
                             {i > 0 && (
@@ -170,7 +170,7 @@ export default function AttributesTable({
                     );
                   })()}
                 </td>
-                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">{row.valuesCount}</td>
+                <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">{row.valuesCount}</td>
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-1.5">
                     {row.status === "Active" && (
@@ -185,7 +185,7 @@ export default function AttributesTable({
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-3 text-000000 text-c12 font-MontserratMedium">{row.date}</td>
+                <td className="py-3 px-3 text-000000 text-sm font-MontserratMedium">{row.date}</td>
                 <td className="py-3 px-3 text-center relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     className="w-6 h-6 flex flex-col gap-[3px] items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer ml-auto mr-2"

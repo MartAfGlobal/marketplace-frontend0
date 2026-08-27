@@ -11,6 +11,7 @@ import { RootState } from "@/store";
 import { Button } from "@/components/ui/Button/Button";
 
 import { setCheckoutItems, setCheckoutSummary } from "@/store/cart/cartSlice";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 import { Input } from "@/components/ui/forms/Input";
 
@@ -63,16 +64,34 @@ export default function CheckoutSummary() {
     }
   }, [token, buyerAddresses.length, fetchAddress]);
 
-  // 2. Fetch summary when address is selected
+  // 2. Select default address if none selected
+  useEffect(() => {
+    if (!buyerAddresses.length) return;
+
+    // Use String() comparison to avoid number vs string mismatch (backend returns numeric IDs)
+    const exists = buyerAddresses.some((a) => String(a.id) === String(selectedAddressId));
+    if (!selectedAddressId || !exists) {
+      const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
+      const newId = defaultAddr?.id ?? buyerAddresses[0].id;
+      dispatch(buyerActions.setSelectedAddress(String(newId)));
+    }
+  }, [buyerAddresses, selectedAddressId, dispatch]);
+
+  // 3. Fetch summary when address is selected
   useEffect(() => {
     if (!token || !selectedAddressId) return;
+
+    // Send as a number — backend expects integer address ID
+    const addressIdNum = Number(selectedAddressId);
+    if (!addressIdNum) return; // guard against NaN / 0
 
     sendHttpRequest({
       requestConfig: {
         url: "/checkout/summary/",
         method: "POST",
         body: {
-          address_id: selectedAddressId,
+          shipping_address_id: addressIdNum,
+          address_id: addressIdNum,
           discount_amount: "0.00",
         },
         token,
@@ -115,10 +134,6 @@ export default function CheckoutSummary() {
     });
   }, [token, selectedAddressId, dispatch, sendHttpRequest]);
 
-
-
-
-
   const handleGuestCheckout = (e?: React.FormEvent) => {
     e?.preventDefault();
 
@@ -152,13 +167,15 @@ export default function CheckoutSummary() {
 
   const handleCheckout = () => {
     const shipping_method_id = checkoutSummary?.shipping_methods?.[0]?.id || "";
+    // Send as a number — backend expects integer address ID
+    const addressIdNum = Number(selectedAddressId);
 
     sendHttpRequest({
       requestConfig: {
         url: "/checkout/",
         method: "POST",
         body: {
-          shipping_address_id: selectedAddressId,
+          shipping_address_id: addressIdNum || selectedAddressId,
           shipping_method_id: shipping_method_id,
           discount_amount: checkoutSummary?.discount_amount || "0.00",
         },

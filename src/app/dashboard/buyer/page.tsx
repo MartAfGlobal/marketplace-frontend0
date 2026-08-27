@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { setWishlist } from "@/store/cart/wishlist-slice";
 import { RootState } from "@/store";
 import { fetchOrdersSuccess } from "@/store/orders/order-slice";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 
 import WireframeLoader from "@/components/ui/WireframeLoader";
 import DotSpinner from "@/components/reloadSpinner/DotSpinner";
@@ -29,6 +30,8 @@ export default function BuyerDashBoardPage() {
   const router = useRouter();
   const token = useSelector((state: RootState) => state.token.token);
 
+  const { fetchOrders } = useFetchOrders();
+
   useEffect(() => {
     if (!token) {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -39,6 +42,8 @@ export default function BuyerDashBoardPage() {
       }
       return;
     }
+
+    fetchOrders();
 
     wishlistReq({
       requestConfig: {
@@ -82,7 +87,8 @@ export default function BuyerDashBoardPage() {
           city: addr.city,
           postal_code: addr.postal_code,
           address: addr.address,
-          defaultAddress: addr.is_default || false,
+          defaultAddress: addr.is_default || addr.defaultAddress || false,
+          is_default: addr.is_default || addr.defaultAddress || false,
         }));
 
         console.log("User address info:", res);
@@ -140,21 +146,6 @@ export default function BuyerDashBoardPage() {
         })
       );
     };
-
-    fetchUserReq({
-      requestConfig: {
-        url: "/orders/buyer/",
-        method: "GET",
-        token,
-        isAuth: true,
-        userType: "buyer",
-      },
-      successRes: (responseData: any) => {
-        const backendOrders = responseData?.data?.results;
-        console.log("order details listed:", backendOrders);
-        dispatch(fetchOrdersSuccess(backendOrders));
-      },
-    });
 
     userInforHttpRequest({
       requestConfig: {

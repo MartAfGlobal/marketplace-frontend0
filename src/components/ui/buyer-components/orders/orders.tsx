@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import ProcessingOrders from "./Component-ui/processing";
 import { useHttp } from "@/hooks/use-http";
 import Disputes from "./Component-ui/dispute-items";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 
 const tabs = [
   "All",
@@ -32,9 +33,20 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("All");
 
   const { sendHttpRequest, loading } = useHttp();
+  const { fetchOrders, fetchAwaitingPayments, fetchDisputeList } =
+    useFetchOrders();
+  const token = useSelector((state: RootState) => state.token?.token);
 
   const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (token) {
+      fetchOrders();
+      fetchAwaitingPayments();
+      fetchDisputeList();
+    }
+  }, [token]);
 
   return (
     <div className="w-full  justify-center  flex flex-col">

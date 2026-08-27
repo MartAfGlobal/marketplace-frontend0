@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 import { OrderItem, TrackOrders } from "@/types/global";
@@ -12,7 +12,9 @@ import { UserAddressProps, Address } from "@/types/global";
 import { useSelector } from "react-redux";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useHttp } from "@/hooks/use-http";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-order-modal";
+import CartWithBoxesIcon from "../CartWithBoxesIcon";
 import { li } from "framer-motion/client";
 import Link from "next/link";
 
@@ -30,12 +32,24 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
 
   const router = useRouter();
 
+  const token = useSelector((state: any) => state.token?.token);
   const { orders } = useSelector((state: any) => state.orders);
+  const { fetchAwaitingPayments, loading: fetchingPayments } = useFetchOrders();
+
+  useEffect(() => {
+    if (token) {
+      fetchAwaitingPayments();
+    }
+  }, [token]);
 
   const awaitingPayment = orders.filter((order: OrderItem) =>
-    ["AWAITING_PAYMENT", "Processing", "Awaiting Payment"].includes(
-      order.status,
-    ),
+    [
+      "AWAITING_PAYMENT",
+      "Processing",
+      "Awaiting Payment",
+      "awaiting_payment",
+      "PENDING_PAYMENT",
+    ].includes(order.status),
   );
 
   const filteredOrders = awaitingPayment.filter((order: OrderItem) => {
@@ -43,11 +57,16 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
 
     const term = searchTerm.toLowerCase();
 
-    const matchesOrderId = order.order_no?.toLowerCase().includes(term);
+    const matchesOrderId = (order.order_no || order.id || "")
+      .toLowerCase()
+      .includes(term);
 
-    const matchesStore = order.manufacturer?.toLowerCase().includes(term);
+    const matchesStore = (order.manufacturer || order.seller_name || "")
+      .toLowerCase()
+      .includes(term);
 
-    const matchesProduct = order.order_items?.some((item) =>
+    const orderItems = order.order_items || (order as any).items || [];
+    const matchesProduct = orderItems.some((item: any) =>
       item.product_name?.toLowerCase().includes(term),
     );
 
@@ -66,25 +85,36 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
     }
   };
 
-  const token = useSelector((state: any) => state.token?.token);
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
 
   const handleRepay = (order_id: any, expected_amount: any) => {
     console.log("checking item to pay", order_id, expected_amount);
-    setSelectedId (order_id)
+    setSelectedId(order_id);
+    const amountNum = Number(expected_amount) || 0;
     repayReq({
       requestConfig: {
         url: "/checkout/repay/",
         method: "POST",
         token,
-        body: { order_id, expected_amount: expected_amount.toFixed(2) },
+        body: {
+          payment_id: order_id,
+          order_id: order_id,
+          repay_order_id: order_id,
+          expected_amount: amountNum.toFixed(2),
+        },
         isAuth: true,
         userType: "buyer",
       },
       successRes: (res) => {
         console.log("✅ User tracking info:", res);
-        if (res.data?.paystack_payment_url) {
-          window.location.href = res.data.paystack_payment_url;
+        const paymentUrl =
+          res.data?.paystack_payment_url ||
+          res.data?.payment_url ||
+          res.data?.authorization_url ||
+          res.data?.checkout_url ||
+          res.data?.url;
+        if (paymentUrl) {
+          window.location.href = paymentUrl;
         } else {
           return;
         }
@@ -140,7 +170,52 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
               >
                 {filteredOrders.map((item: OrderItem) => {
                   const orderItems = item.order_items || (item as any).items || [];
+                  const hasOrderItems = orderItems.length > 0;
                   const isSingleItemOrder = orderItems.length === 1;
+
+                  const itemsCount =
+                    (item as any).items_count ??
+                    (hasOrderItems
+                      ? orderItems.reduce(
+                          (sum: number, i: any) =>
+                            sum + (i.fulfilled_quantity ?? i.quantity ?? 1),
+                          0,
+                        )
+                      : 1);
+
+                  const totalPrice = Number(
+                    item.total_price ??
+                      (hasOrderItems
+                        ? orderItems.reduce(
+                            (sum: number, i: any) =>
+                              sum +
+                              (Number(i.price_at_purchase || 0) *
+                                Number(i.fulfilled_quantity ?? i.quantity ?? 1)),
+                            0,
+                          )
+                        : 0),
+                  );
+
+                  const orderNo =
+                    (item as any).payment_no ||
+                    item.order_no ||
+                    (item as any).payment_reference ||
+                    item.id;
+
+                  const storeName =
+                    item.manufacturer ||
+                    item.seller_name ||
+                    ((item as any).sellers_count
+                      ? `${(item as any).sellers_count} Store${(item as any).sellers_count > 1 ? "s" : ""}`
+                      : "MartAf Order");
+
+                  const formattedDate = item.created_at
+                    ? new Date(item.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                    : "";
 
                   return (
                     <motion.div
@@ -155,11 +230,66 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                           <p className="text-sm font-MontserratSemiBold leading-c20 text-000000">
                             Awaiting payment
                           </p>
+                          {orderNo && (
+                            <p className="text-c12 font-MontserratNormal text-000000/60 mt-1">
+                              Order ID: {orderNo}
+                            </p>
+                          )}
                         </div>
+                        {formattedDate && (
+                          <p className="text-c12 font-MontserratNormal leading-4 text-000000/60">
+                            {formattedDate}
+                          </p>
+                        )}
                       </div>
 
-                      <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
-                        {isSingleItemOrder ? (
+                      <div className="w-full md:justify-between flex-col pb-c32 flex md:flex-row">
+                        {!hasOrderItems ? (
+                          <>
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="flex flex-col md:flex-row gap-4 items-start flex-1"
+                            >
+                              <div className="flex gap-4 items-start w-full">
+                                <CartWithBoxesIcon className="h-24 w-24" itemsCount={itemsCount} />
+                                <div className="w-full">
+                                  <p className="font-MontserratSemiBold text-base mb-1 text-000000">
+                                    Order #{orderNo}
+                                  </p>
+                                  <p className="text-c12 font-MontserratMedium mb-2 text-000000/70">
+                                    {storeName}
+                                  </p>
+                                  <div className="flex flex-wrap gap-2 items-center">
+                                    <p className="rounded-c12 bg-000000/10 text-000000/60 h-fit py-1.5 px-3 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
+                                      {itemsCount} {itemsCount === 1 ? "Item" : "Items"}
+                                    </p>
+                                    {(item as any).shipping_cost > 0 && (
+                                      <p className="text-c12 font-MontserratMedium text-000000/50">
+                                        + ₦{Number((item as any).shipping_cost).toLocaleString()} Shipping
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="font-MontserratSemiBold text-c16 pt-3 text-000000">
+                                    ₦{totalPrice.toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+                            <div className="w-full gap-4 pl flex md:hidden mt-4 space-y-4">
+                              <Button
+                                disabled={repaying}
+                                onClick={() => handleRepay(item.id, totalPrice)}
+                                className="w-full"
+                              >
+                                {selectedId === item.id && repaying ? (
+                                  <LoadingSpinner />
+                                ) : (
+                                  "Confirm & pay"
+                                )}
+                              </Button>
+                            </div>
+                          </>
+                        ) : isSingleItemOrder ? (
                           <>
                             <Link
                               href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
@@ -177,20 +307,20 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                       alt={prod.product_name || "Product Image"}
                                       width={96}
                                       height={96}
-                                      className="h-24 w-24 "
+                                      className="h-24 w-24 object-cover rounded-lg"
                                     />
                                     <div className="w-full">
                                       <p className="font-MontserratSemiBold text-base mb-1">
                                         {prod.product_name}
                                       </p>
                                       <p className=" text-c12 font-MontserratMedium mb-3">
-                                        {item.manufacturer}
+                                        {item.manufacturer || item.seller_name}
                                       </p>
                                       <p className="rounded-c12 bg-000000/10 text-000000/60  h-fit py-2 w-fit min-w-24.5  px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
                                         {prod.fulfilled_quantity ?? prod.quantity}Pc {prod.variation_name},
                                       </p>
                                       <p className="font-MontserratSemiBold text-c16 pt-3">
-                                        ₦{(prod.price_at_purchase * (prod.fulfilled_quantity ?? prod.quantity ?? 0)).toLocaleString()}
+                                        ₦{((prod.price_at_purchase || 0) * (prod.fulfilled_quantity ?? prod.quantity ?? 1)).toLocaleString()}
                                       </p>
                                     </div>
                                   </div>
@@ -202,7 +332,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                               <Button
                                 disabled={repaying}
                                 onClick={() => {
-                                  handleRepay(item.id, item.total_price);
+                                  handleRepay(item.id, totalPrice);
                                 }}
                                 className=""
                               >
@@ -249,7 +379,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                               }
                                               width={96}
                                               height={96}
-                                              className="w-24 h-24 object-cover"
+                                              className="w-24 h-24 object-cover rounded-lg"
                                             />
                                             <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
                                               x{prod.fulfilled_quantity ?? prod.quantity}
@@ -288,19 +418,15 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                     </p>
 
                                     <p className="text-c12 font-MontserratMedium mb-3">
-                                      {item.manufacturer}
+                                      {item.manufacturer || item.seller_name}
                                     </p>
 
                                     <p className="rounded-c12 bg-000000/10 h-fit py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                      {orderItems.reduce(
-                                        (sum: number, i: any) => sum + (i.fulfilled_quantity ?? i.quantity ?? 0),
-                                        0,
-                                      )}{" "}
-                                      <span className="pl-0.5">Items</span>
+                                      {itemsCount} <span className="pl-0.5">Items</span>
                                     </p>
 
                                     <p className="font-MontserratSemiBold text-c16 pt-3">
-                                      ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
+                                      ₦{totalPrice.toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
@@ -318,7 +444,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                       }
                                       width={96}
                                       height={96}
-                                      className="w-24 h-24"
+                                      className="w-24 h-24 object-cover rounded-lg"
                                     />
                                   )}
 
@@ -328,19 +454,15 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                     </p>
 
                                     <p className="text-c12 font-MontserratMedium mb-2">
-                                      {item.manufacturer}
+                                      {item.manufacturer || item.seller_name}
                                     </p>
 
                                     <p className="rounded-c12 bg-000000/10 h-fit py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                      {orderItems.reduce(
-                                        (sum: number, i: any) => sum + (i.fulfilled_quantity ?? i.quantity ?? 0),
-                                        0,
-                                      )}{" "}
-                                      <span className="pl-0.5">Items</span>
+                                      {itemsCount} <span className="pl-0.5">Items</span>
                                     </p>
 
                                     <p className="font-MontserratSemiBold text-c16 pt-2">
-                                      ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
+                                      ₦{totalPrice.toLocaleString()}
                                     </p>
                                     <div className="w-full gap-4 text-c10 pl flex md:hidden  mt-4 space-y-4">
                                       <Button
@@ -348,7 +470,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                         onClick={() => {
                                           handleRepay(
                                             item.id,
-                                            item.total_price,
+                                            totalPrice,
                                           );
                                         }}
                                         className=""
@@ -369,7 +491,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                               <Button
                                 disabled={repaying}
                                 onClick={() => {
-                                  handleRepay(item.id, item.total_price);
+                                  handleRepay(item.id, totalPrice);
                                 }}
                                 className=""
                               >
@@ -384,13 +506,10 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                         )}
 
                         <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
-                          {/* <Button onClick={()=>  handleEditAddress(item.id)} variant="secondary" className="">
-                            Edit address
-                          </Button> */}
                           <Button
                             disabled={repaying}
                             onClick={() => {
-                              handleRepay(item.id, item.total_price);
+                              handleRepay(item.id, totalPrice);
                             }}
                             className=""
                           >

@@ -60,7 +60,7 @@ const variationId = searchParams.get("variationId") || undefined;
 
 
   return (
-    <main className="md:px-c60 pb-c32 ">
+    <main className="px-4 md:px-6 lg:px-8 xl:px-c60 pb-c32 ">
       <div className="hidden md:flex">
         <DetailPageNavbar productName={productDetails?.name || ""} categoryName={productDetails?.category?.name || ""} subCategoryName={productDetails?.category?.subcategory?.name || ""} categorySlug={productDetails?.category?.slug || ""} subCategorySlug={productDetails?.category?.subcategory?.slug || ""} />
       </div>

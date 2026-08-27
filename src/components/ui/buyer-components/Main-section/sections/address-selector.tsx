@@ -67,10 +67,14 @@ export default function UserAddress({
     if (selectedAddressId) {
       setSelectedCardId(selectedAddressId);
     } else if (buyerAddresses.length > 0) {
-      const defaultAddr = buyerAddresses.find((a) => a.is_default);
-      setSelectedCardId(defaultAddr?.id ?? buyerAddresses[0].id);
+      const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
+      const chosenId = defaultAddr?.id ?? buyerAddresses[0].id;
+      setSelectedCardId(chosenId);
+      if (onSelectAddress) {
+        onSelectAddress(chosenId);
+      }
     }
-  }, [buyerAddresses, selectedAddressId]);
+  }, [buyerAddresses, selectedAddressId, onSelectAddress]);
 
   console.log("buyer addresssss", buyerAddresses);
 

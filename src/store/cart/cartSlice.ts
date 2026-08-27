@@ -8,6 +8,7 @@ import { StaticImageData } from "next/image";
 export interface CartItem {
   product_slug: string;
   id: string;
+  product_id?: string;
   quantity: number;
   size?: string;
   product_name: string;
@@ -25,6 +26,7 @@ export interface CartItem {
 export interface GuestCartItem {
   product_slug: string;
   id: string;
+  product_id?: string;
   variation_id?: string;
   quantity: number;
   variation_display?: string;
