@@ -165,7 +165,8 @@ export const OrderItemsList = ({
                 <tr>
                   <th className="p-3">SKU</th>
                   <th className="p-3">Items</th>
-                  <th className="p-3 text-center">Unit price</th>
+                  <th className="p-3 text-center whitespace-nowrap">Unit price</th>
+
                   <th className="p-3 text-center">Quantity</th>
                   <th className="p-3 text-right">Total</th>
                 </tr>

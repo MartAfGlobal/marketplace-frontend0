@@ -21,6 +21,7 @@ const getStatusColor = (status: string) => {
     case "unprocessed":
     case "processed":
     case "processing":
+    case "accepted":
       return "#FFAC06";
     default:
       return "#6B7280";
@@ -50,7 +51,7 @@ export const OrderSummary = ({
       <div className="lg:hidden mt-2 mb-2 w-full">
         <div className="flex justify-between items-center mb-4 px-1">
           <h3 className="font-MontserratSemiBold text-sm text-[#161616]">Order details</h3>
-          <div className={`px-4 py-1 rounded-full text-[10px] font-MontserratSemiBold ${getStatusBadgeClass(order.status?.toLowerCase() || getMappedStatus(order))}`}>
+          <div className={`px-4 py-1 rounded-full text-[10px] font-MontserratSemiBold ${getStatusBadgeClass(getMappedStatus(order))}`}>
             {order.status === "PARTIALLY_ACCEPTED"
               ? "Partial Accept"
               : getMappedStatus(order).charAt(0).toUpperCase() + getMappedStatus(order).slice(1)}
@@ -85,7 +86,7 @@ export const OrderSummary = ({
           <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-3 rounded-b-lg">
             <span className="text-[#161616]">Status</span>
             <span className="font-MontserratSemiBold text-[#161616] flex items-center gap-2 capitalize">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor(order.status) }}></span>
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor(getMappedStatus(order)) }}></span>
               {getMappedStatus(order)}
             </span>
           </div>
@@ -172,7 +173,7 @@ export const OrderSummary = ({
             )}
           </div>
           <div
-            className={`inline-block px-4 py-1 rounded-full text-c12 font-MontserratSemiBold ${getStatusBadgeClass(order.status?.toLowerCase() || getMappedStatus(order))}`}
+            className={`inline-block px-4 py-1 rounded-full text-c12 font-MontserratSemiBold ${getStatusBadgeClass(getMappedStatus(order))}`}
           >
             {order.status === "PARTIALLY_ACCEPTED"
               ? "Partial Accept"

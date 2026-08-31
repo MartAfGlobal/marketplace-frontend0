@@ -29,11 +29,14 @@ export default function OrderProgressBar({
     currentStep = 1;
   } else if (
     normStatus === "PENDING" ||
+    normStatus === "UNPROCESSED" ||
     normStatus === "AWAITING_CONFIRMATION" ||
     normStatus === "CONFIRMATION_PENDING"
   ) {
     currentStep = 2;
   } else if (
+    normStatus === "PROCESSED" ||
+    normStatus === "ACCEPTED" ||
     normStatus === "SENT_FROM_SELLER" ||
     normStatus === "TO_SHIP" ||
     normStatus === "SHIPPED_BY_SELLER" ||

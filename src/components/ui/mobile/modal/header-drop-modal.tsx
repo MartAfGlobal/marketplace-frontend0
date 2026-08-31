@@ -10,6 +10,7 @@ import Car from "@/assets/Icons2/Car.png";
 import { DropdownModalProps, Category } from "@/types/global";
 import { RootState } from "@/store";
 import { useLogout } from "@/utils/logout";
+import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 import { useHttp } from "@/hooks/use-http";
 
 import CategorySkeleton from "@/components/reloadSpinner/CategorySkeleton";
@@ -73,6 +74,7 @@ export default function DropdownModal({
   const { sendHttpRequest, loading } = useHttp();
   const isFetchingRef = useRef(false);
 
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [page, setPage] = useState(1);
@@ -203,7 +205,8 @@ useEffect(() => {
 }, [open]);
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {open && (
         <>
           {/* Backdrop */}
@@ -346,7 +349,7 @@ useEffect(() => {
                       >
                         Settings
                       </Button>
-                      <Button variant="primary" onClick={logout}>
+                      <Button variant="primary" onClick={() => setLogoutModalOpen(true)}>
                         Log out
                       </Button>
                     </>
@@ -373,5 +376,17 @@ useEffect(() => {
         </>
       )}
     </AnimatePresence>
+
+    {/* Logout Confirmation Modal */}
+    <LogoutConfirmModal
+      isOpen={logoutModalOpen}
+      onConfirm={() => {
+        setLogoutModalOpen(false);
+        logout();
+        onClose();
+      }}
+      onCancel={() => setLogoutModalOpen(false)}
+    />
+    </>
   );
 }

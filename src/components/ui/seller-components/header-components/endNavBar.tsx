@@ -14,12 +14,13 @@ import Gear from "@/assets/icons/Gear.svg";
 import LogOut from "@/assets/icons/ArrowBendDownRight.svg";
 
 import { useLogout } from "@/utils/logout";
+import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 
 export default function EndNav() {
   const [userOpen, setUserOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const token = useSelector((state: any) => state.token?.token);
   const seller = useSelector((state: any) => state.seller.data);
-  const buyer = useSelector((state: any) => state.buyer?.BuyerData);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
 
@@ -49,7 +50,7 @@ export default function EndNav() {
           </span>
         </button>
       </div>
-      <div className ="flex items-center gap-4">
+      <div className="flex items-center gap-4">
         <div className="relative">
           <button
             onClick={() => setUserOpen((prev) => !prev)}
@@ -61,10 +62,9 @@ export default function EndNav() {
               </div>
             ) : (
               <>
-              <Image src={User} alt="User" width={30} height={30} className="hidden md:block" />
-              <Image src={User} alt="User" width={19.52} height={18.77} className ="md:hidden"/>
+                <Image src={User} alt="User" width={30} height={30} className="hidden md:block" />
+                <Image src={User} alt="User" width={19.52} height={18.77} className="md:hidden" />
               </>
-              
             )}
             <Image
               src={DropIcon}
@@ -108,7 +108,7 @@ export default function EndNav() {
                   <li>
                     {token ? (
                       <button
-                        onClick={logout}
+                        onClick={() => { setUserOpen(false); setLogoutModalOpen(true); }}
                         className="gap-2.5 items-baseline-last text-000000/50 px-4 py-2 flex"
                       >
                         <Image src={LogOut} alt="gear" width={12} height={12} />
@@ -128,12 +128,18 @@ export default function EndNav() {
             )}
           </AnimatePresence>
         </div>
-        <div className="flex items-center gap-2 md:hidden ">
+        <div className="flex items-center gap-2 md:hidden">
           <h1 className="text-ffffff font-MontserratMedium text-sm md:text-base">EN</h1>
           <Image src={NigeriaFlag} alt="NigeriaFlag" width={20} height={20} />
-       
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={logoutModalOpen}
+        onConfirm={() => { setLogoutModalOpen(false); logout(); }}
+        onCancel={() => setLogoutModalOpen(false)}
+      />
     </nav>
   );
 }

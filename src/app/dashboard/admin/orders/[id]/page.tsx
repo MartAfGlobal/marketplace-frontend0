@@ -27,7 +27,12 @@ import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import UpdateOrderStatusModal from "@/components/ui/Modals/admin/UpdateOrderStatusModal";
 import AdminCancelOrderModal from "@/components/ui/Modals/admin/AdminCancelOrderModal";
+import ResultModal from "@/components/ui/forms/resultModal";
 import { Button } from "@/components/ui/Button/Button";
+import OrderProgressBar, {
+  getProgressIndex,
+} from "@/components/admin-components/orders/OrderProgressBar";
+import OrderItemsAndSummary from "@/components/admin-components/orders/OrderItemsAndSummary";
 
 /* ─────────────── Helpers ─────────────── */
 function formatCurrency(val: any) {
@@ -48,23 +53,6 @@ function formatStatusText(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
-const PROGRESS_STEPS = [
-  { key: "unprocessed", label: "Unprocessed", icon: Hourglass },
-  { key: "processed", label: "Processed", icon: Truck },
-  { key: "fulfilled", label: "Fulfilled", icon: Package },
-  { key: "shipped", label: "Shipped", icon: Plane },
-  { key: "delivered", label: "Delivered", icon: Home },
-];
-
-function getProgressIndex(status: string) {
-  const s = (status || "").toLowerCase();
-  if (s.includes("deliver") || s.includes("complet")) return 4;
-  if (s.includes("ship") || s.includes("transit")) return 3;
-  if (s.includes("fulfil")) return 2;
-  if (s.includes("process")) return 1;
-  return 0; // Unprocessed / pending
-}
-
 export default function AdminOrderDetailsPage() {
   const router = useRouter();
   const params = useParams();
@@ -78,9 +66,10 @@ export default function AdminOrderDetailsPage() {
   const [updateStatusOpen, setUpdateStatusOpen] = useState(false);
   const [updateStatusLoading, setUpdateStatusLoading] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelSuccessModalOpen, setCancelSuccessModalOpen] = useState(false);
 
   const token = useSelector((state: RootState) => state.token.token);
-  const { fetchAdminOrderDetail } = AdminDetails();
+  const { fetchAdminOrderDetail, updateAdminOrderStatus } = AdminDetails();
 
   useEffect(() => {
     if (token && rawId) {
@@ -99,22 +88,65 @@ export default function AdminOrderDetailsPage() {
   }, [token, rawId]);
 
   const handleTrackOrder = () => {
+    const trackId =
+      order?.tracking_number ||
+      order?.tracking_no ||
+      order?.order_no ||
+      order?.order_number ||
+      order?.payment_no ||
+      rawId;
     router.push(
-      `/dashboard/admin/orders/track/${encodeURIComponent(displayOrderId)}`,
+      `/dashboard/admin/orders/track/${encodeURIComponent(trackId)}`,
     );
   };
 
-  const handleConfirmStatusUpdate = async (newStatus: string) => {
-    setUpdateStatusLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(`Order status updated to "${newStatus}" successfully.`);
-      setUpdateStatusOpen(false);
-    } catch {
-      toast.error("Failed to update order status. Please try again.");
-    } finally {
-      setUpdateStatusLoading(false);
+  const handleConfirmStatusUpdate = (newStatus: string) => {
+    // sellerOrderId is derived after order loads; safe to use here
+    const soId: string =
+      (order?.seller_orders?.[0]?.id as string) ??
+      (order?.seller_orders?.[0]?.seller_order_id as string) ??
+      rawId ??
+      "";
+
+    if (!soId) {
+      toast.error("Could not determine seller order ID.");
+      return;
     }
+
+    setUpdateStatusLoading(true);
+    updateAdminOrderStatus(
+      soId,
+      { status: newStatus },
+      (_data: any) => {
+        // Optimistically update the hub status in local state
+        setOrder((prev: any) => {
+          const updatedSellerOrders = Array.isArray(prev?.seller_orders)
+            ? prev.seller_orders.map((so: any, idx: number) =>
+                idx === 0
+                  ? { ...so, hub_status: newStatus, hub_delivery_status: newStatus, tracking_status: newStatus }
+                  : so,
+              )
+            : prev?.seller_orders;
+          return {
+            ...prev,
+            hub_delivery_status: newStatus,
+            hub_status: newStatus,
+            tracking_status: newStatus,
+            seller_orders: updatedSellerOrders,
+          };
+        });
+        if (rawId) {
+          fetchAdminOrderDetail(rawId, (data) => setOrder(data));
+        }
+        toast.success(`Order status updated to "${newStatus.replace(/_/g, " ")}" successfully.`);
+        setUpdateStatusOpen(false);
+        setUpdateStatusLoading(false);
+      },
+      (_err: any) => {
+        toast.error("Failed to update order status. Please try again.");
+        setUpdateStatusLoading(false);
+      },
+    );
   };
 
   const handleCancelOrder = () => {
@@ -174,8 +206,9 @@ export default function AdminOrderDetailsPage() {
     : orderDate;
 
   const rawStatus = (
-    order?.status ??
-    order?.order_status ??
+    order?.order_timeline_stage ||
+    order?.status ||
+    order?.order_status ||
     "PENDING"
   ).toLowerCase();
   const currentStep = getProgressIndex(rawStatus);
@@ -399,11 +432,70 @@ export default function AdminOrderDetailsPage() {
   /** Acceptance window has closed but order is still pending — admin can manually cancel */
   const isExpired = !isCancelled && isPending && order?.can_accept === false;
 
+  /**
+   * The current hub tracking status stored on the first seller_order.
+   * Values: null | "NOT_SENT" | "IN_TRANSIT" | "RECEIVED_AT_HUB" | "SHIPPED_TO_BUYER" | "DELIVERED"
+   */
+  const currentHubStatus: string | null =
+    firstSellerOrder?.hub_delivery_status ??
+    firstSellerOrder?.hub_status ??
+    firstSellerOrder?.tracking_status ??
+    firstSellerOrder?.delivery_status ??
+    order?.hub_delivery_status ??
+    order?.hub_status ??
+    order?.tracking_status ??
+    (order?.status === "IN_TRANSIT_TO_HUB" ? "IN_TRANSIT" : null) ??
+    (order?.order_timeline_stage === "SHIPPED" || order?.status === "SHIPPED" ? "SHIPPED_TO_BUYER" : null) ??
+    (order?.order_timeline_stage === "DELIVERED" || order?.status === "DELIVERED" ? "DELIVERED" : null) ??
+    null;
+
+  const isAcceptedOrInTransit =
+    [
+      "ACCEPTED",
+      "PARTIALLY_ACCEPTED",
+      "IN_TRANSIT_TO_HUB",
+      "RECEIVED_AT_HUB",
+      "SHIPPED_TO_BUYER",
+      "FULFILLED",
+      "SHIPPED",
+      "PROCESSED",
+    ].includes((order?.status ?? "").toUpperCase()) ||
+    [
+      "ACCEPTED",
+      "PARTIALLY_ACCEPTED",
+      "IN_TRANSIT_TO_HUB",
+      "RECEIVED_AT_HUB",
+      "SHIPPED_TO_BUYER",
+      "FULFILLED",
+      "SHIPPED",
+      "PROCESSED",
+    ].includes((order?.order_timeline_stage ?? "").toUpperCase()) ||
+    Boolean(order?.fulfilled_at) ||
+    Boolean(order?.accepted_at) ||
+    [
+      "IN_TRANSIT",
+      "RECEIVED_AT_HUB",
+      "SHIPPED_TO_BUYER",
+    ].includes((currentHubStatus ?? "").toUpperCase());
+
+  /** Hub flow is fully complete when DELIVERED */
+  const hubComplete =
+    (currentHubStatus ?? "").toUpperCase() === "DELIVERED";
+
+  /**
+   * The "Update Status" button is enabled only when:
+   *  - Order is accepted / in transit to hub / fulfilled
+   *  - Order is NOT cancelled, NOT expired
+   *  - Hub flow is NOT yet complete
+   */
+  const canUpdateStatus =
+    isAcceptedOrInTransit && !isCancelled && !isExpired && !hubComplete;
+
   /** Show Track button only when there is a real tracking number */
   const hasTracking = Boolean(trackingNumber);
 
   return (
-    <div className="mb-12 box-border w-full p-6  rounded-2xl bg-white animate-in fade-in duration-300 space-y-8">
+    <div className="mb-12 box-border w-full p-6 rounded-2xl bg-white animate-in fade-in duration-300 space-y-8">
       {/* ── 1. Top Header ── */}
       <div className="flex h-c64 border-b border-b-000000/4 items-start justify-between ">
         <button
@@ -433,9 +525,9 @@ export default function AdminOrderDetailsPage() {
           <LoadingSpinner size={36} color="border-[#FF6D5B]" />
         </div>
       ) : (
-        <>
+        <div className="space-y-c64">
           {/* ── 2. Top Summary & Actions (3 Columns) ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-c64 items-start  w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-c64 items-start w-full">
             {/* Column 1: Order Info */}
             <div className="space-y-3 text-sm font-MontserratNormal w-full">
               <div className="flex items-center gap-2 flex-nowrap ">
@@ -526,7 +618,7 @@ export default function AdminOrderDetailsPage() {
               {hasTracking && (
                 <Button
                   onClick={handleTrackOrder}
-                  className=" bg-[#FF6D5B] hover:bg-[#ff5a43]  "
+                  className="   "
                 >
                   Track Order
                 </Button>
@@ -560,7 +652,7 @@ export default function AdminOrderDetailsPage() {
           </div>
 
           {/* ── 3. 3-Column Details Row (Buyer | Shipping | Seller) ── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 pt-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 ">
             {/* Buyer Details Card */}
             <div className="space-y-3 text-sm font-MontserratNormal">
               <div className="flex items-center justify-between pb-3">
@@ -729,364 +821,87 @@ export default function AdminOrderDetailsPage() {
           </div>
 
           {/* ── 4. Order Progress Section ── */}
-          <div className="space-y-4 pt-2">
-            <h3 className="text-sm font-MontserratSemiBold">Order progress</h3>
+          <OrderProgressBar currentStep={currentStep} />
 
-            <div className="w-full max-w-2xl py-2 overflow-x-auto">
-              <div className="relative flex justify-between items-start w-full min-w-[500px]">
-                {/* Continuous Progress Line Behind the Circles */}
-                <div className="absolute top-5 left-5 right-5 -translate-y-1/2 h-[1.5px] bg-[#E5E7EB] z-0">
-                  <div
-                    className="h-full bg-[#6A0DAD] transition-all duration-300"
-                    style={{
-                      width: `${(Math.min(currentStep, PROGRESS_STEPS.length - 1) / (PROGRESS_STEPS.length - 1)) * 100}%`,
-                    }}
-                  />
-                </div>
+          {/* ── Update Order Status Section ── */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-MontserratSemiBold">
+              Update Order Status
+            </h3>
 
-                {PROGRESS_STEPS.map((step, index) => {
-                  const isCurrentOrPassed = index <= currentStep;
-                  const isFirst = index === 0;
-                  const isLast = index === PROGRESS_STEPS.length - 1;
-                  const StepIcon = step.icon;
+            <div className="flex items-start gap-4 ">
+              {/* Current order status indicator */}
+              <div
+                className={`flex items-center justify-between w-full max-w-[240px] h-c44 px-4 border rounded-c8 text-sm font-MontserratMedium transition-colors
+                  ${canUpdateStatus
+                    ? "border-[#E5E7EB] bg-white text-[#000000]/68 cursor-pointer hover:border-[#FF6D5B]"
+                    : "border-[#E5E7EB] bg-[#F9FAFB] text-[#000000]/30 cursor-not-allowed"
+                  }`}
+                onClick={() => canUpdateStatus && setUpdateStatusOpen(true)}
+              >
+                <span>
+                  {(order?.order_timeline_stage || order?.status || "Pending")
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                </span>
+              </div>
 
-                  return (
-                    <div
-                      key={step.key}
-                      className={`relative z-10 flex flex-col ${
-                        isFirst
-                          ? "items-start"
-                          : isLast
-                            ? "items-end"
-                            : "items-center"
-                      }`}
-                    >
-                      {/* Step Circle */}
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                          isCurrentOrPassed
-                            ? "bg-[#6A0DAD]/68 text-white shadow-sm"
-                            : "bg-000000/12 text-ffffff"
-                        }`}
-                      >
-                        <StepIcon className="w-5 h-5" />
-                      </div>
-
-                      {/* Step Label */}
-                      <span
-                        className={`mt-2 text-xs font-MontserratMedium whitespace-nowrap ${
-                          isFirst
-                            ? "text-left pl-0.5"
-                            : isLast
-                              ? "text-right pr-0.5"
-                              : "text-center"
-                        } ${
-                          isCurrentOrPassed
-                            ? "text-[#6A0DAD]/68"
-                            : "text-000000/12"
-                        }`}
-                      >
-                        {step.label}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="flex flex-col gap-1">
+                <Button
+                  onClick={() => setUpdateStatusOpen(true)}
+                  disabled={!canUpdateStatus}
+                  className="w-auto px-6 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Update Status
+                </Button>
+                {/* Reason the button is disabled */}
+                {isCancelled && (
+                  <span className="text-xs font-MontserratNormal text-[#E8334A]">
+                    Order is cancelled
+                  </span>
+                )}
+                {isExpired && !isCancelled && (
+                  <span className="text-xs font-MontserratNormal text-[#E8334A]">
+                    Acceptance window expired
+                  </span>
+                )}
+                {!isAcceptedOrInTransit && !isCancelled && !isExpired && (
+                  <span className="text-xs font-MontserratNormal text-[#000000]/40">
+                    Available once order is accepted or in transit
+                  </span>
+                )}
+                {hubComplete && (
+                  <span className="text-xs font-MontserratNormal text-[#2ea37d]">
+                    All steps completed
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
           {/* ── 5. Order Items & Order Summary Section ── */}
-          <div className="space-y-4 pt-2">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <OrderItemsAndSummary
+            order={order}
+            orderItems={orderItems}
+            totalItemsCount={totalItemsCount}
+            discountAmount={discountAmount}
+            subtotalAmount={subtotalAmount}
+            shippingFeeAmount={shippingFeeAmount}
+            grandTotalAmount={grandTotalAmount}
+          />
 
-              {/* Order Items Table (Left ~8 cols) */}
-              <div className="lg:col-span-8 space-y-4">
-                <h3 className="text-sm font-MontserratSemiBold ">
-                  Order items
-                </h3>
 
-                <div className="overflow-x-auto ">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-[#947FFF] text-white text-xs font-MontserratSemiBold h-10">
-                        <th className="px-4 py-2">SKU</th>
-                        <th className="px-4 py-2">Items</th>
-                        <th className="px-4 py-2">Unit price</th>
-                        <th className="px-4 py-2 text-center">Qty</th>
-                        <th className="px-4 py-2">Total</th>
-                        <th className="px-4 py-2 w-8"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 text-sm font-MontserratNormal ">
-                      {orderItems.length > 0 ? (
-                        orderItems.map((item: any, idx: number) => {
-                          const itemSku =
-                            item.variation_sku ||
-                            item.product_sku ||
-                            item.sku ||
-                            item.product?.sku ||
-                            (typeof item.product === "string"
-                              ? item.product.slice(0, 8).toUpperCase()
-                              : item.product?.id?.slice(0, 8)) ||
-                            item.id?.slice(0, 8).toUpperCase() ||
-                            "N/A";
 
-                          const itemName =
-                            item.product_name ||
-                            item.name ||
-                            item.title ||
-                            item.product?.name ||
-                            item.product?.title ||
-                            "Item";
-
-                          const variationText = item.variation_name
-                            ? ` (${item.variation_name})`
-                            : "";
-
-                          const rawImg =
-                            item.product_image ||
-                            item.image ||
-                            item.thumbnail ||
-                            item.product?.product_image ||
-                            item.product?.image ||
-                            item.product?.thumbnail ||
-                            (Array.isArray(item.product?.images)
-                              ? typeof item.product.images[0] === "string"
-                                ? item.product.images[0]
-                                : item.product.images[0]?.image
-                              : null);
-
-                          const itemImg = rawImg || "";
-                          const itemUnitPrice = Number(
-                            item.price_at_purchase ??
-                              item.unit_price ??
-                              item.price ??
-                              0,
-                          );
-                          const itemQty = Number(
-                            item.quantity ??
-                              item.qty ??
-                              1,
-                          );
-                          const itemTotal = Number(
-                            item.total_price ??
-                              item.total ??
-                              itemUnitPrice * itemQty,
-                          );
-
-                          const isOrderRejected =
-                            (order?.status ?? "").toUpperCase() === "REJECTED" ||
-                            (order?.order_timeline_stage ?? "").toUpperCase() === "REJECTED";
-                          const isOrderCancelled =
-                            (order?.status ?? "").toUpperCase() === "CANCELLED" ||
-                            (order?.order_timeline_stage ?? "").toUpperCase() === "CANCELLED";
-
-                          let acceptedQty = 0;
-                          let rejectedQty = 0;
-
-                          if (isOrderRejected) {
-                            acceptedQty = 0;
-                            rejectedQty = Number(
-                              item.rejected_quantity ??
-                                (orderItems.length === 1 ? order.rejected_quantity : itemQty) ??
-                                itemQty
-                            );
-                          } else if (isOrderCancelled) {
-                            acceptedQty = 0;
-                            rejectedQty = 0;
-                          } else {
-                            acceptedQty =
-                              item.accepted_quantity !== undefined && item.accepted_quantity !== null
-                                ? Number(item.accepted_quantity)
-                                : order?.accepted_quantity !== undefined && order?.accepted_quantity !== null && orderItems.length === 1
-                                ? Number(order.accepted_quantity)
-                                : order?.accepted_at
-                                ? Number(item.fulfilled_quantity ?? itemQty)
-                                : 0;
-
-                            rejectedQty =
-                              item.rejected_quantity !== undefined && item.rejected_quantity !== null
-                                ? Number(item.rejected_quantity)
-                                : order?.rejected_quantity !== undefined && order?.rejected_quantity !== null && orderItems.length === 1
-                                ? Number(order.rejected_quantity)
-                                : 0;
-                          }
-
-                          const productId =
-                            typeof item.product === "string"
-                              ? item.product
-                              : item.product?.id || item.product_id || item.id;
-
-                          return (
-                            <tr
-                              key={item.id || idx}
-                              onClick={() =>
-                                productId &&
-                                router.push(
-                                  `/dashboard/admin/products/listings/${productId}`,
-                                )
-                              }
-                              className={`transition-colors text-sm h-16 ${
-                                productId
-                                  ? "hover:bg-gray-50 cursor-pointer"
-                                  : "hover:bg-gray-50/60"
-                              }`}
-                            >
-                              <td className="px-4 py-2 font-MontserratMedium text-xs">
-                                {itemSku}
-                              </td>
-                              <td className="px-4 py-2 ">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12  overflow-hidden flex-shrink-0flex items-center justify-center">
-                                    {itemImg ? (
-                                      <img
-                                        src={itemImg}
-                                        alt={itemName}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <span className="text-[14px] ">
-                                        N/A
-                                      </span>
-                                    )}
-                                  </div>
-                                  <span
-                                    className="font-MontserratNormal line-clamp-1 max-w-[200px]"
-                                    title={`${itemName}${variationText}`}
-                                  >
-                                    {itemName}
-                                    {variationText}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-2 font-MontserratNormal ">
-                                {formatCurrencyShort(itemUnitPrice)}
-                              </td>
-                              <td className="px-4 py-2 text-center font-MontserratNormal ">
-                                <div className="flex flex-col items-center">
-                                  <span>{itemQty}</span>
-                                  {(acceptedQty > 0 || rejectedQty > 0) && (
-                                    <div className="text-[10px] flex flex-col items-center leading-tight">
-                                      {acceptedQty > 0 && (
-                                        <span className="text-green-600 font-MontserratMedium">
-                                          Acc: {acceptedQty}
-                                        </span>
-                                      )}
-                                      {rejectedQty > 0 && (
-                                        <span className="text-red-500 font-MontserratMedium">
-                                          Rej: {rejectedQty}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-4 py-2 font-MontserratSemiBold ">
-                                <div className="flex flex-col">
-                                  <span
-                                    className={
-                                      acceptedQty < itemQty && (acceptedQty > 0 || rejectedQty > 0)
-                                        ? "line-through text-gray-400 text-xs font-MontserratNormal"
-                                        : ""
-                                    }
-                                  >
-                                    {formatCurrencyShort(itemTotal)}
-                                  </span>
-                                  {acceptedQty < itemQty && (acceptedQty > 0 || rejectedQty > 0) && (
-                                    <span
-                                      className={`${acceptedQty > 0 ? "text-green-600" : "text-red-500"} font-MontserratSemiBold`}
-                                    >
-                                      {formatCurrencyShort(itemUnitPrice * acceptedQty)}
-                                    </span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-4 py-2 text-center cursor-pointer">
-                                <MoreVertical className="w-4 h-4" />
-                              </td>
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="px-4 py-8 text-center font-MontserratNormal text-sm"
-                          >
-                            No order items found.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Order Summary Card (Right ~4 cols) */}
-              <div className="lg:col-span-4 space-y-4 pt-0 lg:pt-12">
-                <h3 className="text-sm font-MontserratSemiBold ">
-                  Order Summary
-                </h3>
-
-                <div className="space-y-3 text-xs font-MontserratNormal ">
-                  <div className="space-y-3">
-                    <div className="flex justify-between py-1">
-                      <span>Total Amount</span>
-                      <span className="font-MontserratMedium ">
-                        {formatCurrencyShort(subtotalAmount)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span>Total items</span>
-                      <span className="font-MontserratMedium ">
-                        {totalItemsCount}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span>Discounts</span>
-                      <span className="font-MontserratMedium text-[#FF6D5B]">
-                        {discountAmount > 0
-                          ? `-${formatCurrencyShort(discountAmount)}`
-                          : "₦0"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span>Subtotal</span>
-                      <span className="font-MontserratMedium ">
-                        {formatCurrencyShort(subtotalAmount)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span>Shipping Fee</span>
-                      <span className="font-MontserratMedium ">
-                        {formatCurrencyShort(shippingFeeAmount)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Grand Total */}
-                  <div className="pt-4 border-t border-000000/4 flex justify-between items-baseline">
-                    <span className="text-sm font-MontserratMedium ">
-                      Grand Total
-                    </span>
-                    <span className="text-xl md:text-2xl font-MontserratBold text-black">
-                      {formatCurrencyShort(grandTotalAmount)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </>
+        </div>
       )}
 
-      {/* Modal for updating order status if needed */}
+      {/* Modal for updating order status */}
       <UpdateOrderStatusModal
         isOpen={updateStatusOpen}
         onClose={() => setUpdateStatusOpen(false)}
         onConfirm={handleConfirmStatusUpdate}
         loading={updateStatusLoading}
+        currentHubStatus={currentHubStatus}
       />
 
       {/* Admin cancellation modal */}
@@ -1095,7 +910,9 @@ export default function AdminOrderDetailsPage() {
         paymentId={paymentId}
         onClose={() => setCancelModalOpen(false)}
         onSuccess={() => {
-          // Re-fetch the order so the UI reflects the new CANCELLED status
+          setCancelModalOpen(false);
+          setCancelSuccessModalOpen(true);
+          // Re-fetch the order so the UI reflects the new status
           if (token && rawId) {
             fetchAdminOrderDetail(
               rawId,
@@ -1104,6 +921,17 @@ export default function AdminOrderDetailsPage() {
             );
           }
         }}
+      />
+
+      {/* Cancellation Request Sent Result Modal */}
+      <ResultModal
+        isOpen={cancelSuccessModalOpen}
+        result="success"
+        title="Request Sent"
+        message="Your cancellation request has been submitted successfully."
+        discRescription="The cancellation request has been logged and the order status is updated."
+        buttenText="Okay"
+        onConfirm={() => setCancelSuccessModalOpen(false)}
       />
     </div>
   );

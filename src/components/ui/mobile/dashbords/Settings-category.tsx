@@ -15,6 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import NotificationSettings from "../../buyer-components/Main-section/sections/notification-settings";
 import ResultModal from "@/components/ui/forms/resultModal";
+import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 import { useHttp } from "@/hooks/use-http";
 
 // Minimal African sample (add more as needed)
@@ -48,6 +49,7 @@ export default function Settings() {
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.token.token);
   const logout = useLogout(dispatch);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const handleDeleteConfirm = () => {
     sendHttpRequest({
@@ -305,7 +307,7 @@ export default function Settings() {
       />
       <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center  justify-center ">
         <Button
-          onClick={logout}
+          onClick={() => setLogoutModalOpen(true)}
           className="border border-ff715b bg-transparent w-full max-w-36 text-ff715b font-MontserratSemiBold text-sm "
         >
           Log out
@@ -314,6 +316,11 @@ export default function Settings() {
       <ChangePasswordModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      <LogoutConfirmModal
+        isOpen={logoutModalOpen}
+        onConfirm={() => { setLogoutModalOpen(false); logout(); }}
+        onCancel={() => setLogoutModalOpen(false)}
       />
     </div>
   );

@@ -23,6 +23,8 @@ import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { setTrackingData } from "@/store/orders/tracking-slice";
 import Cookies from "js-cookie";
+import OrderItemSummary from "@/components/ui/buyer-components/orders/order-item-summary";
+
 
 export default function TrackingDetail() {
   const [copied, setCopied] = useState(false);
@@ -76,7 +78,7 @@ export default function TrackingDetail() {
 
     sendHttpRequest({
       requestConfig: {
-        url: `orders/${trackingid}/`,
+        url: `/orders/${trackingid}/track/`,
         method: "GET",
         token,
         isAuth: true,
@@ -84,8 +86,24 @@ export default function TrackingDetail() {
       },
       successRes: (res) => {
         console.log("✅ User tracking info:", res);
-        const TrackingDetail = res.data;
+        const TrackingDetail = res.data ?? res;
         dispatch(setTrackingData(TrackingDetail));
+      },
+      errorRes: () => {
+        // Fallback to /orders/${trackingid}/
+        sendHttpRequest({
+          requestConfig: {
+            url: `/orders/${trackingid}/`,
+            method: "GET",
+            token,
+            isAuth: true,
+            userType: "buyer",
+          },
+          successRes: (res) => {
+            const TrackingDetail = res.data ?? res;
+            dispatch(setTrackingData(TrackingDetail));
+          },
+        });
       },
     });
   }, [token, trackingid, dispatch]);
@@ -333,58 +351,10 @@ console.log(formattedDate);
                   <p className="text-sm font-MontserratSemiBold mb-c32">
                     Package details
                   </p>
-                  <div className="flex justify-between overflow-y-auto  custom-scroll h-fit max-h-54 ">
-                    <motion.div
-                      key="orders-list"
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden"
-                      variants={{
-                        hidden: { opacity: 0, height: 0 },
-                        visible: {
-                          opacity: 1,
-                          height: "auto",
-                          transition: { staggerChildren: 0.1 },
-                        },
-                      }}
-                      className="space-y-c24"
-                    >
-                      {oderItems.map((item: any) => (
-                        <motion.div
-                          key={item.id}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.8 }}
-                        >
-                          <div className="w-full justify-between md:pb-8 flex ">
-                            <div className="flex gap-4 items-start  border-b border-b-000000/5  md:border-0 pb-c20 md:pb-0 h-fit">
-                              <Image
-                                src={item.product.image}
-                                alt={item.product.name}
-                                width={100}
-                                height={100}
-                              />
-                              <div className="w-full md:max-w-143.75">
-                                <p className="font-MontserratSemiBold text-sm leading-c24 pb-3 text-000000">
-                                  {item.product.name}
-                                </p>
-
-                                <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
-                                  <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                                    {item.fulfilled_quantity ?? item.quantity}PC, {item.variant?.color}
-                                  </span>
-                                </div>
-                                <p className="font-MontserratSemiBold hidden md:flex text-c18 pt-3 leading-6.5">
-                                  ₦{(item.price_at_purchase * (item.fulfilled_quantity ?? item.quantity ?? 0)).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </motion.div>
+                <div className="flex justify-between overflow-y-auto  custom-scroll h-fit max-h-54 ">
+                    <OrderItemSummary orderItems={oderItems} />
                   </div>
+
                 </div>
               </div>
             </div>

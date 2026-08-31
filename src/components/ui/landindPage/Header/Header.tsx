@@ -23,6 +23,7 @@ import { closeMobileMenu, openMobileMenu } from "@/store/uiSlice";
 
 import { useSearchParams } from "next/navigation";
 import { useLogout } from "@/utils/logout";
+import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 import AuthModal from "../../mobile/auth/sign-up";
 import { AuthStep } from "@/types/global";
 import NotificationButton from "../../Button/notificationButton";
@@ -53,6 +54,7 @@ export default function Header() {
   const [authStep, setAuthStep] = useState<AuthStep>();
 
   const [userOpen, setUserOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     if (resetToken) {
@@ -285,7 +287,7 @@ export default function Header() {
                 <li>
                   {token ? (
                     <button
-                      onClick={logout}
+                      onClick={() => { setUserOpen(false); setLogoutModalOpen(true); }}
                       className="gap-2.5 items-baseline-last text-000000/50 px-4 py-2 flex"
                     >
                       <Image src={LogOut} alt="gear" width={12} height={12} />
@@ -329,6 +331,13 @@ export default function Header() {
           />
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={logoutModalOpen}
+        onConfirm={() => { setLogoutModalOpen(false); logout(); }}
+        onCancel={() => setLogoutModalOpen(false)}
+      />
     </div>
   );
 }

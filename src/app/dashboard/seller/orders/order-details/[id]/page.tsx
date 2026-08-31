@@ -157,15 +157,11 @@ export default function OrderDetailsPage() {
 
   const handleFulfill = (e: any) => {
     e.preventDefault();
-    if (!parcelId.trim()) {
-      alert("Please enter a valid Parcel ID");
-      return;
-    }
 
     setFulfilling(true);
     fulfillOrder(
       id as string,
-      { parcel_id: parcelId },
+      parcelId.trim() ? { parcel_id: parcelId.trim() } : undefined,
       () => {
         setFulfilling(false);
         setShowFulfillModal(false);
@@ -274,11 +270,12 @@ export default function OrderDetailsPage() {
   }
 
   const getStatusBadgeClass = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "unprocessed":
       case "pending":
         return "bg-[#FFAC061A] text-[#FFAC06]";
       case "processed":
+      case "accepted":
         return "bg-[#FFAC061A] text-[#FFAC06]";
       case "fulfilled":
         return "bg-[#0070E91A] text-[#0070E9]";
@@ -287,23 +284,32 @@ export default function OrderDetailsPage() {
       case "delivered":
         return "bg-[#2D75651A] text-[#2D7565]";
       case "partially_accepted":
+      case "partially accepted":
         return "bg-[#0070E91A] text-[#0070E9]";
+      case "rejected":
+      case "cancelled":
+        return "bg-[#CA02021A] text-[#CA0202]";
       default:
         return "bg-gray-100 text-gray-500";
     }
   };
 
   const getMappedStatus = (ord: any) => {
-    if (ord?.order_timeline_stage) {
-      return ord.order_timeline_stage.toLowerCase();
+    const stage = ord?.order_timeline_stage?.toLowerCase();
+    if (stage) {
+      if (stage === "pending") return "unprocessed";
+      if (stage === "accepted" || stage === "processed") return "processed";
+      if (stage === "partially_accepted") return "partially accepted";
+      if (stage === "in_transit_to_hub" || stage === "fulfilled") return "fulfilled";
+      return stage;
     }
     const status = ord?.status;
     if (!status) return "unprocessed";
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === "pending") return "unprocessed";
-    if (lowerStatus === "accepted") return "processed";
+    if (lowerStatus === "accepted" || lowerStatus === "processed") return "processed";
     if (lowerStatus === "partially_accepted") return "partially accepted";
-    if (lowerStatus === "in_transit_to_hub") return "fulfilled";
+    if (lowerStatus === "in_transit_to_hub" || lowerStatus === "fulfilled") return "fulfilled";
     return lowerStatus;
   };
 
@@ -335,7 +341,9 @@ export default function OrderDetailsPage() {
           {/* Time Left */}
           <div className="w-full flex justify-between items-center mb-2">
             <p className="font-MontserratSemiBold text-sm text-[#161616]">
-              Time left for processing:
+              {getMappedStatus(order) === "unprocessed" || (order?.status ?? "").toLowerCase() === "pending"
+                ? "Time left for accepting order:"
+                : "Time left to fulfill order:"}
             </p>
             <span
               className={`font-MontserratSemiBold text-sm px-3 py-1 rounded-md ${timeLeft > 0 ? "bg-[#2D75651A] text-2d7565" : "bg-red-50 text-ca0202"}`}

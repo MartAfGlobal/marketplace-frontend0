@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import XIcon from "@/assets/icons/X.svg";
 import { Button } from "@/components/ui/Button/Button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Label } from "@/components/ui/forms/Label";
+import { Input } from "@/components/ui/forms/Input";
 
 interface FulfillOrderModalProps {
   isOpen: boolean;
@@ -38,26 +40,25 @@ export const FulfillOrderModal = ({
 
         <div className="p-8 space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-MontserratSemiBold text-000000">
+            <h2 className="text-c18 font-MontserratMedium text-000000">
               Mark Order as Shipped
             </h2>
-            <p className="text-sm text-gray-500 font-MontserratNormal px-4">
-              Please provide the parcel ID to track this shipment
+            <p className="text-xs text-000000/68 font-MontserratNormal ">
+              You can optionally provide a parcel ID to track this shipment
             </p>
           </div>
 
           <form onSubmit={onFulfill} className="space-y-6 pt-4">
             <div className="space-y-2">
-              <label className="text-sm font-MontserratSemiBold block text-left">
-                Parcel ID
-              </label>
-              <input
+              <Label className="">
+                Parcel ID <span className="text-xs text-gray-400 font-MontserratNormal">(Optional)</span>
+              </Label>
+              <Input
                 type="text"
-                required
                 value={parcelId}
                 onChange={(e) => setParcelId(e.target.value)}
                 placeholder="e.g. PARCEL-67890"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl outline-none focus:border-ff715b transition-colors"
+                className=""
               />
             </div>
 
@@ -67,7 +68,7 @@ export const FulfillOrderModal = ({
               </Button>
               <Button
                 type="submit"
-                disabled={fulfilling || !parcelId.trim()}
+                disabled={fulfilling}
                 className="disabled:cursor-not-allowed"
               >
                 {fulfilling ? <LoadingSpinner /> : "Confirm Shipment"}

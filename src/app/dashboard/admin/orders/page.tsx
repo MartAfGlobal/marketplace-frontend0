@@ -25,6 +25,14 @@ import FilterDropdown from "@/components/ui/seller-components/body-components/ov
 import OrdersTable, {
   OrderRow,
 } from "@/components/admin-components/orders/OrdersTable";
+import OrdersTabs, { OrdersTabKey } from "@/components/admin-components/orders/OrdersTabs";
+import CancellationRequestsTable, {
+  CancellationRequestRow,
+  mapCancellationRequest,
+} from "@/components/admin-components/orders/CancellationRequestsTable";
+import CancellationDetailModal from "@/components/ui/Modals/admin/CancellationDetailModal";
+import RejectCancellationModal from "@/components/ui/Modals/admin/RejectCancellationModal";
+import ResultModal from "@/components/ui/forms/resultModal";
 import StatusFrame from "@/components/admin-components/users/status-frame";
 import Image from "next/image";
 import { Input } from "@/components/ui/forms/Input";
@@ -120,53 +128,29 @@ function mapToOrderRow(raw: any): OrderRow {
         ? raw.amount
         : "—";
 
-  // Extract buyer country / location
-  const buyerCountry =
-    typeof raw.buyer?.country === "object" && raw.buyer?.country !== null
-      ? raw.buyer.country.name || raw.buyer.country.code || ""
-      : typeof raw.buyer?.country === "string"
-        ? raw.buyer.country
-        : "";
+  // Extract state for location column
+  const extractState = (val: any): string => {
+    if (!val) return "";
+    if (typeof val === "string") return val.trim();
+    if (typeof val === "object") {
+      return val.name || val.state_name || val.title || val.code || "";
+    }
+    return String(val).trim();
+  };
 
-  const buyerLocationParts = [
-    raw.buyer?.city,
-    raw.buyer?.state,
-    buyerCountry,
-  ].filter(Boolean);
+  const stateVal =
+    extractState(raw.delivery_address?.state) ||
+    extractState(raw.shipping_address?.state) ||
+    extractState(raw.shipping_address_snapshot?.state) ||
+    extractState(raw.shipping_info?.state) ||
+    extractState(raw.buyer?.state) ||
+    extractState(raw.buyer?.shipping_address?.state) ||
+    extractState(raw.buyer?.default_address?.state) ||
+    extractState(raw.delivery_state) ||
+    extractState(raw.shipping_state) ||
+    extractState(raw.state);
 
-  // Extract delivery / shipping country
-  const deliveryCountry =
-    typeof raw.delivery_address?.country === "object" &&
-    raw.delivery_address?.country !== null
-      ? raw.delivery_address.country.name ||
-        raw.delivery_address.country.code ||
-        ""
-      : typeof raw.delivery_address?.country === "string"
-        ? raw.delivery_address.country
-        : typeof raw.shipping_address?.country === "object" &&
-            raw.shipping_address?.country !== null
-          ? raw.shipping_address.country.name ||
-            raw.shipping_address.country.code ||
-            ""
-          : typeof raw.shipping_address?.country === "string"
-            ? raw.shipping_address.country
-            : "";
-
-  const deliveryLocationParts = [
-    raw.delivery_address?.city || raw.shipping_address?.city,
-    raw.delivery_address?.state || raw.shipping_address?.state,
-    deliveryCountry,
-  ].filter(Boolean);
-
-  const location =
-    (deliveryLocationParts.length > 0
-      ? deliveryLocationParts.join(", ")
-      : null) ||
-    (buyerLocationParts.length > 0 ? buyerLocationParts.join(", ") : null) ||
-    raw.location ||
-    raw.buyer_location ||
-    buyerCountry ||
-    "—";
+  const location = stateVal || raw.location || raw.buyer_location || "—";
 
   const date = raw.created_at
     ? new Date(raw.created_at).toLocaleDateString("en-GB")
@@ -218,7 +202,44 @@ export default function AdminOrdersPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [trackingNo, setTrackingNo] = useState("");
 
-  const { fetchOrdersList, fetchOrdersSummary, loading } = AdminDetails();
+  // ── Filter Tabs ──────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<OrdersTabKey>("all");
+
+  // ── Cancellation Requests ────────────────────────────────────────────────
+  const [cancellationRequests, setCancellationRequests] = useState<CancellationRequestRow[]>([]);
+  const [cancellationLoading, setCancellationLoading] = useState(false);
+  const [cancellationSubTab, setCancellationSubTab] = useState<"pending" | "approved" | "rejected">("pending");
+
+  // ── Cancellation Modals State ─────────────────────────────────────────────
+  const [selectedCancellation, setSelectedCancellation] =
+    useState<CancellationRequestRow | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [targetCancellation, setTargetCancellation] =
+    useState<CancellationRequestRow | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const [resultModalState, setResultModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    result: "success" | "warning" | "error";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    result: "success",
+  });
+
+  const {
+    fetchOrdersList,
+    fetchOrdersSummary,
+    fetchCancellationRequests,
+    approveCancellationRequest,
+    rejectCancellationRequest,
+    loading,
+  } = AdminDetails();
 
   const getRangeParam = (val: string) => {
     switch (val) {
@@ -273,22 +294,48 @@ export default function AdminOrdersPage() {
     (state: RootState) => (state as any).adminOrders?.totalCount ?? 0,
   );
 
-  // Fetch on mount and page change
+  // Fetch on mount, page change, or tab change
+  useEffect(() => {
+    if (!token) return;
+    if (activeTab === "cancel_request") {
+      setCancellationLoading(true);
+      fetchCancellationRequests(
+        cancellationSubTab,
+        (data: any[]) => {
+          setCancellationRequests(data.map(mapCancellationRequest));
+          setCancellationLoading(false);
+        },
+        () => setCancellationLoading(false),
+      );
+    } else {
+      const statusMap: Record<string, string | undefined> = {
+        all: undefined,
+        unprocessed: "UNPROCESSED",
+        processed: "PROCESSED",
+        shipped: "SHIPPED_TO_BUYER",
+        delivered: "DELIVERED",
+        completed: "COMPLETED",
+        cancelled: "CANCELLED",
+      };
+      fetchOrdersList(currentPage, statusMap[activeTab]);
+    }
+  }, [token, currentPage, activeTab, cancellationSubTab]);
+
+  // Fetch summary on mount
   useEffect(() => {
     if (token) {
-      fetchOrdersList(currentPage);
       fetchOrdersSummary(
         getRangeParam(selectedMonth),
         parseSummaryData,
         () => { setSummaryStats({}); },
       );
     }
-  }, [token, currentPage]);
+  }, [token]);
 
-  // Reset page when search changes
+  // Reset page when search or tab changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchVal]);
+  }, [searchVal, activeTab]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -311,6 +358,7 @@ export default function AdminOrdersPage() {
       );
     });
 
+
   const handleSelectAll = () => {
     if (selectedIds.length === rows.length && rows.length > 0) {
       setSelectedIds([]);
@@ -331,6 +379,102 @@ export default function AdminOrdersPage() {
       return;
     }
     router.push(`/dashboard/admin/orders/track/${encodeURIComponent(trackingNo.trim())}`);
+  };
+
+  const loadCancellationRequests = () => {
+    setCancellationLoading(true);
+    fetchCancellationRequests(
+      cancellationSubTab,
+      (data: any[]) => {
+        setCancellationRequests(data.map(mapCancellationRequest));
+        setCancellationLoading(false);
+      },
+      () => setCancellationLoading(false),
+    );
+  };
+
+  const handleViewCancellationDetails = (row: CancellationRequestRow) => {
+    setSelectedCancellation(row);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleInitiateApprove = (row: CancellationRequestRow) => {
+    setTargetCancellation(row);
+    setIsApproveConfirmOpen(true);
+  };
+
+  const handleInitiateReject = (row: CancellationRequestRow) => {
+    setTargetCancellation(row);
+    setIsRejectModalOpen(true);
+  };
+
+  const handleConfirmApprove = () => {
+    if (!targetCancellation) return;
+    setActionLoading(true);
+    approveCancellationRequest(
+      targetCancellation.id,
+      () => {
+        setActionLoading(false);
+        setIsApproveConfirmOpen(false);
+        setResultModalState({
+          isOpen: true,
+          title: "Cancellation Approved",
+          message: "The cancellation request has been successfully approved.",
+          result: "success",
+        });
+        loadCancellationRequests();
+      },
+      (err: any) => {
+        setActionLoading(false);
+        setIsApproveConfirmOpen(false);
+        const errMsg =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Failed to approve cancellation request. Super-admin permission is required.";
+        setResultModalState({
+          isOpen: true,
+          title: "Approval Failed",
+          message: errMsg,
+          result: "error",
+        });
+      }
+    );
+  };
+
+  const handleConfirmReject = (notes: string) => {
+    if (!targetCancellation) return;
+    setActionLoading(true);
+    rejectCancellationRequest(
+      targetCancellation.id,
+      { rejection_notes: notes },
+      () => {
+        setActionLoading(false);
+        setIsRejectModalOpen(false);
+        setResultModalState({
+          isOpen: true,
+          title: "Cancellation Rejected",
+          message: "The cancellation request has been rejected successfully.",
+          result: "success",
+        });
+        loadCancellationRequests();
+      },
+      (err: any) => {
+        setActionLoading(false);
+        setIsRejectModalOpen(false);
+        const errMsg =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Failed to reject cancellation request.";
+        setResultModalState({
+          isOpen: true,
+          title: "Rejection Failed",
+          message: errMsg,
+          result: "error",
+        });
+      }
+    );
   };
 
   // Derive stats from current page results
@@ -624,36 +768,131 @@ export default function AdminOrdersPage() {
           List of Orders
         </h2>
 
-        {/* Filters Header */}
-        <AdminListHeader
-          searchVal={searchVal}
-          setSearchVal={setSearchVal}
-          placeholder="Search orders by ID, buyer or vendor..."
-          searchExpandable={true}
-        />
+        {/* ── Tab Filter Bar ── */}
+        <OrdersTabs activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} />
 
-        {/* Data Table */}
-        <OrdersTable
-          rows={rows}
-          selectedIds={selectedIds}
-          activeRowId={activeRowId}
-          loading={loading}
-          onSelectAll={handleSelectAll}
-          onToggleRow={handleToggleRow}
-          onSetActiveRowId={setActiveRowId}
-        />
+        {activeTab === "cancel_request" ? (
+          <>
+            {/* Sub-tabs for cancellation status */}
+            <div className="flex items-center gap-4 mb-5">
+              {(["pending", "approved", "rejected"] as const).map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setCancellationSubTab(sub)}
+                  className={`capitalize text-c12 font-MontserratSemiBold pb-1 border-b-2 transition-colors ${
+                    cancellationSubTab === sub
+                      ? "text-6a0dad border-b-6a0dad"
+                      : "text-000000/44 border-b-transparent hover:text-6a0dad"
+                  }`}
+                >
+                  {sub}
+                </button>
+              ))}
+            </div>
 
-        {/* Pagination */}
-        {apiTotalCount > PAGE_SIZE && (
-          <div className="flex justify-end mt-6">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(apiTotalCount / PAGE_SIZE)}
-              onPageChange={(page) => setCurrentPage(page)}
+            <CancellationRequestsTable
+              rows={cancellationRequests}
+              loading={cancellationLoading}
+              activeRowId={activeRowId}
+              onSetActiveRowId={setActiveRowId}
+              onViewDetails={handleViewCancellationDetails}
+              onApprove={handleInitiateApprove}
+              onReject={handleInitiateReject}
             />
-          </div>
+          </>
+        ) : (
+          <>
+            {/* Filters Header */}
+            <AdminListHeader
+              searchVal={searchVal}
+              setSearchVal={setSearchVal}
+              placeholder="Search orders by ID, buyer or vendor..."
+              searchExpandable={true}
+            />
+
+            {/* Data Table */}
+            <OrdersTable
+              rows={rows}
+              selectedIds={selectedIds}
+              activeRowId={activeRowId}
+              loading={loading}
+              onSelectAll={handleSelectAll}
+              onToggleRow={handleToggleRow}
+              onSetActiveRowId={setActiveRowId}
+            />
+
+            {/* Pagination */}
+            {apiTotalCount > PAGE_SIZE && (
+              <div className="flex justify-end mt-6">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(apiTotalCount / PAGE_SIZE)}
+                  onPageChange={(page) => setCurrentPage(page)}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
+
+      {/* ── Cancellation Request Details Modal ── */}
+      <CancellationDetailModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedCancellation(null);
+        }}
+        request={selectedCancellation}
+        onApprove={(req) => {
+          setIsDetailsModalOpen(false);
+          handleInitiateApprove(req);
+        }}
+        onReject={(req) => {
+          setIsDetailsModalOpen(false);
+          handleInitiateReject(req);
+        }}
+      />
+
+      {/* ── Approve Confirmation Warning Modal ── */}
+      <ResultModal
+        isOpen={isApproveConfirmOpen}
+        result="warning"
+        title="Approve Order Cancellation"
+        message={`Are you sure you want to approve this cancellation request for order #${targetCancellation?.orderId}? This will cancel the order.`}
+        buttenText="Yes, Approve"
+        onConfirm={handleConfirmApprove}
+        onCancel={() => {
+          if (!actionLoading) setIsApproveConfirmOpen(false);
+        }}
+        loading={actionLoading}
+      />
+
+      {/* ── Reject Cancellation Modal with Notes ── */}
+      <RejectCancellationModal
+        isOpen={isRejectModalOpen}
+        onClose={() => {
+          if (!actionLoading) setIsRejectModalOpen(false);
+        }}
+        onConfirm={handleConfirmReject}
+        loading={actionLoading}
+        requestOrderId={targetCancellation?.orderId}
+      />
+
+      {/* ── Result Modal for Success / Error ── */}
+      <ResultModal
+        isOpen={resultModalState.isOpen}
+        result={resultModalState.result}
+        title={resultModalState.title}
+        message={resultModalState.message}
+        buttenText="Done"
+        onConfirm={() =>
+          setResultModalState((prev) => ({ ...prev, isOpen: false }))
+        }
+        onCancel={() =>
+          setResultModalState((prev) => ({ ...prev, isOpen: false }))
+        }
+      />
     </div>
   );
 }
+

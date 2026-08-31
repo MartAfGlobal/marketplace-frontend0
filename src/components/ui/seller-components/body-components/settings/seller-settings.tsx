@@ -6,6 +6,7 @@ import { Search, User, FileText, Bell, Globe, Lock, Shield, LayoutGrid, Wallet, 
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { useLogout } from "@/utils/logout";
+import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 import { SellerMobileHeader } from "../../header-components/SellerMobileHeader";
 import Image from "next/image";
 
@@ -52,6 +53,7 @@ export default function SellerSettings() {
 
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const seller = useSelector((state: RootState) => state.seller.data);
   const profile = seller?.profile;
 
@@ -277,13 +279,20 @@ export default function SellerSettings() {
 
           {/* Log out Button */}
           <button 
-            onClick={() => logout()}
+            onClick={() => setLogoutModalOpen(true)}
             className="w-full py-4 border border-[#ff715b] rounded-xl text-[#ff715b] font-MontserratSemiBold text-sm bg-white hover:bg-red-50 transition-colors"
           >
             Log out
           </button>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={logoutModalOpen}
+        onConfirm={() => { setLogoutModalOpen(false); logout(); }}
+        onCancel={() => setLogoutModalOpen(false)}
+      />
     </div>
   );
 }

@@ -246,7 +246,7 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
 
     sendHttpRequest({
       requestConfig: {
-        url: `order/manufacturer/orders/${orderId}/accept/`,
+        url: `/orders/manufacturer/orders/${orderId}/accept/`,
         method: "POST",
         token,
         isAuth: true,
@@ -263,8 +263,15 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
     });
   };
 
-  const fulfillOrder = (orderId: string, payload: { parcel_id: string }, callback?: (data: any) => void, errorCallback?: (err: any) => void) => {
+  const fulfillOrder = (
+    orderId: string,
+    payload?: { parcel_id?: string } | Record<string, any>,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void
+  ) => {
     if (!token) return;
+
+    const body = payload?.parcel_id?.trim() ? { parcel_id: payload.parcel_id.trim() } : {};
 
     sendHttpRequest({
       requestConfig: {
@@ -273,7 +280,7 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
         token,
         isAuth: true,
         userType: "seller",
-        body: payload,
+        body,
       },
       successRes: (res: any) => {
         console.log("Order fulfilled:", res);

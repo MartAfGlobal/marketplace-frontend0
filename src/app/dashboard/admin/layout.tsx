@@ -25,6 +25,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { useLogout } from "@/utils/logout";
 import { useTokenExpiration } from "@/hooks/useTokenExpiration";
+import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 import Image from "next/image";
 import LogoPurple from "@/assets/images/logo-purple.svg";
 import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
@@ -35,7 +36,7 @@ import InactiveBuyerIcon from "@/assets/admin/inActiveBuyerIcon.svg";
 import activeSellerIcon from "@/assets/admin/activeSellerIcon.svg";
 import SellerIcon from "@/assets/icons/sellerIcon.svg";
 import OverviewIcon from "@/assets/icons/admin/overviewIcon.svg";
-import ActiveOverviewIcon from "@/assets/icons/admin/activeOverviewIcon.svg";
+import ActiveOverviewIcon from "@/assets/icons/admin/overviewIcon.svg";
 import UsersIcon from "@/assets/icons/admin/usersIcon.svg";
 import VerificationsIcon from "@/assets/icons/admin/verificatioIcon.svg";
 import ActiveVerificationsIcon from "@/assets/admin/activeKYC.svg";
@@ -106,6 +107,7 @@ export default function AdminLayout({
   const logout = useLogout(dispatch);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<
     Record<string, boolean | undefined>
   >({});
@@ -527,7 +529,7 @@ export default function AdminLayout({
                       <button
                         onClick={() => {
                           setUserOpen(false);
-                          logout();
+                          setLogoutModalOpen(true);
                         }}
                         className="flex items-center gap-2.5 text-gray-500 hover:text-red-500 hover:bg-red-50 px-4 py-2 w-full text-left transition-colors rounded-md"
                       >
@@ -599,6 +601,13 @@ export default function AdminLayout({
         </div>
         {sidebarContent}
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={logoutModalOpen}
+        onConfirm={() => { setLogoutModalOpen(false); logout(); }}
+        onCancel={() => setLogoutModalOpen(false)}
+      />
     </div>
   );
 }

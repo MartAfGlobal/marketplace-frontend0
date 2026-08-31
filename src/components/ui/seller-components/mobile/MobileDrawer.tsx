@@ -21,6 +21,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { useLogout } from "@/utils/logout";
+import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 
 import Logo from "@/assets/Logos/authLogo.svg";
 import OverviewIcon from "@/assets/Seller/overview.png";
@@ -83,17 +84,17 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const seller = useSelector((state: RootState) => state.seller.data);
   const token = useSelector((state: RootState) => state.token.token);
 
     const profile = seller?.profile;
 
-  // const profilePicture = seller?.profile?.profile_picture || null;
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -224,12 +225,20 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
 
               {/* Logout Button */}
               <div className="flex justify-center fixed bottom-0 w-full left-0 h-13 bg-ffffff  " >
-                <LogoutButton logout={logout} onClose={onClose} />
+                <LogoutButton logout={() => setLogoutModalOpen(true)} onClose={onClose} />
               </div>
             </div>
           </motion.div>
         </>
       )}
     </AnimatePresence>
+
+    {/* Logout Confirmation Modal */}
+    <LogoutConfirmModal
+      isOpen={logoutModalOpen}
+      onConfirm={() => { setLogoutModalOpen(false); logout(); onClose(); }}
+      onCancel={() => setLogoutModalOpen(false)}
+    />
+  </>
   );
 }

@@ -5,6 +5,8 @@ import HandBug from "@/assets/Seller/handBug.png";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useRouter } from "next/navigation";
 
+import { CheckCircle2, Clock3, XCircle, Truck } from "lucide-react";
+
 export interface OrderRow {
   id: string;
   buyer: string;
@@ -16,147 +18,121 @@ export interface OrderRow {
   date: string;
 }
 
-const statusConfig: Record<
-  string,
-  { pill: string; icon: React.ReactNode; label: string }
-> = {
-  Delivered: {
-    pill: "text-[#2ea37d] bg-[#2ea37d]/10",
-    label: "Delivered",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6.5" stroke="#2ea37d" strokeWidth="1.2" />
-        <path
-          d="M4.5 7l2 2 3-3"
-          stroke="#2ea37d"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  Ongoing: {
-    pill: "text-[#FFAC06] bg-[#FFAC06]/10",
-    label: "Ongoing",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <path
-          d="M3 2h8M3 12h8M4.5 2v2.5C4.5 6.5 7 7 7 7s-2.5.5-2.5 2.5V12M9.5 2v2.5C9.5 6.5 7 7 7 7s2.5.5 2.5 2.5V12"
-          stroke="#FFAC06"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  Pending: {
-    pill: "text-[#FFAC06] bg-[#FFAC06]/10",
-    label: "Pending",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6.5" stroke="#FFAC06" strokeWidth="1.2" />
-        <path
-          d="M7 4v3.5l2 1"
-          stroke="#FFAC06"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  Processing: {
-    pill: "text-[#318af7] bg-[#318af7]/10",
-    label: "Processing",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6.5" stroke="#318af7" strokeWidth="1.2" />
-        <path
-          d="M7 3.5v3.5h3"
-          stroke="#318af7"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  Shipped: {
-    pill: "text-[#947FFF] bg-[#947FFF]/10",
-    label: "Shipped",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6.5" stroke="#947FFF" strokeWidth="1.2" />
-        <path
-          d="M4 7h6M7 4l3 3-3 3"
-          stroke="#947FFF"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  Rejected: {
-    pill: "text-[#E8334A] bg-[#E8334A]/10",
-    label: "Rejected",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6.5" stroke="#E8334A" strokeWidth="1.2" />
-        <path
-          d="M5 5l4 4M9 5l-4 4"
-          stroke="#E8334A"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  Cancelled: {
-    pill: "text-[#807C79] bg-[#807C79]/10",
-    label: "Cancelled",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6.5" stroke="#807C79" strokeWidth="1.2" />
-        <path
-          d="M5 5l4 4M9 5l-4 4"
-          stroke="#807C79"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  Disputed: {
-    pill: "text-[#E8334A] bg-[#E8334A]/10",
-    label: "Disputed",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6.5" stroke="#E8334A" strokeWidth="1.2" />
-        <path
-          d="M5 5l4 4M9 5l-4 4"
-          stroke="#E8334A"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
-  "Partially Accepted": {
-    pill: "text-[#FFAC06] bg-[#FFAC06]/10",
-    label: "Partially Accepted",
-    icon: (
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-        <circle cx="7" cy="7" r="6.5" stroke="#FFAC06" strokeWidth="1.2" />
-        <path
-          d="M5 7h4"
-          stroke="#FFAC06"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
-  },
+export const renderStatus = (status: string) => {
+  const s = (status ?? "").trim().toLowerCase();
+
+  if (
+    s === "accepted" ||
+    s === "approved" ||
+    s === "delivered" ||
+    s === "completed" ||
+    s === "fulfilled" ||
+    s === "successful" ||
+    s === "active"
+  ) {
+    const label =
+      s === "accepted"
+        ? "Accepted"
+        : s === "approved"
+        ? "Approved"
+        : s === "delivered"
+        ? "Delivered"
+        : s === "completed"
+        ? "Completed"
+        : s === "fulfilled"
+        ? "Fulfilled"
+        : status
+        ? status.charAt(0).toUpperCase() + status.slice(1)
+        : "Accepted";
+
+    return (
+      <span className="inline-flex items-center gap-1 text-[#00BE5C] bg-[#00BE5C]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
+        <CheckCircle2 size={14} />
+        {label}
+      </span>
+    );
+  }
+
+  if (
+    s === "rejected" ||
+    s === "cancelled" ||
+    s === "canceled" ||
+    s === "disputed" ||
+    s === "dispute" ||
+    s === "returned" ||
+    s === "refunded"
+  ) {
+    const isCancelled = s === "cancelled" || s === "canceled";
+    const label = isCancelled
+      ? "Cancelled"
+      : s === "rejected"
+      ? "Rejected"
+      : s === "disputed" || s === "dispute"
+      ? "Disputed"
+      : s === "returned"
+      ? "Returned"
+      : s === "refunded"
+      ? "Refunded"
+      : status
+      ? status.charAt(0).toUpperCase() + status.slice(1)
+      : "Rejected";
+
+    const colorClass = isCancelled
+      ? "text-[#807C79] bg-[#807C79]/12"
+      : "text-[#CA0202] bg-[#CA0202]/12";
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 ${colorClass} h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium`}
+      >
+        <XCircle size={14} />
+        {label}
+      </span>
+    );
+  }
+
+  if (s === "shipped" || s === "in transit" || s === "in_transit") {
+    const label = s === "shipped" ? "Shipped" : "In Transit";
+    return (
+      <span className="inline-flex items-center gap-1 text-[#947FFF] bg-[#947FFF]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
+        <Truck size={14} />
+        {label}
+      </span>
+    );
+  }
+
+  if (s === "processing" || s === "processed") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[#318af7] bg-[#318af7]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
+        <Clock3 size={14} />
+        Processing
+      </span>
+    );
+  }
+
+  if (s === "partially accepted" || s === "partially_accepted") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[#FFAC06] bg-[#FFAC06]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
+        <Clock3 size={14} />
+        Partially Accepted
+      </span>
+    );
+  }
+
+  // Pending / Ongoing / Default fallback
+  const label = status
+    ? status
+        .split(/[_\s]+/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ")
+    : "Pending";
+
+  return (
+    <span className="inline-flex items-center gap-1 text-[#FFAC06] bg-[#FFAC06]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
+      <Clock3 size={14} />
+      {label}
+    </span>
+  );
 };
 
 interface OrdersTableProps {
@@ -304,21 +280,7 @@ export default function OrdersTable({
                 </td>
                
                 <td className="py-3 px-4">
-                  {(() => {
-                    const cfg = statusConfig[row.status];
-                    return cfg ? (
-                      <div
-                        className={`inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium px-3 py-1 rounded-full w-fit ${cfg.pill}`}
-                      >
-                        {cfg.icon}
-                        {cfg.label}
-                      </div>
-                    ) : (
-                      <span className=" text-[11px]">
-                        {row.status}
-                      </span>
-                    );
-                  })()}
+                  {renderStatus(row.status)}
                 </td>
                 <td className="py-3 px-4">
                   <span className="block max-w-[120px] truncate" title={row.amount}>

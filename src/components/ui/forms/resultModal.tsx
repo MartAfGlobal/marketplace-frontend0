@@ -209,19 +209,19 @@ export default function ResultModal({
             <div className="w-full py-c32 px-6">
               <div className="flex flex-col gap-2 text-center">
                 {title && (
-                  <h1 className="text-c18 font-MontserratMedium text-161616">
+                  <h1 className="text-c18 font-MontserratSemiBold text-[#161616]">
                     {title}
                   </h1>
                 )}
 
                 {message && (
-                  <p className="text-base font-MontserratMedium text-000000">
+                  <p className="text-sm font-MontserratNormal text-000000/68 leading-relaxed">
                     {message}
                   </p>
                 )}
 
                 {discRescription && (
-                  <p className="text-sm text-000000/70">{discRescription}</p>
+                  <p className="text-xs text-000000/60 font-MontserratNormal">{discRescription}</p>
                 )}
               </div>
 
@@ -245,7 +245,7 @@ export default function ResultModal({
                     onClick={onConfirm}
                     disabled={loading}
                   >
-                    {loading ? <LoadingSpinner color="border-ff715b" /> : buttenText || "Okay"}
+                    {loading ? <LoadingSpinner color="border-white" /> : buttenText || "Okay"}
                   </Button>
                 )}
               </div>

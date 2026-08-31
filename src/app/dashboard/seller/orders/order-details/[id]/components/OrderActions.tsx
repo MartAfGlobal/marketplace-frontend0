@@ -70,7 +70,7 @@ export const OrderActions = ({
               onClick={onFulfillClick}
               className={`w-full py-4 text-white rounded-xl font-MontserratSemiBold transition-all shadow-lg ${timeLeft > 0 ? "bg-ff715b shadow-ff715b/20 hover:bg-ff715b/90" : "opacity-50 cursor-not-allowed bg-gray-400"}`}
             >
-              Mark as shipped
+              Mark as fulfilled
             </button>
             <div className="pt-4 space-y-2 flex items-center gap-2">
               <p className=" font-MontserratNormal text-sm ">

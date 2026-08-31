@@ -938,14 +938,16 @@ export const AdminDetails = (id?: string) => {
 
   const fetchOrdersList = (
     page: number = 1,
+    status?: string,
     callback?: (data: any) => void,
   ) => {
     if (!token) return;
 
+    const statusParam = status && status !== "all" ? `&status=${status}` : "";
     console.log("Fetching orders token for admin...", token);
     sendHttpRequest({
       requestConfig: {
-        url: `/orders/admin/orderslist?page=${page}`,
+        url: `/orders/admin/orderslist?page=${page}${statusParam}`,
         method: "GET",
         token,
         isAuth: true,
@@ -965,6 +967,94 @@ export const AdminDetails = (id?: string) => {
       },
     });
   };
+
+  const fetchCancellationRequests = (
+    status: string = "pending",
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/cancellation/admin/cancellation-requests?status=${status}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data =
+          responseData?.data?.results ??
+          responseData?.data ??
+          (Array.isArray(responseData) ? responseData : []);
+        console.log("Cancellation requests fetched:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Cancellation requests error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const approveCancellationRequest = (
+    cancellationRequestId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !cancellationRequestId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/cancellation/admin/cancellation-requests/${cancellationRequestId}/approve/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Cancellation request approved:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Approve cancellation request error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const rejectCancellationRequest = (
+    cancellationRequestId: string,
+    payload: { rejection_notes: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !cancellationRequestId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/cancellation/admin/cancellation-requests/${cancellationRequestId}/reject/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Cancellation request rejected:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Reject cancellation request error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
 
   const fetchOrdersSummary = (
     range: string = "this_month",
@@ -1020,10 +1110,71 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const updateAdminOrderStatus = (
+    sellerOrderId: string,
+    payload: { status: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !sellerOrderId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/seller-orders/${sellerOrderId}/update-status/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin seller-order status updated:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin seller-order status update error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const fetchOrderTracking = (
+    trackingNumber: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !trackingNumber) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/${trackingNumber}/track/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Order tracking fetched:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Order tracking error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   return {
     fetchOrdersList,
+    fetchCancellationRequests,
+    approveCancellationRequest,
+    rejectCancellationRequest,
     fetchOrdersSummary,
     fetchAdminOrderDetail,
+    fetchOrderTracking,
+    updateAdminOrderStatus,
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
     approveAdminProduct,

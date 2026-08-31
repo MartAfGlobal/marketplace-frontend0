@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { X, ChevronDown } from "lucide-react";
 import { useState } from "react";
@@ -71,7 +71,7 @@ export default function AdminCancelOrderModal({
 
     cancelReq({
       requestConfig: {
-        url: `/cancellation/admin/payments/${paymentId}/cancellation-requests`,
+        url: `/cancellation/admin/payments/${paymentId}/cancellation-requests/`,
         method: "POST",
         token,
         isAuth: true,
@@ -82,8 +82,9 @@ export default function AdminCancelOrderModal({
             moreInfo || "Admin initiated cancellation via support ticket",
         },
       },
-      successRes: () => {
-        onClose();
+      successRes: (res) => {
+        console.log("Admin cancellation request success:", res);
+        handleClose();
         if (onSuccess) onSuccess();
       },
     });
@@ -159,7 +160,7 @@ export default function AdminCancelOrderModal({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute z-10 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg"
+                        className="absolute z-50 mt-2 w-full max-h-52 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-xl divide-y divide-gray-50"
                       >
                         {reasons.map((item) => (
                           <button
@@ -169,7 +170,11 @@ export default function AdminCancelOrderModal({
                               setSelectedReason(item);
                               setDropdownOpen(false);
                             }}
-                            className="block w-full px-3 py-2 font-MontserratMedium text-left text-c12 text-gray-700 hover:bg-gray-100"
+                            className={`block w-full px-3 py-2.5 font-MontserratMedium text-left text-xs transition-colors cursor-pointer ${
+                              selectedReason?.id === item.id
+                                ? "bg-orange-50 text-[#FF6D5B]"
+                                : "text-gray-700 hover:bg-gray-50"
+                            }`}
                           >
                             {item.title}
                           </button>
@@ -203,7 +208,7 @@ export default function AdminCancelOrderModal({
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting || !selectedReason}
-                  className="bg-[#C00000] hover:bg-[#a60000] min-w-28"
+                  className=" min-w-28"
                 >
                   {submitting ? <LoadingSpinner /> : "Confirm"}
                 </Button>
