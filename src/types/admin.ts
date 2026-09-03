@@ -85,3 +85,85 @@ export function resolveImageUrl(imageUrlField: any): string | undefined {
   }
   return undefined;
 }
+
+// ── Admin Disputes & Returns ───────────────────────────────────────────────
+
+export interface AdminDisputeStats {
+  total_disputes?: number;
+  total?: number;
+  count?: number;
+  requested?: number;
+  requested_count?: number;
+  open?: number;
+  open_count?: number;
+  escalated?: number;
+  escalated_count?: number;
+  resolved?: number;
+  resolved_count?: number;
+  rejected?: number;
+  rejected_count?: number;
+  cancelled?: { count: number; formatted_amount?: string; amount?: number } | number;
+  disputed?: { count: number; formatted_amount?: string; amount?: number } | number;
+  returned?: { count: number; formatted_amount?: string; amount?: number } | number;
+  total_amount?: string;
+  total_refund_amount?: string | number;
+  [key: string]: any;
+}
+
+export interface AdminDisputeItem {
+  id: string;
+  order_id?: string;
+  order_number?: string;
+  order_no?: string;
+  order?: any;
+  status: string;
+  status_display?: string;
+  dispute_type?: string;
+  dispute_type_display?: string;
+  type?: string;
+  reason?: string;
+  cancellation_reason_title?: string;
+  reason_title?: string;
+  more_details?: string;
+  more_information?: string;
+  description?: string;
+  return_method?: string;
+  delivery_station_address?: string;
+  requested_refund_amount?: number;
+  amount?: string | number;
+  total_amount?: string | number;
+  created_at?: string;
+  updated_at?: string;
+  resolved_at?: string;
+  item_returned_at?: string;
+  buyer?: any;
+  seller?: any;
+  vendor?: any;
+  buyer_name?: string;
+  seller_name?: string;
+  vendor_name?: string;
+  dispute_number?: string;
+  affected_quantity?: number;
+  product_name?: string;
+  product_image?: string;
+  product_slug?: string;
+  variant_name?: string;
+  [key: string]: any;
+}
+
+export interface DisputeTableRow {
+  id: string;
+  disputeNumber?: string;
+  orderId: string;
+  buyer: string;
+  buyerEmail?: string;
+  vendor: string;
+  vendorEmail?: string;
+  disputeType: string;
+  reason: string;
+  amount: string;
+  status: string;
+  date: string;
+  quantity?: number;
+  raw: AdminDisputeItem;
+}

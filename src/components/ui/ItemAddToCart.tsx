@@ -169,16 +169,25 @@ export default function ItemAddToCart({
             (item: CartItem) => {
               return {
                 variation_id: item.variation_id,
+                id: item.id || "",
                 product_id: item.id || "",
                 product_name: item.product_name || "",
                 price: item.price || 0,
+                price_at_purchase: item.price_at_purchase || item.price || 0,
                 quantity: item.quantity ?? 1,
                 product_slug: item.product_slug,
                 variation_display: (
                   item.variation_display || "default"
                 ).toLowerCase(),
-
                 product_image: item.product_image || "/placeholder.png",
+                stock:
+                  (item as any).stock !== undefined
+                    ? Number((item as any).stock)
+                    : (item as any).inventory_count !== undefined
+                      ? Number((item as any).inventory_count)
+                      : (item as any).variation_stock !== undefined
+                        ? Number((item as any).variation_stock)
+                        : undefined,
                 checked:
                   typeof item.checked === "boolean" ? item.checked : true,
               };

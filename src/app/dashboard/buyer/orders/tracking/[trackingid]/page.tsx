@@ -113,12 +113,12 @@ export default function TrackingDetail() {
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
 
-  const selectedAddress = buyerAddresses.find(
-    (item: any) => item.id === trackingData.shipping_address
+  const selectedAddress = buyerAddresses?.find(
+    (item: any) => item.id === trackingData?.shipping_address
   );
    
-const isoDate = trackingData.paid_at;
-const orderCreateDate = trackingData.created_at
+const isoDate = trackingData?.paid_at;
+const orderCreateDate = trackingData?.created_at;
 
 const formattedCtreateDate = new Date (orderCreateDate).toLocaleString("en-GB", {
     day: "numeric",
@@ -292,12 +292,12 @@ console.log(formattedDate);
                       Order ID:{" "}
                       <span className="text-c12 font-MontserratSemiBold">
                         {" "}
-                        {trackingData.id}{" "}
+                        {trackingData?.id || "-"}{" "}
                       </span>
                     </p>
                     <button
                       onClick={() => {
-                        handleCopy(trackingData.id);
+                        handleCopy(trackingData?.id);
                       }}
                     >
                       <Image
@@ -319,12 +319,12 @@ console.log(formattedDate);
                       Tracking number:
                       <span className="text-c12 font-MontserratSemiBold">
                         {" "}
-                        {trackingData.tracking_number}{" "}
+                        {trackingData?.tracking_number || "-"}{" "}
                       </span>
                     </p>
                     <button
                       onClick={() => {
-                        handleCopyTrack(trackingData.tracking_number);
+                        handleCopyTrack(trackingData?.tracking_number);
                       }}
                       className="flex   items-center justify-center"
                     >

@@ -14,7 +14,7 @@ import CheckBoxButton from "@/components/ui/Button/checkBoxButton";
  */
 export const HUB_STATUSES = [
   { value: "RECEIVED_AT_HUB", label: "Received at Hub" },
-  { value: "SHIPPED_TO_BUYER", label: "Shipped to Buyer" },
+  { value: "SHIPPED_TO_BUYER", label: "Shipped" },
   { value: "DELIVERED", label: "Delivered" },
 ];
 
@@ -35,7 +35,8 @@ export function getHubStatusIndex(status: string | null | undefined): number {
     s.includes("SHIPPED_TO_BUYER") ||
     s.includes("SHIPPED_FROM_WAREHOUSE") ||
     s.includes("OUT_FOR_DELIVERY") ||
-    (s.includes("SHIP") && !s.includes("SELLER"))
+    s.includes("SHIPPED") ||
+    (s.includes("SHIP") && !s.includes("TO_HUB"))
   ) {
     return 1;
   }
@@ -73,14 +74,15 @@ export default function UpdateOrderStatusModal({
   currentHubStatus,
 }: UpdateOrderStatusModalProps) {
   const currentIndex = getHubStatusIndex(currentHubStatus);
-  // The next valid status to set is one step ahead (or first status if none set)
   const nextIndex = currentIndex + 1;
-  const nextValidStatus =
-    nextIndex >= 0 && nextIndex < HUB_STATUSES.length
-      ? HUB_STATUSES[nextIndex]
-      : null;
+  const defaultSelected =
+    currentIndex >= 1
+      ? "DELIVERED"
+      : currentIndex === 0
+        ? "SHIPPED_TO_BUYER"
+        : HUB_STATUSES[0].value;
 
-  const [selected, setSelected] = useState<string>(nextValidStatus?.value ?? "");
+  const [selected, setSelected] = useState<string>(defaultSelected);
   const [confirmed, setConfirmed] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -88,11 +90,13 @@ export default function UpdateOrderStatusModal({
   useEffect(() => {
     if (isOpen) {
       const idx = getHubStatusIndex(currentHubStatus);
-      const next =
-        idx + 1 >= 0 && idx + 1 < HUB_STATUSES.length
-          ? HUB_STATUSES[idx + 1]
-          : null;
-      setSelected(next?.value ?? "");
+      const nextVal =
+        idx >= 1
+          ? "DELIVERED"
+          : idx === 0
+            ? "SHIPPED_TO_BUYER"
+            : HUB_STATUSES[0].value;
+      setSelected(nextVal);
       setConfirmed(false);
       setIsDropdownOpen(false);
     }
@@ -191,9 +195,9 @@ export default function UpdateOrderStatusModal({
                     >
                       {HUB_STATUSES.map((hubStatus, idx) => {
                         const isSelected = selected === hubStatus.value;
-                        const isNext = idx === nextIndex;
-                        const isPassed = idx < nextIndex;
-                        const isDisabled = !isNext;
+                        const isCurrent = currentIndex >= 0 && idx === currentIndex;
+                        const isPassed = currentIndex >= 0 && idx < currentIndex;
+                        const isDisabled = isCurrent || isPassed;
 
                         return (
                           <button
@@ -216,14 +220,14 @@ export default function UpdateOrderStatusModal({
                           >
                             <span className="flex items-center gap-2">
                               {hubStatus.label}
+                              {isCurrent && (
+                                <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-MontserratNormal">
+                                  Current
+                                </span>
+                              )}
                               {isPassed && (
                                 <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-MontserratNormal">
                                   Completed
-                                </span>
-                              )}
-                              {!isPassed && !isNext && (
-                                <span className="text-[10px] bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full font-MontserratNormal">
-                                  Pending previous steps
                                 </span>
                               )}
                             </span>

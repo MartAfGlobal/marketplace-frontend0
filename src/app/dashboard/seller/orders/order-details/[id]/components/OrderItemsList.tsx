@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import productIcon from "@/assets/Seller/proccessed.svg";
 
 interface OrderItemsListProps {
@@ -21,8 +22,10 @@ const getItemQuantities = (item: any, order: any) => {
       acceptedQty: 0,
       rejectedQty: Number(
         item.rejected_quantity ??
-          (order.items?.length === 1 ? order.rejected_quantity : item.quantity) ??
-          item.quantity
+          (order.items?.length === 1
+            ? order.rejected_quantity
+            : item.quantity) ??
+          item.quantity,
       ),
     };
   }
@@ -37,18 +40,22 @@ const getItemQuantities = (item: any, order: any) => {
   const acceptedQty =
     item.accepted_quantity !== undefined && item.accepted_quantity !== null
       ? Number(item.accepted_quantity)
-      : order.accepted_quantity !== undefined && order.accepted_quantity !== null && order.items?.length === 1
-      ? Number(order.accepted_quantity)
-      : order.accepted_at
-      ? Number(item.fulfilled_quantity ?? item.quantity)
-      : 0;
+      : order.accepted_quantity !== undefined &&
+          order.accepted_quantity !== null &&
+          order.items?.length === 1
+        ? Number(order.accepted_quantity)
+        : order.accepted_at
+          ? Number(item.fulfilled_quantity ?? item.quantity)
+          : 0;
 
   const rejectedQty =
     item.rejected_quantity !== undefined && item.rejected_quantity !== null
       ? Number(item.rejected_quantity)
-      : order.rejected_quantity !== undefined && order.rejected_quantity !== null && order.items?.length === 1
-      ? Number(order.rejected_quantity)
-      : 0;
+      : order.rejected_quantity !== undefined &&
+          order.rejected_quantity !== null &&
+          order.items?.length === 1
+        ? Number(order.rejected_quantity)
+        : 0;
 
   return { acceptedQty, rejectedQty };
 };
@@ -58,6 +65,8 @@ export const OrderItemsList = ({
   mobileTab,
   setMobileTab,
 }: OrderItemsListProps) => {
+  const router = useRouter();
+
   return (
     <>
       {/* Mobile view tabs */}
@@ -84,14 +93,19 @@ export const OrderItemsList = ({
           <h3 className="font-MontserratSemiBold text-sm hidden lg:block">
             Order items
           </h3>
-          
+
           {/* Mobile View: Cards */}
           <div className="lg:hidden flex flex-col gap-6">
             {order.items?.map((item: any, idx: number) => {
-              const { acceptedQty, rejectedQty } = getItemQuantities(item, order);
-              const inStock = (item.product_stock || 0) >= item.quantity;
-              const isLow = (item.product_stock || 0) > 0 && (item.product_stock || 0) < 5;
-              
+              const { acceptedQty, rejectedQty } = getItemQuantities(
+                item,
+                order,
+              );
+              const inStock = item.stock_status;
+              const isLow =
+                (item.inventory_count || 0) > 0 &&
+                (item.inventory_count || 0) < 5;
+
               return (
                 <div key={idx} className="flex gap-4">
                   <div className="flex flex-col gap-3 w-[100px] flex-shrink-0">
@@ -106,10 +120,12 @@ export const OrderItemsList = ({
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex-1 flex flex-col text-c12 font-MontserratNormal bg-white rounded-lg overflow-hidden">
                     <div className="flex justify-between items-center bg-[#ffffff] px-3 py-2 border-b border-gray-50">
-                      <span className="text-[#161616] whitespace-nowrap">SKU</span>
+                      <span className="text-[#161616] whitespace-nowrap">
+                        SKU
+                      </span>
                       <span className="font-MontserratSemiBold text-[#161616] truncate ml-4 text-right">
                         {item.variation_sku || item.product_sku || "N/A"}
                       </span>
@@ -117,7 +133,10 @@ export const OrderItemsList = ({
                     <div className="flex justify-between items-center bg-[#F8F8F8] px-3 py-2 border-b border-white">
                       <span className="text-[#161616]">Unit price</span>
                       <span className="font-MontserratSemiBold text-[#161616]">
-                        ₦{Number(item.price_at_purchase || item.price).toLocaleString()}
+                        ₦
+                        {Number(
+                          item.price_at_purchase || item.price,
+                        ).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center bg-[#ffffff] px-3 py-2 border-b border-gray-50">
@@ -129,7 +148,11 @@ export const OrderItemsList = ({
                     <div className="flex justify-between items-center bg-[#F8F8F8] px-3 py-2">
                       <span className="text-[#161616]">Total price</span>
                       <span className="font-MontserratSemiBold text-[#161616]">
-                        ₦{(Number(item.price_at_purchase || item.price) * item.quantity).toLocaleString()}
+                        ₦
+                        {(
+                          Number(item.price_at_purchase || item.price) *
+                          item.quantity
+                        ).toLocaleString()}
                       </span>
                     </div>
                     {(acceptedQty > 0 || rejectedQty > 0) && (
@@ -165,7 +188,9 @@ export const OrderItemsList = ({
                 <tr>
                   <th className="p-3">SKU</th>
                   <th className="p-3">Items</th>
-                  <th className="p-3 text-center whitespace-nowrap">Unit price</th>
+                  <th className="p-3 text-center whitespace-nowrap">
+                    Unit price
+                  </th>
 
                   <th className="p-3 text-center">Quantity</th>
                   <th className="p-3 text-right">Total</th>
@@ -173,8 +198,11 @@ export const OrderItemsList = ({
               </thead>
               <tbody className="divide-y divide-gray-100 font-MontserratNormal">
                 {order.items?.map((item: any, idx: number) => {
-                  const { acceptedQty, rejectedQty } = getItemQuantities(item, order);
-                  
+                  const { acceptedQty, rejectedQty } = getItemQuantities(
+                    item,
+                    order,
+                  );
+
                   return (
                     <tr key={idx} className="">
                       <td className="pl-3 pr-1 py-3 text-sm font-MontserratNormal">
@@ -200,7 +228,7 @@ export const OrderItemsList = ({
                       <td className="pl-3 pr-1 py-3 text-center text-sm">
                         ₦
                         {Number(
-                          item.price_at_purchase || item.price
+                          item.price_at_purchase || item.price,
                         ).toLocaleString()}
                       </td>
                       <td className="pl-3 pr-1 py-3 text-center text-sm">
@@ -226,7 +254,8 @@ export const OrderItemsList = ({
                         <div className="flex flex-col items-end">
                           <span
                             className={
-                              acceptedQty < item.quantity && (acceptedQty > 0 || rejectedQty > 0)
+                              acceptedQty < item.quantity &&
+                              (acceptedQty > 0 || rejectedQty > 0)
                                 ? "line-through text-gray-400 text-xs"
                                 : ""
                             }
@@ -237,15 +266,18 @@ export const OrderItemsList = ({
                               item.quantity
                             ).toLocaleString()}
                           </span>
-                          {acceptedQty < item.quantity && (acceptedQty > 0 || rejectedQty > 0) && (
-                            <span className={`${acceptedQty > 0 ? "text-green-600" : "text-red-500"} font-MontserratSemiBold`}>
-                              ₦
-                              {(
-                                Number(item.price_at_purchase || item.price) *
-                                acceptedQty
-                              ).toLocaleString()}
-                            </span>
-                          )}
+                          {acceptedQty < item.quantity &&
+                            (acceptedQty > 0 || rejectedQty > 0) && (
+                              <span
+                                className={`${acceptedQty > 0 ? "text-green-600" : "text-red-500"} font-MontserratSemiBold`}
+                              >
+                                ₦
+                                {(
+                                  Number(item.price_at_purchase || item.price) *
+                                  acceptedQty
+                                ).toLocaleString()}
+                              </span>
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -269,9 +301,19 @@ export const OrderItemsList = ({
           {/* Desktop View: Inventory */}
           <div className="hidden lg:block space-y-6">
             {order.items?.map((item: any, idx: number) => {
-              const inStock = (item.product_stock || 0) >= item.quantity;
+              const inStock = item.stock_status
+                ? item.stock_status === "IN_STOCK" ||
+                  item.stock_status === "in_stock"
+                : (item.inventory_count || 0) >= item.quantity;
               const isLow =
-                (item.product_stock || 0) > 0 && (item.product_stock || 0) < 5;
+                (item.inventory_count || 0) > 0 &&
+                (item.inventory_count || 0) < 5;
+              const productId =
+                item.product_id ||
+                (typeof item.product === "string"
+                  ? item.product
+                  : item.product?.id) ||
+                item.product_slug;
 
               return (
                 <div key={idx} className="flex gap-4 items-start">
@@ -317,7 +359,19 @@ export const OrderItemsList = ({
                             : "Out of stock"}
                       </span>
                       {!inStock && (
-                        <button className="text-sm text-ff715b "> Restock </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (productId) {
+                              router.push(
+                                `/dashboard/seller/products/product-details/${productId}`,
+                              );
+                            }
+                          }}
+                          className="text-sm text-ff715b text-left hover:underline cursor-pointer font-MontserratMedium"
+                        >
+                          Restock
+                        </button>
                       )}
                     </div>
                   </div>
@@ -329,9 +383,19 @@ export const OrderItemsList = ({
           {/* Mobile View: Inventory Cards */}
           <div className="lg:hidden flex flex-col gap-6">
             {order.items?.map((item: any, idx: number) => {
-              const inStock = (item.product_stock || 0) >= item.quantity;
+              const inStock = item.stock_status
+                ? item.stock_status === "IN_STOCK" ||
+                  item.stock_status === "in_stock"
+                : (item.inventory_count || 0) >= item.quantity;
               const isLow =
-                (item.product_stock || 0) > 0 && (item.product_stock || 0) < 5;
+                (item.inventory_count || 0) > 0 &&
+                (item.inventory_count || 0) < 5;
+              const productId =
+                item.product_id ||
+                (typeof item.product === "string"
+                  ? item.product
+                  : item.product?.id) ||
+                item.product_slug;
 
               return (
                 <div key={idx} className="flex gap-4">
@@ -355,15 +419,29 @@ export const OrderItemsList = ({
                             : "bg-red-50 text-ca0202"
                       }`}
                     >
-                      {inStock ? "In stock" : isLow ? "Low stock" : "Out of stock"}
+                      {inStock
+                        ? "In stock"
+                        : isLow
+                          ? "Low stock"
+                          : "Out of stock"}
                     </span>
-                    {/* {!inStock && (
-                      <button className="text-[10px] text-ff715b text-center font-MontserratMedium">
+                    {!inStock && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (productId) {
+                            router.push(
+                              `/dashboard/seller/products/product-details/${productId}`,
+                            );
+                          }
+                        }}
+                        className="text-[10px] text-ff715b text-center font-MontserratMedium hover:underline cursor-pointer"
+                      >
                         Restock
                       </button>
-                    )} */}
+                    )}
                   </div>
-                  
+
                   <div className="flex-1 flex flex-col text-c12 font-MontserratNormal bg-white rounded-lg overflow-hidden">
                     <div className="bg-[#ffffff] hidden lg:block px-3 py-2 border-b border-gray-50">
                       <p className="font-MontserratSemiBold text-[#161616] line-clamp-1 text-sm">
@@ -371,7 +449,9 @@ export const OrderItemsList = ({
                       </p>
                     </div>
                     <div className="flex justify-between items-center bg-[#F8F8F8] px-3 py-2 border-b border-white">
-                      <span className="text-[#161616] whitespace-nowrap">SKU</span>
+                      <span className="text-[#161616] whitespace-nowrap">
+                        SKU
+                      </span>
                       <span className="font-MontserratSemiBold text-[#161616] truncate ml-4 text-right">
                         {item.variation_sku || item.product_sku || "N/A"}
                       </span>

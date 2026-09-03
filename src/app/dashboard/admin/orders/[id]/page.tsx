@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/Button/Button";
 import OrderProgressBar, {
   getProgressIndex,
 } from "@/components/admin-components/orders/OrderProgressBar";
+import { getHubStatusIndex } from "@/components/ui/Modals/admin/UpdateOrderStatusModal";
 import OrderItemsAndSummary from "@/components/admin-components/orders/OrderItemsAndSummary";
 
 /* ─────────────── Helpers ─────────────── */
@@ -123,16 +124,26 @@ export default function AdminOrderDetailsPage() {
           const updatedSellerOrders = Array.isArray(prev?.seller_orders)
             ? prev.seller_orders.map((so: any, idx: number) =>
                 idx === 0
-                  ? { ...so, hub_status: newStatus, hub_delivery_status: newStatus, tracking_status: newStatus }
+                  ? { ...so, hub_status: newStatus, hub_delivery_status: newStatus, tracking_status: newStatus, status: newStatus }
                   : so,
               )
             : prev?.seller_orders;
+          const updatedItems = Array.isArray(prev?.items)
+            ? prev.items.map((it: any) => ({
+                ...it,
+                status: newStatus,
+                seller_order_status: newStatus,
+              }))
+            : prev?.items;
           return {
             ...prev,
+            status: newStatus,
+            order_timeline_stage: newStatus,
             hub_delivery_status: newStatus,
             hub_status: newStatus,
             tracking_status: newStatus,
             seller_orders: updatedSellerOrders,
+            items: updatedItems,
           };
         });
         if (rawId) {
@@ -211,11 +222,66 @@ export default function AdminOrderDetailsPage() {
     order?.order_status ||
     "PENDING"
   ).toLowerCase();
+
+  const  cancelled = rawStatus === "CANCELLED" || rawStatus === "canceled";
   const currentStep = getProgressIndex(rawStatus);
 
-  const displayStatus = formatStatusText(
-    order?.status || order?.order_status || "PENDING",
-  );
+  const hasDispute =
+    order?.has_dispute === true ||
+    order?.is_disputed === true ||
+    order?.has_raised_dispute === true ||
+    order?.status === "DISPUTED" ||
+    order?.order_timeline_stage === "DISPUTED" ||
+    Boolean(order?.dispute) ||
+    (Array.isArray(order?.disputes) && order.disputes.length > 0) ||
+    (Array.isArray(order?.items) &&
+      order.items.some(
+        (item: any) =>
+          item.has_dispute === true ||
+          item.dispute === true ||
+          Boolean(item.dispute) ||
+          item.status === "DISPUTED" ||
+          item.seller_order_status === "DISPUTED",
+      )) ||
+    (Array.isArray(order?.order_items) &&
+      order.order_items.some(
+        (item: any) =>
+          item.has_dispute === true ||
+          item.dispute === true ||
+          Boolean(item.dispute) ||
+          item.status === "DISPUTED" ||
+          item.seller_order_status === "DISPUTED",
+      )) ||
+    (Array.isArray(order?.seller_orders) &&
+      order.seller_orders.some(
+        (so: any) =>
+          so.has_dispute === true ||
+          so.status === "DISPUTED" ||
+          (Array.isArray(so.items) &&
+            so.items.some(
+              (item: any) =>
+                item.has_dispute === true ||
+                item.dispute === true ||
+                Boolean(item.dispute) ||
+                item.status === "DISPUTED" ||
+                item.seller_order_status === "DISPUTED",
+            )) ||
+          (Array.isArray(so.order_items) &&
+            so.order_items.some(
+              (item: any) =>
+                item.has_dispute === true ||
+                item.dispute === true ||
+                Boolean(item.dispute) ||
+                item.status === "DISPUTED" ||
+                item.seller_order_status === "DISPUTED",
+            )),
+      ));
+
+  const displayStatus = hasDispute
+    ? "Disputed"
+    : formatStatusText(
+        order?.status || order?.order_status || "PENDING",
+      );
   const paymentMethod =
     order?.payment_method || (order?.payment ? "Card" : "Card");
   const rawPaymentStatus = (
@@ -436,18 +502,51 @@ export default function AdminOrderDetailsPage() {
    * The current hub tracking status stored on the first seller_order.
    * Values: null | "NOT_SENT" | "IN_TRANSIT" | "RECEIVED_AT_HUB" | "SHIPPED_TO_BUYER" | "DELIVERED"
    */
+  const itemStatusCandidates = extractedItems.flatMap((item: any) => [
+    item?.seller_order_status,
+    item?.status,
+  ]).filter(Boolean) as string[];
+
+  const hubStatusCandidates = [
+    firstSellerOrder?.hub_delivery_status,
+    firstSellerOrder?.hub_status,
+    firstSellerOrder?.tracking_status,
+    firstSellerOrder?.delivery_status,
+    order?.hub_delivery_status,
+    order?.hub_status,
+    order?.tracking_status,
+    order?.status,
+    order?.order_timeline_stage,
+    order?.delivery_status,
+    ...itemStatusCandidates,
+  ].filter(Boolean) as string[];
+
   const currentHubStatus: string | null =
-    firstSellerOrder?.hub_delivery_status ??
-    firstSellerOrder?.hub_status ??
-    firstSellerOrder?.tracking_status ??
-    firstSellerOrder?.delivery_status ??
-    order?.hub_delivery_status ??
-    order?.hub_status ??
-    order?.tracking_status ??
-    (order?.status === "IN_TRANSIT_TO_HUB" ? "IN_TRANSIT" : null) ??
-    (order?.order_timeline_stage === "SHIPPED" || order?.status === "SHIPPED" ? "SHIPPED_TO_BUYER" : null) ??
-    (order?.order_timeline_stage === "DELIVERED" || order?.status === "DELIVERED" ? "DELIVERED" : null) ??
-    null;
+    hubStatusCandidates.reduce<string | null>((mostAdvanced, candidate) => {
+      if (
+        !mostAdvanced ||
+        getHubStatusIndex(candidate) > getHubStatusIndex(mostAdvanced)
+      ) {
+        return candidate;
+      }
+      return mostAdvanced;
+    }, null);
+
+  const hasShippedState = [
+    order?.status,
+    order?.order_timeline_stage,
+    order?.delivery_status,
+    order?.tracking_status,
+    ...itemStatusCandidates,
+  ].some((value) => {
+    const v = String(value ?? "").toUpperCase();
+    return v.includes("SHIP") || v === "OUT_FOR_DELIVERY";
+  });
+
+  const effectiveHubStatus =
+    hasShippedState && getHubStatusIndex(currentHubStatus) < 1
+      ? "SHIPPED_TO_BUYER"
+      : currentHubStatus;
 
   const isAcceptedOrInTransit =
     [
@@ -480,7 +579,10 @@ export default function AdminOrderDetailsPage() {
 
   /** Hub flow is fully complete when DELIVERED */
   const hubComplete =
-    (currentHubStatus ?? "").toUpperCase() === "DELIVERED";
+    (effectiveHubStatus ?? "").toUpperCase() === "DELIVERED" ||
+    (currentHubStatus ?? "").toUpperCase() === "DELIVERED" ||
+    (order?.status ?? "").toUpperCase() === "DELIVERED" ||
+    (order?.order_timeline_stage ?? "").toUpperCase() === "DELIVERED";
 
   /**
    * The "Update Status" button is enabled only when:
@@ -559,7 +661,15 @@ export default function AdminOrderDetailsPage() {
               </div>
               <div className="flex justify-between items-center w-full">
                 <span>Order Status:</span>
-                <span className="px-4 py-2 rounded-2xl text-xs font-MontserratSemiBold bg-[#FFAC06]/12 text-000000/12">
+                <span
+                  className={`px-4 py-2 rounded-2xl text-xs font-MontserratSemiBold ${
+                    displayStatus.toLowerCase() === "disputed"
+                      ? "bg-[#CA0202]/12 text-[#CA0202]"
+                      : displayStatus.toLowerCase() === "delivered"
+                        ? "bg-[#00BE5C]/12 text-[#00BE5C]"
+                        : "bg-[#FFAC06]/12 text-[#FFAC06]"
+                  }`}
+                >
                   {displayStatus}
                 </span>
               </div>
@@ -840,9 +950,7 @@ export default function AdminOrderDetailsPage() {
                 onClick={() => canUpdateStatus && setUpdateStatusOpen(true)}
               >
                 <span>
-                  {(order?.order_timeline_stage || order?.status || "Pending")
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                  {displayStatus}
                 </span>
               </div>
 
@@ -901,7 +1009,7 @@ export default function AdminOrderDetailsPage() {
         onClose={() => setUpdateStatusOpen(false)}
         onConfirm={handleConfirmStatusUpdate}
         loading={updateStatusLoading}
-        currentHubStatus={currentHubStatus}
+        currentHubStatus={effectiveHubStatus}
       />
 
       {/* Admin cancellation modal */}

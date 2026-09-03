@@ -38,7 +38,7 @@ export default function OrderProgressBar({
     normStatus === "PROCESSED" ||
     normStatus === "ACCEPTED" ||
     normStatus === "SENT_FROM_SELLER" ||
-    normStatus === "TO_SHIP" ||
+    normStatus === "RECEIVED_AT_HUB" ||
     normStatus === "SHIPPED_BY_SELLER" ||
     normStatus === "PROCESSING"
   ) {

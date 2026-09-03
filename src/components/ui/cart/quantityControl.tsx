@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addGuestItemToCart,
-  addToCart,
+  setCartItems,
   updateQuantity,
+  CartItem,
 } from "@/store/cart/cartSlice";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
@@ -33,7 +34,9 @@ type QuantitySelectorPropsWithBackend = Omit<
   buttonHeight?: string;
   quantityFont?: string;
   variation_id?: string;
-
+  /** Hard cap from the variation's current stock. When provided, the + button
+   *  is disabled once safeQty reaches this value. */
+  maxStock?: number;
 };
 
 export default function QuantitySelector({
@@ -51,6 +54,7 @@ export default function QuantitySelector({
   buttonWidth = "w-6 md:w-7.5",
   buttonHeight = "h-6 md:h-7.5",
   quantityFont = "text-sm",
+  maxStock,
 }: QuantitySelectorPropsWithBackend) {
   const dispatch = useDispatch();
   const { sendHttpRequest } = useHttp();
@@ -76,14 +80,49 @@ const productDetails = useSelector(
     (s) => s.variation_id === variation_id
   );
 
+  // Resolve the effective stock cap:
+  // 1. explicit maxStock prop (from cart page)
+  // 2. group_variation size stock (from product detail page)
+  // 3. Infinity (no cap)
+  const stockCap: number =
+    maxStock !== undefined
+      ? maxStock
+      : selectedSize?.stock ?? Infinity;
+
 
 
 
  const variationDisplay = productDetails?.variations.find((p)=>p.id === variation_id)
 
-
-
-
+  // Logged-in only: fetch true cart from backend and update Redux
+  const fetchCartFromBackend = async () => {
+    if (!token) return;
+    await sendHttpRequest({
+      requestConfig: {
+        url: "/cart/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res: any) => {
+        const items: CartItem[] = (res?.data?.items || []).map((item: any) => ({
+          id: item.id || item.product_id || "",
+          product_id: item.product_id || item.id || "",
+          variation_id: item.variation_id || null,
+          product_name: item.product_name || item.name || "",
+          price: item.price || item.unit_price || 0,
+          price_at_purchase: item.price_at_purchase || item.price || 0,
+          quantity: item.quantity ?? 1,
+          product_slug: item.product_slug || "",
+          variation_display: (item.variation_display || item.variation_name || "").toLowerCase(),
+          product_image: item.product_image || item.image || "/placeholder.png",
+          checked: typeof item.checked === "boolean" ? item.checked : true,
+        }));
+        dispatch(setCartItems(items));
+      },
+    });
+  };
 
   const addItemToCartBackend = async () => {
     if (!token || !productId) return;
@@ -101,28 +140,9 @@ const productDetails = useSelector(
         userType: "buyer",
         successMessage: "Item added to cart!",
       },
-      successRes: (res) => {
-        console.log("Add to cart response:", res);  
-        const price =
-          selectedSize?.price ||
-          products.find((p) => p.id === productId)?.base_price ||
-          0;
-
-        dispatch(
-          addToCart({
-             product_slug: products.find((p)=>p.id ===productId)?.slug || "",
-            variation_display: variationDisplay?.name,
-            id: productId,
-            variation_id: variation_id || "",
-            quantity: res.data.quantity , // first add is always 1
-            product_image: group_variation?.main_image || "",
-            price,
-            price_at_purchase: price,
-            product_name: products.find((p) => p.id === productId)?.name || "",
-            checked: true,
-            size: selectedSize?.size || "",
-          })
-        );
+      successRes: () => {
+        // Logged-in: refresh from backend — never write locally to avoid doubling
+        fetchCartFromBackend();
       },
     });
   };
@@ -149,6 +169,13 @@ const productDetails = useSelector(
 
   const handleQuantityChange = async (newQty: number) => {
     if (newQty < 0) return;
+
+    // Enforce stock cap when increasing
+    if (newQty > safeQty && newQty > stockCap) {
+      toast.error(`Only ${stockCap} item${stockCap === 1 ? "" : "s"} available in stock`);
+      return;
+    }
+
     if (safeQty === 0 && newQty === 1) {
       setSafeQty(1);
       onChange?.(1, productId);
@@ -183,12 +210,11 @@ const productDetails = useSelector(
       setSafeQty(newQty);
       onChange?.(newQty, productId);
 
-      if (itemExistsInCart) {
-        dispatch(updateQuantity({ variation_id, quantity: newQty }));
-      }
-
       if (token && itemExistsInCart) {
         await updateBackendQuantity(newQty);
+        fetchCartFromBackend();
+      } else if (!token && itemExistsInCart) {
+        dispatch(updateQuantity({ variation_id, quantity: newQty }));
       }
     }
   };
@@ -210,14 +236,7 @@ const productDetails = useSelector(
       </span>
 
       <button
-        disabled={
-          group_variation
-            ? safeQty >=
-              (group_variation.sizes.find(
-                (s) => s.variation_id === variation_id
-              )?.stock || Infinity)
-            : false
-        }
+        disabled={safeQty >= stockCap}
         onClick={() => handleQuantityChange(safeQty + 1)}
         className={`md:w-6 md:h-6 ${buttonWidth} ${buttonHeight} rounded-full flex items-center disabled:opacity-40 disabled:cursor-not-allowed justify-center ${increaseBg} ${increaseText} md:bg-ff715b md:text-ffffff`}
       >

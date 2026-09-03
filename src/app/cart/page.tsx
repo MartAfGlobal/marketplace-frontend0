@@ -78,7 +78,11 @@ export default function CartPage() {
 
   const persistLocalCart = (items: any[]) => {
     try {
-      localStorage.setItem("cart", JSON.stringify(items || []));
+      if (!token) {
+        localStorage.setItem("cart", JSON.stringify(items || []));
+      } else {
+        localStorage.removeItem("cart");
+      }
     } catch (e) {
       console.error("Failed to persist cart to localStorage", e);
     }
@@ -256,7 +260,11 @@ export default function CartPage() {
           console.log("✅ Final merged cart:", merged);
 
           dispatch(setCartItems(merged));
-          persistLocalCart(merged);
+          if (!token) {
+            persistLocalCart(merged);
+          } else {
+            localStorage.removeItem("cart");
+          }
 
           const newSelected: Record<string, boolean> = {};
           merged.forEach((mi) => {
@@ -278,27 +286,34 @@ export default function CartPage() {
   const syncGuestCartAndFetch = async () => {
     if (!token) return;
 
-    // 1️⃣ Sync guest cart if any
+    // 1️⃣ Sync guest cart if any was stored while logged out
     const stored = JSON.parse(localStorage.getItem("cart") || "[]");
+    // CRITICAL: Immediately remove from localStorage so it NEVER syncs again!
+    localStorage.removeItem("cart");
+    setGuestCart([]);
+
     const payload = mapGuestCartForSync(stored);
 
-    if (payload.length > 0) {
-      await sendHttpRequest({
-        requestConfig: {
-          url: "/cart/bulk_add/",
-          method: "POST",
-          token,
-          isAuth: true,
-          userType: "buyer",
-          body: { items: payload },
-        },
-        successRes: () => {
-          // ✅ only clear local cart AFTER backend confirms success
-          localStorage.removeItem("cart");
-          setGuestCart([]);
-          hasSyncedGuestCart.current = true;
-        },
-      });
+    if (payload.length > 0 && !hasSyncedGuestCart.current) {
+      hasSyncedGuestCart.current = true;
+      try {
+        await sendHttpRequest({
+          requestConfig: {
+            url: "/cart/bulk_add/",
+            method: "POST",
+            token,
+            isAuth: true,
+            userType: "buyer",
+            body: { items: payload },
+          },
+          successRes: () => {
+            localStorage.removeItem("cart");
+            setGuestCart([]);
+          },
+        });
+      } catch (err) {
+        console.error("Failed to sync guest cart:", err);
+      }
     }
 
     // 2️⃣ Fetch final backend cart
@@ -776,7 +791,7 @@ export default function CartPage() {
                                 <QuantitySelector
                                   productId={item.id}
                                   variation_id={item.variation_id || item.id}
-                                  quantity={localQty}
+                                  quantity={item.quantity}
                                   onChange={handleQtyChange}
                                 />
                               </motion.div>

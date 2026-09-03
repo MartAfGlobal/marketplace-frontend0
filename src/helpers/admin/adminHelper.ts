@@ -1055,6 +1055,231 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminDisputeStats = (
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/stats/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const statsData = responseData?.data ?? responseData;
+        console.log("Admin dispute stats:", statsData);
+        if (callback) callback(statsData);
+      },
+      errorRes: (err: any) => {
+        console.error("Fetch admin dispute stats error:", err);
+        // Fallback retry without trailing slash
+        sendHttpRequest({
+          requestConfig: {
+            url: `/disputes/admin/stats`,
+            method: "GET",
+            token,
+            isAuth: true,
+            userType: "admin",
+          },
+          successRes: (fallbackRes: any) => {
+            const fbData = fallbackRes?.data ?? fallbackRes;
+            if (callback) callback(fbData);
+          },
+          errorRes: (fallbackErr: any) => {
+            if (errorCallback) errorCallback(fallbackErr);
+          },
+        });
+      },
+    });
+  };
+
+  const fetchAdminDisputesList = (
+    params: { status?: string; page?: number; search?: string } = {},
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+
+    const queryParts: string[] = [];
+    if (params.status && params.status !== "ALL") {
+      queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    }
+    if (params.page) {
+      queryParts.push(`page=${params.page}`);
+    }
+    if (params.search && params.search.trim()) {
+      queryParts.push(`search=${encodeURIComponent(params.search.trim())}`);
+    }
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin${queryString}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData ?? [];
+        console.log("Admin disputes fetched:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin disputes list error:", err);
+        // Fallback retry with trailing slash if needed
+        sendHttpRequest({
+          requestConfig: {
+            url: `/disputes/admin/${queryString}`,
+            method: "GET",
+            token,
+            isAuth: true,
+            userType: "admin",
+          },
+          successRes: (fbRes: any) => {
+            const fbData = fbRes?.data ?? fbRes ?? [];
+            if (callback) callback(fbData);
+          },
+          errorRes: (fbErr: any) => {
+            if (errorCallback) errorCallback(fbErr);
+          },
+        });
+      },
+    });
+  };
+
+  const fetchAdminDisputeDetail = (
+    disputeId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin dispute detail fetched:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Fetch admin dispute detail error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const updateAdminDisputeStatus = (
+    disputeId: string,
+    payload: { status: string; notes?: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/update-status/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin dispute status updated:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        // Fallback: try PATCH /disputes/admin/${disputeId}/
+        sendHttpRequest({
+          requestConfig: {
+            url: `/disputes/admin/${disputeId}/`,
+            method: "PATCH",
+            token,
+            isAuth: true,
+            userType: "admin",
+            body: payload,
+          },
+          successRes: (fbRes: any) => {
+            if (callback) callback(fbRes?.data ?? fbRes);
+          },
+          errorRes: (fbErr: any) => {
+            if (errorCallback) errorCallback(fbErr);
+          },
+        });
+      },
+    });
+  };
+
+  const processAdminDisputeRefund = (
+    disputeId: string,
+    payload: { amount?: number; is_partial?: boolean; notes?: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/refund/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin dispute refund processed:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin dispute refund error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const rejectAdminDispute = (
+    disputeId: string,
+    payload: { rejection_notes?: string; reason?: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/reject/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin dispute rejected:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin dispute reject error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
 
   const fetchOrdersSummary = (
     range: string = "this_month",
@@ -1171,6 +1396,12 @@ export const AdminDetails = (id?: string) => {
     fetchCancellationRequests,
     approveCancellationRequest,
     rejectCancellationRequest,
+    fetchAdminDisputeStats,
+    fetchAdminDisputesList,
+    fetchAdminDisputeDetail,
+    updateAdminDisputeStatus,
+    processAdminDisputeRefund,
+    rejectAdminDispute,
     fetchOrdersSummary,
     fetchAdminOrderDetail,
     fetchOrderTracking,

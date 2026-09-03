@@ -46,7 +46,7 @@ export default function Orders() {
   const router = useRouter();
 
   const totalToShip = orders.filter(
-    (order: OrderItem) => order.status === "TO_SHIP",
+    (order: OrderItem) => order.status === "RECEIVED_AT_HUB",
   ).length;
   const totalShipped = orders.filter(
     (order: OrderItem) => order.status === "SHIPPED",
@@ -60,6 +60,30 @@ export default function Orders() {
   const totalCancelled = orders.filter(
     (order: OrderItem) => order.status === "Cancelled",
   ).length;
+
+  const isAwaitingPayment = (order: OrderItem) =>
+    [
+      "AWAITING_PAYMENT",
+      "Awaiting Payment",
+      "awaiting_payment",
+      "PENDING_PAYMENT",
+    ].includes(order.status);
+
+  // Filter for actual placed orders (excluding unpaid awaiting payment sessions)
+  const placedOrders = orders.filter(
+    (order: OrderItem) => !isAwaitingPayment(order),
+  );
+
+  // Sort newest first by creation date
+  const sortedOrders = (placedOrders.length > 0 ? placedOrders : orders)
+    .slice()
+    .sort((a: any, b: any) => {
+      const dateA = new Date(a.created_at || a.updated_at || 0).getTime();
+      const dateB = new Date(b.created_at || b.updated_at || 0).getTime();
+      return dateB - dateA;
+    });
+
+  const lastOrders = sortedOrders.slice(0, 2);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -89,6 +113,13 @@ export default function Orders() {
       total: totalDelivered,
     },
   ];
+
+  useEffect(() => {
+    if (token) {
+      fetchOrders();
+    }
+  }, [token]);
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -203,7 +234,7 @@ export default function Orders() {
           </div>
         ))}
       </div>
-      {orders.length > 0 ? (
+      {lastOrders.length > 0 ? (
         <div className="w-full">
           <div className="flex justify-between">
             <h1 className="text-sm font-MontserratSemiBold leading-6.5 text-000000 opacity-32">
@@ -219,7 +250,7 @@ export default function Orders() {
             )} */}
           </div>
           <div className="w-full space-y-c24 mt-c32">
-            {orders.slice(-2).map((item: OrderItem) => {
+            {lastOrders.map((item: OrderItem) => {
               const orderItems = item.order_items || (item as any).items || [];
               const hasOrderItems = orderItems.length > 0;
               const firstItem = orderItems[0] as any;
@@ -261,7 +292,7 @@ export default function Orders() {
                             : "text-161616"
                       }`}
                     >
-                      {item.status === "TO_SHIP"
+                      {item.status === "RECEIVED_AT_HUB"
                         ? "Received at Central hub"
                         : item.status === "SHIPPED"
                           ? "Order on its way"
@@ -271,7 +302,7 @@ export default function Orders() {
                               ? "Delivered"
                               : item.status === "AWAITING_PAYMENT"
                                 ? "Awaiting payment"
-                                : item.status === "PENDING"
+                                : item.status === "PENDING" || item.status==="ACCEPTED" || item.status === "IN_TRANSIT_TO_HUB"
                                   ? "Order is being processed"
                                   : item.status === "CANCELLED"
                                     ? "Cancelled"
@@ -336,7 +367,7 @@ export default function Orders() {
                       </>
                     )}
 
-                    {item.status === "TO_SHIP" && (
+                    {item.status === "RECEIVED_AT_HUB" && (
                       <>
                         {/* <Button
                           onClick={() => handleEditAddress(item.id)}
@@ -355,7 +386,7 @@ export default function Orders() {
                         </Button>
                       </>
                     )}
-                    {item.status === "PENDING" && (
+                    {item.status === "PENDING" && item.can_cancel && (
                       <>
                         {/* <Button
                           onClick={() => handleEditAddress(item.id)}

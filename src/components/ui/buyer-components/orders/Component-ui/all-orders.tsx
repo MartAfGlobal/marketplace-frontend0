@@ -294,7 +294,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
-                      {item.status === "TO_SHIP" && (
+                      {item.status === "RECEIVED_AT_HUB" && (
                         <>
                           <div className="w-full"></div>
                           <Button variant="secondary" onClick={() => handleTrackOrder(item.id)}>
@@ -302,7 +302,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
-                      {item.status === "PENDING" && (
+                      {item.status === "PENDING" && item.can_cancel && (
                         <>
                           <Button onClick={() => handleEditAddress(item.id)}>Edit address</Button>
                           <Button
@@ -349,8 +349,8 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                   : "text-161616"
                             }`}
                           >
-                            {item.status === "TO_SHIP"
-                              ? "Received at Central hub"
+                            {item.status === "RECEIVED_AT_HUB"
+                              ? "To ship"
                               : item.status === "SHIPPED" || item.status === "SHIPPED_TO_BUYER"
                                 ? "Order on its way"
                                 : item.status === "DELIVERED"
@@ -359,7 +359,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                     ? "Delivered"
                                     : item.status === "AWAITING_PAYMENT"
                                       ? "Awaiting payment"
-                                      : item.status === "PENDING"
+                                      : item.status === "PENDING" || item.status === "ACCEPTED" || item.status === "IN_TRANSIT_TO_HUB"  
                                         ? "Order is being processed"
                                         : item.status === "CANCELLED"
                                           ? "Cancelled"
@@ -587,7 +587,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                             </>
                           )}
 
-                          {item.status === "TO_SHIP"   && (
+                          {item.status === "RECEIVED_AT_HUB"   && (
                             <>
                               <Button
                                 variant="secondary"
@@ -599,13 +599,13 @@ export default function Orders({ searchTerm }: OrdersProps) {
                             </>
                           )}
 
-                          {item.status === "PENDING" && (
+                          {item.status === "PENDING" && item.can_cancel && (
                             <>
-                              <Button
+                              {/* <Button
                                 onClick={() => handleEditAddress(item.id)}
                               >
                                 Edit address
-                              </Button>
+                              </Button> */}
                               <Button
                                 variant="secondary"
                                 onClick={() => {

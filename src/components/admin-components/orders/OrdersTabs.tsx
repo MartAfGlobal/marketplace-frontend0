@@ -5,6 +5,7 @@ export type OrdersTabKey =
   | "shipped"
   | "delivered"
   | "completed"
+  | "disputed"
   | "cancelled"
   | "cancel_request";
 
@@ -20,6 +21,7 @@ const TABS: Tab[] = [
   { key: "shipped", label: "Shipped" },
   { key: "delivered", label: "Delivered" },
   { key: "completed", label: "Completed" },
+  { key: "disputed", label: "Disputed" },
   { key: "cancelled", label: "Cancelled" },
   { key: "cancel_request", label: "Cancel Request" },
 ];

@@ -207,7 +207,7 @@ export default function AdminLayout({
         },
         {
           name: "Refund & Dispute",
-          path: "/dashboard/admin/orders?type=refund-dispute",
+          path: "/dashboard/admin/orders/refund-dispute",
           icon: Categories,
           activeIcon: ActiveCategories,
         },
@@ -319,14 +319,17 @@ export default function AdminLayout({
                         ) {
                           if (sub.path.includes("all-orders")) {
                             isSubActive =
-                              pathname === "/dashboard/admin/orders"
+                              !pathname.startsWith(
+                                "/dashboard/admin/orders/refund-dispute"
+                              ) &&
+                              (pathname === "/dashboard/admin/orders"
                                 ? queryType === "all-orders" || !queryType
-                                : true;
+                                : !pathname.includes("refund-dispute"));
                           } else if (sub.path.includes("refund-dispute")) {
                             isSubActive =
-                              pathname === "/dashboard/admin/orders"
-                                ? queryType === "refund-dispute"
-                                : false;
+                              pathname.startsWith(
+                                "/dashboard/admin/orders/refund-dispute"
+                              ) || queryType === "refund-dispute";
                           }
                         } else if (
                           pathname.startsWith("/dashboard/admin/products") ||

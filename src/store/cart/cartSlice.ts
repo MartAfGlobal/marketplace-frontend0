@@ -19,7 +19,8 @@ export interface CartItem {
   formatted_subtotal?: string;
   variation_id?: string | null;
   variation_display?: string;
-
+  /** Available stock for the variation — used to cap the quantity selector */
+  stock?: number;
   checked: boolean;
 }
 
@@ -43,16 +44,21 @@ export interface GuestCartItem {
 
 const loadCartFromLocalStorage = (): CartItem[] => {
   if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("cart");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as CartItem[];
-        return parsed.map((item) => ({
-          ...item,
-          quantity: Number(item.quantity || 0),
-        }));
-      } catch (e) {
-        console.error("Failed to parse cart from localStorage", e);
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("accessToken");
+    // If logged in, cart is managed on the backend, not in localStorage
+    if (!token) {
+      const stored = localStorage.getItem("cart");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as CartItem[];
+          return parsed.map((item) => ({
+            ...item,
+            quantity: Number(item.quantity || 0),
+          }));
+        } catch (e) {
+          console.error("Failed to parse cart from localStorage", e);
+        }
       }
     }
   }
@@ -61,7 +67,15 @@ const loadCartFromLocalStorage = (): CartItem[] => {
 
 const saveCartToLocalStorage = (items: CartItem[]) => {
   if (typeof window !== "undefined") {
-    localStorage.setItem("cart", JSON.stringify(items));
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("accessToken");
+    // ONLY save to localStorage if user is a guest (logged out).
+    // When logged in, cart is on the backend database.
+    if (!token) {
+      localStorage.setItem("cart", JSON.stringify(items));
+    } else {
+      localStorage.removeItem("cart");
+    }
   }
 };
 

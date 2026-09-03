@@ -371,7 +371,7 @@ export default function SellerProductDetailsPage() {
             <ProductInfo productDetails={productDetails} published={published} />
           </div>
 
-          <div className="lg:flex-1 min-w-0 mb-c32">
+          <div className="lg:flex-1 min-w-0 mb-c32 ">
             <ProductActions
               published={published}
               productDetails={productDetails}

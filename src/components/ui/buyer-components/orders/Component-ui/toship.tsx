@@ -46,7 +46,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
   const router = useRouter();
 
   const toShip = orders.filter(
-    (order: OrderItem) => order.status === "TO_SHIP",
+    (order: OrderItem) => order.status === "RECEIVED_AT_HUB",
   );
 
   const filteredOrders = toShip.filter((order: OrderItem) => {
