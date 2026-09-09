@@ -615,7 +615,7 @@ export default function OrderDetailsPage() {
       <ResultModal
         isOpen={success}
         title="Submitted successfully"
-        message="Welcome to the team!"
+        message="Recieved your complain!"
         discRescription="You will receive an email with further instructions based on our return policy and evidence provided"
         onConfirm={handleConfirm}
         buttenText="Back to shopping"

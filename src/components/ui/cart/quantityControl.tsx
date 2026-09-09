@@ -138,9 +138,10 @@ const productDetails = useSelector(
         token,
         isAuth: true,
         userType: "buyer",
-        successMessage: "Item added to cart!",
+        // No successMessage here — use toast directly to avoid mobile result modal
       },
       successRes: () => {
+        toast.success("Item added to cart!");
         // Logged-in: refresh from backend — never write locally to avoid doubling
         fetchCartFromBackend();
       },
@@ -161,9 +162,11 @@ const productDetails = useSelector(
         token,
         isAuth: true,
         userType: "buyer",
-        successMessage: "Quantity updated successfully!",
+        // No successMessage here — use toast directly to avoid mobile result modal
       },
-      successRes: () => {},
+      successRes: () => {
+        toast.success("Quantity updated!");
+      },
     });
   };
 

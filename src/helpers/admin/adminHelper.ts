@@ -1688,6 +1688,108 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const processAdminRefund = (
+    refundId: string,
+    payload: { admin_notes?: string } = {},
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !refundId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/refunds/admin/${refundId}/process`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {
+          admin_notes: payload.admin_notes || "Reviewed and approved.",
+        },
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin refund processed:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Process admin refund error:", err);
+        sendHttpRequest({
+          requestConfig: {
+            url: `/refunds/admin/${refundId}/process/`,
+            method: "POST",
+            token,
+            isAuth: true,
+            userType: "admin",
+            body: {
+              admin_notes: payload.admin_notes || "Reviewed and approved.",
+            },
+          },
+          successRes: (fbRes: any) => {
+            if (callback) callback(fbRes?.data ?? fbRes);
+          },
+          errorRes: (fbErr: any) => {
+            if (errorCallback) errorCallback(fbErr || err);
+          },
+        });
+      },
+    });
+  };
+
+  const rejectAdminRefund = (
+    refundId: string,
+    payload: { admin_notes?: string; reason?: string } = {},
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !refundId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/refunds/admin/${refundId}/reject`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {
+          admin_notes:
+            payload.admin_notes ||
+            payload.reason ||
+            "Not eligible -- past the return window.",
+        },
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin refund rejected:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Reject admin refund error:", err);
+        sendHttpRequest({
+          requestConfig: {
+            url: `/refunds/admin/${refundId}/reject/`,
+            method: "POST",
+            token,
+            isAuth: true,
+            userType: "admin",
+            body: {
+              admin_notes:
+                payload.admin_notes ||
+                payload.reason ||
+                "Not eligible -- past the return window.",
+            },
+          },
+          successRes: (fbRes: any) => {
+            if (callback) callback(fbRes?.data ?? fbRes);
+          },
+          errorRes: (fbErr: any) => {
+            if (errorCallback) errorCallback(fbErr || err);
+          },
+        });
+      },
+    });
+  };
+
   return {
     fetchOrdersList,
     fetchCancellationRequests,
@@ -1704,6 +1806,8 @@ export const AdminDetails = (id?: string) => {
     rejectAdminDispute,
     markAdminReturnReceived,
     createAdminRefund,
+    processAdminRefund,
+    rejectAdminRefund,
     fetchOrdersSummary,
     fetchAdminOrderDetail,
     fetchOrderTracking,

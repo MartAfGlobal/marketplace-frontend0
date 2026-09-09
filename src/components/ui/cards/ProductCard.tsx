@@ -289,7 +289,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="flex items-end justify-between p-4 h-[104px]">
           <div className="text-sm">
             <p className="font-MontserratMedium text-[12px] text-[#161616]">
-              Free shipping
+              {product.name || "Product name"}
             </p>
 
             <div className="flex items-center">

@@ -74,6 +74,8 @@ export default function AdminReturnDetailsPage() {
     processAdminDisputeRefund,
     approveAdminDispute,
     createAdminRefund,
+    processAdminRefund,
+    rejectAdminRefund,
   } = AdminDetails();
 
   const checkPendingRefundStatus = (disputeObj: any) => {
@@ -560,119 +562,82 @@ export default function AdminReturnDetailsPage() {
         : orderItemPrice
   );
 
-  const handleConfirmFullRefund = () => {
+  const handleApproveRefund = (adminNotes?: string) => {
     setActionLoading(true);
-    const payload = {
-      amount: orderRefundAmount,
-      is_partial: false,
-      notes: "Full refund requested by admin",
-    };
+    const targetId = String(dispute?.id || rawId || "");
 
-    processAdminDisputeRefund(
-      rawId,
-      payload,
+    processAdminRefund(
+      targetId,
+      { admin_notes: adminNotes || "Reviewed and approved." },
       () => {
         setActionLoading(false);
         setConfirmRefundOpen(false);
-        setResultModalState({
-          isOpen: true,
-          title: "Refund Request Submitted",
-          message: "The full refund request has been successfully submitted.",
-          result: "success",
-        });
-        loadDisputeData();
-      },
-      () => {
-        approveAdminDispute(
-          rawId,
-          {
-            resolution_type: "FULL_REFUND",
-            approved_amount: orderRefundAmount,
-            admin_notes: "Full refund requested by admin",
-          },
-          () => {
-            setActionLoading(false);
-            setConfirmRefundOpen(false);
-            setResultModalState({
-              isOpen: true,
-              title: "Refund Request Submitted",
-              message: "The full refund request has been successfully submitted.",
-              result: "success",
-            });
-            loadDisputeData();
-          },
-          (err: any) => {
-            setActionLoading(false);
-            const msg =
-              err?.message ||
-              err?.data?.message ||
-              err?.data?.detail ||
-              "Failed to submit refund request.";
-            toast.error(msg);
-          }
-        );
-      }
-    );
-  };
-
-  const handleConfirmPartialRefund = (data: {
-    includeDelivery: boolean;
-    reason: string;
-    moreInfo: string;
-    deductionAmount: string;
-    refundAmount: string;
-  }) => {
-    setActionLoading(true);
-
-    const paymentId =
-      dispute?.payment_id ||
-      (typeof dispute?.payment === "object" ? dispute?.payment?.id : dispute?.payment) ||
-      dispute?.payment_reference ||
-      dispute?.seller_order_id ||
-      dispute?.id ||
-      rawId ||
-      "";
-
-    const formattedDeduction = data.deductionAmount
-      ? Number(data.deductionAmount).toFixed(2)
-      : "0.00";
-
-    const payload = {
-      payment_id: String(paymentId),
-      refund_type: "PARTIAL_ORDER",
-      reason: data.reason || "Partial refund request",
-      deduction_amount: formattedDeduction,
-      include_shipping_fee: Boolean(data.includeDelivery),
-      admin_notes: data.moreInfo?.trim() || undefined,
-    };
-
-    const targetId = String(dispute?.id || rawId || "");
-
-    createAdminRefund(
-      targetId,
-      payload,
-      () => {
-        setActionLoading(false);
         setPartialRefundOpen(false);
         setResultModalState({
           isOpen: true,
-          title: "Partial Refund Submitted",
-          message: "The partial refund request has been successfully submitted.",
+          title: "Refund Approved & Processed",
+          message: "The refund has been approved and processed via Paystack.",
           result: "success",
         });
         loadDisputeData();
       },
       (err: any) => {
         setActionLoading(false);
-        const msg =
-          err?.response?.data?.message ||
-          err?.response?.data?.detail ||
-          err?.response?.data?.error ||
-          err?.data?.message ||
-          err?.data?.detail ||
-          err?.message ||
-          "Failed to submit partial refund request.";
-        toast.error(msg);
+        if (err?.status === 403 || err?.response?.status === 403) {
+          toast.error(
+            "Permission denied: Only super-admins can process/approve refunds."
+          );
+        } else {
+          const msg =
+            err?.response?.data?.message ||
+            err?.response?.data?.detail ||
+            err?.response?.data?.error ||
+            err?.data?.message ||
+            err?.data?.detail ||
+            err?.message ||
+            "Failed to process refund via Paystack.";
+          toast.error(msg);
+        }
+      }
+    );
+  };
+
+  const handleRejectRefund = (adminNotes?: string) => {
+    setActionLoading(true);
+    const targetId = String(dispute?.id || rawId || "");
+
+    rejectAdminRefund(
+      targetId,
+      { admin_notes: adminNotes || "Not eligible -- past the return window." },
+      () => {
+        setActionLoading(false);
+        setConfirmRefundOpen(false);
+        setPartialRefundOpen(false);
+        setResultModalState({
+          isOpen: true,
+          title: "Refund Request Rejected",
+          message: "The refund request status has been updated to REJECTED.",
+          result: "success",
+        });
+        loadDisputeData();
+      },
+      (err: any) => {
+        setActionLoading(false);
+        if (err?.status === 403 || err?.response?.status === 403) {
+          toast.error(
+            "Permission denied: Only super-admins can reject refund requests."
+          );
+        } else {
+          const msg =
+            err?.response?.data?.message ||
+            err?.response?.data?.detail ||
+            err?.response?.data?.error ||
+            err?.data?.message ||
+            err?.data?.detail ||
+            err?.message ||
+            "Failed to reject refund request.";
+          toast.error(msg);
+        }
       }
     );
   };
@@ -881,11 +846,11 @@ export default function AdminReturnDetailsPage() {
             moreDetails={moreDetails}
             evidenceImages={evidenceImages}
             showRefundActions={showRefundActions}
-            onPartialRefund={
-              showRefundActions ? () => setPartialRefundOpen(true) : undefined
-            }
-            onRequestRefund={
+            onApproveRefund={
               showRefundActions ? () => setConfirmRefundOpen(true) : undefined
+            }
+            onRejectRefund={
+              showRefundActions ? () => handleRejectRefund() : undefined
             }
             onApprove={
               canUpdateStatus && !showRefundActions
@@ -954,7 +919,7 @@ export default function AdminReturnDetailsPage() {
         deliveryFee={orderDeliveryFee}
         orderTotal={orderTotalAmount}
         refundAmount={orderRefundAmount}
-        onConfirm={handleConfirmFullRefund}
+        onConfirm={() => handleApproveRefund("Reviewed and approved.")}
         loading={actionLoading}
       />
 
@@ -966,7 +931,7 @@ export default function AdminReturnDetailsPage() {
         itemPrice={orderItemPrice}
         deliveryFee={orderDeliveryFee}
         orderTotal={orderTotalAmount}
-        onConfirm={handleConfirmPartialRefund}
+        onConfirm={(data) => handleApproveRefund(data.moreInfo || "Reviewed and approved.")}
         loading={actionLoading}
       />
 

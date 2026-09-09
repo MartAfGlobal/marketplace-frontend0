@@ -19,6 +19,8 @@ export interface ReturnRequestDetailsProps {
   evidenceImages: (string | { url?: string; image?: string; file_url?: string })[];
 
   showRefundActions?: boolean;
+  onApproveRefund?: () => void;
+  onRejectRefund?: () => void;
   onPartialRefund?: () => void;
   onRequestRefund?: () => void;
   onApprove?: () => void;
@@ -36,6 +38,8 @@ export default function ReturnRequestDetails({
   moreDetails,
   evidenceImages = [],
   showRefundActions = false,
+  onApproveRefund,
+  onRejectRefund,
   onPartialRefund,
   onRequestRefund,
   onApprove,
@@ -43,6 +47,9 @@ export default function ReturnRequestDetails({
   loading = false,
 }: ReturnRequestDetailsProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const handleApproveRefundClick = onApproveRefund || onRequestRefund || onPartialRefund;
+  const handleRejectRefundClick = onRejectRefund || onReject;
 
   const getImageUrl = (item: any): string => {
     if (typeof item === "string") return item;
@@ -183,41 +190,29 @@ export default function ReturnRequestDetails({
       <div className="flex flex-wrap items-center justify-end gap-6 pt-6">
         {showRefundActions ? (
           <>
-            {onPartialRefund && (
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={loading}
-                onClick={onPartialRefund}
-                className="w-[146px]"
-              >
-                Partial Refund
-              </Button>
-            )}
-
-            {onRequestRefund && (
+            {handleApproveRefundClick && (
               <Button
                 type="button"
                 variant="primary"
                 disabled={loading}
-                onClick={onRequestRefund}
-                className="w-[146px]"
+                onClick={handleApproveRefundClick}
+                className="w-[150px] bg-[#2D7565] text-white hover:bg-[#235d50]"
               >
-                Request Refund
+                Approve Refund
               </Button>
             )}
 
-            {/* {onReject && (
+            {handleRejectRefundClick && (
               <Button
                 type="button"
                 variant="danger"
                 disabled={loading}
-                onClick={onReject}
-                className="w-[146px]"
+                onClick={handleRejectRefundClick}
+                className="w-[150px]"
               >
-                Reject
+                Reject Refund
               </Button>
-            )} */}
+            )}
           </>
         ) : (
           <>

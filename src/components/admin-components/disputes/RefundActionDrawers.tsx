@@ -617,7 +617,7 @@ export function ConfirmRefundRequestDrawer({
         <div>
           <div>
             <h2 className="text-C18 font-MontserratMedium text-center">
-              Confirm Refund Request
+              Approve Refund
             </h2>
             <button
               onClick={onClose}
@@ -628,8 +628,7 @@ export function ConfirmRefundRequestDrawer({
           </div>
 
           <p className="text-xs font-MontserratMedium text-center mt-3">
-            Confirm the refund amount and submit this full refund request for
-            approval.
+            Confirm the refund details and approve this refund request.
           </p>
         </div>
       </div>
@@ -670,9 +669,9 @@ export function ConfirmRefundRequestDrawer({
         <Button
           onClick={onConfirm}
           disabled={loading}
-          className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          className=""
         >
-          {loading ? <LoadingSpinner size={16} color="border-white" /> : "Request Refund"}
+          {loading ? <LoadingSpinner size={16} color="border-white" /> : "Approve Refund"}
         </Button>
       </div>
     </DrawerWrapper>
