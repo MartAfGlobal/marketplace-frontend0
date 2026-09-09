@@ -12,7 +12,6 @@ import {
   XCircle,
   AlertTriangle,
   Eye,
-  ExternalLink,
 } from "lucide-react";
 import type { DisputeTableRow } from "@/types/admin";
 
@@ -64,7 +63,7 @@ export const renderDisputeStatus = (status: string) => {
   return (
     <span className="inline-flex items-center gap-1 text-[#FFAC06] bg-[#FFAC06]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium whitespace-nowrap">
       <Clock3 size={13} />
-      Requested
+      {s === "PENDING" ? "Pending" : "Requested"}
     </span>
   );
 };
@@ -74,6 +73,7 @@ interface DisputesTableProps {
   selectedIds: string[];
   activeRowId: string | null;
   loading: boolean;
+  showCaseId?: boolean;
   onSelectAll: () => void;
   onToggleRow: (id: string) => void;
   onSetActiveRowId: (id: string | null) => void;
@@ -85,6 +85,7 @@ export default function DisputesTable({
   selectedIds,
   activeRowId,
   loading,
+  showCaseId = true,
   onSelectAll,
   onToggleRow,
   onSetActiveRowId,
@@ -96,17 +97,22 @@ export default function DisputesTable({
     if (onViewDetails) {
       onViewDetails(row);
     } else {
-      router.push(`/dashboard/admin/orders/refund-dispute/${row.id}`);
+      const isRefund = Boolean(row.refundType);
+      router.push(
+        `/dashboard/admin/orders/refund-dispute/${row.id}${
+          isRefund ? "?type=refund" : "?type=dispute"
+        }`
+      );
     }
   };
 
   console.log("rows", rows);
   return (
-    <div className="overflow-x-auto min-h-[280px]">
+    <div className="overflow-x-auto min-h-[250px] box-border">
       <table className="w-full text-left">
         <thead>
           <tr className="h-10.5 bg-[#947fff] text-white text-nowrap">
-            <th className="font-MontserratNormal text-sm text-center w-10 p-3">
+            {/* <th className=" text-xs font-MontserratSemiBold text-center w-10 p-3">
               <button
                 type="button"
                 onClick={(e) => {
@@ -137,30 +143,32 @@ export default function DisputesTable({
                   <path d="M5 12.5 9.5 17 19 7.5" />
                 </svg>
               </button>
-            </th>
+            </th> */}
 
-            <th className="p-3 font-MontserratNormal text-sm">Case ID</th>
-            <th className="p-3 font-MontserratNormal text-sm">Order ID</th>
-            <th className="p-3 font-MontserratNormal text-sm min-w-[140px]">
+            {showCaseId && (
+              <th className="p-3 font-MontserratMedium text-xs leading-[1%]">Case ID</th>
+            )}
+            <th className="p-3 font-MontserratMedium text-xs leading-[1%]">Order ID</th>
+            <th className="p-3 font-MontserratMedium text-xs leading-[1%] ">
               Buyer
             </th>
-            <th className="p-3 font-MontserratNormal text-sm min-w-[124px]">
+            <th className="p-3 font-MontserratMedium text-xs leading-[1%] ">
               Vendor
             </th>
             
-            <th className="p-3 font-MontserratNormal text-sm min-w-[60px]">
+            <th className="p-3 font-MontserratMedium text-xs leading-[1%]  text-center">
               Qty
             </th>
-            <th className="p-3 font-MontserratNormal text-sm">Amount</th>
-            <th className="p-3 font-MontserratNormal text-sm">Status</th>
-            <th className="p-3 font-MontserratNormal text-sm">Date</th>
-            <th className="p-3 font-MontserratNormal text-sm text-center w-10"></th>
+            <th className="p-3 font-MontserratMedium text-xs leading-[1%]">Amount</th>
+            <th className="p-3 font-MontserratMedium text-xs leading-[1%]">Status</th>
+            <th className="p-3 font-MontserratMedium text-xs leading-[1%]">Date</th>
+            <th className="p-3 font-MontserratMedium text-xs leading-[1%] text-center w-10"></th>
           </tr>
         </thead>
-        <tbody className="text-sm text-000000/68 font-MontserratNormal">
+        <tbody className="text-xs text-000000/68 font-MontserratMedium">
           {loading ? (
             <tr>
-              <td colSpan={11} className="py-16 text-center">
+              <td colSpan={showCaseId ? 10 : 9} className="py-12 text-center">
                 <div className="flex justify-center items-center">
                   <LoadingSpinner size={32} color="border-[#ff715b]" />
                 </div>
@@ -171,19 +179,22 @@ export default function DisputesTable({
               <tr
                 key={row.id}
                 onClick={() => handleRowClick(row)}
-                className="h-16 hover:bg-[#FAF8F5] duration-300 border-b border-000000/4 cursor-pointer"
+                className="hover:bg-gray-50/50 transition-colors h-14 border-b border-000000/4 cursor-pointer"
               >
-                <td
-                  className="text-center w-10 p-3"
+                {/* <td
+                  className="py-3 px-4 font-MontserratMedium"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
                     type="button"
-                    onClick={() => onToggleRow(row.id)}
-                    className={`mx-auto flex h-4 w-4 items-center justify-center border duration-200 ${
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleRow(row.id);
+                    }}
+                    className={`group flex h-4 w-4 mx-auto items-center justify-center border transition-all duration-200 cursor-pointer ${
                       selectedIds.includes(row.id)
                         ? "border-[#ff715b] bg-[#ff715b]"
-                        : "border-[#605d5b] hover:border-[#ff715b]"
+                        : "border-[#161616] hover:border-[#ff715b]"
                     }`}
                   >
                     <svg
@@ -196,54 +207,70 @@ export default function DisputesTable({
                       className={`h-2.5 w-2.5 ${
                         selectedIds.includes(row.id)
                           ? "text-white"
-                          : "text-[#ff715b] opacity-0 hover:opacity-100 hover:text-white"
+                          : "text-[#ff715b] opacity-0 group-hover:opacity-100 group-hover:text-white"
                       }`}
                     >
                       <path d="M5 12.5 9.5 17 19 7.5" />
                     </svg>
                   </button>
-                </td>
+                </td> */}
 
-                <td className="p-3 text-xs font-MontserratMedium max-w-25 truncate text-[#161616] whitespace-nowrap">
-                  {row.disputeNumber || `#${row.id.slice(0, 8)}`}
+                {showCaseId && (
+                  <td className="py-3 px-4">
+                    <span
+                      className="block max-w-[100px] truncate font-MontserratMedium"
+                      title={row.disputeNumber || `#${row.id.slice(0, 8)}`}
+                    >
+                      {row.disputeNumber || `#${row.id.slice(0, 8)}`}
+                    </span>
+                  </td>
+                )}
+                <td className="py-3 px-4">
+                  <span
+                    className="block max-w-[100px] truncate text-left font-MontserratMedium cursor-pointer"
+                    title={row.orderId}
+                  >
+                    {row.orderId}
+                  </span>
                 </td>
-                <td className="p-3 text-xs text-[#6A0DAD] max-w-25 truncate font-MontserratMedium whitespace-nowrap">
-                  {row.orderId}
+                <td className="py-3 px-4">
+                  <span className="block max-w-[140px] truncate" title={row.buyer}>
+                    {row.buyer}
+                  </span>
                 </td>
-                <td className="p-3 text-xs font-MontserratMedium max-w-[140px] truncate text-[#161616]">
-                  <div>{row.buyer}</div>
-                  {row.buyerEmail && (
-                    <div className="text-[11px] text-gray-400 font-MontserratNormal truncate max-w-[150px]">
-                      {row.buyerEmail}
-                    </div>
-                  )}
-                </td>
-                <td className="p-3 text-xs font-MontserratMedium max-w-[140px] truncate text-[#161616]">
-                  <div>{row.vendor}</div>
-                  {row.vendorEmail && (
-                    <div className="text-[11px] text-gray-400 font-MontserratNormal truncate max-w-[140px]">
-                      {row.vendorEmail}
-                    </div>
-                  )}
+                <td className="py-3 px-4">
+                  <span className="block max-w-[124px] truncate" title={row.vendor}>
+                    {row.vendor}
+                  </span>
                 </td>
               
-                <td className="p-3 text-xs font-MontserratMedium text-center text-[#161616]">
-                  {row.quantity != null ? row.quantity : row.raw?.affected_quantity ?? "—"}
+                <td className="py-3 px-4 text-center">
+                  <span className="block max-w-[50px] truncate">
+                    {row.quantity != null ? row.quantity : row.raw?.affected_quantity ?? "—"}
+                  </span>
                 </td>
-                <td className="p-3 text-xs font-MontserratSemiBold  max-w-25 truncate text-[#161616] whitespace-nowrap">
-                  {row.amount}
+                <td className="py-3 px-4">
+                  <span className="block max-w-[100px] truncate" title={row.amount}>
+                    {row.amount}
+                  </span>
                 </td>
-                <td className="p-3  max-w-25 truncate">{renderDisputeStatus(row.status)}</td>
-                <td className="p-3 text-xs whitespace-nowrap  max-w-25 truncate">{row.date}</td>
+                <td className="py-3 px-4">
+                  {renderDisputeStatus(row.status)}
+                </td>
+                <td className="py-3 px-4">
+                  <span className="block max-w-[90px] truncate" title={row.date}>
+                    {row.date}
+                  </span>
+                </td>
                 <td
-                  className="p-3 text-center relative"
+                  className="py-3 px-4 text-center relative"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
                     onClick={() =>
                       onSetActiveRowId(activeRowId === row.id ? null : row.id)
                     }
-                    className="p-1 rounded hover:bg-gray-100 text-gray-500 transition-colors"
+                    className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
                   >
                     <svg
                       width="16"
@@ -273,30 +300,11 @@ export default function DisputesTable({
                             onSetActiveRowId(null);
                             handleRowClick(row);
                           }}
-                          className="w-full flex items-center  gap-2 hover:text-ff715b px-4 py-2 hover:bg-gray-50 text-[#161616] transition-colors"
+                          className="w-full flex items-center gap-2 hover:text-ff715b px-4 py-2 hover:bg-gray-50 text-000000/68 transition-colors"
                         >
-                          <Eye size={14} className=" " />
-                          <span className="">View Details</span>
+                          <Eye size={14} />
+                          <span>View Details</span>
                         </button>
-                        {/* {row.orderId && row.orderId !== "—" && (
-                          <button
-                            onClick={() => {
-                              onSetActiveRowId(null);
-                              router.push(
-                                `/dashboard/admin/orders/${encodeURIComponent(
-                                  row.orderId,
-                                )}`,
-                              );
-                            }}
-                            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[#161616] transition-colors"
-                          >
-                            <ExternalLink
-                              size={14}
-                              className="text-[#6A0DAD]"
-                            />
-                            <span>View Order</span>
-                          </button>
-                        )} */}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -305,7 +313,7 @@ export default function DisputesTable({
             ))
           ) : (
             <tr>
-              <td colSpan={11} className="py-16 text-center text-gray-400">
+              <td colSpan={showCaseId ? 10 : 9} className="py-16 text-center text-gray-400">
                 <div className="flex flex-col items-center justify-center gap-3">
                   <Image
                     src={HandBug}
@@ -314,7 +322,7 @@ export default function DisputesTable({
                     height={48}
                     className="opacity-40"
                   />
-                  <p className="text-sm font-MontserratMedium">
+                  <p className="text-xs font-MontserratMedium">
                     No disputes or refund requests found
                   </p>
                 </div>

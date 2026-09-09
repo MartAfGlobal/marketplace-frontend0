@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import CustomerImage from "@/assets/admin/customerImage.svg";
 import Phonicon from "@/assets/admin/phone.svg";
 import { Mail, MapPin, Edit, ChevronRight, User } from "lucide-react";
@@ -21,7 +21,9 @@ import { AdminBuyerDetailsData } from "@/types/global";
 export default function AdminBuyerDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const userId = params.id as string;
+  const fromParam = searchParams.get("from");
 
   const token = useSelector((state: RootState) => state.token?.token);
   const { fetchAdminBuyerById, toggleAdminBuyerStatus, deleteAdminBuyer, updateAdminBuyer, loading } =
@@ -36,7 +38,7 @@ export default function AdminBuyerDetailsPage() {
     "suspend" | "activate" | "delete" | "edit-account" | "error" | null
   >(null);
 
-  const parentCategory = "Buyers";
+  const parentCategory = fromParam || "Buyers";
 
   const fullName = buyer
     ? [buyer.first_name, buyer.last_name].filter(Boolean).join(" ") ||
@@ -162,12 +164,13 @@ export default function AdminBuyerDetailsPage() {
       {/* Breadcrumbs */}
       <div>
         <div className="text-c12 font-MontserratMedium flex items-center gap-1">
-          <Link
-            href="/dashboard/admin/users?type=buyers"
-            className="hover:text-gray-600 text-000000/12 transition-colors"
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="hover:text-gray-600 text-000000/12 transition-colors cursor-pointer"
           >
             {parentCategory}
-          </Link>
+          </button>
           <ChevronRight className="text-000000/44 w-4 h-4 px-[2.5px]" />
           <span className="font-MontserratSemiBold">
             {fullName}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import SellerDetails from "@/components/admin-components/users/seller-details/SellerDetails";
@@ -15,7 +15,9 @@ import { RootState } from "@/store";
 export default function AdminSellerDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const userId = params.id as string;
+  const fromParam = searchParams.get("from");
 
   const token = useSelector((state: RootState) => state.token?.token);
   const seller = useSelector((state: RootState) => state.adminSellerById?.adminSellerById);
@@ -27,7 +29,7 @@ export default function AdminSellerDetailsPage() {
     "suspend" | "unsuspend" | "delete" | "error" | null
   >(null);
 
-  const parentCategory = "Sellers";
+  const parentCategory = fromParam || "Sellers";
 
   useEffect(() => {
     if (token) {
@@ -78,12 +80,13 @@ export default function AdminSellerDetailsPage() {
       {/* Breadcrumbs */}
       <div>
         <div className="text-c12 font-MontserratMedium flex items-center gap-1">
-          <Link
-            href="/dashboard/admin/users?type=sellers"
-            className="hover:text-gray-600 text-000000/12 transition-colors"
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="hover:text-gray-600 text-000000/12 transition-colors cursor-pointer"
           >
             {parentCategory}
-          </Link>
+          </button>
           <ChevronRight className="text-000000/44 w-4 h-4 px-[2.5px]" />
           <span className="font-MontserratSemiBold">
             {seller?.company_name}

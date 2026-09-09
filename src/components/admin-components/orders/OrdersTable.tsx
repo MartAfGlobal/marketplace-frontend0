@@ -91,8 +91,22 @@ export const renderStatus = (status: string) => {
     );
   }
 
-  if (s === "shipped" || s === "in transit" || s === "in_transit") {
-    const label = s === "shipped" ? "Shipped" : "In Transit";
+  if (
+    s === "shipped" ||
+    s.includes("in transit") ||
+    s.includes("in_transit") ||
+    s.includes("to hub") ||
+    s.includes("to_hub")
+  ) {
+    const label =
+      s === "shipped"
+        ? "Shipped"
+        : status
+        ? status
+            .split(/[_\s]+/)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(" ")
+        : "In Transit";
     return (
       <span className="inline-flex items-center gap-1 text-[#947FFF] bg-[#947FFF]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
         <Truck size={14} />

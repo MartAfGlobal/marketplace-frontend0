@@ -1098,7 +1098,7 @@ export const AdminDetails = (id?: string) => {
   };
 
   const fetchAdminDisputesList = (
-    params: { status?: string; page?: number; search?: string } = {},
+    params: { status?: string; dispute_type?: string; page?: number; search?: string } = {},
     callback?: (data: any) => void,
     errorCallback?: (err: any) => void,
   ) => {
@@ -1107,6 +1107,9 @@ export const AdminDetails = (id?: string) => {
     const queryParts: string[] = [];
     if (params.status && params.status !== "ALL") {
       queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    }
+    if (params.dispute_type) {
+      queryParts.push(`dispute_type=${encodeURIComponent(params.dispute_type)}`);
     }
     if (params.page) {
       queryParts.push(`page=${params.page}`);
@@ -1152,6 +1155,60 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminRefundsList = (
+    params: { status?: string; page?: number; search?: string } = {},
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+
+    const queryParts: string[] = [];
+    if (params.status) {
+      queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    }
+    if (params.page) {
+      queryParts.push(`page=${params.page}`);
+    }
+    if (params.search && params.search.trim()) {
+      queryParts.push(`search=${encodeURIComponent(params.search.trim())}`);
+    }
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/refunds/admin${queryString}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData ?? [];
+        console.log(`GET /refunds/admin${queryString} response:`, data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin refunds list error:", err);
+        sendHttpRequest({
+          requestConfig: {
+            url: `/refunds/admin/${queryString}`,
+            method: "GET",
+            token,
+            isAuth: true,
+            userType: "admin",
+          },
+          successRes: (fbRes: any) => {
+            const fbData = fbRes?.data ?? fbRes ?? [];
+            if (callback) callback(fbData);
+          },
+          errorRes: (fbErr: any) => {
+            if (errorCallback) errorCallback(fbErr);
+          },
+        });
+      },
+    });
+  };
+
   const fetchAdminDisputeDetail = (
     disputeId: string,
     callback?: (data: any) => void,
@@ -1161,7 +1218,7 @@ export const AdminDetails = (id?: string) => {
 
     sendHttpRequest({
       requestConfig: {
-        url: `/disputes/admin/${disputeId}/`,
+        url: `/disputes/admin/${disputeId}`,
         method: "GET",
         token,
         isAuth: true,
@@ -1174,7 +1231,66 @@ export const AdminDetails = (id?: string) => {
       },
       errorRes: (err: any) => {
         console.error("Fetch admin dispute detail error:", err);
-        if (errorCallback) errorCallback(err);
+        // Fallback retry with trailing slash if needed
+        sendHttpRequest({
+          requestConfig: {
+            url: `/disputes/admin/${disputeId}/`,
+            method: "GET",
+            token,
+            isAuth: true,
+            userType: "admin",
+          },
+          successRes: (fbRes: any) => {
+            const fbData = fbRes?.data ?? fbRes;
+            if (callback) callback(fbData);
+          },
+          errorRes: (fbErr: any) => {
+            if (errorCallback) errorCallback(fbErr);
+          },
+        });
+      },
+    });
+  };
+
+  const fetchAdminRefundDetail = (
+    refundId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !refundId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/refunds/admin/${refundId}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin refund detail fetched:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Fetch admin refund detail error:", err);
+        // Fallback retry with trailing slash if needed
+        sendHttpRequest({
+          requestConfig: {
+            url: `/refunds/admin/${refundId}/`,
+            method: "GET",
+            token,
+            isAuth: true,
+            userType: "admin",
+          },
+          successRes: (fbRes: any) => {
+            const fbData = fbRes?.data ?? fbRes;
+            if (callback) callback(fbData);
+          },
+          errorRes: (fbErr: any) => {
+            if (errorCallback) errorCallback(fbErr);
+          },
+        });
       },
     });
   };
@@ -1223,6 +1339,39 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const approveAdminDispute = (
+    disputeId: string,
+    payload: {
+      resolution_type: string;
+      approved_amount?: string | number;
+      admin_notes?: string;
+    },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/approve/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin dispute approved:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin dispute approve error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   const processAdminDisputeRefund = (
     disputeId: string,
     payload: { amount?: number; is_partial?: boolean; notes?: string },
@@ -1254,7 +1403,7 @@ export const AdminDetails = (id?: string) => {
 
   const rejectAdminDispute = (
     disputeId: string,
-    payload: { rejection_notes?: string; reason?: string },
+    payload: { rejection_reason?: string; rejection_notes?: string; reason?: string },
     callback?: (data: any) => void,
     errorCallback?: (err: any) => void,
   ) => {
@@ -1276,6 +1425,39 @@ export const AdminDetails = (id?: string) => {
       },
       errorRes: (err: any) => {
         console.error("Admin dispute reject error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const markAdminReturnReceived = (
+    disputeId: string,
+    payload: {
+      tracking_number: string;
+      inspection_passed: boolean;
+      inspection_notes?: string;
+    },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/mark-return-received/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin return marked as received:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin return mark received error:", err);
         if (errorCallback) errorCallback(err);
       },
     });
@@ -1391,6 +1573,121 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const createOrderTrackingUpdate = (
+    orderIdOrTrackingNumber: string,
+    payload: { status: string; location: string; comments: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !orderIdOrTrackingNumber) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/ordertracking/admin/${orderIdOrTrackingNumber}/create/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Order tracking update created:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        // Fallback without trailing slash if 404
+        if (err?.response?.status === 404 || err?.status === 404) {
+          sendHttpRequest({
+            requestConfig: {
+              url: `/ordertracking/admin/${orderIdOrTrackingNumber}/create`,
+              method: "POST",
+              token,
+              isAuth: true,
+              userType: "admin",
+              body: payload,
+            },
+            successRes: (resData: any) => {
+              const d = resData?.data ?? resData;
+              console.log("Order tracking update created (no slash):", d);
+              if (callback) callback(d);
+            },
+            errorRes: (fallbackErr: any) => {
+              console.error("Order tracking update error:", fallbackErr);
+              if (errorCallback) errorCallback(fallbackErr);
+            },
+          });
+          return;
+        }
+        console.error("Order tracking update error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const createAdminRefund = (
+    refundId: string,
+    payload: {
+       refundId?: string;
+      refund_type: string;
+      reason: string;
+      deduction_amount: string;
+      include_shipping_fee: boolean;
+      admin_notes?: string;
+    },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+
+    const endpoint = refundId ? `/refunds/admin/create/` : `/refunds/admin/create/`;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: endpoint,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin refund created:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (err?.response?.status === 404 || err?.status === 404) {
+          const fallbackUrl = endpoint.endsWith("/")
+            ? endpoint.slice(0, -1)
+            : `/refunds/admin/create/`;
+          sendHttpRequest({
+            requestConfig: {
+              url: fallbackUrl,
+              method: "POST",
+              token,
+              isAuth: true,
+              userType: "admin",
+              body: payload,
+            },
+            successRes: (responseData: any) => {
+              const data = responseData?.data ?? responseData;
+              console.log("Admin refund created (fallback):", data);
+              if (callback) callback(data);
+            },
+            errorRes: (retryErr: any) => {
+              console.error("Admin create refund error:", retryErr || err);
+              if (errorCallback) errorCallback(retryErr || err);
+            },
+          });
+          return;
+        }
+        console.error("Admin create refund error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   return {
     fetchOrdersList,
     fetchCancellationRequests,
@@ -1398,13 +1695,19 @@ export const AdminDetails = (id?: string) => {
     rejectCancellationRequest,
     fetchAdminDisputeStats,
     fetchAdminDisputesList,
+    fetchAdminRefundsList,
     fetchAdminDisputeDetail,
+    fetchAdminRefundDetail,
     updateAdminDisputeStatus,
+    approveAdminDispute,
     processAdminDisputeRefund,
     rejectAdminDispute,
+    markAdminReturnReceived,
+    createAdminRefund,
     fetchOrdersSummary,
     fetchAdminOrderDetail,
     fetchOrderTracking,
+    createOrderTrackingUpdate,
     updateAdminOrderStatus,
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,

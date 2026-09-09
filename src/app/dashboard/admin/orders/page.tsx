@@ -33,103 +33,15 @@ import CancellationRequestsTable, {
 import CancellationDetailModal from "@/components/ui/Modals/admin/CancellationDetailModal";
 import RejectCancellationModal from "@/components/ui/Modals/admin/RejectCancellationModal";
 import ResultModal from "@/components/ui/forms/resultModal";
-import StatusFrame from "@/components/admin-components/users/status-frame";
 import Image from "next/image";
 import { Input } from "@/components/ui/forms/Input";
+import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
 
 const PAGE_SIZE = 20;
 
 /** Map a raw API order object to the shape OrdersTable expects */
 function mapToOrderRow(raw: any): OrderRow {
-  // Check if order or any of its items has an active dispute
-  const hasDispute =
-    raw.has_dispute === true ||
-    raw.is_disputed === true ||
-    raw.has_raised_dispute === true ||
-    raw.dispute_status === "DISPUTED" ||
-    Boolean(raw.dispute) ||
-    (Array.isArray(raw.disputes) && raw.disputes.length > 0) ||
-    (Array.isArray(raw.items) &&
-      raw.items.some(
-        (item: any) =>
-          item.has_dispute === true ||
-          item.dispute === true ||
-          Boolean(item.dispute) ||
-          item.status === "DISPUTED" ||
-          item.seller_order_status === "DISPUTED",
-      )) ||
-    (Array.isArray(raw.order_items) &&
-      raw.order_items.some(
-        (item: any) =>
-          item.has_dispute === true ||
-          item.dispute === true ||
-          Boolean(item.dispute) ||
-          item.status === "DISPUTED" ||
-          item.seller_order_status === "DISPUTED",
-      )) ||
-    (Array.isArray(raw.seller_orders) &&
-      raw.seller_orders.some(
-        (so: any) =>
-          so.has_dispute === true ||
-          so.status === "DISPUTED" ||
-          (Array.isArray(so.items) &&
-            so.items.some(
-              (item: any) =>
-                item.has_dispute === true ||
-                item.dispute === true ||
-                Boolean(item.dispute) ||
-                item.status === "DISPUTED" ||
-                item.seller_order_status === "DISPUTED",
-            )) ||
-          (Array.isArray(so.order_items) &&
-            so.order_items.some(
-              (item: any) =>
-                item.has_dispute === true ||
-                item.dispute === true ||
-                Boolean(item.dispute) ||
-                item.status === "DISPUTED" ||
-                item.seller_order_status === "DISPUTED",
-            )),
-      ));
-
-  // Normalise status — the API may return lowercase, uppercase, or snake_case
-  const rawStatus = (
-    raw.status ??
-    raw.order_timeline_stage ??
-    raw.order_status ??
-    ""
-  )
-    .toUpperCase()
-    .trim();
-
-  let status = "Ongoing";
-  if (hasDispute) {
-    status = "Disputed";
-  } else if (rawStatus === "DELIVERED" || rawStatus === "COMPLETED") {
-    status = "Delivered";
-  } else if (rawStatus === "REJECTED") {
-    status = "Rejected";
-  } else if (rawStatus === "CANCELLED" || rawStatus === "CANCELED") {
-    status = "Cancelled";
-  } else if (rawStatus === "DISPUTED" || rawStatus === "DISPUTE") {
-    status = "Disputed";
-  } else if (rawStatus === "PENDING" || rawStatus === "UNPROCESSED") {
-    status = "Pending";
-  } else if (rawStatus === "PROCESSING" || rawStatus === "PROCESSED") {
-    status = "Processing";
-  } else if (rawStatus === "SHIPPED") {
-    status = "Shipped";
-  } else if (rawStatus === "PARTIALLY_ACCEPTED") {
-    status = "Partially Accepted";
-  } else if (rawStatus === "ONGOING") {
-    status = "Ongoing";
-  } else if (rawStatus) {
-    status = rawStatus
-      .toLowerCase()
-      .split("_")
-      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  }
+  const status = getOrderDisplayStatus(raw);
 
   const buyerFullName = raw.buyer
     ? `${raw.buyer.first_name ?? ""} ${raw.buyer.last_name ?? ""}`.trim()
@@ -415,9 +327,6 @@ export default function AdminOrdersPage() {
   const rows: OrderRow[] = rawOrders
     .map(mapToOrderRow)
     .filter((row: OrderRow) => {
-      if (activeTab === "disputed" && row.status.toLowerCase() !== "disputed") {
-        return false;
-      }
       if (!query) return true;
       return (
         row.id.toLowerCase().includes(query) ||

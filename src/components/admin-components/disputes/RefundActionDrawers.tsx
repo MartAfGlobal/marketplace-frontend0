@@ -5,6 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import Image from "next/image";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Input } from "@/components/ui/forms/Input";
+import { Label } from "@/components/ui/forms/Label";
+import { Button } from "@/components/ui/Button/Button";
+import { toast } from "sonner";
 
 // ─── Shared Drawer Wrapper ─────────────────────────────────────────────────────
 function DrawerWrapper({
@@ -48,7 +52,7 @@ function DrawerWrapper({
             exit={{ opacity: 0, x: 160 }}
             transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white shadow-xl flex flex-col w-full max-w-[520px] max-h-[92vh] rounded-[16px] relative overflow-hidden"
+            className="bg-white shadow-xl flex flex-col p-8 w-full max-w-[426px] max-h-[92vh] rounded-[16px] relative overflow-hidden"
           >
             {children}
           </motion.div>
@@ -72,10 +76,18 @@ function ModalItemsTable({ items }: { items: ModalItem[] }) {
     <table className="w-full text-sm mb-0">
       <thead>
         <tr className="bg-[#7F56D9] text-white">
-          <th className="py-2.5 px-4 text-left font-MontserratNormal text-xs">Items</th>
-          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">Unit price</th>
-          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">Quantity</th>
-          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">Total</th>
+          <th className="py-2.5 px-4 text-left font-MontserratNormal text-xs">
+            Items
+          </th>
+          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">
+            Unit price
+          </th>
+          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">
+            Quantity
+          </th>
+          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">
+            Total
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -94,9 +106,7 @@ function ModalItemsTable({ items }: { items: ModalItem[] }) {
                 ) : (
                   <div className="w-10 h-10 bg-gray-100 rounded flex-shrink-0" />
                 )}
-                <span className="text-xs font-MontserratMedium text-[#161616] leading-tight">
-                  {item.name}
-                </span>
+                <span className=" leading-tight">{item.name}</span>
               </div>
             </td>
             <td className="py-3 px-4 text-right text-xs font-MontserratNormal text-[#161616]">
@@ -129,14 +139,16 @@ function SummaryRow({
 }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <span className="text-xs font-MontserratNormal text-[#161616]/60">{label}</span>
+      <span className="text-xs font-MontserratMedium text-000000/68">
+        {label}
+      </span>
       <span
         className={`text-xs ${
           isOrderId
-            ? "text-[#FF6D5B] font-MontserratMedium"
+            ? "text-[#FF6D5B] font-MontserratSemiBold"
             : highlight
-            ? "text-[#161616] font-MontserratSemiBold"
-            : "text-[#161616] font-MontserratMedium"
+              ? "text-000000 font-MontserratSemiBold"
+              : "text-000000 font-MontserratSemiBold"
         }`}
       >
         {value}
@@ -203,7 +215,8 @@ export function ApproveFullRefundDrawer({
             Approve Full Refund
           </h2>
           <p className="text-xs font-MontserratNormal text-gray-400 mt-0.5">
-            Please review the refund amount and confirm to approve this partial refund request.
+            Please review the refund amount and confirm to approve this partial
+            refund request.
           </p>
         </div>
         <button
@@ -219,11 +232,17 @@ export function ApproveFullRefundDrawer({
         {/* Order ID + Admin */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="text-xs font-MontserratNormal text-[#161616]/60">Order ID: </span>
-            <span className="text-xs font-MontserratSemiBold text-[#161616]">{orderId}</span>
+            <span className="text-xs font-MontserratNormal text-[#161616]/60">
+              Order ID:{" "}
+            </span>
+            <span className="text-xs font-MontserratSemiBold text-[#161616]">
+              {orderId}
+            </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-MontserratSemiBold text-[#161616]">Admin:</span>
+            <span className="text-xs font-MontserratSemiBold text-[#161616]">
+              Admin:
+            </span>
             <div className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-MontserratNormal text-[#161616]/60 min-w-[160px]">
               {adminName || "Auto-filled Admin Name - Super Admin"}
             </div>
@@ -233,14 +252,18 @@ export function ApproveFullRefundDrawer({
         {/* Requested by + Date */}
         <div className="grid grid-cols-2 gap-4 py-3 border-t border-b border-gray-100">
           <div>
-            <p className="text-xs font-MontserratSemiBold text-[#161616] mb-1">Requested by:</p>
+            <p className="text-xs font-MontserratSemiBold text-[#161616] mb-1">
+              Requested by:
+            </p>
             <p className="text-xs font-MontserratNormal text-[#161616]/60">
               {requestedBy || "Auto-filled Admin Name"} -{" "}
               {requestedByRole || "Role"}
             </p>
           </div>
           <div>
-            <p className="text-xs font-MontserratSemiBold text-[#161616] mb-1">Date:</p>
+            <p className="text-xs font-MontserratSemiBold text-[#161616] mb-1">
+              Date:
+            </p>
             <div className="flex items-center justify-between">
               <p className="text-xs font-MontserratNormal text-[#161616]/60">
                 {date || "—"}
@@ -284,28 +307,44 @@ export function ApproveFullRefundDrawer({
 
         {/* Order Summary */}
         <div>
-          <p className="text-xs font-MontserratSemiBold text-[#161616] mb-2">Order Summary</p>
+          <p className="text-xs font-MontserratSemiBold text-[#161616] mb-2">
+            Order Summary
+          </p>
           <div className="space-y-0.5">
             <SummaryRow label="Order ID:" value={orderId} isOrderId />
-            <SummaryRow label="Item Price" value={`₦${itemPrice.toLocaleString()}`} />
-            <SummaryRow label="Delivery Fee" value={`₦${deliveryFee.toLocaleString()}`} />
-            <SummaryRow label="Order Total" value={`₦${orderTotal.toLocaleString()}`} />
-            <SummaryRow label="Refund Amount" value={`₦${refundAmount.toLocaleString()}`} highlight />
+            <SummaryRow
+              label="Item Price"
+              value={`₦${itemPrice.toLocaleString()}`}
+            />
+            <SummaryRow
+              label="Delivery Fee"
+              value={`₦${deliveryFee.toLocaleString()}`}
+            />
+            <SummaryRow
+              label="Order Total"
+              value={`₦${orderTotal.toLocaleString()}`}
+            />
+            <SummaryRow
+              label="Refund Amount"
+              value={`₦${refundAmount.toLocaleString()}`}
+              highlight
+            />
           </div>
         </div>
 
         {/* Confirm checkbox */}
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
+        <Label className="flex items-center gap-2 cursor-pointer">
+          <Input
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
             className="w-4 h-4 accent-[#FF6D5B] cursor-pointer"
           />
           <span className="text-xs font-MontserratNormal text-[#161616]/70">
-            I confirm that the refund details are correct and approve this full refund.
+            I confirm that the refund details are correct and approve this full
+            refund.
           </span>
-        </label>
+        </Label>
       </div>
 
       {/* Footer Buttons */}
@@ -389,7 +428,8 @@ export function ApprovePartialRefundDrawer({
             Approve Partial Refund
           </h2>
           <p className="text-xs font-MontserratNormal text-gray-400 mt-0.5">
-            Please review the refund amount and confirm to approve this partial refund request.
+            Please review the refund amount and confirm to approve this partial
+            refund request.
           </p>
         </div>
         <button
@@ -405,11 +445,17 @@ export function ApprovePartialRefundDrawer({
         {/* Order ID + Admin */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="text-xs font-MontserratNormal text-[#161616]/60">Order ID: </span>
-            <span className="text-xs font-MontserratSemiBold text-[#161616]">{orderId}</span>
+            <span className="text-xs font-MontserratNormal text-[#161616]/60">
+              Order ID:{" "}
+            </span>
+            <span className="text-xs font-MontserratSemiBold text-[#161616]">
+              {orderId}
+            </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-MontserratSemiBold text-[#161616]">Admin:</span>
+            <span className="text-xs font-MontserratSemiBold text-[#161616]">
+              Admin:
+            </span>
             <div className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-MontserratNormal text-[#161616]/60 min-w-[160px]">
               {adminName || "Auto-filled Admin Name - Super Admin"}
             </div>
@@ -419,14 +465,18 @@ export function ApprovePartialRefundDrawer({
         {/* Requested by + Date */}
         <div className="grid grid-cols-2 gap-4 py-3 border-t border-b border-gray-100">
           <div>
-            <p className="text-xs font-MontserratSemiBold text-[#161616] mb-1">Requested by:</p>
+            <p className="text-xs font-MontserratSemiBold text-[#161616] mb-1">
+              Requested by:
+            </p>
             <p className="text-xs font-MontserratNormal text-[#161616]/60">
               {requestedBy || "Auto-filled Admin Name"} -{" "}
               {requestedByRole || "Role"}
             </p>
           </div>
           <div>
-            <p className="text-xs font-MontserratSemiBold text-[#161616] mb-1">Date:</p>
+            <p className="text-xs font-MontserratSemiBold text-[#161616] mb-1">
+              Date:
+            </p>
             <div className="flex items-center justify-between">
               <p className="text-xs font-MontserratNormal text-[#161616]/60">
                 {date || "—"}
@@ -470,29 +520,48 @@ export function ApprovePartialRefundDrawer({
 
         {/* Order Summary */}
         <div>
-          <p className="text-xs font-MontserratSemiBold text-[#161616] mb-2">Order Summary</p>
+          <p className="text-xs font-MontserratSemiBold text-[#161616] mb-2">
+            Order Summary
+          </p>
           <div className="space-y-0.5">
             <SummaryRow label="Order ID:" value={orderId} isOrderId />
-            <SummaryRow label="Item Price" value={`₦${itemPrice.toLocaleString()}`} />
-            <SummaryRow label="Delivery Fee" value={`₦${deliveryFee.toLocaleString()}`} />
-            <SummaryRow label="Order Total" value={`₦${orderTotal.toLocaleString()}`} />
-            <SummaryRow label="Deduction Amount" value={`₦${deductionAmount.toLocaleString()}`} />
-            <SummaryRow label="Refund Amount" value={`₦${refundAmount.toLocaleString()}`} highlight />
+            <SummaryRow
+              label="Item Price"
+              value={`₦${itemPrice.toLocaleString()}`}
+            />
+            <SummaryRow
+              label="Delivery Fee"
+              value={`₦${deliveryFee.toLocaleString()}`}
+            />
+            <SummaryRow
+              label="Order Total"
+              value={`₦${orderTotal.toLocaleString()}`}
+            />
+            <SummaryRow
+              label="Deduction Amount"
+              value={`₦${deductionAmount.toLocaleString()}`}
+            />
+            <SummaryRow
+              label="Refund Amount"
+              value={`₦${refundAmount.toLocaleString()}`}
+              highlight
+            />
           </div>
         </div>
 
         {/* Confirm checkbox */}
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
+        <Label className="flex items-center gap-2 cursor-pointer">
+          <Input
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
             className="w-4 h-4 accent-[#FF6D5B] cursor-pointer"
           />
           <span className="text-xs font-MontserratNormal text-[#161616]/70">
-            I confirm that the refund details are correct and approve this partial refund.
+            I confirm that the refund details are correct and approve this
+            partial refund.
           </span>
-        </label>
+        </Label>
       </div>
 
       {/* Footer Buttons */}
@@ -544,51 +613,67 @@ export function ConfirmRefundRequestDrawer({
   return (
     <DrawerWrapper isOpen={isOpen} onClose={onClose}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
+      <div className="flex items-center justify-between pb-8 flex-shrink-0">
         <div>
-          <h2 className="text-base font-MontserratSemiBold text-[#161616]">
-            Confirm Refund Request
-          </h2>
-          <p className="text-xs font-MontserratNormal text-gray-400 mt-0.5 max-w-sm">
-            You are about to submit a request for a full refund for this order. Please confirm
-            that you want to accept this request and send it for approval.
+          <div>
+            <h2 className="text-C18 font-MontserratMedium text-center">
+              Confirm Refund Request
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-000000 hover:bg-gray-100 rounded-full absolute right-8 top-8 transition-colors flex-shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <p className="text-xs font-MontserratMedium text-center mt-3">
+            Confirm the refund amount and submit this full refund request for
+            approval.
           </p>
         </div>
-        <button
-          onClick={onClose}
-          className="ml-4 text-[#343330] hover:bg-gray-100 rounded-full p-1 transition-colors flex-shrink-0"
-        >
-          <X className="w-5 h-5" />
-        </button>
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 no-scrollbar">
+      <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
         <div className="space-y-1">
           <SummaryRow label="Order ID:" value={orderId} isOrderId />
-          <SummaryRow label="Item Price" value={`₦${itemPrice.toLocaleString()}`} />
-          <SummaryRow label="Delivery Fee" value={`₦${deliveryFee.toLocaleString()}`} />
-          <SummaryRow label="Order Total" value={`₦${orderTotal.toLocaleString()}`} />
-          <SummaryRow label="Refund Amount" value={`₦${refundAmount.toLocaleString()}`} highlight />
+          <SummaryRow
+            label="Item Price"
+            value={`₦${itemPrice.toLocaleString()}`}
+          />
+          <SummaryRow
+            label="Delivery Fee"
+            value={`₦${deliveryFee.toLocaleString()}`}
+          />
+          <SummaryRow
+            label="Order Total"
+            value={`₦${orderTotal.toLocaleString()}`}
+          />
+          <SummaryRow
+            label="Refund Amount"
+            value={`₦${refundAmount.toLocaleString()}`}
+            highlight
+          />
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-3 px-6 py-5 border-t border-gray-100 flex-shrink-0">
-        <button
+      <div className="flex items-center gap-4 pt-8 border-t border-gray-100 flex-shrink-0">
+        <Button
+          variant="secondary"
           onClick={onClose}
-          className="flex-1 h-11 border border-[#FF6D5B] text-[#FF6D5B] text-xs font-MontserratSemiBold rounded-xl hover:bg-[#FF6D5B]/5 transition-colors"
+          className="w-full"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onConfirm}
           disabled={loading}
-          className="flex-1 h-11 bg-[#FF6D5B] hover:bg-[#e85e4a] text-white text-xs font-MontserratSemiBold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? <LoadingSpinner size={16} color="border-white" /> : null}
-          Request Refund
-        </button>
+          {loading ? <LoadingSpinner size={16} color="border-white" /> : "Request Refund"}
+        </Button>
       </div>
     </DrawerWrapper>
   );
@@ -630,6 +715,7 @@ export function RequestPartialRefundDrawer({
   // Auto-calculate refund amount
   const base = includeDelivery ? orderTotal : itemPrice;
   const deduction = Number(deductionAmount) || 0;
+  const isDeductionExceeded = deduction > base;
   const computedRefund = Math.max(0, base - deduction);
 
   useEffect(() => {
@@ -643,6 +729,16 @@ export function RequestPartialRefundDrawer({
 
   const handleSubmit = () => {
     if (!onConfirm) return;
+    if (isDeductionExceeded) {
+      toast.error(
+        `Deduction amount cannot exceed the refund amount (₦${base.toLocaleString()})`
+      );
+      return;
+    }
+    if (deduction < 0) {
+      toast.error("Deduction amount cannot be negative");
+      return;
+    }
     onConfirm({
       includeDelivery,
       reason,
@@ -655,130 +751,167 @@ export function RequestPartialRefundDrawer({
   return (
     <DrawerWrapper isOpen={isOpen} onClose={onClose}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
+      <div className="flex items-center justify-between pb-8 flex-shrink-0 ">
         <div>
-          <h2 className="text-base font-MontserratSemiBold text-[#161616]">
-            Request Partial Refund
-          </h2>
-          <p className="text-xs font-MontserratNormal text-gray-400 mt-0.5">
-            Confirm the refund amount and submit this partial refund request for approval.
+          <div className="">
+            <h2 className="text-C18 font-MontserratMedium text-center">
+              Request Partial Refund
+            </h2>
+            <button
+              onClick={onClose}
+              className=" text-000000 hover:bg-gray-100 rounded-full absolute right-8 top-8 s transition-colors flex-shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <p className="text-xs font-MontserratMedium text-center mt-3">
+            Confirm the refund amount and submit this partial refund request for
+            approval.
           </p>
         </div>
-        <button
-          onClick={onClose}
-          className="ml-4 text-[#343330] hover:bg-gray-100 rounded-full p-1 transition-colors flex-shrink-0"
-        >
-          <X className="w-5 h-5" />
-        </button>
       </div>
 
       {/* Scrollable Body */}
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 no-scrollbar">
+      <div className="flex-1 overflow-y-auto  space-y-4 no-scrollbar">
         {/* Include delivery fee toggle */}
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={includeDelivery}
-            onChange={(e) => setIncludeDelivery(e.target.checked)}
-            className="w-4 h-4 accent-[#FF6D5B] cursor-pointer"
-          />
-          <span className="text-xs font-MontserratMedium text-[#161616]">
-            Include delivery fee refund
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <span className="relative flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={includeDelivery}
+              onChange={(e) => setIncludeDelivery(e.target.checked)}
+              className="sr-only"
+            />
+            <span
+              className={`flex items-center justify-center w-5 h-5 rounded border-1 transition-colors ${
+                includeDelivery
+                  ? "bg-ff715b border-ff715b"
+                  : "bg-white border-ff715b"
+              }`}
+            >
+              {includeDelivery && (
+                <svg
+                  viewBox="0 0 12 10"
+                  fill="none"
+                  className="w-3 h-3"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M1 5l3.5 3.5L11 1" />
+                </svg>
+              )}
+            </span>
           </span>
+          <span className="text-xs font-MontserratMedium text-000000/68">Include delivery fee refund</span>
         </label>
 
         {/* Order summary */}
         <div className="space-y-1">
           <SummaryRow label="Order ID:" value={orderId} isOrderId />
-          <SummaryRow label="Item Price" value={`₦${itemPrice.toLocaleString()}`} />
-          <SummaryRow label="Delivery Fee" value={`₦${deliveryFee.toLocaleString()}`} />
-          <SummaryRow label="Order Total" value={`₦${orderTotal.toLocaleString()}`} />
+          <SummaryRow
+            label="Item Price"
+            value={`₦${itemPrice.toLocaleString()}`}
+          />
+          <SummaryRow
+            label="Delivery Fee"
+            value={`₦${deliveryFee.toLocaleString()}`}
+          />
+          <SummaryRow
+            label="Order Total"
+            value={`₦${orderTotal.toLocaleString()}`}
+          />
         </div>
 
-        <div className="border-t border-gray-100" />
 
         {/* Reason for deduction */}
-        <div className="space-y-1.5">
-          <label className="text-xs font-MontserratMedium text-[#161616]">
-            Reason for the Deduction
-          </label>
-          <input
+        <div className="pt-4">
+          <Label className="">Reason for the Deduction</Label>
+          <Input
             type="text"
             placeholder="Write reason for the deduction"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full h-11 px-4 text-xs font-MontserratNormal border border-gray-200 rounded-xl focus:outline-none focus:border-[#FF6D5B]"
+            className=""
           />
         </div>
 
         {/* More information */}
         <div className="space-y-1.5">
-          <label className="text-xs font-MontserratMedium text-[#161616]">
-            More Information
-          </label>
-          <input
+          <Label className="">More Information</Label>
+          <Input
             type="text"
             placeholder="Write reason for the deduction"
             value={moreInfo}
             onChange={(e) => setMoreInfo(e.target.value)}
-            className="w-full h-11 px-4 text-xs font-MontserratNormal border border-gray-200 rounded-xl focus:outline-none focus:border-[#FF6D5B]"
+            className=""
           />
         </div>
 
         {/* Deduction amount */}
         <div className="space-y-1.5">
-          <label className="text-xs font-MontserratMedium text-[#161616]">
-            Deduction Amount
-          </label>
+          <Label className="">Deduction Amount</Label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-MontserratNormal text-[#161616]/60">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-MontserratNormal text-[#161616]/60 pointer-events-none z-10">
               ₦
             </span>
-            <input
+            <Input
               type="number"
               placeholder="0.00"
+              min={0}
+              max={base}
+              valid={!isDeductionExceeded}
               value={deductionAmount}
               onChange={(e) => setDeductionAmount(e.target.value)}
-              className="w-full h-11 pl-7 pr-4 text-xs font-MontserratNormal border border-gray-200 rounded-xl focus:outline-none focus:border-[#FF6D5B]"
+              className="pl-7"
             />
           </div>
+          {isDeductionExceeded && (
+            <p className="text-[11px] text-[#CA0202] font-MontserratMedium mt-1">
+              Deduction amount cannot exceed the refund amount (₦{base.toLocaleString()})
+            </p>
+          )}
         </div>
 
         {/* Refund amount (read-only / automated) */}
         <div className="space-y-1.5">
-          <label className="text-xs font-MontserratMedium text-[#161616]">
+          <Label className="">
             Refund Amount{" "}
-            <span className="text-[#161616]/50 font-MontserratNormal">(Automated)</span>
-          </label>
+            <span className="text-[#161616]/50 font-MontserratNormal">
+              (Automated)
+            </span>
+          </Label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-MontserratNormal text-[#161616]/60">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-MontserratNormal text-[#161616]/60 pointer-events-none z-10">
               ₦
             </span>
-            <input
+            <Input
               readOnly
               value={computedRefund.toLocaleString()}
-              className="w-full h-11 pl-7 pr-4 text-xs font-MontserratNormal border border-gray-200 rounded-xl bg-gray-50 cursor-not-allowed"
+              className="pl-7"
             />
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-3 px-6 py-5 border-t border-gray-100 flex-shrink-0">
-        <button
+      <div className="flex items-center gap-4 pt-8 border-t border-gray-100 flex-shrink-0">
+        <Button
+          variant="secondary"
           onClick={onClose}
-          className="flex-1 h-11 border border-[#FF6D5B] text-[#FF6D5B] text-xs font-MontserratSemiBold rounded-xl hover:bg-[#FF6D5B]/5 transition-colors"
+          className="w-full"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleSubmit}
-          disabled={loading || !reason.trim()}
-          className="flex-1 h-11 bg-[#FF6D5B] hover:bg-[#e85e4a] text-white text-xs font-MontserratSemiBold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          disabled={loading || !reason.trim() || isDeductionExceeded || deduction < 0}
+          className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? <LoadingSpinner size={16} color="border-white" /> : null}
-          Request Refund
-        </button>
+          {loading ? <LoadingSpinner size={16} color="border-white" /> : "Request Refund"}
+        </Button>
       </div>
     </DrawerWrapper>
   );

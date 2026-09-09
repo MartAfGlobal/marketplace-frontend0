@@ -21,13 +21,7 @@ export default function CheckoutModal({
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   const handleLogin = () => {
-    if (isMobile) {
-      // Go to landing page and tell it to open login modal
-      router.replace("/?showLogin=true");
-    } else {
-      // Desktop → go to dedicated login page
-      router.replace("/auth/login");
-    }
+    router.push("/auth/login?from=/cart");
   };
 
   return (

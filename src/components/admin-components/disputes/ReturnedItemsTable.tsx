@@ -43,32 +43,32 @@ export default function ReturnedItemsTable({
   );
 
   return (
-    <div className="space-y-4 pt-4">
-      <h3 className="text-base font-MontserratBold text-[#161616]">Returned Item</h3>
+    <div className="space-y-8 ">
+      <h3 className="text-sam font-MontserratSemiBold text-000000/68">Returned Item</h3>
 
-      <div className="overflow-x-auto rounded-xl">
+      <div className="overflow-x-auto ">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-[#7F56D9] text-white text-xs font-MontserratMedium h-11">
-              <th className="px-5 py-3 font-MontserratMedium">SKU</th>
-              <th className="px-5 py-3 font-MontserratMedium min-w-[220px]">items</th>
-              <th className="px-5 py-3 font-MontserratMedium">Unit price</th>
-              <th className="px-5 py-3 font-MontserratMedium text-center">Qty</th>
-              <th className="px-5 py-3 font-MontserratMedium">Variants</th>
-              <th className="px-5 py-3 font-MontserratMedium">Shipping Fee</th>
-              <th className="px-5 py-3 font-MontserratMedium">Total</th>
+            <tr className="bg-[#947FFF] text-white text-xs text-nowrap font-MontserratSemiBold h-10">
+              <th className="p-3 font-MontserratMedium">SKU</th>
+              <th className="p-3 font-MontserratMedium min-w-[220px]">items</th>
+              <th className="p-3 font-MontserratMedium">Unit price</th>
+              <th className="p-3 font-MontserratMedium text-center">Qty</th>
+              <th className="p-3 font-MontserratMedium">Variants</th>
+              <th className="p-3 font-MontserratMedium">Shipping Fee</th>
+              <th className="p-3 font-MontserratMedium">Total</th>
             </tr>
           </thead>
-          <tbody className="text-sm font-MontserratNormal bg-white divide-y divide-gray-100">
+          <tbody className="text-sm bg-white divide-y divide-gray-100">
             {items.length > 0 ? (
               items.map((item, idx) => (
                 <tr key={idx} className="h-20 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-5 py-3 text-xs font-MontserratMedium text-[#161616]">
+                  <td className="p-3 text-sm">
                     {item.sku || "—"}
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="p-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 relative overflow-hidden border border-gray-200">
+                      <div className="w-c64 h-c64   flex-shrink-0 relative overflow-hidden ">
                         {item.image ? (
                           <img
                             src={item.image}
@@ -81,24 +81,24 @@ export default function ReturnedItemsTable({
                           </div>
                         )}
                       </div>
-                      <span className="text-xs font-MontserratMedium text-[#161616] line-clamp-2">
+                      <span className="text-sm line-clamp-2">
                         {item.name}
                       </span>
                     </div>
                   </td>
-                  <td className="px-5 py-3 text-xs font-MontserratMedium text-[#161616]">
+                  <td className="p-3 text-sm">
                     {formatAmount(item.unitPrice)}
                   </td>
-                  <td className="px-5 py-3 text-xs font-MontserratMedium text-center text-[#161616]">
+                  <td className="p-3 text-sm text-center ]">
                     {item.quantity}
                   </td>
-                  <td className="px-5 py-3 text-xs font-MontserratNormal text-gray-600">
+                  <td className="p-3 text-sm font-MontserratNormal ">
                     {item.variants || "—"}
                   </td>
-                  <td className="px-5 py-3 text-xs font-MontserratSemiBold text-[#161616]">
+                  <td className="p-3 text-sm font-MontserratSemiBold ]">
                     {formatAmount(item.shippingFee)}
                   </td>
-                  <td className="px-5 py-3 text-xs font-MontserratBold text-[#161616]">
+                  <td className="p-3p-3 text-sm font-MontserratSemiBold ]">
                     {formatAmount(item.total)}
                   </td>
                 </tr>
@@ -115,52 +115,17 @@ export default function ReturnedItemsTable({
       </div>
 
       {/* ── Action bar beneath Returned Item Table ── */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative min-w-[200px]">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full h-11 px-4 text-xs font-MontserratMedium text-gray-700 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#FF6D5B] appearance-none cursor-pointer"
-            >
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="In Review">In Review</option>
-              <option value="Item Returned">Item Returned</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => onUpdateStatus?.(selectedStatus)}
-            className="h-11 px-6 bg-[#FF6D5B] text-white text-xs font-MontserratSemiBold rounded-xl hover:bg-[#FF6D5B]/90 transition-colors disabled:opacity-50 whitespace-nowrap shadow-sm"
-          >
-            {loading ? "Updating..." : "Update Status"}
-          </button>
-        </div>
-
-        {onTrackOrder && (
+      {/* {onTrackOrder && (
+        <div className="flex justify-end pt-3">
           <button
             type="button"
             onClick={onTrackOrder}
-            className="w-full sm:w-auto h-11 px-8 border border-[#FF6D5B] text-[#FF6D5B] text-xs font-MontserratSemiBold rounded-xl hover:bg-[#FF6D5B]/5 transition-colors whitespace-nowrap"
+            className="w-full sm:w-auto h-11 px-8 border border-[#FF6D5B] text-[#FF6D5B] text-xs font-MontserratSemiBold rounded-xl hover:bg-[#FF6D5B]/5 transition-colors whitespace-nowrap cursor-pointer"
           >
             Track order
           </button>
-        )}
-      </div>
+        </div>
+      )} */}
     </div>
   );
 }

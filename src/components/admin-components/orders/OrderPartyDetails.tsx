@@ -2,11 +2,13 @@
 
 import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import VerifiedIcon from "@/assets/icons/verifiedIcon.svg";
 
 export interface OrderPartyDetailsProps {
+  buyerId?: string;
   buyerName: string;
   buyerAvatar?: string;
   buyerEmail: string;
@@ -20,6 +22,7 @@ export interface OrderPartyDetailsProps {
   shippingMethod: string;
   trackingNumber: string;
 
+  sellerId?: string;
   sellerName: string;
   sellerAvatar?: string;
   isSellerVerified?: boolean;
@@ -31,6 +34,7 @@ export interface OrderPartyDetailsProps {
 }
 
 export default function OrderPartyDetails({
+  buyerId,
   buyerName,
   buyerAvatar,
   buyerEmail,
@@ -44,6 +48,7 @@ export default function OrderPartyDetails({
   shippingMethod,
   trackingNumber,
 
+  sellerId,
   sellerName,
   sellerAvatar,
   isSellerVerified = true,
@@ -53,6 +58,35 @@ export default function OrderPartyDetails({
   onViewSellerProfile,
   onMessageSeller,
 }: OrderPartyDetailsProps) {
+  const router = useRouter();
+
+  const handleViewBuyerProfile = () => {
+    if (onViewBuyerProfile) {
+      onViewBuyerProfile();
+      return;
+    }
+    if (buyerId) {
+      router.push(`/dashboard/admin/users/buyers/${buyerId}?from=Order+details`);
+    } else {
+      router.push(
+        `/dashboard/admin/users?type=buyers${buyerName ? `&search=${encodeURIComponent(buyerName)}` : ""}`
+      );
+    }
+  };
+
+  const handleViewSellerProfile = () => {
+    if (onViewSellerProfile) {
+      onViewSellerProfile();
+      return;
+    }
+    if (sellerId) {
+      router.push(`/dashboard/admin/users/sellers/${sellerId}?from=Order+details`);
+    } else {
+      router.push(
+        `/dashboard/admin/users?type=sellers${sellerName ? `&search=${encodeURIComponent(sellerName)}` : ""}`
+      );
+    }
+  };
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-xs font-MontserratNormal">
       {/* ── 1. Buyer Details Card ── */}
@@ -117,7 +151,7 @@ export default function OrderPartyDetails({
           <Button
             type="button"
             variant="secondary"
-            onClick={onViewBuyerProfile}
+            onClick={handleViewBuyerProfile}
             className=" w-[137.33px]"
           >
             View Profile
@@ -208,7 +242,7 @@ export default function OrderPartyDetails({
           <Button
             type="button"
             variant="secondary"
-            onClick={onViewSellerProfile}
+            onClick={handleViewSellerProfile}
             className=" w-[137.33px]"
           >
             View Profile

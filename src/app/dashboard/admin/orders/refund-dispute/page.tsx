@@ -22,7 +22,7 @@ import type { AdminDisputeItem, AdminDisputeStats, DisputeTableRow } from "@/typ
 
 const PAGE_SIZE = 20;
 
-function mapToDisputeRow(raw: any): DisputeTableRow {
+function mapToDisputeRow(raw: any, activeTab?: DisputeStatusTabKey): DisputeTableRow {
   const buyer = raw.buyer ?? {};
   const buyerName =
     raw.buyer_name ||
@@ -44,12 +44,20 @@ function mapToDisputeRow(raw: any): DisputeTableRow {
     (seller.first_name ? `${seller.first_name} ${seller.last_name ?? ""}`.trim() : null) ||
     "—";
 
-  const orderId =
-    raw.order_number ||
-    raw.order_no ||
-    raw.order_id ||
-    (raw.order ? String(raw.order.id || raw.order) : null) ||
-    "—";
+  const isRefund =
+    activeTab === "REFUND" ||
+    Boolean(raw.refund_type || raw.refund_type_display || raw.refund_reference);
+
+  // For refunds, user requested using the payload's id as orderId
+  const orderId = isRefund
+    ? raw.id || raw.payment_number || raw.order_number || raw.order_no || raw.order_id || "—"
+    : raw.order_number ||
+      raw.order_no ||
+      raw.order_id ||
+      (raw.order ? String(raw.order.id || raw.order) : null) ||
+      raw.payment_number ||
+      raw.id ||
+      "—";
 
   const rawAmount =
     raw.requested_refund_amount ??
@@ -66,6 +74,8 @@ function mapToDisputeRow(raw: any): DisputeTableRow {
       : "—";
 
   const disputeType =
+    raw.refund_type_display ||
+    raw.refund_type ||
     raw.dispute_type_display ||
     raw.dispute_type ||
     raw.type ||
@@ -85,6 +95,7 @@ function mapToDisputeRow(raw: any): DisputeTableRow {
   return {
     id: String(raw.id ?? ""),
     disputeNumber: raw.dispute_number || undefined,
+    refundType: raw.refund_type_display || raw.refund_type || disputeType,
     orderId: String(orderId),
     buyer: buyerName,
     buyerEmail: raw.buyer?.email || raw.buyer_email,
@@ -95,7 +106,13 @@ function mapToDisputeRow(raw: any): DisputeTableRow {
     amount,
     status: raw.status_display || raw.status || "REQUESTED",
     date,
-    quantity: raw.affected_quantity ?? undefined,
+    quantity:
+      raw.quantity ??
+      raw.affected_quantity ??
+      raw.items_count ??
+      raw.item_count ??
+      raw.qty ??
+      undefined,
     raw,
   };
 }
@@ -114,8 +131,8 @@ export default function AdminRefundAndDisputePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [trackingNo, setTrackingNo] = useState("");
 
-  // Default active tab is "REQUESTED" matching /disputes/admin?status=REQUESTED
-  const [activeTab, setActiveTab] = useState<DisputeStatusTabKey>("REQUESTED");
+  // Default active tab is "DISPUTE_RETURNS"
+  const [activeTab, setActiveTab] = useState<DisputeStatusTabKey>("DISPUTE_RETURNS");
   const [rawDisputes, setRawDisputes] = useState<any[]>([]);
   const [disputesTotalCount, setDisputesTotalCount] = useState(0);
   const [disputesLoading, setDisputesLoading] = useState(false);
@@ -124,6 +141,7 @@ export default function AdminRefundAndDisputePage() {
     fetchOrdersSummary,
     fetchAdminDisputeStats,
     fetchAdminDisputesList,
+    fetchAdminRefundsList,
   } = AdminDetails();
 
   const getRangeParam = (val: string) => {
@@ -191,38 +209,45 @@ export default function AdminRefundAndDisputePage() {
     );
   }, [token]);
 
-  // Load dispute table data when tab, page, or search changes
+  // Load table data when tab, page, or search changes
   useEffect(() => {
     if (!token) return;
     setDisputesLoading(true);
 
-    fetchAdminDisputesList(
-      {
-        status: activeTab,
-        page: currentPage,
-        search: searchVal,
-      },
-      (resData: any) => {
-        console.log("dispute list:", resData);
-        const results =
-          resData?.results ??
-          resData?.data?.results ??
-          resData?.data ??
-          (Array.isArray(resData) ? resData : []);
-        const total =
-          resData?.count ??
-          resData?.data?.count ??
-          (Array.isArray(results) ? results.length : 0);
+    const onSuccess = (resData: any) => {
+      const results =
+        resData?.results ??
+        resData?.data?.results ??
+        resData?.data ??
+        (Array.isArray(resData) ? resData : []);
+      const total =
+        resData?.count ??
+        resData?.data?.count ??
+        (Array.isArray(results) ? results.length : 0);
 
-        console.log("dispute items:", results, "total:", total);
-        setRawDisputes(Array.isArray(results) ? results : []);
-        setDisputesTotalCount(total);
-        setDisputesLoading(false);
-      },
-      () => {
-        setDisputesLoading(false);
-      }
-    );
+      console.log("items:", results, "total:", total);
+      setRawDisputes(Array.isArray(results) ? results : []);
+      setDisputesTotalCount(total);
+      setDisputesLoading(false);
+    };
+
+    const onError = () => setDisputesLoading(false);
+
+    if (activeTab === "REFUND") {
+      // /refunds/admin?status=PENDING
+      fetchAdminRefundsList(
+        { status: "PENDING", page: currentPage, search: searchVal },
+        onSuccess,
+        onError,
+      );
+    } else {
+      // /disputes/admin — all disputes & returns
+      fetchAdminDisputesList(
+        { page: currentPage, search: searchVal },
+        onSuccess,
+        onError,
+      );
+    }
   }, [token, activeTab, currentPage, searchVal]);
 
   // Close row popup on outside click
@@ -256,7 +281,9 @@ export default function AdminRefundAndDisputePage() {
     );
   };
 
-  const rows: DisputeTableRow[] = rawDisputes.map(mapToDisputeRow);
+  const rows: DisputeTableRow[] = rawDisputes.map((r) =>
+    mapToDisputeRow(r, activeTab)
+  );
 
   return (
     <div className="space-y-8 duration-300">
@@ -312,14 +339,7 @@ export default function AdminRefundAndDisputePage() {
             setActiveTab(tab);
             setCurrentPage(1);
           }}
-          counts={{
-            REQUESTED: disputeStats?.requested ?? disputeStats?.requested_count,
-            OPEN: disputeStats?.open ?? disputeStats?.open_count,
-            ESCALATED: disputeStats?.escalated ?? disputeStats?.escalated_count,
-            RESOLVED: disputeStats?.resolved ?? disputeStats?.resolved_count,
-            REJECTED: disputeStats?.rejected ?? disputeStats?.rejected_count,
-            ALL: disputeStats?.total_disputes ?? disputeStats?.total,
-          }}
+         
         />
 
         {/* Filter header with search */}
@@ -339,11 +359,16 @@ export default function AdminRefundAndDisputePage() {
           selectedIds={selectedIds}
           activeRowId={activeRowId}
           loading={disputesLoading}
+          showCaseId={activeTab === "DISPUTE_RETURNS"}
           onSelectAll={handleSelectAll}
           onToggleRow={handleToggleRow}
           onSetActiveRowId={setActiveRowId}
           onViewDetails={(row) =>
-            router.push(`/dashboard/admin/orders/refund-dispute/${row.id}`)
+            router.push(
+              `/dashboard/admin/orders/refund-dispute/${row.id}${
+                activeTab === "REFUND" ? "?type=refund" : "?type=dispute"
+              }`
+            )
           }
         />
 

@@ -3,6 +3,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { Button } from "@/components/ui/Button/Button";
+import { Input } from "@/components/ui/forms/Input";
+import { Label } from "@/components/ui/forms/Label";
+import { Textarea } from "@/components/ui/forms/auth/text-area";
 
 export interface ReturnRequestDetailsProps {
   requestDate: string;
@@ -11,11 +15,13 @@ export interface ReturnRequestDetailsProps {
   returnMethod: string;
   deliveryStationAddress: string;
   reasonForReturn: string;
-  moreDetails: string;
+  moreDetails?: string;
   evidenceImages: (string | { url?: string; image?: string; file_url?: string })[];
 
+  showRefundActions?: boolean;
   onPartialRefund?: () => void;
   onRequestRefund?: () => void;
+  onApprove?: () => void;
   onReject?: () => void;
   loading?: boolean;
 }
@@ -29,8 +35,10 @@ export default function ReturnRequestDetails({
   reasonForReturn,
   moreDetails,
   evidenceImages = [],
+  showRefundActions = false,
   onPartialRefund,
   onRequestRefund,
+  onApprove,
   onReject,
   loading = false,
 }: ReturnRequestDetailsProps) {
@@ -42,68 +50,68 @@ export default function ReturnRequestDetails({
   };
 
   return (
-    <div className="space-y-6 pt-6 border-t border-gray-100">
+    <div className="space-y-12 pt-4 ">
       {/* ── Section Title & Item Returned Date ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <h3 className="text-base font-MontserratBold text-[#161616]">
+        <h3 className="text-sm font-MontserratSemiBold text-000000/68">
           Request Details
         </h3>
         {itemReturnedDate && (
-          <span className="text-xs font-MontserratMedium text-gray-500">
+          <span className="text-xs font-MontserratNormal">
             Item Returned: {itemReturnedDate}
           </span>
         )}
       </div>
 
       {/* ── 2-Column Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
         {/* Left Column */}
-        <div className="space-y-5">
+        <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-MontserratMedium text-gray-500 block">
+            <Label className="text-xs font-MontserratMedium text-gray-500 block">
               Request Date
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               readOnly
               value={requestDate || "—"}
-              className="w-full h-12 px-4 text-xs font-MontserratMedium text-[#161616] bg-white border border-gray-200 rounded-xl focus:outline-none"
+              className=""
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-MontserratMedium text-gray-500 block">
+            <Label className="text-xs font-MontserratMedium text-gray-500 block">
               Return Type
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               readOnly
               value={returnType || "Return & Refund"}
-              className="w-full h-12 px-4 text-xs font-MontserratMedium text-[#161616] bg-white border border-gray-200 rounded-xl focus:outline-none"
+              className=""
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-MontserratMedium text-gray-500 block">
+            <Label className="text-xs font-MontserratMedium text-gray-500 block">
               Return Method
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               readOnly
               value={returnMethod || "Drop-off"}
-              className="w-full h-12 px-4 text-xs font-MontserratMedium text-[#161616] bg-white border border-gray-200 rounded-xl focus:outline-none"
+              className=""
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-MontserratMedium text-gray-500 block">
+            <Label className="text-xs font-MontserratMedium text-gray-500 block">
               Delivery Station Address
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               readOnly
               value={deliveryStationAddress || "—"}
-              className="w-full h-12 px-4 text-xs font-MontserratMedium text-[#161616] bg-white border border-gray-200 rounded-xl focus:outline-none"
+              className=""
             />
           </div>
         </div>
@@ -111,35 +119,37 @@ export default function ReturnRequestDetails({
         {/* Right Column */}
         <div className="space-y-5">
           <div className="space-y-2">
-            <label className="text-xs font-MontserratMedium text-gray-500 block">
+            <Label className="text-xs font-MontserratMedium text-gray-500 block">
               Reason for the Return
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               readOnly
               value={reasonForReturn || "—"}
-              className="w-full h-12 px-4 text-xs font-MontserratMedium text-[#161616] bg-white border border-gray-200 rounded-xl focus:outline-none"
+              className=""
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-MontserratMedium text-gray-500 block">
-              More Details
-            </label>
-            <textarea
-              readOnly
-              rows={4}
-              value={moreDetails || "No additional notes provided."}
-              className="w-full p-4 text-xs font-MontserratNormal text-gray-700 bg-white border border-gray-200 rounded-xl focus:outline-none resize-none leading-relaxed"
-            />
-          </div>
+          {moreDetails && moreDetails.trim() && (
+            <div className="space-y-2">
+              <Label className="text-xs font-MontserratMedium text-gray-500 block">
+                More Details
+              </Label>
+              <Textarea
+                readOnly
+                rows={4}
+                value={moreDetails}
+                className=""
+              />
+            </div>
+          )}
 
           {/* Evidence gallery */}
           <div className="space-y-2">
-            <label className="text-xs font-MontserratMedium text-gray-500 block">
+            <Label className="text-sm font-MontserratNormal text-000000/68">
               Evidence (optional)
-            </label>
-            <div className="p-4 bg-white border border-gray-200 rounded-xl">
+            </Label>
+            <div className="py-2.5 px-4 border border-000000/12 rounded-c8">
               {evidenceImages.length > 0 ? (
                 <div className="flex flex-wrap gap-4">
                   {evidenceImages.map((img, idx) => {
@@ -148,7 +158,7 @@ export default function ReturnRequestDetails({
                       <div
                         key={idx}
                         onClick={() => setSelectedImage(src)}
-                        className="w-18 h-18 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:opacity-90 hover:scale-105 transition-all shadow-sm relative"
+                        className="w-16 h-16 overflow-hidden  cursor-pointer hover:opacity-90 hover:scale-105 transition-all shadow-sm relative"
                       >
                         <img
                           src={src}
@@ -170,38 +180,70 @@ export default function ReturnRequestDetails({
       </div>
 
       {/* ── Bottom Action Buttons ── */}
-      <div className="flex flex-wrap items-center justify-end gap-4 pt-6">
-        {onPartialRefund && (
-          <button
-            type="button"
-            disabled={loading}
-            onClick={onPartialRefund}
-            className="h-11 px-6 border border-[#FF6D5B] text-[#FF6D5B] text-xs font-MontserratSemiBold rounded-xl hover:bg-[#FF6D5B]/5 transition-colors disabled:opacity-50"
-          >
-            Partial Refund
-          </button>
-        )}
+      <div className="flex flex-wrap items-center justify-end gap-6 pt-6">
+        {showRefundActions ? (
+          <>
+            {onPartialRefund && (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={loading}
+                onClick={onPartialRefund}
+                className="w-[146px]"
+              >
+                Partial Refund
+              </Button>
+            )}
 
-        {onRequestRefund && (
-          <button
-            type="button"
-            disabled={loading}
-            onClick={onRequestRefund}
-            className="h-11 px-8 bg-[#FF6D5B] text-white text-xs font-MontserratSemiBold rounded-xl hover:bg-[#FF6D5B]/90 transition-colors disabled:opacity-50 shadow-sm"
-          >
-            Request Refund
-          </button>
-        )}
+            {onRequestRefund && (
+              <Button
+                type="button"
+                variant="primary"
+                disabled={loading}
+                onClick={onRequestRefund}
+                className="w-[146px]"
+              >
+                Request Refund
+              </Button>
+            )}
 
-        {onReject && (
-          <button
-            type="button"
-            disabled={loading}
-            onClick={onReject}
-            className="h-11 px-8 bg-[#C40000] text-white text-xs font-MontserratSemiBold rounded-xl hover:bg-[#A30000] transition-colors disabled:opacity-50 shadow-sm"
-          >
-            Reject
-          </button>
+            {/* {onReject && (
+              <Button
+                type="button"
+                variant="danger"
+                disabled={loading}
+                onClick={onReject}
+                className="w-[146px]"
+              >
+                Reject
+              </Button>
+            )} */}
+          </>
+        ) : (
+          <>
+            {onApprove && (
+              <Button
+                type="button"
+                disabled={loading}
+                onClick={onApprove}
+                className="bg-2d7565 w-[146px]"
+              >
+                Approve Return
+              </Button>
+            )}
+
+            {onReject && (
+              <Button
+                type="button"
+                variant="danger"
+                disabled={loading}
+                onClick={onReject}
+                className="w-[146px]"
+              >
+                Reject
+              </Button>
+            )}
+          </>
         )}
       </div>
 

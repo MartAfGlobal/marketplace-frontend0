@@ -154,6 +154,7 @@ export interface AdminDisputeItem {
 export interface DisputeTableRow {
   id: string;
   disputeNumber?: string;
+  refundType?: string;
   orderId: string;
   buyer: string;
   buyerEmail?: string;

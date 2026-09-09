@@ -154,8 +154,8 @@ export default function VerificationDetailsPage() {
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-xs font-MontserratMedium">
         <button 
-          onClick={() => router.push("/dashboard/admin/verifications")}
-          className="text-000000/44  transition-colors"
+          onClick={() => router.back()}
+          className="text-000000/44 hover:text-gray-700 transition-colors cursor-pointer"
         >
           Verifications
         </button>

@@ -34,6 +34,11 @@ import OrderProgressBar, {
 } from "@/components/admin-components/orders/OrderProgressBar";
 import { getHubStatusIndex } from "@/components/ui/Modals/admin/UpdateOrderStatusModal";
 import OrderItemsAndSummary from "@/components/admin-components/orders/OrderItemsAndSummary";
+import {
+  getOrderDisplayStatus,
+  formatOrderStatus,
+  isOrderFullyRejected,
+} from "@/helpers/admin/orderStatusHelper";
 
 /* ─────────────── Helpers ─────────────── */
 function formatCurrency(val: any) {
@@ -50,8 +55,7 @@ function formatCurrencyShort(val: any) {
 }
 
 function formatStatusText(str: string) {
-  if (!str) return "Unprocessed";
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  return formatOrderStatus(str);
 }
 
 export default function AdminOrderDetailsPage() {
@@ -226,62 +230,7 @@ export default function AdminOrderDetailsPage() {
   const  cancelled = rawStatus === "CANCELLED" || rawStatus === "canceled";
   const currentStep = getProgressIndex(rawStatus);
 
-  const hasDispute =
-    order?.has_dispute === true ||
-    order?.is_disputed === true ||
-    order?.has_raised_dispute === true ||
-    order?.status === "DISPUTED" ||
-    order?.order_timeline_stage === "DISPUTED" ||
-    Boolean(order?.dispute) ||
-    (Array.isArray(order?.disputes) && order.disputes.length > 0) ||
-    (Array.isArray(order?.items) &&
-      order.items.some(
-        (item: any) =>
-          item.has_dispute === true ||
-          item.dispute === true ||
-          Boolean(item.dispute) ||
-          item.status === "DISPUTED" ||
-          item.seller_order_status === "DISPUTED",
-      )) ||
-    (Array.isArray(order?.order_items) &&
-      order.order_items.some(
-        (item: any) =>
-          item.has_dispute === true ||
-          item.dispute === true ||
-          Boolean(item.dispute) ||
-          item.status === "DISPUTED" ||
-          item.seller_order_status === "DISPUTED",
-      )) ||
-    (Array.isArray(order?.seller_orders) &&
-      order.seller_orders.some(
-        (so: any) =>
-          so.has_dispute === true ||
-          so.status === "DISPUTED" ||
-          (Array.isArray(so.items) &&
-            so.items.some(
-              (item: any) =>
-                item.has_dispute === true ||
-                item.dispute === true ||
-                Boolean(item.dispute) ||
-                item.status === "DISPUTED" ||
-                item.seller_order_status === "DISPUTED",
-            )) ||
-          (Array.isArray(so.order_items) &&
-            so.order_items.some(
-              (item: any) =>
-                item.has_dispute === true ||
-                item.dispute === true ||
-                Boolean(item.dispute) ||
-                item.status === "DISPUTED" ||
-                item.seller_order_status === "DISPUTED",
-            )),
-      ));
-
-  const displayStatus = hasDispute
-    ? "Disputed"
-    : formatStatusText(
-        order?.status || order?.order_status || "PENDING",
-      );
+  const displayStatus = getOrderDisplayStatus(order);
   const paymentMethod =
     order?.payment_method || (order?.payment ? "Card" : "Card");
   const rawPaymentStatus = (
@@ -584,14 +533,20 @@ export default function AdminOrderDetailsPage() {
     (order?.status ?? "").toUpperCase() === "DELIVERED" ||
     (order?.order_timeline_stage ?? "").toUpperCase() === "DELIVERED";
 
+  const isRejected =
+    displayStatus.toLowerCase() === "rejected" ||
+    (order?.status ?? "").toUpperCase() === "REJECTED" ||
+    (order?.order_timeline_stage ?? "").toUpperCase() === "REJECTED" ||
+    isOrderFullyRejected(order);
+
   /**
    * The "Update Status" button is enabled only when:
    *  - Order is accepted / in transit to hub / fulfilled
-   *  - Order is NOT cancelled, NOT expired
+   *  - Order is NOT cancelled, NOT expired, NOT rejected
    *  - Hub flow is NOT yet complete
    */
   const canUpdateStatus =
-    isAcceptedOrInTransit && !isCancelled && !isExpired && !hubComplete;
+    isAcceptedOrInTransit && !isCancelled && !isExpired && !hubComplete && !isRejected;
 
   /** Show Track button only when there is a real tracking number */
   const hasTracking = Boolean(trackingNumber);
@@ -663,11 +618,18 @@ export default function AdminOrderDetailsPage() {
                 <span>Order Status:</span>
                 <span
                   className={`px-4 py-2 rounded-2xl text-xs font-MontserratSemiBold ${
-                    displayStatus.toLowerCase() === "disputed"
+                    displayStatus.toLowerCase() === "disputed" ||
+                    displayStatus.toLowerCase() === "rejected" ||
+                    displayStatus.toLowerCase() === "cancelled"
                       ? "bg-[#CA0202]/12 text-[#CA0202]"
-                      : displayStatus.toLowerCase() === "delivered"
+                      : displayStatus.toLowerCase() === "delivered" ||
+                        displayStatus.toLowerCase() === "completed"
                         ? "bg-[#00BE5C]/12 text-[#00BE5C]"
-                        : "bg-[#FFAC06]/12 text-[#FFAC06]"
+                        : displayStatus.toLowerCase().includes("transit") ||
+                          displayStatus.toLowerCase() === "shipped" ||
+                          displayStatus.toLowerCase() === "received at hub"
+                          ? "bg-[#947FFF]/12 text-[#947FFF]"
+                          : "bg-[#FFAC06]/12 text-[#FFAC06]"
                   }`}
                 >
                   {displayStatus}
@@ -826,7 +788,24 @@ export default function AdminOrderDetailsPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-6 pt-3">
-                <Button className="" variant="secondary">
+                <Button
+                  className=""
+                  variant="secondary"
+                  onClick={() => {
+                    const buyerId =
+                      buyer?.id ||
+                      order?.buyer_id ||
+                      order?.user_id ||
+                      order?.user?.id;
+                    if (buyerId) {
+                      router.push(`/dashboard/admin/users/buyers/${buyerId}?from=Order+details`);
+                    } else {
+                      router.push(
+                        `/dashboard/admin/users?type=buyers${buyerName ? `&search=${encodeURIComponent(buyerName)}` : ""}`
+                      );
+                    }
+                  }}
+                >
                   View Profile
                 </Button>
                 <Button className="">Message Buyer</Button>
@@ -922,10 +901,28 @@ export default function AdminOrderDetailsPage() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-6 pt-3">
-                <Button className="" variant="secondary">
+                <Button
+                  className="w-[159.5px]"
+                  variant="secondary"
+                  onClick={() => {
+                    const sellerId =
+                      seller?.id ||
+                      seller?.seller_id ||
+                      firstSellerOrder?.seller_id ||
+                      firstSellerOrder?.seller?.id ||
+                      order?.seller_id;
+                    if (sellerId) {
+                      router.push(`/dashboard/admin/users/sellers/${sellerId}?from=Order+details`);
+                    } else {
+                      router.push(
+                        `/dashboard/admin/users?type=sellers${sellerName ? `&search=${encodeURIComponent(sellerName)}` : ""}`
+                      );
+                    }
+                  }}
+                >
                   View Profile
                 </Button>
-                <Button className="">Message Seller</Button>
+                <Button className="w-[159.5px]">Message Seller</Button>
               </div>
             </div>
           </div>
@@ -963,22 +960,27 @@ export default function AdminOrderDetailsPage() {
                   Update Status
                 </Button>
                 {/* Reason the button is disabled */}
-                {isCancelled && (
+                {isRejected && (
+                  <span className="text-xs font-MontserratNormal text-[#E8334A]">
+                    Order is rejected
+                  </span>
+                )}
+                {isCancelled && !isRejected && (
                   <span className="text-xs font-MontserratNormal text-[#E8334A]">
                     Order is cancelled
                   </span>
                 )}
-                {isExpired && !isCancelled && (
+                {isExpired && !isCancelled && !isRejected && (
                   <span className="text-xs font-MontserratNormal text-[#E8334A]">
                     Acceptance window expired
                   </span>
                 )}
-                {!isAcceptedOrInTransit && !isCancelled && !isExpired && (
+                {!isAcceptedOrInTransit && !isCancelled && !isExpired && !isRejected && (
                   <span className="text-xs font-MontserratNormal text-[#000000]/40">
                     Available once order is accepted or in transit
                   </span>
                 )}
-                {hubComplete && (
+                {hubComplete && !isRejected && (
                   <span className="text-xs font-MontserratNormal text-[#2ea37d]">
                     All steps completed
                   </span>

@@ -13,7 +13,8 @@ export const logout = async (
   router: any,
   isSeller?: boolean,
   isAdmin?: boolean,
-  token?: string | null
+  token?: string | null,
+  currentPath?: string
 ) => {
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -51,6 +52,8 @@ export const logout = async (
       router.replace("/auth/admin/login");
     } else if (isSeller) {
       router.push("/auth/seller/login");
+    } else if (currentPath?.startsWith("/cart")) {
+      router.replace("/cart");
     } else {
       if (isMobile) {
         router.replace("/?showLogin=true");
@@ -81,5 +84,5 @@ export const useLogout = (dispatch: AppDispatch) => {
     );
   };
 
-  return () => logout(dispatch, router, isSeller, isAdmin, getToken());
+  return () => logout(dispatch, router, isSeller, isAdmin, getToken(), pathname);
 };

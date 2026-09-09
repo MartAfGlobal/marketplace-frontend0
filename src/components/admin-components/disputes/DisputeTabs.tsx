@@ -2,13 +2,7 @@
 
 import React from "react";
 
-export type DisputeStatusTabKey =
-  | "REQUESTED"
-  | "OPEN"
-  | "ESCALATED"
-  | "RESOLVED"
-  | "REJECTED"
-  | "ALL";
+export type DisputeStatusTabKey = "DISPUTE_RETURNS" | "REFUND";
 
 interface Tab {
   key: DisputeStatusTabKey;
@@ -16,12 +10,8 @@ interface Tab {
 }
 
 const DISPUTE_TABS: Tab[] = [
-  { key: "REQUESTED", label: "Requested" },
-  { key: "OPEN", label: "Open" },
-  { key: "ESCALATED", label: "Escalated" },
-  { key: "RESOLVED", label: "Resolved" },
-  { key: "REJECTED", label: "Rejected" },
-  { key: "ALL", label: "All Disputes" },
+  { key: "DISPUTE_RETURNS", label: "Dispute / Returns" },
+  { key: "REFUND", label: "Refund" },
 ];
 
 interface DisputeTabsProps {

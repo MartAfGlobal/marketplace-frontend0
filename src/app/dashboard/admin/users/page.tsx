@@ -391,9 +391,9 @@ export default function AdminUsersPage() {
 
   const handleRowClick = (userId: string) => {
     if (isBuyers) {
-      router.push(`/dashboard/admin/users/buyers/${userId}`);
+      router.push(`/dashboard/admin/users/buyers/${userId}?from=Buyers`);
     } else {
-      router.push(`/dashboard/admin/users/sellers/${userId}`);
+      router.push(`/dashboard/admin/users/sellers/${userId}?from=Sellers`);
     }
   };
 

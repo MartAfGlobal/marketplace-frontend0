@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Download,
@@ -26,6 +26,7 @@ import OrderItemsAndSummary from "@/components/admin-components/orders/OrderItem
 import OrderProgressBar, {
   getProgressIndex,
 } from "@/components/admin-components/orders/OrderProgressBar";
+import { HUB_STATUSES } from "@/components/ui/Modals/admin/UpdateOrderStatusModal";
 import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
 
@@ -45,18 +46,13 @@ function formatCurrencyShort(val: any) {
 
 function formatStatusText(str: string) {
   if (!str) return "Unprocessed";
+  const s = str.toUpperCase().trim();
+  if (s === "SHIPPED_TO_BUYER" || s === "SHIPPED") return "Shipped";
+  if (s === "RECEIVED_AT_HUB") return "Received at Hub";
+  if (s === "DELIVERED") return "Delivered";
   const formatted = str.replace(/_/g, " ").toLowerCase();
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
-
-const TRACKING_STATUSES = [
-  "Order Placed",
-  "Order Processing",
-  "Order Processed",
-  "Shipped",
-  "Out for Delivery",
-  "Delivered",
-];
 
 export default function AdminTrackOrderPage() {
   const router = useRouter();
@@ -80,9 +76,46 @@ export default function AdminTrackOrderPage() {
   const [trackingNotes, setTrackingNotes] = useState("");
   const [confirmAccurate, setConfirmAccurate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   const token = useSelector((state: RootState) => state.token.token);
-  const { fetchOrderTracking } = AdminDetails();
+  const { fetchOrderTracking, createOrderTrackingUpdate } = AdminDetails();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleOpenUpdateModal = () => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    const timeStr = now.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).toLowerCase();
+
+    setTrackingDate(dateStr);
+    setTrackingTime(timeStr);
+    setTrackingStatus("");
+    setTrackingLocation("");
+    setTrackingNotes("");
+    setConfirmAccurate(false);
+    setIsStatusDropdownOpen(false);
+    setIsUpdateModalOpen(true);
+  };
 
   useEffect(() => {
     if (token && rawId) {
@@ -128,6 +161,9 @@ export default function AdminTrackOrderPage() {
 
   const rawStatus = (
     order?.order_timeline_stage ||
+    order?.hub_delivery_status ||
+    order?.hub_status ||
+    order?.tracking_status ||
     order?.status ||
     order?.order_status ||
     "UNPROCESSED"
@@ -345,6 +381,9 @@ export default function AdminTrackOrderPage() {
 
   const timelineStage = (
     order?.order_timeline_stage ||
+    order?.hub_delivery_status ||
+    order?.hub_status ||
+    order?.tracking_status ||
     order?.status ||
     order?.order_status ||
     "UNPROCESSED"
@@ -354,10 +393,15 @@ export default function AdminTrackOrderPage() {
     timelineStage.includes("DELIVER") || timelineStage.includes("COMPLET");
   const isShipped =
     isDelivered ||
+    timelineStage.includes("SHIPPED_TO_BUYER") ||
     timelineStage.includes("SHIP") ||
     timelineStage.includes("TRANSIT") ||
     timelineStage.includes("OUT_FOR_DELIVERY");
-  const isFulfilled = isShipped || timelineStage.includes("FULFIL");
+  const isFulfilled =
+    isShipped ||
+    timelineStage.includes("RECEIVED_AT_HUB") ||
+    timelineStage.includes("AT_HUB") ||
+    timelineStage.includes("FULFIL");
   const isProcessed =
     isFulfilled ||
     timelineStage === "PROCESSED" ||
@@ -368,6 +412,13 @@ export default function AdminTrackOrderPage() {
     timelineStage === "PROCESSING" ||
     timelineStage === "PARTIALLY_ACCEPTED" ||
     !!order?.accepted_at;
+
+  const backendTrackingEvents =
+    (Array.isArray(order?.trackings) && order.trackings.length > 0 && order.trackings) ||
+    (Array.isArray(order?.tracking_events) && order.tracking_events.length > 0 && order.tracking_events) ||
+    (Array.isArray(order?.tracking_updates) && order.tracking_updates.length > 0 && order.tracking_updates) ||
+    (Array.isArray(order?.tracking_history) && order.tracking_history.length > 0 && order.tracking_history) ||
+    null;
 
   const derivedTimelineEvents: Array<{
     label: string;
@@ -406,17 +457,27 @@ export default function AdminTrackOrderPage() {
     });
   }
 
-  // Step 4: Shipped
+  // Step 4: Received at Hub
+  if (isFulfilled || timelineStage.includes("RECEIVED_AT_HUB")) {
+    derivedTimelineEvents.push({
+      label: "Received at Hub",
+      location: order?.location || "Aba Distribution Center",
+      note: order?.comments || "Package arrived at facility",
+      datetime: formatEventTime(order?.updated_at || order?.created_at),
+    });
+  }
+
+  // Step 5: Shipped
   if (isShipped) {
     derivedTimelineEvents.push({
       label: "Shipped",
-      location: "Lagos Sorting Center",
-      note: "Package arrived at facility",
+      location: order?.location || "Lagos Sorting Center",
+      note: order?.comments || "Package arrived at facility",
       datetime: formatEventTime(order?.updated_at),
     });
   }
 
-  // Step 5: Delivered
+  // Step 6: Delivered
   if (isDelivered) {
     derivedTimelineEvents.push({
       label: "Delivered",
@@ -425,9 +486,33 @@ export default function AdminTrackOrderPage() {
     });
   }
 
-  // Mark the current (latest active) event
-  if (derivedTimelineEvents.length > 0) {
-    derivedTimelineEvents[derivedTimelineEvents.length - 1].current = true;
+  const timelineEvents: Array<{
+    label: string;
+    note: string;
+    location?: string;
+    datetime: string;
+    current?: boolean;
+  }> = backendTrackingEvents
+    ? backendTrackingEvents.map((ev: any, idx: number) => {
+        const rawStatusVal = (ev.status || ev.tracking_status || ev.stage || "Update").toString();
+        const matched = HUB_STATUSES.find(
+          (s) =>
+            s.value.toUpperCase() === rawStatusVal.toUpperCase() ||
+            s.label.toLowerCase() === rawStatusVal.toLowerCase(),
+        );
+        const label = matched?.label || formatStatusText(rawStatusVal);
+        return {
+          label,
+          location: ev.location || "",
+          note: ev.comments || ev.note || ev.notes || "",
+          datetime: formatEventTime(ev.created_at || ev.timestamp || ev.date),
+          current: idx === backendTrackingEvents.length - 1,
+        };
+      })
+    : derivedTimelineEvents;
+
+  if (timelineEvents.length > 0 && !timelineEvents.some((e) => e.current)) {
+    timelineEvents[timelineEvents.length - 1].current = true;
   }
 
   /* ── handlers ── */
@@ -450,30 +535,76 @@ export default function AdminTrackOrderPage() {
 
   const handleAddTracking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!confirmAccurate) {
-      toast.warning("Please confirm that the tracking update is accurate.");
-      return;
-    }
     if (!trackingStatus) {
       toast.warning("Please select a tracking status.");
       return;
     }
-    setSubmitting(true);
-    try {
-      await new Promise((r) => setTimeout(r, 1000));
-      toast.success("Tracking update added successfully.");
-      setTrackingStatus("");
-      setTrackingDate("");
-      setTrackingTime("");
-      setTrackingLocation("");
-      setTrackingNotes("");
-      setConfirmAccurate(false);
-      setIsUpdateModalOpen(false);
-    } catch {
-      toast.error("Failed to add tracking update.");
-    } finally {
-      setSubmitting(false);
+    if (!trackingLocation.trim()) {
+      toast.warning("Please enter a location.");
+      return;
     }
+    if (!trackingNotes.trim()) {
+      toast.warning("Please enter notes.");
+      return;
+    }
+    if (!confirmAccurate) {
+      toast.warning("Please confirm that the tracking update is accurate.");
+      return;
+    }
+
+    const targetId = order?.id || order?.tracking_number || rawId;
+    if (!targetId) {
+      toast.error("Could not determine order ID or tracking number.");
+      return;
+    }
+
+    setSubmitting(true);
+    const payload = {
+      status: trackingStatus,
+      location: trackingLocation.trim(),
+      comments: trackingNotes.trim(),
+    };
+
+    createOrderTrackingUpdate(
+      targetId,
+      payload,
+      (_res: any) => {
+        toast.success("Tracking update added successfully.");
+        setOrder((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            status: trackingStatus,
+            order_timeline_stage: trackingStatus,
+            hub_status: trackingStatus,
+            hub_delivery_status: trackingStatus,
+            tracking_status: trackingStatus,
+            location: trackingLocation.trim(),
+            comments: trackingNotes.trim(),
+          };
+        });
+        if (rawId) {
+          fetchOrderTracking(rawId, (data: any) => {
+            setOrder(data);
+          });
+        }
+        setTrackingStatus("");
+        setTrackingLocation("");
+        setTrackingNotes("");
+        setConfirmAccurate(false);
+        setIsUpdateModalOpen(false);
+        setSubmitting(false);
+      },
+      (err: any) => {
+        const errorMsg =
+          err?.response?.data?.message ||
+          err?.response?.data?.detail ||
+          err?.message ||
+          "Failed to add tracking update. Please try again.";
+        toast.error(errorMsg);
+        setSubmitting(false);
+      },
+    );
   };
 
   return (
@@ -611,8 +742,8 @@ export default function AdminTrackOrderPage() {
               </h3>
 
               <div className="space-y-0">
-                {derivedTimelineEvents.map((ev, i) => {
-                  const isLast = i === derivedTimelineEvents.length - 1;
+                {timelineEvents.map((ev, i) => {
+                  const isLast = i === timelineEvents.length - 1;
                   return (
                     <div key={i} className="flex items-start gap-4">
                       {/* Left Column: Circle Icon + Connecting Line directly below */}
@@ -669,7 +800,7 @@ export default function AdminTrackOrderPage() {
               </p>
               <Button
                 type="button"
-                onClick={() => setIsUpdateModalOpen(true)}
+                onClick={handleOpenUpdateModal}
                 className="bg-[#FF6D5B] hover:bg-[#e05d4a] text-white font-MontserratMedium text-sm py-2.5 px-8 rounded-lg w-full max-w-xs transition-colors"
               >
                 Add Tracking Update
@@ -724,135 +855,161 @@ export default function AdminTrackOrderPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleAddTracking} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                {/* Tracking Status */}
-                <div className="relative">
-                  <label className="block text-xs font-MontserratMedium text-gray-700 mb-1.5">
-                    Tracking Status
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
-                    className="w-full h-12 bg-white border border-gray-200 rounded-lg px-4 flex items-center justify-between text-xs font-MontserratNormal text-left outline-none focus:border-[#FF6D5B] transition-colors cursor-pointer"
-                  >
-                    <span
-                      className={
-                        trackingStatus
-                          ? "text-gray-900 font-MontserratMedium"
-                          : "text-gray-600"
-                      }
-                    >
-                      {trackingStatus || "Select Status"}
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-gray-400 transition-transform ${
-                        isStatusDropdownOpen ? "rotate-180 text-[#FF6D5B]" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {isStatusDropdownOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 overflow-hidden">
-                      {TRACKING_STATUSES.map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => {
-                            setTrackingStatus(s);
-                            setIsStatusDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-2.5 text-left text-xs font-MontserratNormal hover:bg-gray-50 flex items-center justify-between cursor-pointer ${
-                            trackingStatus === s
-                              ? "bg-[#FF6D5B]/10 text-[#FF6D5B] font-MontserratMedium"
-                              : "text-gray-700"
-                          }`}
+            {(() => {
+              const selectedStatusOption = HUB_STATUSES.find(
+                (item) => item.value === trackingStatus,
+              );
+              return (
+                <form onSubmit={handleAddTracking} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                    {/* Tracking Status */}
+                    <div className="relative" ref={statusDropdownRef}>
+                      <label className="block text-xs font-MontserratMedium text-gray-700 mb-1.5">
+                        Tracking Status
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
+                        className={`w-full h-12 bg-white border rounded-lg px-4 flex items-center justify-between text-xs font-MontserratNormal text-left outline-none transition-colors cursor-pointer ${
+                          isStatusDropdownOpen
+                            ? "border-[#FF6D5B] ring-1 ring-[#FF6D5B]"
+                            : "border-gray-200 hover:border-[#FF6D5B]/60"
+                        }`}
+                      >
+                        <span
+                          className={
+                            selectedStatusOption
+                              ? "text-gray-900 font-MontserratMedium"
+                              : "text-gray-400 font-MontserratNormal"
+                          }
                         >
-                          <span>{s}</span>
-                          {trackingStatus === s && (
-                            <Check className="w-3.5 h-3.5 text-[#FF6D5B]" />
-                          )}
-                        </button>
-                      ))}
+                          {selectedStatusOption?.label || "Select Status"}
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                            isStatusDropdownOpen ? "rotate-180 text-[#FF6D5B]" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isStatusDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 overflow-hidden">
+                          {HUB_STATUSES.map((hubStatus) => {
+                            const isSelected = trackingStatus === hubStatus.value;
+                            return (
+                              <button
+                                key={hubStatus.value}
+                                type="button"
+                                onClick={() => {
+                                  setTrackingStatus(hubStatus.value);
+                                  setIsStatusDropdownOpen(false);
+                                }}
+                                className={`w-full px-4 py-2.5 text-left text-xs font-MontserratMedium flex items-center justify-between transition-colors cursor-pointer ${
+                                  isSelected
+                                    ? "bg-[#FF6D5B]/10 text-[#FF6D5B]"
+                                    : "text-gray-700 hover:bg-gray-50"
+                                }`}
+                              >
+                                <span>{hubStatus.label}</span>
+                                {isSelected && (
+                                  <Check className="w-3.5 h-3.5 text-[#FF6D5B]" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {/* Date & Time */}
-                <div>
-                  <label className="block text-xs font-MontserratMedium text-gray-700 mb-1.5">
-                    Date &amp; Time
-                  </label>
-                  <div className="w-full h-12 bg-white border border-gray-200 rounded-lg px-4 flex items-center justify-between text-xs font-MontserratNormal text-gray-700">
-                    <span>{trackingDate || "12/12/2025 (auto-filled)"}</span>
-                    <span>{trackingTime || "12:25 pm"}</span>
+                    {/* Date & Time */}
+                    <div>
+                      <label className="block text-xs font-MontserratMedium text-gray-700 mb-1.5">
+                        Date &amp; Time
+                      </label>
+                      <div className="w-full h-12 bg-white border border-gray-200 rounded-lg px-4 flex items-center justify-between text-xs font-MontserratNormal text-gray-700">
+                        <span>
+                          {trackingDate
+                            ? `${trackingDate} (auto-filled)`
+                            : "Auto-filled Date"}
+                        </span>
+                        <span>{trackingTime || ""}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {/* Location */}
-                <div>
-                  <label className="block text-xs font-MontserratMedium text-gray-700 mb-1.5">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={trackingLocation}
-                    onChange={(e) => setTrackingLocation(e.target.value)}
-                    placeholder="Aba Distribution Center"
-                    className="w-full h-12 border border-gray-200 rounded-lg px-4 text-xs font-MontserratNormal outline-none focus:border-[#FF6D5B] placeholder-gray-400 bg-white"
-                  />
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {/* Location */}
+                    <div>
+                      <label className="block text-xs font-MontserratMedium text-gray-700 mb-1.5">
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={trackingLocation}
+                        onChange={(e) => setTrackingLocation(e.target.value)}
+                        placeholder="Aba Distribution Center"
+                        className="w-full h-12 border border-gray-200 rounded-lg px-4 text-xs font-MontserratNormal outline-none focus:border-[#FF6D5B] placeholder-gray-400 bg-white"
+                      />
+                    </div>
 
-                {/* Notes */}
-                <div>
-                  <label className="block text-xs font-MontserratMedium text-gray-700 mb-1.5">
-                    Notes
-                  </label>
-                  <input
-                    type="text"
-                    value={trackingNotes}
-                    onChange={(e) => setTrackingNotes(e.target.value)}
-                    placeholder="Package arrived at Aba facility."
-                    className="w-full h-12 border border-gray-200 rounded-lg px-4 text-xs font-MontserratNormal outline-none focus:border-[#FF6D5B] placeholder-gray-400 bg-white"
-                  />
-                </div>
-              </div>
+                    {/* Notes */}
+                    <div>
+                      <label className="block text-xs font-MontserratMedium text-gray-700 mb-1.5">
+                        Notes
+                      </label>
+                      <input
+                        type="text"
+                        value={trackingNotes}
+                        onChange={(e) => setTrackingNotes(e.target.value)}
+                        placeholder="Package arrived at Aba facility."
+                        className="w-full h-12 border border-gray-200 rounded-lg px-4 text-xs font-MontserratNormal outline-none focus:border-[#FF6D5B] placeholder-gray-400 bg-white"
+                      />
+                    </div>
+                  </div>
 
-              {/* Confirmation checkbox */}
-              <div className="pt-2">
-                <label className="flex items-center gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={confirmAccurate}
-                    onChange={(e) => setConfirmAccurate(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300 accent-[#FF6D5B] cursor-pointer"
-                  />
-                  <span className="text-xs text-gray-600 font-MontserratNormal">
-                    I confirm that this tracking update is accurate.
-                  </span>
-                </label>
-              </div>
+                  {/* Confirmation checkbox */}
+                  <div className="pt-2">
+                    <label className="flex items-center gap-2.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={confirmAccurate}
+                        onChange={(e) => setConfirmAccurate(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300 accent-[#FF6D5B] cursor-pointer"
+                      />
+                      <span className="text-xs text-gray-600 font-MontserratNormal select-none">
+                        I confirm that this tracking update is accurate.
+                      </span>
+                    </label>
+                  </div>
 
-              {/* Actions */}
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsUpdateModalOpen(false)}
-                  className="flex-1 h-12 border border-[#FF6D5B] text-[#FF6D5B] rounded-xl text-sm font-MontserratMedium hover:bg-[#FF6D5B]/5 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 h-12 bg-[#FF6D5B] text-white rounded-xl text-sm font-MontserratMedium hover:bg-[#e05d4a] transition-colors shadow-sm disabled:opacity-60 cursor-pointer"
-                >
-                  {submitting ? "Adding..." : "Add Update"}
-                </button>
-              </div>
-            </form>
+                  {/* Actions */}
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsUpdateModalOpen(false)}
+                      disabled={submitting}
+                      className="flex-1 h-12 border border-[#FF6D5B] text-[#FF6D5B] rounded-xl text-sm font-MontserratMedium hover:bg-[#FF6D5B]/5 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting || !confirmAccurate || !trackingStatus}
+                      className="flex-1 h-12 bg-[#FF6D5B] text-white rounded-xl text-sm font-MontserratMedium hover:bg-[#e05d4a] transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      {submitting ? (
+                        <>
+                          <LoadingSpinner size={16} color="border-white" />
+                          <span>Adding...</span>
+                        </>
+                      ) : (
+                        "Add Update"
+                      )}
+                    </button>
+                  </div>
+                </form>
+              );
+            })()}
           </div>
         </div>
       )}
