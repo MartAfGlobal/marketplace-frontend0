@@ -429,7 +429,7 @@ export default function CheckoutSummary() {
       </motion.div>
 
       {/* Fixed bottom bar for mobile */}
-      <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
+      <div className="w-full h-30 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-30 flex items-center gap-4">
         <div className="flex items-center gap-3 w-full">
           <div>
             <p className="text-base font-MontserratSemiBold mb-3">Total</p>

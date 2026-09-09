@@ -71,20 +71,16 @@ export default function CategoryPage() {
   const { loading: itemRemove, sendHttpRequest: itemRemoveReq } = useHttp();
   const [loadingRem, setLoadRem] = useState<Record<string, boolean>>({});
   const allSelected =
-    wishlistItems.length > 0 &&
-    wishlistItems.every((item) => {
-      const productId = String(item.product?.id ?? item.id);
-      return selectedItems[productId];
-    });
-const [selectedSlug, setSelectedSlug] = useState<string>("");
+    localLabelItems.length > 0 &&
+    localLabelItems.every((item) => selectedItems[String(item.id)]);
+  const [selectedSlug, setSelectedSlug] = useState<string>("");
   const handleToggleSelectAll = () => {
     if (allSelected) {
       setSelectedItems({});
     } else {
       const newSelections: { [key: string]: boolean } = {};
-      wishlistItems.forEach((item) => {
-        const productId = String(item.product?.id ?? item.id);
-        newSelections[productId] = true;
+      localLabelItems.forEach((item) => {
+        newSelections[String(item.id)] = true;
       });
       setSelectedItems(newSelections);
     }
@@ -265,91 +261,22 @@ const [selectedSlug, setSelectedSlug] = useState<string>("");
             )}
           </div>
         </div>
-        {wishlistItems.length === 0 ? (
-          // <div className="w-full flex justify-center h-75.5 items-center">
-          //   <div className="flex flex-col items-center justify-center py-20 text-center">
-          //     {/* Animated Cart SVG */}
-          //     <motion.svg
-          //       xmlns="http://www.w3.org/2000/svg"
-          //       fill="none"
-          //       viewBox="0 0 64 64"
-          //       stroke="currentColor"
-          //       strokeWidth="2"
-          //       className="w-24 h-24 text-ff715b"
-          //       animate={{
-          //         rotate: [0, -5, 5, -5, 5, 0],
-          //       }}
-          //       transition={{
-          //         duration: 2,
-          //         repeat: Infinity,
-          //         repeatDelay: 2,
-          //         ease: "easeInOut",
-          //       }}
-          //     >
-          //       <motion.g
-          //         strokeLinecap="round"
-          //         strokeLinejoin="round"
-          //         initial={{ y: 0 }}
-          //         animate={{ y: [0, -2, 0] }}
-          //         transition={{
-          //           duration: 1.5,
-          //           repeat: Infinity,
-          //           ease: "easeInOut",
-          //         }}
-          //       >
-          //         <path d="M8 8h6l6 36h28l6-24H20" />
-          //         <path d="M26 28h18" />
-          //         <path d="M24 20h22" />
-          //       </motion.g>
-
-          //       {/* Spinning wheels */}
-          //       <motion.circle
-          //         cx="26"
-          //         cy="52"
-          //         r="3"
-          //         animate={{ rotate: 360 }}
-          //         transition={{
-          //           duration: 2,
-          //           repeat: Infinity,
-          //           ease: "linear",
-          //         }}
-          //       />
-          //       <motion.circle
-          //         cx="46"
-          //         cy="52"
-          //         r="3"
-          //         animate={{ rotate: -360 }}
-          //         transition={{
-          //           duration: 2,
-          //           repeat: Infinity,
-          //           ease: "linear",
-          //         }}
-          //       />
-          //     </motion.svg>
-
-          //     <p className="text-c18 font-MontserratMedium text-000000/32 mb-8">
-          //       No items added to Whislist
-          //     </p>
-          //     <Button  onClick={() => router.push("/#production-section")}variant="primary">Visit our Store</Button>
-          //   </div>
-          // </div>
-          <EmptyCartIcon title = "No items added to Whislist" description=" Looks like you haven’t added any items yet. Start exploring our productsto fill your Wishlist"/>
-        ) : labelItems?.length === 0 ? (
-          // <div className="w-full flex justify-center h-75.5 items-center">
-          //   <div>
-          //     <p className="text-c18 font-MontserratMedium text-000000/32 mb-8">
-          //       No items added to <br /> <span>{labelSelected.name}</span>
-          //     </p>
-          //     <Button variant="primary">Start shopping</Button>
-          //   </div>
-          // </div>
-           <EmptyCartIcon title="No items added to " description={labelSelected.name} ButtonText="Add items" onClick={() => setAddItemOpen(true)}/>
+        {localLabelItems?.length === 0 ? (
+          <EmptyCartIcon
+            title="No items added to "
+            description={labelSelected.name}
+            ButtonText="Add items"
+            onClick={() => setAddItemOpen(true)}
+          />
         ) : (
           <div className="w-full  ">
             <div className="w-full h-c56 mb-4 md:mb-c32 flex justify-between items-center md:hidden">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleToggleSelectAll}
+              <button
+                type="button"
+                onClick={handleToggleSelectAll}
+                className="flex items-center gap-4 cursor-pointer select-none"
+              >
+                <div
                   className={`w-5 h-5 rounded-c4 border-1 border-000000/32 flex items-center justify-center transition-colors ${
                     allSelected ? "bg-ff715b" : "border-000000/5 bg-transparent"
                   }`}
@@ -362,11 +289,11 @@ const [selectedSlug, setSelectedSlug] = useState<string>("");
                       height={7.13}
                     />
                   )}
-                </button>
+                </div>
                 <span className="text-c12 font-MontserratSemiBold">
                   Select all
                 </span>
-              </div>
+              </button>
               <Image src={Filter} alt="filter" width={24} height={24} />
             </div>
 
@@ -390,8 +317,7 @@ const [selectedSlug, setSelectedSlug] = useState<string>("");
                     .map((item: WishlistItem) => {
                       const product: Product = item.product ?? (item as any);
                       const productId = String(product.id);
-                      const whishlistItemSelected = item.id;
-                      console.log("wishlistId");
+                      const whishlistItemSelected = String(item.id);
                       return (
                         <div
                           key={whishlistItemSelected}
@@ -400,14 +326,16 @@ const [selectedSlug, setSelectedSlug] = useState<string>("");
                           <div className="flex gap-4 w-full items-center md:items-start">
                             <div className="flex gap-3 items-center w-full max-w-fit">
                               <button
-                                onClick={() =>
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedItems((prev) => ({
                                     ...prev,
                                     [whishlistItemSelected]:
                                       !prev[whishlistItemSelected],
-                                  }))
-                                }
-                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                  }));
+                                }}
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
                                   selectedItems[whishlistItemSelected]
                                     ? "bg-ff715b border-ff715b"
                                     : "border-ff715b bg-transparent"
@@ -422,19 +350,27 @@ const [selectedSlug, setSelectedSlug] = useState<string>("");
                                   />
                                 )}
                               </button>
-                              <Image
-                                src={product.main_image.medium || "/placeholder.png"}
-                                alt={
-                                  product.name || "Wishlist item image"
-                                }
-                                width={100}
-                                height={100}
-                                unoptimized
-                                className="w-16 h-16 md:w-25 md:h-25"
-                              />
+                              <div
+                                onClick={() => router.push(`/product/${product.slug}`)}
+                                className="cursor-pointer flex-shrink-0"
+                              >
+                                <Image
+                                  src={product.main_image?.medium || "/placeholder.png"}
+                                  alt={
+                                    product.name || "Wishlist item image"
+                                  }
+                                  width={100}
+                                  height={100}
+                                  unoptimized
+                                  className="w-16 h-16 md:w-25 md:h-25 object-cover rounded"
+                                />
+                              </div>
                             </div>
-                            <div className="w-full md:max-w-143.75">
-                              <p className="font-MontserratSemiBold text-c12 md:text-sm pb-1 text-000000">
+                            <div
+                              onClick={() => router.push(`/product/${product.slug}`)}
+                              className="w-full md:max-w-143.75 cursor-pointer"
+                            >
+                              <p className="font-MontserratSemiBold text-c12 md:text-sm pb-1 text-000000 hover:text-ff715b transition-colors">
                                 {product.name}
                               </p>
                               <p className="font-MontserratSemiBold  text-base md:text-c18 pt-3 leading-6.5">
@@ -444,19 +380,16 @@ const [selectedSlug, setSelectedSlug] = useState<string>("");
                           </div>
 
                           <button
-                            onClick={handleAddToCart(product.slug)}
-                            className={`w-10 h-10 flex justify-center md:hidden items-center rounded-full border flex-shrink-0 border-ff715b $}`}
+                            type="button"
+                            onClick={() => router.push(`/product/${product.slug}`)}
+                            className="w-10 h-10 flex justify-center md:hidden items-center rounded-full border flex-shrink-0 border-ff715b cursor-pointer"
                           >
-                            {loadingIds[productId] ? (
-                              <LoadingSpinner color="border-ff715b" />
-                            ) : (
-                              <Image
-                                src={CartButton}
-                                alt="Add to cart"
-                                width={16}
-                                height={16}
-                              />
-                            )}
+                            <Image
+                              src={CartButton}
+                              alt="View product"
+                              width={16}
+                              height={16}
+                            />
                           </button>
 
                           <div className="hidden md:flex flex-col w-full max-w-52.5 space-y-4">

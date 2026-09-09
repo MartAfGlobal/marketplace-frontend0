@@ -71,7 +71,8 @@ export default function Mylist({
   const { loading: removeLoading, sendHttpRequest: removReg } = useHttp();
 
   const allSelected =
-    labels.length > 0 && labels.every((item) => selectedItems[item.id]);
+    localLabelItems.length > 0 &&
+    localLabelItems.every((item) => selectedItems[String(item.id)]);
 
   const handleDeleteLabel = () => {
     if (!token) {
@@ -161,20 +162,22 @@ export default function Mylist({
       setSelectedItems({});
     } else {
       const newSelections: { [key: string]: boolean } = {};
-      labels.forEach((item) => {
+      localLabelItems.forEach((item) => {
         const productId = String(item.id);
         newSelections[productId] = true;
       });
       setSelectedItems(newSelections);
     }
   };
-  console.log("local itemsssssss:", localLabelItems)
   return (
     <div className="px-6 md:px-0">
       <div className="w-full h-c56 mb-4 md:mb-c32 flex justify-between items-center md:hidden">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleToggleSelectAll}
+        <button
+          type="button"
+          onClick={handleToggleSelectAll}
+          className="flex items-center gap-4 cursor-pointer select-none"
+        >
+          <div
             className={`w-5 h-5 rounded-c4 border-1 border-000000/32 flex items-center justify-center transition-colors ${
               allSelected ? "bg-ff715b" : "border-000000/5 bg-transparent"
             }`}
@@ -182,9 +185,9 @@ export default function Mylist({
             {allSelected && (
               <Image src={GoodMark} alt="checked" width={9.75} height={7.13} />
             )}
-          </button>
+          </div>
           <span className="text-c12 font-MontserratSemiBold">Select all</span>
-        </div>
+        </button>
         <Image src={Filter} alt="filter" width={24} height={24} />
       </div>
       {localLabelItems.length === 0 && (
@@ -275,15 +278,15 @@ export default function Mylist({
                   >
                     <div className="w-full h-35.75 flex-shrink-0 ">
                       <Image
-                        src={item.product.main_image.medium || "product image"}
-                        alt={item.product.name}
+                        src={item.product?.main_image?.medium || "/placeholder-product.png"}
+                        alt={item.product?.name || "product image"}
                         width={100}
                         height={100}
                         className="w-full h-full hidden md:flex"
                       />
                       <Image
-                        src={item.product.main_image.medium }
-                        alt={item.product.name}
+                        src={item.product?.main_image?.medium || "/placeholder-product.png"}
+                        alt={item.product?.name || "product image"}
                         width={96}
                         height={96}
                         className="w-full h-full md:hidden"

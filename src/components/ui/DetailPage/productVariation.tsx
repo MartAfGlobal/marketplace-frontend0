@@ -543,7 +543,7 @@ const dispatch = useDispatch() as AppDispatch;
             )}
 
             {isModal && (
-              <div className="mt-8">
+              <div className=" hidden md:block mt-8">
                 <ItemAddToCart
                   selectedVariation={selectedVariation}
                   productId={productDetails?.id || ""}
@@ -620,7 +620,7 @@ const dispatch = useDispatch() as AppDispatch;
                   </div>
                 </div>
                 {/* Shipping Info */}
-                <div className="md:flex gap-4 items-start hidden">
+                <div className="md:flex gap-4 items-start hidden ">
                   {/* <div>
                     <Image
                       src={truck}
@@ -648,7 +648,7 @@ const dispatch = useDispatch() as AppDispatch;
                   </div> */}
                 </div>
                 {/* Security & Refund */}
-                <div className="space-y-6">
+                <div className="space-y-6 bg-0070e9">
                   <div className="flex gap-4 items-start">
                     <Image
                       src={Security}
@@ -706,7 +706,7 @@ const dispatch = useDispatch() as AppDispatch;
                 </div>
                 <div>
                   <h1 className="font-MontserratSemiBold text-161616 text-c18">
-                    Seller Name
+                    {productDetails?.manufacturer_name || "Seller Name"}
                   </h1>
                   <div className="flex gap-2 items-center">
                     <div className="w-5 h-5">
@@ -792,17 +792,17 @@ const dispatch = useDispatch() as AppDispatch;
         </>
       )}
 
-      <div className="md:hidden flex w-full  gap-2 mb-c32  md:gap-0  md:flex-col">
+      {/* <div className="md:hidden flex w-full  gap-2 mb-c32  md:gap-0  md:flex-col">
         <Button className="" variant="secondary">
           View profile
         </Button>
         <Button variant="primary">Send message</Button>
-      </div>
-      <div>
+      </div> */}
+      <div className = "">
         <AdSlider />
       </div>
 
-      <div className=" mt-c32 md:hidden">
+      <div className=" mt-c32 md:hidden s">
         <div className="md:hidden">
           <ProductDetailCategory
             slug={productDetails?.slug || "new"}

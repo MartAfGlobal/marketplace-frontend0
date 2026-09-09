@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import GoodMark from "@/assets/mobile/good.png";
 import { RootState } from "@/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -38,6 +39,7 @@ export default function AllWishlist({
   onClose,
   onOpen,
 }: AllWishlistProps) {
+  const router = useRouter();
   // Selection keyed by actual product id
   const [selectedItems, setSelectedItems] = useState<{
     [productId: string]: boolean;
@@ -65,13 +67,10 @@ export default function AllWishlist({
   const [loadingRem, setLoadRem] = useState<Record<string, boolean>>({});
   const [selectedSlug, setSelectedSlug] = useState<string>("");
 
-  // allSelected now based on product ids
+  // allSelected uses wishlist entry item.id to match individual checkbox key space
   const allSelected =
     wishlistItems.length > 0 &&
-    wishlistItems.every((item) => {
-      const productId = String(item.product?.id ?? item.id);
-      return selectedItems[productId];
-    });
+    wishlistItems.every((item) => selectedItems[String(item.id)]);
 
   const handleToggleSelectAll = () => {
     if (allSelected) {
@@ -79,8 +78,7 @@ export default function AllWishlist({
     } else {
       const newSelections: { [key: string]: boolean } = {};
       wishlistItems.forEach((item) => {
-        const productId = String(item.product?.id ?? item.id);
-        newSelections[productId] = true;
+        newSelections[String(item.id)] = true;
       });
       setSelectedItems(newSelections);
     }
@@ -197,9 +195,12 @@ export default function AllWishlist({
       ) : (
         <div className="w-full px-6 md:px-0">
           <div className="w-full h-c56 mb-4 md:mb-c32 flex justify-between items-center md:hidden">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleToggleSelectAll}
+            <button
+              type="button"
+              onClick={handleToggleSelectAll}
+              className="flex items-center gap-4 cursor-pointer select-none"
+            >
+              <div
                 className={`w-5 h-5 rounded-c4 border-1 border-000000/32 flex items-center justify-center transition-colors ${
                   allSelected ? "bg-ff715b" : "border-000000/5 bg-transparent"
                 }`}
@@ -212,11 +213,11 @@ export default function AllWishlist({
                     height={7.13}
                   />
                 )}
-              </button>
+              </div>
               <span className="text-c12 font-MontserratSemiBold">
                 Select all
               </span>
-            </div>
+            </button>
             <Image src={Filter} alt="filter" width={24} height={24} />
           </div>
 
@@ -247,14 +248,16 @@ export default function AllWishlist({
                         <div className="flex gap-4 w-full items-center md:items-start">
                           <div className="flex gap-3 items-center w-full max-w-fit">
                             <button
-                              onClick={() =>
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedItems((prev) => ({
                                   ...prev,
                                   [whishlistItemSelected]:
                                     !prev[whishlistItemSelected],
-                                }))
-                              }
-                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                }));
+                              }}
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
                                 selectedItems[whishlistItemSelected]
                                   ? "bg-ff715b border-ff715b"
                                   : "border-ff715b bg-transparent"
@@ -269,18 +272,26 @@ export default function AllWishlist({
                                 />
                               )}
                             </button>
-                            <Image
-                              src={
-                                product.main_image.medium || "/placeholder.png"
-                              }
-                              alt={product.name || "Wishlist item image"}
-                              width={100}
-                              height={100}
-                              className="w-16 h-16 md:w-25 md:h-25"
-                            />
+                            <div
+                              onClick={() => router.push(`/product/${product.slug}`)}
+                              className="cursor-pointer flex-shrink-0"
+                            >
+                              <Image
+                                src={
+                                  product.main_image?.medium || "/placeholder.png"
+                                }
+                                alt={product.name || "Wishlist item image"}
+                                width={100}
+                                height={100}
+                                className="w-16 h-16 md:w-25 md:h-25 object-cover rounded"
+                              />
+                            </div>
                           </div>
-                          <div className="w-full md:max-w-143.75">
-                            <p className="font-MontserratSemiBold text-c12 md:text-sm pb-1 text-000000">
+                          <div
+                            onClick={() => router.push(`/product/${product.slug}`)}
+                            className="w-full md:max-w-143.75 cursor-pointer"
+                          >
+                            <p className="font-MontserratSemiBold text-c12 md:text-sm pb-1 text-000000 hover:text-ff715b transition-colors">
                               {product.name}
                             </p>
                             <p className="font-MontserratSemiBold  text-base md:text-c18 pt-3 leading-6.5">
@@ -290,19 +301,16 @@ export default function AllWishlist({
                         </div>
 
                         <button
-                          onClick={handleAddToCart(product.slug)}
-                          className={`w-10 h-10 flex justify-center md:hidden items-center rounded-full border flex-shrink-0 border-ff715b $}`}
+                          type="button"
+                          onClick={() => router.push(`/product/${product.slug}`)}
+                          className="w-10 h-10 flex justify-center md:hidden items-center rounded-full border flex-shrink-0 border-ff715b cursor-pointer"
                         >
-                          {loadingIds[productId] ? (
-                            <LoadingSpinner color="border-ff715b" />
-                          ) : (
-                            <Image
-                              src={CartButton}
-                              alt="Add to cart"
-                              width={16}
-                              height={16}
-                            />
-                          )}
+                          <Image
+                            src={CartButton}
+                            alt="View product"
+                            width={16}
+                            height={16}
+                          />
                         </button>
 
                         <div className="hidden md:flex flex-col w-full max-w-52.5 space-y-4">

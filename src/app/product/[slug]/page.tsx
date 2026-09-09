@@ -66,9 +66,9 @@ const variationId = searchParams.get("variationId") || undefined;
       </div>
 
       {/* Product main section */}
-      <div className="flex flex-col md:flex-row md:gap-c67 justify-center">
+      <div className="flex flex-col md:flex-row md:gap-c67 justify-center ">
         <div className="flex flex-col gap-c32 w-full ">
-          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-12 px-5.5 md:px-0  md:border-b md:border-gray-200 h-fit pb-1.5 ">
+          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-12   md:border-b md:border-gray-200 h-fit pb-1.5 ">
             {/* <div className="w-full  md:max-w-99.5 overflow-hidden">
               <div className="w-full md:min-w-c397 h-fit md:h-c386-58 mb-1 md:mb-4 flex-shrink-0">
                 <Image
