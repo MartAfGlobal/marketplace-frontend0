@@ -29,6 +29,7 @@ import { AuthStep } from "@/types/global";
 import NotificationButton from "../../Button/notificationButton";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import { useHttp } from "@/hooks/use-http";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 export default function Header() {
   const [showModal, setShowModal] = useState(false);
@@ -99,6 +100,79 @@ export default function Header() {
     setMounted(true);
   }, []);
 
+  // Fetch user profile info on mount / login if token exists
+  useEffect(() => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/accounts/UserDetails/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res: any) => {
+        const resData = res?.data;
+        const user = resData?.buyerDetails || resData?.user || resData;
+        if (!user) return;
+
+        dispatch(
+          buyerActions.updateBuyerData({
+            id: user?.id ?? "",
+            email: user?.email ?? "",
+            first_name: user?.first_name ?? "",
+            last_name: user?.last_name ?? "",
+            account_status: user?.account_status ?? "",
+            date_created: user?.date_created ?? "",
+            date_joined: user?.date_joined ?? "",
+            last_login: user?.last_login ?? null,
+            groups: user?.groups ?? [],
+            is_accountant: user?.is_accountant ?? false,
+            is_active: user?.is_active ?? false,
+            is_agent: user?.is_agent ?? false,
+            is_customer: user?.is_customer ?? false,
+            is_google_user: user?.is_google_user ?? false,
+            is_manufacturer: user?.is_manufacturer ?? false,
+            is_staff: user?.is_staff ?? false,
+            is_staff_member: user?.is_staff_member ?? false,
+            is_superuser: user?.is_superuser ?? false,
+            profile_type: user?.profile_type ?? "",
+            user_permissions: user?.user_permissions ?? [],
+            profile: {
+              id: user?.profile?.id ?? 0,
+              profile_picture: user?.profile?.profile_picture ?? null,
+              first_name: user?.profile?.first_name ?? "",
+              last_name: user?.profile?.last_name ?? "",
+              name: user?.profile?.name ?? "",
+              phone: user?.profile?.phone ?? null,
+              phone2: user?.profile?.phone2 ?? null,
+              country: user?.profile?.country ?? null,
+              state: user?.profile?.state ?? null,
+              city: user?.profile?.city ?? null,
+              address: user?.profile?.address ?? null,
+              landmark: user?.profile?.landmark ?? null,
+              zip_code: user?.profile?.zip_code ?? null,
+              loyalty_points: user?.profile?.loyalty_points ?? 0,
+              preferred_payment_method:
+                user?.profile?.preferred_payment_method ?? null,
+              created_at: user?.profile?.created_at ?? "",
+            },
+          })
+        );
+      },
+    });
+  }, [token, dispatch, sendHttpRequest]);
+
+  const getProfileImage = (userObj: any) => {
+    const pic = userObj?.profile?.profile_picture || userObj?.profile_picture;
+    if (!pic || typeof pic !== "string") return User;
+    if (pic.startsWith("http://") || pic.startsWith("https://") || pic.startsWith("/")) {
+      return pic;
+    }
+    return User;
+  };
+
   console.log("lets check coundydy", cartCount);
 
   return (
@@ -143,21 +217,13 @@ export default function Header() {
               className="flex items-center gap-2"
             >
               {token ? (
-                <div className="h-7.5 w-7.5 border-1 border-fffff rounded-full flex justify-center items-center overflow-hidden">
+                <div className="h-7.5 w-7.5 border-1 border-ffffff rounded-full flex justify-center items-center overflow-hidden">
                   <Image
-                    src={(() => {
-                      const pic = buyer?.profile?.profile_picture;
-                      if (!pic) return User;
-                      try {
-                        new URL(pic);
-                        return pic;
-                      } catch {
-                        return User;
-                      }
-                    })()}
+                    src={getProfileImage(buyer)}
                     alt="User"
                     width={30}
                     height={30}
+                    className="object-cover w-full h-full"
                   />
                 </div>
               ) : (
@@ -171,7 +237,7 @@ export default function Header() {
                     buyer?.first_name
                       ? buyer.first_name.charAt(0).toUpperCase() +
                         buyer.first_name.slice(1)
-                      : "Not set"
+                      : "User"
                   }`}
                 </span>
               )}
@@ -215,23 +281,18 @@ export default function Header() {
             </div>
 
             {token ? (
-              <div className="h-5 w-5 border-1 border-ffffff rounded-full flex justify-center items-center overflow-hidden">
-                {/* <Image
-                  src={(() => {
-                    const pic = buyer?.profile?.profile_picture;
-                    if (!pic) return User;
-                    try {
-                      new URL(pic);
-                      return pic;
-                    } catch {
-                      return User;
-                    }
-                  })()}
+              <button
+                onClick={() => dispatch(openMobileMenu())}
+                className="h-7 w-7 border-1 border-ffffff rounded-full flex justify-center items-center overflow-hidden cursor-pointer"
+              >
+                <Image
+                  src={getProfileImage(buyer)}
                   alt="User"
-                  width={20}
-                  height={20}
-                /> */}
-              </div>
+                  width={28}
+                  height={28}
+                  className="object-cover w-full h-full"
+                />
+              </button>
             ) : (
               <div className="flex items-center gap-2">
                 <Image src={User} alt="User" width={19.52} height={18.77} />

@@ -38,6 +38,28 @@ export default function CheckoutSummary() {
     (state: RootState) => state.cart.checkoutSummary,
   );
 
+  const computedSubtotal = checkoutItems.reduce(
+    (acc: number, item: any) => acc + (Number(item.subtotal) || Number(item.total_price) || 0),
+    0
+  );
+
+  const formatAmount = (val: any, fallback: number = 0): string => {
+    if (val === undefined || val === null || val === "") {
+      return fallback.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    const num = typeof val === "number" ? val : parseFloat(String(val).replace(/,/g, ""));
+    if (isNaN(num)) {
+      return fallback.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const subtotalDisplay = formatAmount(checkoutSummary?.subtotal, computedSubtotal);
+  const discountDisplay = formatAmount(checkoutSummary?.discount_amount, 0);
+  const shippingDisplay = formatAmount(checkoutSummary?.shipping_cost, 0);
+  const totalDisplay = formatAmount(checkoutSummary?.total, computedSubtotal);
+  const totalItemCount = checkoutItems.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0);
+
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses,
   );
@@ -384,24 +406,24 @@ export default function CheckoutSummary() {
         <div className="space-y-2 text-sm font-MontserratNormal mt-4">
           <div className="flex justify-between">
             <p>Total items:</p>
-            <p>₦{checkoutSummary?.subtotal}</p>
+            <p>{totalItemCount}</p>
           </div>
           <div className="flex justify-between">
             <p>Discount:</p>
-            <p className="text-ca0202">-₦{checkoutSummary?.discount_amount}</p>
+            <p className="text-ca0202">-₦{discountDisplay}</p>
           </div>
           <div className="flex justify-between">
             <p className="font-MontserratSemiBold">Subtotal:</p>
-            <p>₦{checkoutSummary?.subtotal}</p>
+            <p>₦{subtotalDisplay}</p>
           </div>
 
           <div className="flex justify-between mt-4">
             <p>Shipping fee:</p>
-            <p>₦{checkoutSummary?.shipping_cost}</p>
+            <p>₦{shippingDisplay}</p>
           </div>
           <div className="flex justify-between text-base font-MontserratSemiBold mt-4">
             <p>Estimated total:</p>
-            <p>₦{checkoutSummary?.total}</p>
+            <p>₦{totalDisplay}</p>
           </div>
         </div>
       </motion.div>
@@ -412,7 +434,7 @@ export default function CheckoutSummary() {
           <div>
             <p className="text-base font-MontserratSemiBold mb-3">Total</p>
             <p className="font-MontserratSemiBold text-c20">
-              ₦{checkoutSummary?.total}
+              ₦{totalDisplay}
             </p>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { RootState } from "@/store";
+import axios from "@/lib/axios";
 import GuestCheckoutModal from "@/components/ui/Modals/guestCheckoutModal";
 import { selectCheckedItems, setCheckoutSummary } from "@/store/cart/cartSlice";
 import {
@@ -471,7 +472,6 @@ export default function CartPage() {
 
   const handleDeleteSelected = async () => {
     const selectedIds = Object.entries(selectedItems)
-
       .filter(([_, checked]) => checked)
       .map(([id]) => id);
 
@@ -479,8 +479,16 @@ export default function CartPage() {
       toast.info("No items selected to delete.");
       return;
     }
-    console.log("selectedIds for deletion:", selectedIds);
 
+    const itemsToDelete = (cartItems || []).filter(
+      (it) => selectedItems[it.variation_id || it.id],
+    );
+
+    const payloadItemIds = itemsToDelete.map((item) => ({
+      variation_id: item.variation_id || item.id || item.product_id || "",
+    }));
+
+    // Optimistically update local state & Redux
     selectedIds.forEach((id) => dispatch(removeFromCart({ variation_id: id })));
 
     const remaining = (cartItems || []).filter(
@@ -500,12 +508,26 @@ export default function CartPage() {
           token,
           isAuth: true,
           userType: "buyer",
-          body: { item_ids: selectedIds },
+          body: { item_ids: payloadItemIds },
         },
         successRes: () => {},
       });
-    } catch (err) {
-      toast.error("Failed to delete selected items on server");
+    } catch {
+      try {
+        await Promise.allSettled(
+          itemsToDelete.map((item) => {
+            const targetId = item.variation_id || item.id || item.product_id;
+            return axios.delete(`/cart/item/${targetId}/remove/`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+          }),
+        );
+      } catch (err) {
+        console.error("Error deleting items from backend:", err);
+      }
+    } finally {
       await fetchBackendCart();
     }
   };

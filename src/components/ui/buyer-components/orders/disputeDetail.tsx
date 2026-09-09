@@ -513,10 +513,10 @@ export default function DisputeDetailsPage(returnid:string) {
       <ResultModal
         isOpen={success}
         title="Submitted successfully"
-        message="Welcome to the team!"
+        message="Your return request has been submitted successfully."
         discRescription="You will receive an email with further instructions based on our return policy and evidence provided"
         onConfirm={handleConfirm}
-        buttenText="Back to shopping"
+        buttenText="Done"
       />
     </>
   );

@@ -62,6 +62,28 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
     (state: RootState) => state.cart.checkoutSummary,
   );
 
+  const computedSubtotal = checkoutItems.reduce(
+    (acc, item) => acc + (Number(item.subtotal) || (Number(item.price) * (item.quantity || 1)) || 0),
+    0
+  );
+
+  const formatAmount = (val: any, fallback: number = 0): string => {
+    if (val === undefined || val === null || val === "") {
+      return fallback.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    const num = typeof val === "number" ? val : parseFloat(String(val).replace(/,/g, ""));
+    if (isNaN(num)) {
+      return fallback.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const subtotalDisplay = formatAmount(checkoutSummary?.subtotal, computedSubtotal);
+  const discountDisplay = formatAmount(checkoutSummary?.discount_amount, 0);
+  const shippingDisplay = formatAmount(checkoutSummary?.shipping_cost, 0);
+  const totalDisplay = formatAmount(checkoutSummary?.total, computedSubtotal);
+  const totalItemCount = checkoutItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+
   const { loading: guestchecking, sendHttpRequest: saveRequest } = useHttp();
 
   const toNumber = (value: any): number => {
@@ -290,24 +312,24 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                 <div className="font-MontserratNormal text-sm text-000000 h-23 border-b border-b-000000/10 space-y-2">
                   <div className="flex justify-between">
                     <p>Total items</p>
-                    <p>N{checkoutSummary?.subtotal}</p>
+                    <p>{totalItemCount}</p>
                   </div>
                   <div className="flex justify-between">
                     <p>Discounts</p>
-                    <p>-N{checkoutSummary?.discount_amount}</p>
+                    <p>-₦{discountDisplay}</p>
                   </div>
                   <div className="flex justify-between">
                     <p>Subtotal</p>
-                    <p>{checkoutSummary?.subtotal}</p>
+                    <p>₦{subtotalDisplay}</p>
                   </div>
                 </div>
                 <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
                   <p>Shipping fee</p>
-                  <p>{checkoutSummary?.shipping_cost}</p>
+                  <p>₦{shippingDisplay}</p>
                 </div>
                 <div className="flex justify-between h-9 border-b border-b-000000/10 mt-3">
                   <p>Order total</p>
-                  <p>{checkoutSummary?.total}</p>
+                  <p>₦{totalDisplay}</p>
                 </div>
 
                 <div className=" mt-3 mb-c32 flex gap-c42 items-center">
@@ -320,7 +342,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                     </p>
                   </div>
                   <p className="font-MontserratSemiBold text-c32 ">
-                    N{checkoutSummary?.total}
+                    ₦{totalDisplay}
                   </p>
                 </div>
                 {token ? (

@@ -473,7 +473,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                                             totalPrice,
                                           );
                                         }}
-                                        className=""
+                                        className="hidden"
                                       >
                                         {selectedId === item.id && repaying ? (
                                           <LoadingSpinner />
