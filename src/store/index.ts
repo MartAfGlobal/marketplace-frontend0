@@ -83,10 +83,10 @@ const sellerPersistConfig = {
   storage,
 };
 
-const cartPersistConfig = {
-  key: "cart",
-  storage,
-};
+// Cart is intentionally NOT persisted via redux-persist.
+// For logged-in users the backend is the sole source of truth; the cart is
+// fetched fresh on every cart-page mount via syncGuestCartAndFetch().
+// For guests, cartSlice.ts manages its own localStorage["cart"] key directly.
 
 const orderSlicePersistConfig = {
   key: "orderSlice",
@@ -194,7 +194,7 @@ const rootReducer = combineReducers({
   token: persistReducer(tokenPersistConfig, tokenReducer),
   buyer: persistReducer(buyerPersistConfig, buyerReducer),
   seller: persistReducer(sellerPersistConfig, sellerReducer),
-  cart: persistReducer(cartPersistConfig, cartReducer),
+  cart: cartReducer,
   draft: persistReducer(draftPersistConfig, draftReducer),
   wishlist: persistReducer(wishlistPersistConfig, wishlistReducer),
   products: persistReducer(productsPersistConfig, productReducer),

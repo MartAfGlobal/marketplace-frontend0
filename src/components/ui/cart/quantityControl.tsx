@@ -152,8 +152,6 @@ const productDetails = useSelector(
   const updateBackendQuantity = async (newQty: number) => {
     if (!token || !variation_id) return;
 
-    console.log("Updating backend quantity to:", newQty, variation_id);
-
     return sendHttpRequest({
       requestConfig: {
         url: `/cart/item/${variation_id}/update_quantity/`,
@@ -215,7 +213,8 @@ const productDetails = useSelector(
 
       if (token && itemExistsInCart) {
         await updateBackendQuantity(newQty);
-        fetchCartFromBackend();
+        // Await the refetch so Redux is always up-to-date before any re-render
+        await fetchCartFromBackend();
       } else if (!token && itemExistsInCart) {
         dispatch(updateQuantity({ variation_id, quantity: newQty }));
       }
