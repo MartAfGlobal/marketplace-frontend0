@@ -1,0 +1,17 @@
+# Local-dev-only image — runs `next dev` with the source bind-mounted for
+# hot reload. Not a production build (see the project's own deploy docs/
+# Vercel config for that); this exists solely so the app can run under a
+# recent Node inside Docker on machines whose host Node is older than the
+# >=20.9 this Next.js version requires.
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

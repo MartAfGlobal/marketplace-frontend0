@@ -23,6 +23,10 @@ import AdminCategoryStatsReducer from "@/store/admin/categories/categoryStatsSli
 import AdminCategoriesReducer from "@/store/admin/categories/adminCategoriesSlice"
 import AdminCategoryDetailReducer from "@/store/admin/categories/adminCategoryDetailSlice"
 import AdminOrdersReducer from "@/store/admin/orders/adminOrdersSlice"
+import AdminRolesReducer from "@/store/admin/roles/adminRolesSlice"
+import AdminRoleDetailReducer from "@/store/admin/roles/adminRoleDetailSlice"
+import AdminStaffReducer from "@/store/admin/staff/adminStaffSlice"
+import AdminStaffDetailReducer from "@/store/admin/staff/adminStaffDetailSlice"
 
 import productReducer from "./user-data/products/product-slice";
 import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice";
@@ -172,6 +176,22 @@ const AdminOrdersPersistConfig = {
   key: "adminOrders",
   storage,
 };
+const AdminRolesPersistConfig = {
+  key: "adminRoles",
+  storage,
+};
+const AdminRoleDetailPersistConfig = {
+  key: "adminRoleDetail",
+  storage,
+};
+const AdminStaffPersistConfig = {
+  key: "adminStaff",
+  storage,
+};
+const AdminStaffDetailPersistConfig = {
+  key: "adminStaffDetail",
+  storage,
+};
 
 const rootReducer = combineReducers({
   productDetails: persistReducer(
@@ -189,6 +209,10 @@ const rootReducer = combineReducers({
  adminProducts:persistReducer(AdminProductsPersistConfig, AdminProductsReducer),
  adminProductDetail:persistReducer(AdminProductDetailPersistConfig, AdminProductDetailReducer),
  adminOrders:persistReducer(AdminOrdersPersistConfig, AdminOrdersReducer),
+ adminRoles:persistReducer(AdminRolesPersistConfig, AdminRolesReducer),
+ adminRoleDetail:persistReducer(AdminRoleDetailPersistConfig, AdminRoleDetailReducer),
+ adminStaff:persistReducer(AdminStaffPersistConfig, AdminStaffReducer),
+ adminStaffDetail:persistReducer(AdminStaffDetailPersistConfig, AdminStaffDetailReducer),
   sellerProduct: persistReducer(SellerPersistConfig, SellerProductReducer),
   tracking: persistReducer(trackingPersistCobfig, trackingReducer),
   token: persistReducer(tokenPersistConfig, tokenReducer),

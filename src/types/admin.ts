@@ -86,6 +86,163 @@ export function resolveImageUrl(imageUrlField: any): string | undefined {
   return undefined;
 }
 
+// ── Roles & Permissions (RBAC) ─────────────────────────────────────────────
+// Mirrors departments/serializers_rbac.py + accounts/models.py on the backend.
+
+export type PermissionAction = "view" | "create" | "modify" | "delete";
+
+export type PermissionCategoryKey =
+  | "USERS"
+  | "VERIFICATIONS"
+  | "PRODUCTS"
+  | "ORDERS"
+  | "SUPPORT"
+  | "FINANCES"
+  | "REPORTS"
+  | "STAFF";
+
+export type AccessLevel = "RESTRICTED" | "HIGH" | "STANDARD";
+export type RoleStatus = "ACTIVE" | "SUSPENDED";
+export type RoleType = "SYSTEM" | "CUSTOM";
+
+export type PermissionMatrix = Record<
+  PermissionCategoryKey,
+  Record<PermissionAction, boolean>
+>;
+
+export interface AdminRoleListItem {
+  id: number;
+  name: string;
+  description: string;
+  status: RoleStatus;
+  status_display: string;
+  access_level: AccessLevel;
+  access_level_display: string;
+  role_type: RoleType;
+  role_type_display: string;
+  access_areas: string[];
+  assigned_staff: number;
+  updated_at: string;
+}
+
+export interface AdminRoleDetail extends AdminRoleListItem {
+  permissions: PermissionMatrix;
+  created_at: string;
+  created_by_email: string | null;
+  updated_by_email: string | null;
+}
+
+export interface AdminRoleStaffAssignedItem {
+  user_id: string;
+  staff_ref: string | null;
+  name: string;
+  status: string | null;
+  date_added: string;
+  last_active: string | null;
+}
+
+export interface AdminRolesSummary {
+  total_roles: number;
+  active_roles: number;
+  total_staff_assigned: number;
+  unused_roles: number;
+}
+
+export interface PermissionCategoryOption {
+  key: PermissionCategoryKey;
+  label: string;
+}
+
+// ── Staff Management ───────────────────────────────────────────────────────
+
+export type StaffStatus = "PENDING" | "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
+
+export interface AdminStaffListItem {
+  user_id: string;
+  staff_ref: string;
+  full_name: string;
+  email: string;
+  role: string | null;
+  location: string | null;
+  status: StaffStatus;
+  status_display: string;
+  last_active: string | null;
+}
+
+export interface AdminStaffDetail {
+  user_id: string;
+  staff_ref: string;
+  status: StaffStatus;
+  status_display: string;
+  email: string;
+  role: string | null;
+  role_id: number | null;
+  profile_picture_url: string | null;
+  first_name: string;
+  last_name: string;
+  middle_name: string | null;
+  dob: string | null;
+  gender: string | null;
+  marital_status: string | null;
+  phone: string;
+  nationality: string | null;
+  residential_address: string | null;
+  country: string | null;
+  state: string | null;
+  city: string | null;
+  postal_code: string | null;
+  location: string | null;
+  means_of_identification: string | null;
+  id_issue_date: string | null;
+  id_expiration_date: string | null;
+  identification_document_url: string | null;
+  invited_at: string | null;
+  activated_at: string | null;
+  created_at: string;
+}
+
+export interface AdminStaffSummary {
+  total_staff: number;
+  active_staff: number;
+  inactive_staff: number;
+}
+
+export interface AdminStaffByRole {
+  role: string;
+  count: number;
+}
+
+export interface AdminStaffActivityLogItem {
+  id: number;
+  actor_name: string;
+  category: "STAFF" | "ROLE" | "KYC" | "TICKET" | "OTHER";
+  action: string;
+  target_description: string | null;
+  created_at: string;
+}
+
+export interface AdminStaffTicketItem {
+  id: number;
+  ticket_ref: string;
+  subject: string;
+  status: "OPEN" | "PENDING" | "CLOSED";
+  created_at: string;
+  closed_at: string | null;
+}
+
+// The reason codes accepted by both the suspend and security-logout
+// endpoints (accounts.models.SuspensionReason).
+export const SUSPENSION_REASONS: { value: string; label: string }[] = [
+  { value: "FRAUDULENT_ACTIVITY", label: "Fraudulent activity" },
+  { value: "MALICIOUS_PAYMENT_INFO", label: "Malicious payment information" },
+  { value: "POLICY_VIOLATION", label: "Policy violation" },
+  { value: "MULTIPLE_DISPUTES", label: "Multiple unresolved disputes" },
+  { value: "SUSPICIOUS_BEHAVIOR", label: "Suspicious behavior" },
+  { value: "COUNTERFEIT_PRODUCTS", label: "Counterfeit or prohibited products" },
+  { value: "NON_COMPLIANCE", label: "KYC/KYB non-compliance" },
+  { value: "OTHER", label: "Other" },
+];
+
 // ── Admin Disputes & Returns ───────────────────────────────────────────────
 
 export interface AdminDisputeStats {

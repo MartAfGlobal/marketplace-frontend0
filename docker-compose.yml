@@ -1,0 +1,24 @@
+# Local-dev-only. Runs the Next.js dev server inside Node 20 (this project's
+# host machine may have an older Node than the >=20.9 Next 16 requires).
+# Talks to the backend at http://localhost:8000 — the browser makes the
+# NEXT_PUBLIC_ API calls directly, not this container, so it reaches the
+# backend's host-published port the same way a natively-run `next dev` would;
+# no shared Docker network with the backend compose project is needed.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3001:3000"
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - next_cache:/app/.next
+
+volumes:
+  node_modules:
+  next_cache:
