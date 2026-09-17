@@ -6,6 +6,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import HandBug from "@/assets/Seller/handBug.png";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import AdminRowCheckbox from "@/components/admin-components/AdminRowCheckbox";
 import type { AdminStaffListItem, StaffStatus } from "@/types/admin";
 
 interface StaffTableProps {
@@ -15,6 +16,7 @@ interface StaffTableProps {
   onToggleRow: (id: string) => void;
   onSelectAll: () => void;
   onSuspendRow: (row: AdminStaffListItem) => void;
+  onResendInvite: (row: AdminStaffListItem) => void;
 }
 
 const STATUS_STYLES: Record<StaffStatus, string> = {
@@ -40,36 +42,6 @@ function formatLastActive(iso: string | null) {
   return date.toLocaleDateString();
 }
 
-function Checkbox({ checked, onClick, ariaLabel }: { checked: boolean; onClick: () => void; ariaLabel: string }) {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className={`group flex h-4 w-4 items-center justify-center border duration-200 ${
-        checked ? "border-[#ff715b] bg-[#ff715b]" : "border-[#161616] hover:border-[#ff715b]"
-      }`}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={`h-2.5 w-2.5 ${
-          checked ? "text-white" : "text-[#ff715b] opacity-0 group-hover:opacity-100 group-hover:text-white"
-        }`}
-      >
-        <path d="M5 12.5 9.5 17 19 7.5" />
-      </svg>
-    </button>
-  );
-}
-
 export default function StaffTable({
   rows,
   loading,
@@ -77,6 +49,7 @@ export default function StaffTable({
   onToggleRow,
   onSelectAll,
   onSuspendRow,
+  onResendInvite,
 }: StaffTableProps) {
   const router = useRouter();
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
@@ -90,7 +63,7 @@ export default function StaffTable({
           <tr className="h-10.5 bg-947fff text-ffffff text-nowrap">
             <th className="font-MontserratNormal text-sm text-center w-10 p-3">
               <div className="mx-auto flex">
-                <Checkbox checked={allSelected} onClick={onSelectAll} ariaLabel="Select all staff" />
+                <AdminRowCheckbox checked={allSelected} onClick={onSelectAll} ariaLabel="Select all staff" />
               </div>
             </th>
             <th className="p-3 font-MontserratNormal text-sm">Full name</th>
@@ -115,7 +88,7 @@ export default function StaffTable({
             rows.map((row) => (
               <tr key={row.user_id} className="transition-colors h-10.5 text-000000/68 font-MontserratNormal text-sm">
                 <td className="py-3 px-4">
-                  <Checkbox
+                  <AdminRowCheckbox
                     checked={selectedIds.includes(row.user_id)}
                     onClick={() => onToggleRow(row.user_id)}
                     ariaLabel={`Select ${row.full_name}`}
@@ -166,6 +139,17 @@ export default function StaffTable({
                         >
                           <span className="text-[#ff715b] hover:text-[#ff715b]/80 transition-colors">More Details</span>
                         </button>
+                        {row.status === "PENDING" && (
+                          <button
+                            onClick={() => {
+                              setActiveRowId(null);
+                              onResendInvite(row);
+                            }}
+                            className="w-full py-2 text-left text-000000/68 hover:text-000000 transition-colors flex items-center gap-3"
+                          >
+                            Resend invitation
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setActiveRowId(null);

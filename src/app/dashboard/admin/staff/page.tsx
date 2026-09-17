@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, UserPlus, LogOut, Users, CheckCircle2, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { RootState } from "@/store";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { Button } from "@/components/ui/Button/Button";
@@ -39,6 +40,7 @@ export default function AdminStaffPage() {
     fetchAdminStaffList,
     securityLogoutAdminStaffBulk,
     suspendAdminStaff,
+    resendAdminStaffInvite,
     loading,
   } = AdminDetails();
 
@@ -88,6 +90,13 @@ export default function AdminStaffPage() {
       setSuspendTarget(null);
       refetch();
     });
+  };
+
+  const handleResendInvite = (row: AdminStaffListItem) => {
+    resendAdminStaffInvite(
+      row.user_id,
+      () => toast.success(`Invitation resent to ${row.email}.`),
+    );
   };
 
   return (
@@ -204,6 +213,7 @@ export default function AdminStaffPage() {
             onToggleRow={handleToggleRow}
             onSelectAll={handleSelectAll}
             onSuspendRow={setSuspendTarget}
+            onResendInvite={handleResendInvite}
           />
 
           {totalCount > PAGE_SIZE && (

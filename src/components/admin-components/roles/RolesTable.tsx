@@ -5,11 +5,15 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import HandBug from "@/assets/Seller/handBug.png";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import AdminRowCheckbox from "@/components/admin-components/AdminRowCheckbox";
 import type { AccessLevel, AdminRoleListItem } from "@/types/admin";
 
 interface RolesTableProps {
   rows: AdminRoleListItem[];
   loading: boolean;
+  selectedIds: number[];
+  onToggleRow: (id: number) => void;
+  onSelectAll: () => void;
   onEdit: (role: AdminRoleListItem) => void;
   onDuplicate: (role: AdminRoleListItem) => void;
   onDelete: (role: AdminRoleListItem) => void;
@@ -33,14 +37,30 @@ function formatDate(iso: string) {
   });
 }
 
-export default function RolesTable({ rows, loading, onEdit, onDuplicate, onDelete }: RolesTableProps) {
+export default function RolesTable({
+  rows,
+  loading,
+  selectedIds,
+  onToggleRow,
+  onSelectAll,
+  onEdit,
+  onDuplicate,
+  onDelete,
+}: RolesTableProps) {
   const [activeRowId, setActiveRowId] = useState<number | null>(null);
+
+  const allSelected = rows.length > 0 && rows.every((row) => selectedIds.includes(row.id));
 
   return (
     <div className="overflow-x-auto min-h-[250px]">
       <table className="w-full text-left">
         <thead>
           <tr className="h-10.5 bg-947fff text-ffffff text-nowrap">
+            <th className="font-MontserratNormal text-sm text-center w-10 p-3">
+              <div className="mx-auto flex">
+                <AdminRowCheckbox checked={allSelected} onClick={onSelectAll} ariaLabel="Select all roles" />
+              </div>
+            </th>
             <th className="p-3 font-MontserratNormal text-sm">Role name</th>
             <th className="p-3 font-MontserratNormal text-sm">Access level</th>
             <th className="p-3 font-MontserratNormal text-sm">Access areas</th>
@@ -52,7 +72,7 @@ export default function RolesTable({ rows, loading, onEdit, onDuplicate, onDelet
         <tbody className="text-sm text-000000/68 font-MontserratNormal">
           {loading ? (
             <tr>
-              <td colSpan={6} className="py-12 text-center">
+              <td colSpan={7} className="py-12 text-center">
                 <div className="flex justify-center items-center">
                   <LoadingSpinner size={32} color="border-ff715b" />
                 </div>
@@ -65,6 +85,13 @@ export default function RolesTable({ rows, loading, onEdit, onDuplicate, onDelet
 
               return (
                 <tr key={role.id} className="transition-colors">
+                  <td className="p-3 align-top">
+                    <AdminRowCheckbox
+                      checked={selectedIds.includes(role.id)}
+                      onClick={() => onToggleRow(role.id)}
+                      ariaLabel={`Select ${role.name}`}
+                    />
+                  </td>
                   <td className="p-3 align-top max-w-72" onClick={() => onEdit(role)}>
                     <p className="text-000000 cursor-pointer">{role.name}</p>
                     <p className="text-c12 text-000000/44 font-MontserratNormal mt-0.5 line-clamp-2">
@@ -150,7 +177,7 @@ export default function RolesTable({ rows, loading, onEdit, onDuplicate, onDelet
             })
           ) : (
             <tr>
-              <td colSpan={6} className="py-8 text-center text-000000/68 text-xs">
+              <td colSpan={7} className="py-8 text-center text-000000/68 text-xs">
                 No roles found.
               </td>
             </tr>

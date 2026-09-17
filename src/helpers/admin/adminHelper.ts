@@ -2195,6 +2195,32 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const resendAdminStaffInvite = (
+    userId: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/resend-invite/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   const fetchAdminStaffDetail = (
     userId: string,
     callback?: (data: any) => void,
@@ -2534,6 +2560,7 @@ export const AdminDetails = (id?: string) => {
     fetchAdminStaffList,
     fetchAdminStaffActivityFeed,
     inviteAdminStaff,
+    resendAdminStaffInvite,
     fetchAdminStaffDetail,
     updateAdminStaffProfile,
     reassignAdminStaffRole,

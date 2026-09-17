@@ -27,6 +27,7 @@ export default function RolesAndPermissionsPage() {
   const [detailRoleId, setDetailRoleId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminRoleListItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const token = useSelector((state: RootState) => state.token?.token);
   const { adminRoles, totalCount, summary } = useSelector((state: RootState) => state.adminRoles);
@@ -50,6 +51,15 @@ export default function RolesAndPermissionsPage() {
         [role.name, role.description, ...role.access_areas].join(" ").toLowerCase().includes(query),
       )
     : adminRoles;
+
+  const handleToggleRow = (id: number) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  };
+
+  const handleSelectAll = () => {
+    const allSelected = filteredRoles.length > 0 && filteredRoles.every((r) => selectedIds.includes(r.id));
+    setSelectedIds(allSelected ? [] : filteredRoles.map((r) => r.id));
+  };
 
   const handleDuplicate = (role: AdminRoleListItem) => {
     duplicateAdminRole(role.id, () => {
@@ -139,6 +149,9 @@ export default function RolesAndPermissionsPage() {
         <RolesTable
           rows={filteredRoles}
           loading={listLoading}
+          selectedIds={selectedIds}
+          onToggleRow={handleToggleRow}
+          onSelectAll={handleSelectAll}
           onEdit={(role) => setDetailRoleId(role.id)}
           onDuplicate={handleDuplicate}
           onDelete={setDeleteTarget}
