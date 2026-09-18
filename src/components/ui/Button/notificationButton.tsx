@@ -13,13 +13,13 @@ interface CartButtonProps {
 }
 
 export default function NotificationButton({
-  size = 25.32,
+  size = 24,
   image = DefaultNofication,
   showBadge = true,
 }: CartButtonProps) {
   //   const cartItems = useSelector((state: RootState) => state.cart.items);
   //   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const cartCount = 1;
+
 
   return (
     <div className="w-fit h-fit relative">
@@ -29,7 +29,7 @@ export default function NotificationButton({
       >
         <Image
           src={image}
-          alt="Cart"
+          alt="Notification Icon"
           width={size}
           height={size}
           className="object-cover"

@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/Button/Button";
 import activeIcon from "@/assets/admin/active.svg";
 import suspendedUserIcon from "@/assets/admin/inactive.svg";
 import inActiveIcon from "@/assets/admin/suspend.svg";
-import TotalReturn from "@/assets/admin/disputetotal.svg"
+import TotalReturn from "@/assets/admin/disputetotal.svg";
 
 import FilterDropdown from "@/components/ui/seller-components/body-components/over-view/Filter-components/filterButton";
 import AdminOrdersAndDisputesSummaryCards from "@/components/admin-components/orders/AdminOrdersAndDisputesSummaryCards";
@@ -25,7 +25,9 @@ import type { AdminDisputeStats } from "@/types/admin";
 import OrdersTable, {
   OrderRow,
 } from "@/components/admin-components/orders/OrdersTable";
-import OrdersTabs, { OrdersTabKey } from "@/components/admin-components/orders/OrdersTabs";
+import OrdersTabs, {
+  OrdersTabKey,
+} from "@/components/admin-components/orders/OrdersTabs";
 import CancellationRequestsTable, {
   CancellationRequestRow,
   mapCancellationRequest,
@@ -34,8 +36,11 @@ import CancellationDetailModal from "@/components/ui/Modals/admin/CancellationDe
 import RejectCancellationModal from "@/components/ui/Modals/admin/RejectCancellationModal";
 import ResultModal from "@/components/ui/forms/resultModal";
 import Image from "next/image";
-import { Input } from "@/components/ui/forms/Input";
 import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
+import StatusFrame from "@/components/admin-components/users/status-frame";
+import QuickTrackDropdown from "@/components/admin-components/orders/QuickTrackDropdown";
+import TrackOrderModal from "@/components/admin-components/orders/TrackOrderModal";
+import RequestPickupModal from "@/components/admin-components/orders/RequestPickupModal";
 
 const PAGE_SIZE = 20;
 
@@ -122,15 +127,22 @@ function mapToOrderRow(raw: any): OrderRow {
     : (raw.date ?? "—");
 
   return {
-    id: String(
-      raw.id ?? raw.order_id ?? raw.order_number ?? raw.payment_no ?? "",
-    ),
+    id: String(raw.id ?? raw.order_id ?? raw.order_number ?? ""),
+    orderId: raw.order_id ?? "",
+    trackingNumber:
+      raw.tracking_number ||
+      raw.tracking_no ||
+      raw.seller_tracking_id_to_hub ||
+      raw.admin_tracking_id_to_buyer ||
+      "",
     buyer: buyerName,
     vendors: vendorName,
     amount,
     location,
     status,
     date,
+    hasDispute: status.toLowerCase().includes("dispute") ||
+      Boolean(raw.has_dispute || raw.dispute || raw.dispute_status),
   };
 }
 
@@ -165,7 +177,9 @@ export default function AdminOrdersPage() {
     GH?: number;
     CN?: number;
   }>({});
-  const [disputeStats, setDisputeStats] = useState<AdminDisputeStats | null>(null);
+  const [disputeStats, setDisputeStats] = useState<AdminDisputeStats | null>(
+    null,
+  );
 
   const token = useSelector((state: RootState) => state.token.token);
 
@@ -173,15 +187,20 @@ export default function AdminOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [trackingNo, setTrackingNo] = useState("");
+  const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
+  const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
 
   // ── Filter Tabs ──────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<OrdersTabKey>("all");
 
   // ── Cancellation Requests ────────────────────────────────────────────────
-  const [cancellationRequests, setCancellationRequests] = useState<CancellationRequestRow[]>([]);
+  const [cancellationRequests, setCancellationRequests] = useState<
+    CancellationRequestRow[]
+  >([]);
   const [cancellationLoading, setCancellationLoading] = useState(false);
-  const [cancellationSubTab, setCancellationSubTab] = useState<"pending" | "approved" | "rejected">("pending");
+  const [cancellationSubTab, setCancellationSubTab] = useState<
+    "pending" | "approved" | "rejected"
+  >("pending");
 
   // ── Cancellation Modals State ─────────────────────────────────────────────
   const [selectedCancellation, setSelectedCancellation] =
@@ -252,11 +271,9 @@ export default function AdminOrdersPage() {
   const onMonthChange = (value: string) => {
     setSelectedMonth(value);
     if (token) {
-      fetchOrdersSummary(
-        getRangeParam(value),
-        parseSummaryData,
-        () => { setSummaryStats({}); },
-      );
+      fetchOrdersSummary(getRangeParam(value), parseSummaryData, () => {
+        setSummaryStats({});
+      });
     }
   };
 
@@ -299,11 +316,9 @@ export default function AdminOrdersPage() {
   // Fetch summary and dispute stats on mount
   useEffect(() => {
     if (token) {
-      fetchOrdersSummary(
-        getRangeParam(selectedMonth),
-        parseSummaryData,
-        () => { setSummaryStats({}); },
-      );
+      fetchOrdersSummary(getRangeParam(selectedMonth), parseSummaryData, () => {
+        setSummaryStats({});
+      });
       fetchAdminDisputeStats((stats: any) => {
         setDisputeStats(stats);
       });
@@ -336,7 +351,6 @@ export default function AdminOrdersPage() {
       );
     });
 
-
   const handleSelectAll = () => {
     if (selectedIds.length === rows.length && rows.length > 0) {
       setSelectedIds([]);
@@ -349,14 +363,6 @@ export default function AdminOrdersPage() {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
-  };
-
-  const handleTrackOrder = () => {
-    if (!trackingNo.trim()) {
-      toast.info("Please enter a tracking number or order ID");
-      return;
-    }
-    router.push(`/dashboard/admin/orders/track/${encodeURIComponent(trackingNo.trim())}`);
   };
 
   const loadCancellationRequests = () => {
@@ -416,7 +422,7 @@ export default function AdminOrdersPage() {
           message: errMsg,
           result: "error",
         });
-      }
+      },
     );
   };
 
@@ -451,7 +457,7 @@ export default function AdminOrdersPage() {
           message: errMsg,
           result: "error",
         });
-      }
+      },
     );
   };
 
@@ -461,83 +467,74 @@ export default function AdminOrdersPage() {
   const disputedCount = rows.filter((r) => r.status === "Disputed").length;
 
   return (
-    <div className="space-y-8 duration-300">
-      {/* Page Title & Track Order */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full">
-        <h1 className="text-xl md:text-c18 font-MontserratSemiBold">
+    <div className="space-y-8 duration-300 bg-white rounded-2xl py-6 px-8 border border-000000/4">
+      {/* Page Title & Quick Track */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4">
+        <h1 className="text-xl md:text-c20 font-MontserratMedium">
           Order Management
         </h1>
-        <div className="flex items-center gap-4 w-full max-w-101.5">
-          <Input
-            placeholder="Enter Tracking No."
-            className="max-w-60"
-            value={trackingNo}
-            onChange={(e) => setTrackingNo(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleTrackOrder();
-            }}
-          />
-          <Button
-            variant="secondary"
-            onClick={handleTrackOrder}
-            className="max-w-37.5"
-          >
-            Track Order
-          </Button>
-        </div>
+        <QuickTrackDropdown
+          onOpenTrackModal={() => setIsTrackModalOpen(true)}
+          onOpenPickupModal={() => setIsPickupModalOpen(true)}
+        />
       </div>
 
       {/* Stats */}
-      {/* <div className="justify-between flex items-center w-full">
-        <StatusFrame
-          title="Total Orders"
-          quantity={summaryStats.total ?? apiTotalCount}
-          icon={OrdersIcon}
-          width={26}
-          height={22}
-        />
-        <StatusFrame
-          title="Delivered Orders"
-          quantity={summaryStats.delivered ?? deliveredCount}
-          icon={activeIcon}
-          width={26}
-          height={26}
-        />
-        <StatusFrame
-          title="Ongoing Orders"
-          quantity={summaryStats.ongoing ?? ongoingCount}
-          icon={inActiveIcon}
-          width={18}
-          height={26}
-        />
-        <StatusFrame
-          title="Disputed Orders"
-          quantity={summaryStats.disputed ?? disputedCount}
-          icon={suspendedUserIcon}
-          width={26}
-          height={26}
-        />
-      </div> */}
+      <div className="h-43 w-full  flex justify-center items-end">
+        <div className="justify-between h-29 flex items-center w-full">
+          <StatusFrame
+            title="Total Orders"
+            quantity={summaryStats.totalCount ?? apiTotalCount}
+            icon={OrdersIcon}
+            width={26}
+            height={22}
+          />
+          <StatusFrame
+            title="Delivered Orders"
+            quantity={summaryStats.delivered?.count ?? deliveredCount}
+            icon={activeIcon}
+            width={26}
+            height={26}
+          />
+          <StatusFrame
+            title="Ongoing Orders"
+            quantity={summaryStats.ongoing?.count ?? ongoingCount}
+            icon={inActiveIcon}
+            width={18}
+            height={26}
+          />
+          <StatusFrame
+            title="Disputed Orders"
+            quantity={summaryStats.disputed?.count ?? disputedCount}
+            icon={suspendedUserIcon}
+            width={26}
+            height={26}
+          />
+        </div>
+      </div>
       {/* ── Summary Cards (Orders + Revenue & Dispute from /disputes/admin/stats) ── */}
-      <AdminOrdersAndDisputesSummaryCards
+      {/* <AdminOrdersAndDisputesSummaryCards
         selectedMonth={selectedMonth}
         onMonthChange={onMonthChange}
         summaryStats={summaryStats}
         disputeStats={disputeStats}
-      />
+      /> */}
 
       {/* Orders List Table */}
-      <div className="bg-white rounded-2xl p-6 border border-000000/4">
+      <div className="p-6 rounded-c16 border border-000000/4">
         <h2 className="text-base font-MontserratNormal text-000000/68 mb-6">
           List of Orders
         </h2>
 
         {/* ── Tab Filter Bar ── */}
-        <OrdersTabs activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} />
+        {/* <OrdersTabs
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab)}
+        /> */}
 
-        {activeTab === "cancel_request" ? (
+        {/* {activeTab === "cancel_request" ? (
           <>
-            {/* Sub-tabs for cancellation status */}
+            
             <div className="flex items-center gap-4 mb-5">
               {(["pending", "approved", "rejected"] as const).map((sub) => (
                 <button
@@ -566,7 +563,7 @@ export default function AdminOrdersPage() {
           </>
         ) : (
           <>
-            {/* Filters Header */}
+            
             <AdminListHeader
               searchVal={searchVal}
               setSearchVal={setSearchVal}
@@ -574,7 +571,7 @@ export default function AdminOrdersPage() {
               searchExpandable={true}
             />
 
-            {/* Data Table */}
+           
             <OrdersTable
               rows={rows}
               selectedIds={selectedIds}
@@ -585,7 +582,7 @@ export default function AdminOrdersPage() {
               onSetActiveRowId={setActiveRowId}
             />
 
-            {/* Pagination */}
+          
             {apiTotalCount > PAGE_SIZE && (
               <div className="flex justify-end mt-6">
                 <Pagination
@@ -596,7 +593,44 @@ export default function AdminOrdersPage() {
               </div>
             )}
           </>
-        )}
+        )} */}
+
+        <>
+          {/* Filters Header */}
+          <AdminListHeader
+            searchVal={searchVal}
+            setSearchVal={setSearchVal}
+            placeholder="Search orders by ID, buyer or vendor..."
+            searchExpandable={true}
+          />
+
+          {/* Data Table */}
+          <OrdersTable
+            rows={rows}
+            selectedIds={selectedIds}
+            activeRowId={activeRowId}
+            loading={loading}
+            onSelectAll={handleSelectAll}
+            onToggleRow={handleToggleRow}
+            onSetActiveRowId={setActiveRowId}
+            onViewDispute={(row) =>
+              router.push(
+                `/dashboard/admin/orders/${row.id}?from=Orders&viewDispute=true`,
+              )
+            }
+          />
+
+          {/* Pagination */}
+          {apiTotalCount > PAGE_SIZE && (
+            <div className="flex justify-end mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(apiTotalCount / PAGE_SIZE)}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            </div>
+          )}
+        </>
       </div>
 
       {/* ── Cancellation Request Details Modal ── */}
@@ -656,7 +690,18 @@ export default function AdminOrdersPage() {
           setResultModalState((prev) => ({ ...prev, isOpen: false }))
         }
       />
+
+      {/* ── Track Order Modal ── */}
+      <TrackOrderModal
+        isOpen={isTrackModalOpen}
+        onClose={() => setIsTrackModalOpen(false)}
+      />
+
+      {/* ── Request Pickup Modal ── */}
+      <RequestPickupModal
+        isOpen={isPickupModalOpen}
+        onClose={() => setIsPickupModalOpen(false)}
+      />
     </div>
   );
 }
-

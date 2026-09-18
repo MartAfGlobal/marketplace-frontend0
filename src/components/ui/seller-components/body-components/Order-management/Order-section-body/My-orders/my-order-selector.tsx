@@ -15,12 +15,12 @@ export default function FilteredOrders({
   setActiveTab,
 }: NavigationBarProps) {
   return (
-    <nav className=" font-MontserratSemiBold text-sm flex gap-6 relative border-b border-b-000000/10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <nav className=" font-MontserratMedium text-c12 flex gap-2 relative border-b border-b-000000/10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       {navItems.map((item) => (
         <button
           key={item.id}
           onClick={() => setActiveTab(item.id)}
-          className="relative flex flex-col items-center justify-center h-c48 p-4"
+          className="relative flex flex-col items-center justify-center h-c48 p-4 leading-[16px] tracking-[1%]"
         >
           <p className="flex items-center gap-2">
             <span className={`${

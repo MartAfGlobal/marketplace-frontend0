@@ -148,14 +148,14 @@ export default function AdminListHeader({
         >
           {isExpanded ? (
             <div className="relative text-gray-700 w-full">
-              <input
+              <Input
                 ref={inputRef}
                 type="text"
                 placeholder={placeholder}
                 value={searchVal}
                 onChange={(e) => setSearchVal(e.target.value)}
                 onBlur={handleBlur}
-                className="h-10 w-full bg-white border border-[#eef0f3] rounded-c8 pl-4 pr-10 text-xs focus:outline-none focus:ring-1 focus:ring-ff715b focus:border-ff715b"
+                className=" pl-4 "
               />
               <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
                 <Search className="w-4 h-4" />
@@ -164,10 +164,10 @@ export default function AdminListHeader({
           ) : (
             <button
               onClick={handleSearchClick}
-              className="w-10 h-10 flex shrink-0 items-center justify-center bg-white shadow-custom rounded-c8 hover:bg-gray-50 transition-colors  cursor-pointer"
+              className="w-10 h-10 flex shrink-0 items-center justify-center bg-white quickTrackShadow rounded-c8 hover:bg-gray-50 transition-colors  cursor-pointer"
               title="Search"
             >
-              <Search className="w-[13.01] h-[13.01] text-000000" />
+              <Search className="w-[13.01px] h-[13.01px] text-000000" />
             </button>
           )}
         </div>
@@ -256,7 +256,7 @@ export default function AdminListHeader({
           options={["This Week", "This Month", "This Year"]}
           defaultValue={selectedMonth}
           onChange={onMonthChange}
-          className="border border-[#eef0f3] !rounded-xl !h-11 !py-0 !px-4 !gap-4 !text-gray-500 hover:bg-gray-50 !shadow-sm"
+          className="border border-[#eef0f3] !rounded-xl !h-11 !py-0 !px-4 !gap-4 !text-000000/68 hover:bg-gray-50 !shadow-sm"
         />
 
         {/* Red/Coral Export PDF Button */}

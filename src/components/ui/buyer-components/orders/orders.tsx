@@ -23,9 +23,10 @@ const tabs = [
 
   "Awaiting Payment",
   "Processing",
-  "To Ship",
+
   "Shipped",
-  "Processed",
+  "Delivered",
+  "Completed",
   "In Dispute",
 ];
 
@@ -74,9 +75,11 @@ export default function OrdersPage() {
           {activeTab === "Processing" && (
             <ProcessingOrders searchTerm={searchTerm} />
           )}
-          {activeTab === "To Ship" && <ToShip searchTerm={searchTerm} />}
+
           {activeTab === "Shipped" && <Shipped searchTerm={searchTerm} />}
-          {activeTab === "Processed" && <Proccessed searchTerm={searchTerm} />}
+
+          {activeTab === "Delivered" && <Proccessed searchTerm={searchTerm} />}
+          {activeTab === "Completed" && <Proccessed searchTerm={searchTerm} />}
           {activeTab === "In Dispute" && <Disputes searchTerm={searchTerm} />}
         </div>
       </div>

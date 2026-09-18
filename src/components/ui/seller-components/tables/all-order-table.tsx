@@ -11,9 +11,13 @@ import EyeIcon from "@/assets/icons/eye.png";
 import downloadIcon from "@/assets/Seller/colourDownload.svg";
 import Empty from "@/assets/Seller/Empty.svg";
 import { ChevronRight } from "lucide-react";
+import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
 
 const getStatusClass = (status: string) => {
   switch (status.toLowerCase()) {
+    case "dispute closed":
+    case "closed":
+      return "text-[#6A0DAD] bg-[#6A0DAD]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "fulfilled":
       return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "unprocessed":
@@ -30,6 +34,10 @@ const getStatusClass = (status: string) => {
       return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "delivered":
       return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
+    case "disputed":
+    case "dispute raised":
+    case "dispute ongoing":
+      return "text-[#E8334A] bg-[#E8334A]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "shipped":
     case "in transit":
       return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
@@ -40,6 +48,9 @@ const getStatusClass = (status: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
+    case "dispute closed":
+    case "closed":
+      return "#6A0DAD";
     case "fulfilled":
       return "#0070E9";
     case "unprocessed":
@@ -57,6 +68,10 @@ const getStatusColor = (status: string) => {
       return "#CA0202";
     case "delivered":
       return "#2D7565";
+    case "disputed":
+    case "dispute raised":
+    case "dispute ongoing":
+      return "#E8334A";
     default:
       return "#6B7280";
   }
@@ -101,17 +116,23 @@ export default function AllOrderTable({
   const ordersFromStore = useSelector((state: any) => state.orders.orders);
 
   const allRows = ordersFromStore.map((order: SellerOrderResult, i: number) => {
+    const displayStatus = getOrderDisplayStatus(order);
     return {
-      id: i + 1,
-      orderId: order.id,
+      id: order.id,
+      orderId: order.order_id,
       date: order.created_at ? new Date(order.created_at).toLocaleDateString() : "N/A",
       sku: order.items?.length > 1 ? "Multiple SKU" : (order.items?.[0]?.variation_sku || "N/A"),
       items: order.items?.length > 1 ? "Multiple items" : (order.items?.[0]?.product_name || "N/A"),
       amount: order.subtotal ? `#${order.subtotal}` : "N/A",
       perc: 0,
       stock: order.items?.reduce((acc, item) => acc + (item.quantity || 0), 0) || 0,
-      status: (order as any).order_timeline_stage?.toLowerCase() || 
-              (order.status?.toLowerCase() === "pending" ? "unprocessed" : order.status),
+      status:
+        displayStatus === "Dispute closed"
+          ? "Dispute closed"
+          : displayStatus === "Dispute raised" || displayStatus === "Dispute ongoing"
+          ? "disputed"
+          : (order as any).order_timeline_stage?.toLowerCase() ||
+            (order.status?.toLowerCase() === "pending" ? "unprocessed" : order.status),
       country: order.shipping_address?.country || "N/A",
       accepted_quantity: order.accepted_quantity || 0,
       rejected_quantity: order.rejected_quantity || 0,
@@ -256,9 +277,9 @@ export default function AllOrderTable({
 
       {/* Desktop View */}
       <table className="hidden lg:table w-full border-collapse">
-        <thead className="text-white font-MontserratSemiBold text-c12 bg-947fff h-10">
-          <tr>
-            <th className="w-8 text-center">
+        <thead className="text-white font-MontserratSemiBold py-3 text-c12 bg-947fff h-10 ">
+          <tr className="text-left">
+            <th className=" px-3 text-center ">
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -267,15 +288,15 @@ export default function AllOrderTable({
                   className="sr-only"
                 />
                 <div
-                  className={`w-4 h-4 border rounded flex items-center justify-center ${
+                  className={`w-5 h-5 border rounded flex items-center justify-center ${
                     allPageSelected
                       ? "bg-[#FF715B] border-0"
-                      : "bg-white border-gray-300"
+                      : " border-ffffff"
                   }`}
                 >
                   {allPageSelected && (
                     <svg
-                      className="w-3 h-3 text-white"
+                      className="w-4 h-4 text-white"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -289,25 +310,26 @@ export default function AllOrderTable({
                 </div>
               </label>
             </th>
-            <th className="px-3 text-left">Order ID</th>
-            <th className="px-3 text-left">Date</th>
-            <th className="px-3 text-left">Items</th>
-            <th className="px-3 text-left hidden md:table-cell">SKU</th>
-            <th className="px-3 text-left hidden md:table-cell">Country</th>
-            <th className="px-3 text-left">Amount</th>
-            <th className="px-3 text-left">Status</th>
-            <th className="px-3 text-left">Action</th>
+            <th className="px-3 ">Order ID</th>
+            <th className="px-3 ">Date</th>
+            <th className="px-3 ">Items</th>
+            <th className="px-3  hidden md:table-cell">SKU</th>
+            <th className="px-3  hidden md:table-cell">Country</th>
+            <th className="px-3 ">Amount</th>
+            <th className="px-3 ">Status</th>
+            <th className="px-3 ">Action</th>
           </tr>
         </thead>
-
-        <tbody>
+        
+        <tbody className=" ">
+         <tr><td colSpan={9} className="h-1" /></tr> 
           {currentRows.length > 0 ? (
             currentRows.map((row: any) => (
               <tr
                 key={row.id}
-                className="h-10 text-c12 font-MontserratSemiBold text-000000/60"
+                className="h-12 text-c12 font-MontserratSemiBold py-3 text-000000/60"
               >
-                <td className="text-center">
+                <td className="text-center px-3">
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
@@ -316,7 +338,7 @@ export default function AllOrderTable({
                       className="sr-only"
                     />
                     <div
-                      className={`w-4 h-4 border rounded flex items-center justify-center ${
+                      className={`w-5 h-5 border rounded flex items-center justify-center ${
                         selectedRows.includes(row.id)
                           ? "bg-ff715b border-0"
                           : "bg-white"
@@ -324,7 +346,7 @@ export default function AllOrderTable({
                     >
                       {selectedRows.includes(row.id) && (
                         <svg
-                          className="w-3 h-3 text-white"
+                          className="w-4 h-4 text-white"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -338,9 +360,9 @@ export default function AllOrderTable({
                     </div>
                   </label>
                 </td>
-                <td className="px-3 text-left">{row.orderId}</td>
-                <td className="px-3 text-left">{row.date}</td>
-                <td className="px-3 text-left">
+                <td className="px-3 max-w-[116px] truncate cursor-pointer" title={row.orderId}><button onClick={() => handleViewDetails(row.id)} >{row.orderId}</button></td>
+                <td className="px-3 max-w-[96px] truncate" title={row.date}>{row.date}</td>
+                <td className="px-3 max-w-[234px] truncate  " title={row.items}>
                   <div className="flex flex-col">
                     <span>{row.items}</span>
                     {row.status.toLowerCase() === "partially_accepted" && (
@@ -350,11 +372,11 @@ export default function AllOrderTable({
                     )}
                   </div>
                 </td>
-                <td className="px-3 text-left hidden md:table-cell">{row.sku}</td>
-                <td className="px-3 text-left hidden md:table-cell">{row.country}</td>
-                <td className="px-3 text-left">{row.amount}</td>
-                <td className="px-3">
-                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize ${getStatusClass(row.status)}`}>
+                <td className="px-3  max-w-[124px] truncate   hidden md:table-cell" title={row.sku}>{row.sku}</td>
+                <td className="px-3 max-w-[104px] truncate   hidden md:table-cell" title={row.countrys}>{row.country}</td>
+                <td className="px-3 max-w-[116px]" title={row.amount}>{row.amount}</td>
+                <td className="px-3 ">
+                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize max-w-[124px] truncate ${getStatusClass(row.status)}`} title={row.status}>
                     {row.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : row.status}
                   </div>
                 </td>
@@ -380,7 +402,7 @@ export default function AllOrderTable({
                         {/* More Details */}
                         <button
                           className="flex items-center gap-3 w-full text-ff715b hover:bg-gray-100"
-                          onClick={() => handleViewDetails(row.orderId)}
+                          onClick={() => handleViewDetails(row.id)}
                         >
                           <Image
                             src={EyeIcon}

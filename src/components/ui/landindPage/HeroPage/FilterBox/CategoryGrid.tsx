@@ -4,20 +4,27 @@ const CATEGORIES_CACHE_KEY = "martaf_landing_categories";
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import InfiniteScroll from "react-infinite-scroll-component";
-import Image from "next/image";
 
 import { Category, subcategory } from "@/types/global";
 import CategoryButton from "./CategoryButton";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import CategorySkeleton from "@/components/reloadSpinner/CategorySkeleton";
-import { X, RotateCw } from "lucide-react";
 
-export default function CategoriesGrid() {
-  const router = useRouter();
+interface CategoriesGridProps {
+  selectedCategory?: Category | null;
+  onSelectCategory?: (cat: Category | null) => void;
+  onSubcategoriesLoaded?: (subs: subcategory[]) => void;
+  onSubLoadingChange?: (loading: boolean) => void;
+}
+
+export default function CategoriesGrid({
+  selectedCategory = null,
+  onSelectCategory,
+  onSubcategoriesLoaded,
+  onSubLoadingChange,
+}: CategoriesGridProps = {}) {
   const { sendHttpRequest, loading } = useHttp();
   const isFetchingRef = useRef(false);
 
@@ -26,14 +33,10 @@ export default function CategoriesGrid() {
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
 
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
-  );
-  const [subLoading, setSubLoading] = useState(false);
   const [categorySubcategories, setCategorySubcategories] = useState<Record<string, subcategory[]>>({});
 
   const fetchSubcategories = useCallback((parentSlug: string, cacheKey: string) => {
-    setSubLoading(true);
+    onSubLoadingChange?.(true);
     sendHttpRequest({
       requestConfig: {
         url: `products/public/categories/subcategories/?parent=${encodeURIComponent(parentSlug)}`,
@@ -53,32 +56,53 @@ export default function CategoriesGrid() {
           [cacheKey]: finalSubs,
           [parentSlug]: finalSubs,
         }));
-        setSubLoading(false);
+        onSubcategoriesLoaded?.(finalSubs);
+        onSubLoadingChange?.(false);
       },
       errorRes: () => {
-        setSubLoading(false);
+        onSubLoadingChange?.(false);
       },
     });
-  }, [sendHttpRequest]);
+  }, [sendHttpRequest, onSubLoadingChange, onSubcategoriesLoaded]);
 
   const handleCategoryClick = useCallback((cat: Category) => {
-    setSelectedCategory(cat);
+    // Toggle off if clicking the same category
+    if (selectedCategory?.id === cat.id) {
+      onSelectCategory?.(null);
+      onSubcategoriesLoaded?.([]);
+      return;
+    }
+
+    onSelectCategory?.(cat);
 
     const parentSlug = cat.slug || cat.name?.toLowerCase().replace(/\s+/g, "-") || cat.id;
     const cacheKey = cat.id || parentSlug;
 
-    // Check if subcategories already exist in any common field
-    const existingSubs =
-      (cat.children && cat.children.length > 0) ||
-      ((cat as any).sub_categories && (cat as any).sub_categories.length > 0) ||
-      ((cat as any).subcategories && (cat as any).subcategories.length > 0) ||
-      (cat.subcategory && (Array.isArray(cat.subcategory) ? cat.subcategory.length > 0 : Object.keys(cat.subcategory).length > 0));
-
-    if (!existingSubs && !categorySubcategories[cacheKey] && !categorySubcategories[parentSlug] && !categorySubcategories[cat.id]) {
-      console.log(`Fetching subcategories for parent: ${parentSlug}`);
-      fetchSubcategories(parentSlug, cacheKey);
+    // Check if subcategories already exist in cache
+    const existingCached = categorySubcategories[cacheKey] || categorySubcategories[parentSlug] || categorySubcategories[cat.id];
+    if (existingCached && existingCached.length > 0) {
+      onSubcategoriesLoaded?.(existingCached);
+      onSubLoadingChange?.(false);
+      return;
     }
-  }, [categorySubcategories, fetchSubcategories]);
+
+    // Check if subcategories exist on the category object itself
+    const directSubs =
+      cat.children ||
+      (cat as any).sub_categories ||
+      (cat as any).subcategories ||
+      cat.subcategory;
+
+    if (Array.isArray(directSubs) && directSubs.length > 0) {
+      onSubcategoriesLoaded?.(directSubs);
+      onSubLoadingChange?.(false);
+      return;
+    }
+
+    // Otherwise fetch fresh
+    onSubcategoriesLoaded?.([]);
+    fetchSubcategories(parentSlug, cacheKey);
+  }, [selectedCategory, onSelectCategory, onSubcategoriesLoaded, onSubLoadingChange, categorySubcategories, fetchSubcategories]);
 
   // Fetch categories with pagination
   const fetchCategories = useCallback(() => {
@@ -162,55 +186,21 @@ export default function CategoriesGrid() {
     // fetchCategories will be called by useEffect since it's a dependency and will be recreated
   }, []);
 
-  // Extract subcategories for selected category safely
-  const subcategories: subcategory[] = (() => {
-    if (!selectedCategory) return [];
-
-    const parentSlug = selectedCategory.slug || selectedCategory.name?.toLowerCase().replace(/\s+/g, "-") || selectedCategory.id;
-    const cacheKey = selectedCategory.id || parentSlug;
-
-    // Check various common field names for subcategories array from backend
-    const possible =
-      categorySubcategories[cacheKey] ||
-      categorySubcategories[parentSlug] ||
-      categorySubcategories[selectedCategory.id] ||
-      categorySubcategories[selectedCategory.slug] ||
-      selectedCategory.children ||
-      (selectedCategory as any).sub_categories ||
-      (selectedCategory as any).subcategories ||
-      selectedCategory.subcategory;
-
-    if (Array.isArray(possible)) return possible;
-    // Handle single object response if necessary
-    if (possible && typeof possible === "object" && Object.keys(possible).length > 0) {
-      return [possible as subcategory];
-    }
-    return [];
-  })();
-
   return (
-    <>
     <div
       id="scrollableDiv"
       className="flex flex-col gap-2 bg-dual-gradient py-c32 w-full max-w-full max-h-134 overflow-y-auto overflow-x-hidden custom-scroll"
     >
-      <div className="flex justify-between items-center pr-c32">
-        <h1 className="font-MontserratBold text-c20 pb-c24 text-000000 pl-c32">
+      <div className="">
+        <h1 className="font-MontserratSemiBold text-c20 px-c32 pb-c24 text-000000 ">
           Categories
         </h1>
-        <button 
-          onClick={handleManualRefetch}
-          className="pb-c24 hover:text-ff715b transition-colors"
-          title="Refresh categories"
-        >
-          <RotateCw size={18} className={`${loading ? "animate-spin" : ""} text-gray-500`} />
-        </button>
       </div>
 
       {loading && categories.length === 0 ? (
         <CategorySkeleton count={8} />
       ) : categories.length === 0 ? (
-        <p className="pl-c32 text-gray-500">No categories available</p>
+        <p className=" text-000000/64 px-c32">No categories available</p>
       ) : (
         <InfiniteScroll
           dataLength={categories.length}
@@ -240,82 +230,7 @@ export default function CategoriesGrid() {
           </div>
         </InfiniteScroll>
       )}
-
     </div>
-      <AnimatePresence>
-        {selectedCategory && (
-          <motion.div
-            className="fixed top-0 inset-0 bg-black/50 flex items-center justify-start z-50 w-full h-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedCategory(null)}
-          >
-            <motion.div
-              className="absolute top-[104px] left-[400px] "
-              initial={{ y: "-100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "-100%", opacity: 0 }}
-              transition={{ type: "spring", stiffness: 100, damping: 20 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-               <div className="bg-white p-8 shadow-customW w-full lg:w-181.75 max-w-181.75 pointer-events-auto min-h-[200px] relative rounded-lg">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
-                  aria-label="Close"
-                >
-                  <X size={18} />
-                </button>
-
-                {subLoading ? (
-                  <div className="flex items-center justify-center h-full w-full py-10">
-                    <LoadingSpinner color="border-ff715b" size={40} />
-                  </div>
-                ) : subcategories.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-gray-500">
-                    <p className="font-MontserratMedium text-sm">No subcategories available</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-x-[26px] gap-y-[27px]">
-                    {subcategories.map((sub) => (
-                      <button
-                        key={sub.id || sub.slug || sub.name}
-                        onClick={() => {
-                          setSelectedCategory(null);
-                          router.push(
-                            `/categories/${encodeURIComponent(
-                              selectedCategory.slug || selectedCategory.id
-                            )}/${encodeURIComponent(sub.slug || sub.id)}`
-                          );
-                        }}
-                        className="flex flex-col w-22 items-center cursor-pointer hover:shadow-md transition-shadow"
-                      >
-                        <span className="w-22 h-22 bg-gray-100 flex items-center justify-center rounded-md overflow-hidden">
-                          {sub.image ? (
-                            <Image
-                              src={sub.image}
-                              height={88}
-                              width={88}
-                              alt={sub.name}
-                              className="object-cover h-22 w-22"
-                            />
-                          ) : (
-                            <div className="text-gray-300 text-[10px] text-center px-1">No Image</div>
-                          )}
-                        </span>
-                        <p className="mt-2 text-sm text-center text-c12 font-MontserratNormal">
-                          {sub.name}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
   );
 }
+

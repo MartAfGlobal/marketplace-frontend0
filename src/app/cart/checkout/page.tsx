@@ -69,6 +69,7 @@ export default function CheckoutPage() {
   // 3. Fetch summary when address is selected
   useEffect(() => {
     if (!token || !selectedAddressId) return;
+    
 
     // Send as a number — backend expects integer address ID
     const addressIdNum = Number(selectedAddressId);

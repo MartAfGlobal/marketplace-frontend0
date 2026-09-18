@@ -20,6 +20,8 @@ import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "../loading-spinner";
 import { useState } from "react";
 import { toast } from "sonner";
+import StarIconChecked from "@/assets/icons/Star1.svg";
+import StarIconUnChecked from "@/assets/icons/Star2.svg";
 
 import AddCartModal from "../Modals/addToCart/addTocart-modal";
 import { setSelectedVariation } from "@/store/slices/variationSelectorSlice";
@@ -38,7 +40,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const token = useSelector((state: RootState) => state.token.token);
   const [openAddToCart, setOpenAddToCart] = useState(false);
   const selectedVariation = useSelector(
-    (state: RootState) => state.selectedVariation
+    (state: RootState) => state.selectedVariation,
   );
 
   const fetchWishlist = () => {
@@ -137,15 +139,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
 
   const wishlistItem = wishlistItems.find(
-    (item: any) => item.product.id === product.id
+    (item: any) => item.product.id === product.id,
   );
 
   const isInWishlist = Boolean(wishlistItem);
   const wishlistId = wishlistItem?.id;
 
   const handleToggleWishlist = (id: string) => {
-  
-
     console.log("checking id", id);
     if (!token) {
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -242,10 +242,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         // ⭐ Add animation on hover
         whileHover={{ scale: 1.03, boxShadow: "0 8px 20px rgba(0,0,0,0.15)" }}
         whileTap={{ scale: 0.98 }}
-        className="rounded-lg shadow-custom w-full h-[264.69px] pb-4 flex-shrink-0  bg-white overflow-hidden cursor-pointer"
+        className="rounded-lg shadow-custom w-full md:w-[196px] h-[264.69px] pb-4 flex-shrink-0  bg-ffffff overflow-hidden cursor-pointer"
       >
         {/* Product Image */}
-        <div onClick={handleClick} className="relative h-40 w-full">
+        <div onClick={handleClick} className="relative h-[168.69px] w-full">
           <Image
             src={productImage}
             alt={product.name || "Product name"}
@@ -286,29 +286,30 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
 
-        <div className="flex items-end justify-between p-4 h-[104px]">
-          <div className="text-sm">
-            <p className="font-MontserratMedium text-[12px] text-[#161616]">
+        <div className="flex items-end justify-between p-4 h-[96px] w-full 5">
+          <div className="flex flex-col gap-1 max-w-[91.56px] ">
+            <p className="font-MontserratMedium text-[12px] w-full truncate text-[#161616]">
               {product.name || "Product name"}
             </p>
 
-            <div className="flex items-center">
+            <div className="flex items-center gap-0.5">
               {Array.from({ length: 5 }, (_, i) => (
-                <span
+                <Image
                   key={i}
-                  className={`text-base ${
+                  src={
                     i < Math.round(product.rating_average || 0)
-                      ? "text-yellow-500"
-                      : "text-gray-300"
-                  }`}
-                >
-                  ★
-                </span>
+                      ? StarIconChecked
+                      : StarIconUnChecked
+                  }
+                  alt="Star"
+                  width={16.89}
+                  height={16}
+                />
               ))}
             </div>
 
             {/* Price */}
-            <p className="font-MontserratSemiBold text-base">
+            <p className="font-MontserratSemiBold text-base w-full truncate text-[#161616]">
               {product.price_range.currency}
               {product.base_price}
             </p>
@@ -317,7 +318,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={() => handleAddToCart(product.slug)}
             disabled={loading || product.inventory === 0}
-            className={`w-c44 hidden flex-shrink-0 md:flex h-[41.97px] items-center justify-center gap-2 py-1 rounded-[8px] transition
+            className={` hidden flex-shrink-0 md:flex p-3 items-center justify-center   rounded-[8px] transition
              ${
                loading || product.inventory === 0
                  ? "bg-gray-400 cursor-not-allowed"
@@ -327,7 +328,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             {loading ? (
               <LoadingSpinner />
             ) : (
-              <Image src={Cart} alt="cart" width={20} height={17.6} />
+              <Image src={Cart} alt="cart" width={20} height={17.97} className="flex-shrink-0 w-5 h-[17.97px]" />
             )}
           </button>
         </div>

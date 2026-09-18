@@ -112,7 +112,7 @@ export default function UserMain() {
 
   return (
     <div
-      className="hidden md:flex md:px-10 lg:pl-35 lg:pr-10 xl:px-35 justify-center gap-8 w-full"
+      className="hidden md:flex md:px-6 lg:pl-30 lg:pr-10 xl:px-30 justify-center gap-8 w-full"
       style={{ paddingTop: "2rem" }}
     >
       {/* Sidebar with slide-in */}
@@ -173,7 +173,7 @@ export default function UserMain() {
 
         <motion.section
           id="wishlist"
-          className="section-offset scroll-mt-28"
+          className="section-offset scroll-mt-28 w-full "
           initial="hidden"
           whileInView="visible"
           viewport={{ once: false }}

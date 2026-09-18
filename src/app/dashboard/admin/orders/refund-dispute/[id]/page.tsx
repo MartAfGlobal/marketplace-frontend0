@@ -76,7 +76,11 @@ export default function AdminReturnDetailsPage() {
     createAdminRefund,
     processAdminRefund,
     rejectAdminRefund,
+    closeAdminDispute,
   } = AdminDetails();
+
+  const [closeWarningOpen, setCloseWarningOpen] = useState(false);
+  const [closeSuccess, setCloseSuccess] = useState(false);
 
   const checkPendingRefundStatus = (disputeObj: any) => {
     const paymentNo =
@@ -224,6 +228,13 @@ export default function AdminReturnDetailsPage() {
     "Pending";
   const renderRefundStatusBadge = (statusStr: string) => {
     const s = statusStr.toUpperCase();
+    if (s.includes("CLOSED")) {
+      return (
+        <span className="text-[#000000]/60 bg-[#000000]/8 px-4 py-2 rounded-2xl text-xs font-MontserratSemiBold">
+          Closed
+        </span>
+      );
+    }
     if (s.includes("RESOLV") || s.includes("APPROV") || s.includes("SUCCESS")) {
       return (
         <span className="text-[#2D7565] bg-[#2D7565]/12 px-4 py-2 rounded-2xl text-xs font-MontserratSemiBold">
@@ -255,6 +266,8 @@ export default function AdminReturnDetailsPage() {
 
   const sUpper = currentStatus.toUpperCase();
 
+  const isClosed = sUpper.includes("CLOSED");
+
   const isApproved =
     sUpper.includes("APPROV") ||
     sUpper.includes("IN_TRANSIT") ||
@@ -271,7 +284,36 @@ export default function AdminReturnDetailsPage() {
     sUpper.includes("CANCEL") ||
     sUpper.includes("DECLIN");
 
-  const isRequested = !isApproved && !isResolved && !isRejected;
+  const isRequested = !isApproved && !isResolved && !isRejected && !isClosed;
+
+  const handleConfirmClose = () => {
+    if (!rawId) {
+      toast.error("Could not find dispute ID.");
+      return;
+    }
+
+    setActionLoading(true);
+    closeAdminDispute(
+      String(rawId),
+      () => {
+        setActionLoading(false);
+        setCloseWarningOpen(false);
+        setCloseSuccess(true);
+        loadDisputeData();
+      },
+      (err: any) => {
+        setActionLoading(false);
+        setCloseWarningOpen(false);
+        const errMsg =
+          err?.response?.data?.message ||
+          err?.response?.data?.detail ||
+          err?.response?.data?.error ||
+          err?.message ||
+          "Failed to close dispute. Please try again.";
+        toast.error(errMsg);
+      },
+    );
+  };
 
   const isRefundTable =
     detailType === "refund" ||
@@ -288,7 +330,22 @@ export default function AdminReturnDetailsPage() {
 
   const showRefundActions = isPendingRefundConditionMet && !isRejected;
 
-  const canUpdateStatus = !isResolved && !isRejected;
+  const canUpdateStatus = !isResolved && !isRejected && !isClosed;
+
+  const isRefundBothParties =
+    dispute?.resolution_type === "REFUND_BOTH_PARTIES" ||
+    (dispute?.resolution_type_display || "").toUpperCase().includes("BOTH");
+
+  const isDeliveryConfirmed = Boolean(
+    dispute?.return_delivery_confirmed ||
+    dispute?.delivery_to_seller_confirmed ||
+    dispute?.return_received_at_seller
+  );
+
+  const canCloseDispute =
+    (isResolved || isApproved) &&
+    !isClosed &&
+    (isRefundBothParties || isDeliveryConfirmed);
 
   console.log("Refund Details Status Summary:", {
     currentStatus,
@@ -297,6 +354,7 @@ export default function AdminReturnDetailsPage() {
     isPendingRefundConditionMet,
     showRefundActions,
     canUpdateStatus,
+    canCloseDispute,
   });
 
   // Buyer details
@@ -647,7 +705,7 @@ export default function AdminReturnDetailsPage() {
   };
 
   return (
-    <div className="mb-12 box-border w-full p-6 md:p-8 rounded-2xl bg-white animate-in fade-in duration-300 space-y-8">
+    <div className="mb-12 box-border w-full p-6 md:p-8 rounded-2xl bg-white border border-000000/4 shadow-customW animate-in fade-in duration-300 space-y-8">
       {/* ── 1. Top Header ── */}
       <div className="flex h-c64 border-b border-b-000000/4 items-start justify-between ">
         <button
@@ -798,20 +856,35 @@ export default function AdminReturnDetailsPage() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <Button
-                  onClick={() => {
-                    setSelectedReturnAction(
-                      isApproved ? "MARK_RETURN_RECEIVED" : "APPROVE_RETURN"
-                    );
-                    setUpdateStatusOpen(true);
-                  }}
-                  disabled={!canUpdateStatus}
-                  className="w-auto px-6 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Update Status
-                </Button>
+                {canCloseDispute ? (
+                  <Button
+                    onClick={() => setCloseWarningOpen(true)}
+                    disabled={actionLoading}
+                    className="w-auto px-6 whitespace-nowrap bg-[#161616] hover:bg-black text-white"
+                  >
+                    Close Dispute
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      setSelectedReturnAction(
+                        isApproved ? "MARK_RETURN_RECEIVED" : "APPROVE_RETURN"
+                      );
+                      setUpdateStatusOpen(true);
+                    }}
+                    disabled={!canUpdateStatus}
+                    className="w-auto px-6 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Update Status
+                  </Button>
+                )}
                 {/* Reason the button is disabled or current step indication */}
-                {isResolved && (
+                {isClosed && (
+                  <span className="text-xs font-MontserratNormal text-[#000000]/44">
+                    Dispute closed
+                  </span>
+                )}
+                {isResolved && !isClosed && (
                   <span className="text-xs font-MontserratNormal text-[#2D7565]">
                     Return dispute resolved
                   </span>
@@ -826,7 +899,7 @@ export default function AdminReturnDetailsPage() {
                     Next: Approve or reject return
                   </span>
                 )}
-                {isApproved && (
+                {isApproved && !isClosed && (
                   <span className="text-xs font-MontserratNormal text-[#FF6D5B]">
                     Next: Receive return at warehouse
                   </span>
@@ -948,6 +1021,31 @@ export default function AdminReturnDetailsPage() {
         onCancel={() =>
           setResultModalState((prev) => ({ ...prev, isOpen: false }))
         }
+      />
+
+      {/* ── Close Dispute Confirmation Warning Modal ── */}
+      <ResultModal
+        isOpen={closeWarningOpen}
+        result="warning"
+        title="Close dispute?"
+        message={`Are you sure you want to close dispute ${displayOrderId}?`}
+        discRescription="Final step: seller confirms they've received the returned good back. No money moves here. Dispute status will become Closed."
+        buttenText="Confirm & Close"
+        loading={actionLoading}
+        onCancel={() => setCloseWarningOpen(false)}
+        onConfirm={handleConfirmClose}
+      />
+
+      {/* ── Close Dispute Success Modal ── */}
+      <ResultModal
+        isOpen={closeSuccess}
+        result="success"
+        title="Dispute Closed"
+        message="The dispute has been successfully closed."
+        discRescription="The seller has confirmed receipt of returned goods, and this dispute is now finalized and marked as Closed."
+        buttenText="Okay"
+        onConfirm={() => setCloseSuccess(false)}
+        onCancel={() => setCloseSuccess(false)}
       />
     </div>
   );

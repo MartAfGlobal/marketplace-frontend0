@@ -263,19 +263,55 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
     });
   };
 
-  const fulfillOrder = (
+  const submitTrackingToHub = (
     orderId: string,
-    payload?: { parcel_id?: string } | Record<string, any>,
+    payload: { seller_tracking_id_to_hub: string; notes?: string },
     callback?: (data: any) => void,
     errorCallback?: (err: any) => void
   ) => {
     if (!token) return;
 
-    const body = payload?.parcel_id?.trim() ? { parcel_id: payload.parcel_id.trim() } : {};
+    sendHttpRequest({
+      requestConfig: {
+        url: `orders/manufacturer/orders/${orderId}/submit-tracking/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "seller",
+        body: payload,
+      },
+      successRes: (res: any) => {
+        console.log("Tracking submitted to hub:", res);
+        if (callback) callback(res.data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      }
+    });
+  };
+
+  const fulfillOrder = (
+    orderId: string,
+    payload?: { seller_tracking_id_to_hub?: string; notes?: string; parcel_id?: string } | Record<string, any>,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void
+  ) => {
+    if (!token) return;
+
+    const body: Record<string, any> = {};
+    if (payload?.seller_tracking_id_to_hub) {
+      body.seller_tracking_id_to_hub = payload.seller_tracking_id_to_hub.trim();
+    }
+    if (payload?.notes) {
+      body.notes = payload.notes.trim();
+    }
+    if (payload?.parcel_id && !body.seller_tracking_id_to_hub) {
+      body.seller_tracking_id_to_hub = payload.parcel_id.trim();
+    }
 
     sendHttpRequest({
       requestConfig: {
-        url: `orders/manufacturer/orders/${orderId}/fulfill/`,
+        url: `orders/manufacturer/orders/${orderId}/submit-tracking/`,
         method: "POST",
         token,
         isAuth: true,
@@ -283,7 +319,7 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
         body,
       },
       successRes: (res: any) => {
-        console.log("Order fulfilled:", res);
+        console.log("Tracking submitted to hub (fulfill):", res);
         if (callback) callback(res.data);
       },
       errorRes: (err: any) => {
@@ -416,6 +452,7 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
     acceptOrder,
     rejectOrder,
     fulfillOrder,
+    submitTrackingToHub,
     fetchWarehouses,
     fetchDeliveryPartners,
     fetchRejectionReasons,

@@ -12,6 +12,9 @@ import Link from "next/link";
 import Copy from "@/assets/icons/Copy.png";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import { useSelector } from "react-redux";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
+import { useFetchOrders } from "@/helpers/fetchOrders";
+import { useHttp } from "@/hooks/use-http";
 
 interface OrdersProps {
   searchTerm: string;
@@ -22,11 +25,14 @@ export default function Shipped({ searchTerm }: OrdersProps) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
+  const { fetchOrders } = useFetchOrders();
+  const [itemId, setItemId] = useState("")
+  const { loading: comfirming, sendHttpRequest: ComfirmReq } = useHttp();
+  const token = useSelector((state: any) => state.token?.token);
   const { orders, loading } = useSelector((state: any) => state.orders);
 
-  const shipped = orders.filter(
-    (order: OrderItem) => ["SHIPPED", "shipped-buyer"].includes(order.status),
+  const shipped = orders.filter((order: OrderItem) =>
+    ["SHIPPED", "shipped-buyer", "Shipped"].includes(order.buyer_status),
   );
 
   const filteredOrders = shipped.filter((order: OrderItem) => {
@@ -56,7 +62,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
   }, []);
 
   const handleTrackOrder = (orderId: string) => {
-    router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
+    router.push(getBuyerOrderTrackingPath(orderId));
   };
   console.log(
     "tracking id:",
@@ -67,10 +73,31 @@ export default function Shipped({ searchTerm }: OrdersProps) {
     if (isMobile) {
       router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`); // redirect on mobile
     } else {
+      setItemId(id)
       setOpen(true); // open modal on desktop
     }
   };
-
+  const handleComfirmOder = (order_id: any) => {
+    console.log("checking item to pay", order_id);
+    ComfirmReq({
+      requestConfig: {
+        url: `/orders/buyer/${order_id}/confirm-delivery/`,
+        method: "POST",
+        token,
+        body: {
+          confirmed: true,
+        },
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res) => {
+        console.log("✅ User tracking info:", res);
+        fetchOrders();
+        setOpen(false);
+        
+      },
+    });
+  };
   const handleCopy = (orderId: string) => {
     navigator.clipboard
       .writeText(orderId)
@@ -130,7 +157,8 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                 className="space-y-c24"
               >
                 {filteredOrders.map((item: OrderItem) => {
-                  const orderItems = item.order_items || (item as any).items || [];
+                  const orderItems =
+                    item.order_items || (item as any).items || [];
                   const isSingleItemOrder = orderItems.length === 1;
 
                   return (
@@ -148,10 +176,10 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                           </p>
                           <div className="md:flex hidden gap-2 mt-2">
                             <p className="text-c12  font-MontserratNormal">
-                              Order ID: {item.order_no}
+                              Order ID: {item.order_id}
                             </p>
                             <button
-                              onClick={() => handleCopy(item.order_no || "")}
+                              onClick={() => handleCopy(item.order_id || "")}
                             >
                               <Image
                                 src={Copy}
@@ -168,7 +196,19 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                           </div>
                         </div>
                         <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                          {item.estimated_delivery_date}
+                          Delivery:{" "}
+                          {item.estimated_delivery_date
+                            ? ` ${item.estimated_delivery_date}`
+                            : item.created_at
+                              ? new Date(item.created_at).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  },
+                                )
+                              : ""}
                         </p>
                       </div>
 
@@ -199,18 +239,29 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                       {item.seller_name || item.manufacturer}
                                     </p>
                                     <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
-                                      {prod.fulfilled_quantity ?? prod.quantity}Pc,
+                                      {prod.fulfilled_quantity ?? prod.quantity}
+                                      Pc,
                                       {prod.variation_name || prod.product_name}
                                     </p>
                                     <p className="font-MontserratSemiBold text-c16 pt-3">
-                                      ₦{(prod.price_at_purchase * (prod.fulfilled_quantity ?? prod.quantity ?? 0)).toLocaleString()}
+                                      ₦
+                                      {(
+                                        prod.price_at_purchase *
+                                        (prod.fulfilled_quantity ??
+                                          prod.quantity ??
+                                          0)
+                                      ).toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
                               ))}
                             </Link>
                             <div className="w-full gap-4 pl md:hidden flex  md:max-w-70 ">
-                              <div className="w-full"></div>
+                              <Button
+                                onClick={() => {
+                                  handleClick(item.id);
+                                }}
+                              ></Button>
                               <Button
                                 variant="secondary"
                                 key={item.id}
@@ -218,6 +269,14 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                               >
                                 Track order
                               </Button>
+                              <div className="w-full hidden md:flex justify-center">
+                                <Link
+                                  href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
+                                  className="text-c14 font-MontserratSemiBold text-ff715b"
+                                >
+                                  Order details
+                                </Link>
+                              </div>
                             </div>
                           </>
                         ) : (
@@ -255,7 +314,9 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                           className="w-24 h-24 object-cover"
                                         />
                                         <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                          x{prod.fulfilled_quantity ?? prod.quantity}
+                                          x
+                                          {prod.fulfilled_quantity ??
+                                            prod.quantity}
                                         </p>
                                       </div>
                                     </div>
@@ -278,16 +339,11 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                             {prod.product_name}
                                           </span>
                                           {index <
-                                            Math.min(
-                                              orderItems.length,
-                                              3,
-                                            ) -
+                                            Math.min(orderItems.length, 3) -
                                               1 && <span>,&nbsp;</span>}
                                         </span>
                                       ))}
-                                    {orderItems.length > 3 && (
-                                      <span>...</span>
-                                    )}
+                                    {orderItems.length > 3 && <span>...</span>}
                                   </p>
 
                                   <p className="text-c12 font-MontserratMedium mb-3">
@@ -296,14 +352,29 @@ export default function Shipped({ searchTerm }: OrdersProps) {
 
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
                                     {orderItems.reduce(
-                                      (sum: number, i: any) => sum + (i.fulfilled_quantity ?? i.quantity ?? 0),
+                                      (sum: number, i: any) =>
+                                        sum +
+                                        (i.fulfilled_quantity ??
+                                          i.quantity ??
+                                          0),
                                       0,
                                     )}{" "}
                                     <span className="pl-0.5">Items</span>
                                   </p>
 
                                   <p className="font-MontserratSemiBold text-c16 pt-3">
-                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
+                                    ₦
+                                    {orderItems
+                                      .reduce(
+                                        (sum: number, i: any) =>
+                                          sum +
+                                          i.price_at_purchase *
+                                            (i.fulfilled_quantity ??
+                                              i.quantity ??
+                                              0),
+                                        0,
+                                      )
+                                      .toLocaleString()}
                                   </p>
                                 </div>
                               </div>
@@ -340,13 +411,30 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                   </p>
 
                                   <p className="font-MontserratSemiBold text-c16 pt-2">
-                                    ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
+                                    ₦
+                                    {orderItems
+                                      .reduce(
+                                        (sum: number, i: any) =>
+                                          sum +
+                                          i.price_at_purchase *
+                                            (i.fulfilled_quantity ??
+                                              i.quantity ??
+                                              0),
+                                        0,
+                                      )
+                                      .toLocaleString()}
                                   </p>
                                 </div>
                               </div>
                             </Link>
                             <div className="w-full gap-4 pl md:hidden flex  md:max-w-70 ">
-                              <div className="w-full"></div>
+                              <div className="w-full">
+                                <Button
+                                  onClick={() => {
+                                    handleClick(item.id);
+                                  }}
+                                ></Button>
+                              </div>
                               <Button
                                 variant="secondary"
                                 key={item.id}
@@ -354,12 +442,25 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                               >
                                 Track order
                               </Button>
+                              <div className="w-full hidden md:flex justify-center">
+                                <Link
+                                  href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
+                                  className="text-c14 font-MontserratSemiBold text-ff715b"
+                                >
+                                  Order details
+                                </Link>
+                              </div>
                             </div>
                           </>
                         )}
 
                         <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
-                           <div className="w-full"></div>
+                          <Button
+                            onClick={() => {
+                              handleClick(item.id);
+                            }}
+                          ></Button>
+
                           <Button
                             variant="secondary"
                             key={item.id}
@@ -367,6 +468,14 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                           >
                             Track order
                           </Button>
+                          <div className="w-full hidden md:flex justify-center">
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="text-c14 font-MontserratSemiBold text-ff715b"
+                            >
+                              Order details
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -383,9 +492,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
         title="Did you receive this package?"
         description="Confirming helps us complete your order and improve service."
         onNo={() => setOpen(false)}
-        onYes={() => {
-          open;
-        }}
+        onYes={() => handleComfirmOder(itemId)}
       />
     </div>
   );

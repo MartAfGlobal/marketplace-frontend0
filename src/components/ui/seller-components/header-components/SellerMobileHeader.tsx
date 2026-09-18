@@ -43,7 +43,7 @@ export const SellerMobileHeader = ({
             </span>
           </button>
         )}
-        <span className="text-c18 font-MontserratSemiBold text-000000">
+        <span className="text-c18 font-MontserratSemiBold leading-[22px] text-000000">
           {title}
         </span>
       </div>

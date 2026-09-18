@@ -15,27 +15,22 @@ import { transformApiProduct } from "@/utils/transformApiProduct";
 
 import { usePathname } from "next/navigation";
 export default function Home() {
-    const pathname = usePathname();
+  const pathname = usePathname();
   const dispatch = useDispatch();
   const { sendHttpRequest } = useHttp();
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
+  useEffect(() => {
+    const id = window.location.hash.replace("#", "");
+    if (!id) return;
 
-  const id = window.location.hash.replace("#", "");
-  if (!id) return;
-
-  const el = document.getElementById(id);
-  if (el) {
-    setTimeout(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 300); 
-  }
-}, []);
-
-
-
-
+    const el = document.getElementById(id);
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, []);
 
   // useEffect(() => {
   //   const handleProducts = (res: any) => {
@@ -69,11 +64,11 @@ useEffect(() => {
 
   return (
     <main>
-        <div className="px-4.75 lg:px-15 pt-6">
+      <div className=" lg:px-15 pt-6">
         <HeroPage />
-      <div className="lg:hidden">
+        <div className="lg:hidden">
           <MobileCategory />
-        </div>
+        </div> 
         <div className="lg:hidden">
           <Gallary />
         </div>
@@ -83,7 +78,7 @@ useEffect(() => {
 
         <AboutPage /> 
       </div>
-       <JoinUsPage /> 
+      <JoinUsPage /> 
     </main>
   );
 }

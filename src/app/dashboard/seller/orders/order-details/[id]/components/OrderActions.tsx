@@ -32,14 +32,15 @@ export const OrderActions = ({
             <Button
               disabled={!order.can_accept}
               onClick={onAcceptClick}
-              className={`w-full py-4 bg-ff715b text-white rounded-xl transition-all shadow-lg shadow-ff715b/20 ${!order.can_accept ? "opacity-50 cursor-not-allowed bg-gray-400" : "hover:bg-ff715b/90"}`}
+              className={` ${!order.can_accept ? "opacity-50 cursor-not-allowed bg-gray-400" : "hover:bg-ff715b/90"}`}
             >
               Accept order
             </Button>
             <Button
+            variant="secondary"
               disabled={!order.can_accept}
               onClick={onRejectClick}
-              className={`w-full py-4 bg-white border border-ca0202 text-ca0202 rounded-xl transition-all ${!order.can_accept ? "opacity-50 cursor-not-allowed border-gray-300 text-gray-400" : "hover:bg-red-50"}`}
+              className={` ${!order.can_accept ? "opacity-50 cursor-not-allowed border-gray-300 text-gray-400" : "hover:bg-red-50"}`}
             >
               Reject order
             </Button>
@@ -63,15 +64,15 @@ export const OrderActions = ({
           </div>
         )}
 
-        {(mappedStatus === "processed" || mappedStatus === "partially accepted") && (
+        {(mappedStatus === "processing" || mappedStatus === "partially accepted" || mappedStatus === "accepted") && (
           <div className="flex flex-col gap-4">
-            <button
+            <Button
               disabled={timeLeft <= 0}
               onClick={onFulfillClick}
-              className={`w-full py-4 text-white rounded-xl font-MontserratSemiBold transition-all shadow-lg ${timeLeft > 0 ? "bg-ff715b shadow-ff715b/20 hover:bg-ff715b/90" : "opacity-50 cursor-not-allowed bg-gray-400"}`}
+              className={`w-full  ${timeLeft > 0 ? "bg-ff715b shadow-ff715b/20 hover:bg-ff715b/90" : "opacity-50 cursor-not-allowed bg-gray-400"}`}
             >
-              Mark as fulfilled
-            </button>
+              Submit tracking number
+            </Button>
             <div className="pt-4 space-y-2 flex items-center gap-2">
               <p className=" font-MontserratNormal text-sm ">
                 Time left to fulfill order:
@@ -89,6 +90,12 @@ export const OrderActions = ({
                 ? "N/B: The order will automatically be cancelled after time elapses"
                 : "The order has been cancelled"}
             </p>
+          </div>
+        )}
+
+        {mappedStatus === "tracking submitted" && (
+          <div className="w-full py-4 bg-blue-50 text-[#0070E9] rounded-c8 flex items-center justify-center font-MontserratSemiBold text-sm text-center px-4">
+            Tracking submitted (Awaiting hub confirmation)
           </div>
         )}
 
@@ -124,13 +131,23 @@ export const OrderActions = ({
           </>
         )}
         {(mappedStatus === "processed" || mappedStatus === "partially accepted") && (
-          <button
+          <Button
             disabled={timeLeft <= 0}
             onClick={onFulfillClick}
-            className={`w-full py-3 text-white rounded-xl font-MontserratSemiBold transition-all shadow-lg ${timeLeft > 0 ? "bg-ff715b shadow-ff715b/20 hover:bg-ff715b/90" : "opacity-50 cursor-not-allowed bg-gray-400"}`}
+            className={`w-full  ${timeLeft > 0 ? "bg-ff715b shadow-ff715b/20 hover:bg-ff715b/90" : "opacity-50 cursor-not-allowed bg-gray-400"}`}
           >
-            Mark as shipped
-          </button>
+            Submit tracking number
+          </Button>
+        )}
+        {mappedStatus === "tracking submitted" && (
+          <div className="w-full py-3 bg-blue-50 text-[#0070E9] rounded-xl flex items-center justify-center font-MontserratSemiBold text-sm text-center px-4">
+            Tracking submitted (Awaiting hub confirmation)
+          </div>
+        )}
+        {mappedStatus === "fulfilled" && (
+          <div className="w-full py-3 bg-000000/12 text-ffffff rounded-xl flex items-center justify-center font-MontserratSemiBold text-sm">
+            Order at warehouse
+          </div>
         )}
       </div>
     </div>

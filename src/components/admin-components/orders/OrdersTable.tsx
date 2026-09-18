@@ -5,10 +5,12 @@ import HandBug from "@/assets/Seller/handBug.png";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useRouter } from "next/navigation";
 
-import { CheckCircle2, Clock3, XCircle, Truck } from "lucide-react";
+import { CheckCircle2, Clock3, XCircle } from "lucide-react";
 
 export interface OrderRow {
   id: string;
+  orderId: string;
+  trackingNumber?: string;
   buyer: string;
   vendors: string;
   extraVendors?: number;
@@ -16,135 +18,75 @@ export interface OrderRow {
   location: string;
   status: string;
   date: string;
+  hasDispute?: boolean;
 }
 
 export const renderStatus = (status: string) => {
   const s = (status ?? "").trim().toLowerCase();
 
+  // ── Dispute closed (purple) ───────────────────────────────────────────────
   if (
-    s === "accepted" ||
-    s === "approved" ||
-    s === "delivered" ||
-    s === "completed" ||
-    s === "fulfilled" ||
-    s === "successful" ||
-    s === "active"
+    s === "dispute closed" ||
+    s === "dispute_closed" ||
+    s === "closed"
   ) {
-    const label =
-      s === "accepted"
-        ? "Accepted"
-        : s === "approved"
-        ? "Approved"
-        : s === "delivered"
-        ? "Delivered"
-        : s === "completed"
-        ? "Completed"
-        : s === "fulfilled"
-        ? "Fulfilled"
-        : status
-        ? status.charAt(0).toUpperCase() + status.slice(1)
-        : "Accepted";
-
     return (
-      <span className="inline-flex items-center gap-1 text-[#00BE5C] bg-[#00BE5C]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
+      <span className="inline-flex items-center gap-1 text-[#6A0DAD] bg-[#6A0DAD]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
         <CheckCircle2 size={14} />
-        {label}
+        Dispute closed
       </span>
     );
   }
 
+  // ── Delivered (green) ──────────────────────────────────────────────────────
   if (
+    s === "delivered" ||
+    s === "received by buyer" ||
+    s === "received_by_buyer" ||
+    s === "completed" ||
+    s === "fulfilled" ||
+    s === "successful"
+  ) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[#00BE5C] bg-[#00BE5C]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
+        <CheckCircle2 size={14} />
+        Delivered
+      </span>
+    );
+  }
+
+  // ── Disputed / Rejected / Cancelled / Return Requested (red) ────────────────
+  if (
+    s === "disputed" ||
+    s === "dispute raised" ||
+    s === "dispute ongoing" ||
+    s === "return_requested" ||
+    s === "return requested" ||
     s === "rejected" ||
     s === "cancelled" ||
-    s === "canceled" ||
-    s === "disputed" ||
-    s === "dispute" ||
-    s === "returned" ||
-    s === "refunded"
+    s === "canceled"
   ) {
-    const isCancelled = s === "cancelled" || s === "canceled";
-    const label = isCancelled
-      ? "Cancelled"
-      : s === "rejected"
-      ? "Rejected"
-      : s === "disputed" || s === "dispute"
-      ? "Disputed"
-      : s === "returned"
-      ? "Returned"
-      : s === "refunded"
-      ? "Refunded"
-      : status
-      ? status.charAt(0).toUpperCase() + status.slice(1)
-      : "Rejected";
-
-    const colorClass = isCancelled
-      ? "text-[#807C79] bg-[#807C79]/12"
-      : "text-[#CA0202] bg-[#CA0202]/12";
-
+    const label =
+      s === "dispute ongoing"
+        ? "Dispute ongoing"
+        : s === "disputed" || s === "dispute raised" || s === "return_requested" || s === "return requested"
+        ? "Disputed"
+        : s === "rejected"
+        ? "Rejected"
+        : "Cancelled";
     return (
-      <span
-        className={`inline-flex items-center gap-1 ${colorClass} h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium`}
-      >
+      <span className="inline-flex items-center gap-1 text-[#CA0202] bg-[#CA0202]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
         <XCircle size={14} />
         {label}
       </span>
     );
   }
 
-  if (
-    s === "shipped" ||
-    s.includes("in transit") ||
-    s.includes("in_transit") ||
-    s.includes("to hub") ||
-    s.includes("to_hub")
-  ) {
-    const label =
-      s === "shipped"
-        ? "Shipped"
-        : status
-        ? status
-            .split(/[_\s]+/)
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-            .join(" ")
-        : "In Transit";
-    return (
-      <span className="inline-flex items-center gap-1 text-[#947FFF] bg-[#947FFF]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
-        <Truck size={14} />
-        {label}
-      </span>
-    );
-  }
-
-  if (s === "processing" || s === "processed") {
-    return (
-      <span className="inline-flex items-center gap-1 text-[#318af7] bg-[#318af7]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
-        <Clock3 size={14} />
-        Processing
-      </span>
-    );
-  }
-
-  if (s === "partially accepted" || s === "partially_accepted") {
-    return (
-      <span className="inline-flex items-center gap-1 text-[#FFAC06] bg-[#FFAC06]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
-        <Clock3 size={14} />
-        Partially Accepted
-      </span>
-    );
-  }
-
-  // Pending / Ongoing / Default fallback
-  const label = status
-    ? status
-        .split(/[_\s]+/)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-        .join(" ")
-    : "Pending";
-
+  // ── Ongoing (yellow) — everything else ────────────────────────────────────
   return (
     <span className="inline-flex items-center gap-1 text-[#FFAC06] bg-[#FFAC06]/12 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium">
       <Clock3 size={14} />
-      {label}
+      Ongoing
     </span>
   );
 };
@@ -157,6 +99,7 @@ interface OrdersTableProps {
   onSelectAll: () => void;
   onToggleRow: (id: string) => void;
   onSetActiveRowId: (id: string | null) => void;
+  onViewDispute?: (row: OrderRow) => void;
 }
 
 export default function OrdersTable({
@@ -167,6 +110,7 @@ export default function OrdersTable({
   onSelectAll,
   onToggleRow,
   onSetActiveRowId,
+  onViewDispute,
 }: OrdersTableProps) {
   const router = useRouter();
 
@@ -174,15 +118,15 @@ export default function OrdersTable({
     <div className="overflow-x-auto min-h-[250px]">
       <table className="w-full text-left">
         <thead>
-          <tr className="h-10.5 bg-[#947fff] text-white text-nowrap ">
-            <th className="font-MontserratNormal text-sm text-center w-10 p-3">
+          <tr className="h-10.5 bg-[#947fff] text-white text-nowrap py-[10.5px]">
+            <th className="font-MontserratNormal text-sm text-center  px-3.5">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectAll();
                 }}
-                className={`mx-auto flex h-4 w-4 items-center justify-center border duration-200 ${
+                className={`mx-auto flex h-3 w-3 items-center justify-center border duration-200 ${
                   rows.length > 0 &&
                   rows.every((row) => selectedIds.includes(row.id))
                     ? "border-[#ff715b] bg-[#ff715b]"
@@ -207,22 +151,22 @@ export default function OrdersTable({
                 </svg>
               </button>
             </th>
-            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Date</th>
-            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Order ID</th>
-            <th className="p-3 font-MontserratNormal text-sm leading-[1%] w-[203.4]">
+            <th className=" px-3  font-MontserratNormal text-sm leading-[1%]">Date</th>
+            <th className=" px-3  font-MontserratNormal text-sm leading-[1%]">Order ID</th>
+            <th className=" px-3  font-MontserratNormal text-sm leading-[1%] w-[203.4]">
               Buyer
             </th>
-            <th className="p-3 font-MontserratNormal text-sm leading-[1%] w-[203.4]">
+            <th className=" px-3  font-MontserratNormal text-sm leading-[1%] w-[203.4]">
               Business name
             </th>
-            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Status</th>
-            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Amount</th>
+            <th className=" px-3  font-MontserratNormal text-sm leading-[1%]">Status</th>
+            <th className=" px-3  font-MontserratNormal text-sm leading-[1%]">Amount</th>
 
-            <th className="p-3 font-MontserratNormal text-sm leading-[1%]">Location</th>
-            <th className="p-3 font-MontserratNormal text-sm leading-[1%] text-center"></th>
+            <th className=" px-3  font-MontserratNormal text-sm leading-[1%]">Location</th>
+            <th className=" px-3  font-MontserratNormal text-sm leading-[1%] text-center"></th>
           </tr>
         </thead>
-        <tbody className="text-sm text-000000/68 font-MontserratNormal">
+        <tbody className="text-sm text-000000/68 font-MontserratNormal leading-[21px] text-nowrap truncate">
           {loading ? (
             <tr>
               <td colSpan={9} className="py-12 text-center">
@@ -235,16 +179,16 @@ export default function OrdersTable({
             rows.map((row) => (
               <tr
                 key={row.id}
-                className="hover:bg-gray-50/50 transition-colors h-14"
+                className="hover:bg-gray-50/50 transition-colors h-c45 py-3"
               >
-                <td className="py-3 px-4  font-MontserratMedium">
+                <td className="px-3  font-MontserratMedium">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleRow(row.id);
                     }}
-                    className={`group flex h-4 w-4 mx-auto items-center justify-center border transition-all duration-200 cursor-pointer ${
+                    className={`group flex h-3 w-3 mx-auto items-center justify-center border transition-all duration-200 cursor-pointer ${
                       selectedIds.includes(row.id)
                         ? "border-[#ff715b] bg-[#ff715b]"
                         : "border-[#161616] hover:border-[#ff715b]"
@@ -267,51 +211,51 @@ export default function OrdersTable({
                     </svg>
                   </button>
                 </td>
-                <td className="py-3 px-4">
-                  <span className="block max-w-[90px] truncate" title={row.date}>
+                <td className="px-3">
+                  <span className="block max-w-[104px] truncate" title={row.date}>
                     {row.date}
                   </span>
                 </td>
-                <td className="py-3 px-4">
+                <td className="px-3">
                   <button
                     type="button"
-                    onClick={() => router.push(`/dashboard/admin/orders/${row.id}`)}
-                    className="block max-w-[120px] truncate text-left font-MontserratMedium cursor-pointer"
-                    title={row.id}
+                    onClick={() => router.push(`/dashboard/admin/orders/${row.id}?from=Orders`)}
+                    className="block max-w-[111px] truncate text-left font-MontserratMedium cursor-pointer"
+                    title={row.orderId}
                   >
-                    {row.id}
+                    {row.orderId}
                   </button>
                 </td>
-                <td className="py-3 px-4">
-                  <span className="block max-w-[120px] truncate" title={row.buyer}>
+                <td className="px-3">
+                  <span className="block max-w-[203.4px] truncate" title={row.buyer}>
                     {row.buyer}
                   </span>
                 </td>
-                <td className="py-3 px-4">
-                  <span className="block max-w-[120px] truncate" title={row.vendors}>
+                <td className="px-3">
+                  <span className="block max-w-[203.4px] truncate" title={row.vendors}>
                     {row.vendors}
                   </span>
                 </td>
                
-                <td className="py-3 px-4">
+                <td className="px-1">
                   {renderStatus(row.status)}
                 </td>
-                <td className="py-3 px-4">
-                  <span className="block max-w-[120px] truncate" title={row.amount}>
+                <td className="px-3">
+                  <span className="block max-w-[107px] truncate" title={row.amount}>
                     {row.amount}
                   </span>
                 </td>
-                <td className="py-3 px-4">
-                  <span className="block max-w-[140px] truncate" title={row.location}>
+                <td className="px-3">
+                  <span className="block max-w-[91px] truncate" title={row.location}>
                     {row.location}
                   </span>
                 </td>
                 <td
-                  className="py-3 px-4 text-center relative"
+                  className="px-3 text-center relative"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
-                    className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+                    className="w-4 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       onSetActiveRowId(activeRowId === row.id ? null : row.id);
@@ -331,16 +275,28 @@ export default function OrdersTable({
                         <button
                           onClick={() => {
                             onSetActiveRowId(null);
-                            router.push(`/dashboard/admin/orders/${row.id}`);
+                            router.push(`/dashboard/admin/orders/${row.id}?from=Orders`);
                           }}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer"
                         >
                           View Details
                         </button>
+                        {row.hasDispute && onViewDispute && (
+                          <button
+                            onClick={() => {
+                              onSetActiveRowId(null);
+                              onViewDispute(row);
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer"
+                          >
+                            View dispute
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             onSetActiveRowId(null);
-                            router.push(`/dashboard/admin/orders/track/${row.id}`);
+                            const target = row.trackingNumber || row.orderId || row.id;
+                            router.push(`/dashboard/admin/orders/${encodeURIComponent(target)}?from=Orders`);
                           }}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer"
                         >

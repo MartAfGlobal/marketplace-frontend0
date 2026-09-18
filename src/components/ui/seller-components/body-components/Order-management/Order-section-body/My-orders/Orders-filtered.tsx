@@ -70,7 +70,7 @@ export default function OrderFiltered({
       </div>
 
       {/* 🔹 Main content with animation */}
-      <main className="flex-1 pt-c32">
+      <main className="flex-1 pt-c32 ">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}

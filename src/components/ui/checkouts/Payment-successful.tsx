@@ -22,6 +22,7 @@ import PaymentSuccess from "./success";
 import { RootState } from "@/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useHttp } from "@/hooks/use-http";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 
 export default function PaymentSuccessful() {
   const [copied, setCopied] = useState(false);
@@ -40,7 +41,7 @@ export default function PaymentSuccessful() {
 
   const handleTrackOrder = () => {
     const trackingId = trackOrders[0]?.id?.toString() ?? "";
-    router.push(`/dashboard/buyer/orders/tracking/${trackingId}`);
+    router.push(getBuyerOrderTrackingPath(trackingId));
   };
 
   const { loading, sendHttpRequest: fetchSuccOrderRequest } = useHttp();

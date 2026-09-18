@@ -77,197 +77,124 @@ export default function OrderProgressBar({
   };
 
   return (
-    <main>
-      <div className="bg-white h-37.5 mt-4 space-y-6 max-w-182 rounded-2xl p-6 mb-6 mx-auto animate-in fade-in duration-300">
+    <main className="w-full">
+      <div className="bg-white w-full mt-4 space-y-4 rounded-2xl p-4 sm:p-6 mb-6 animate-in fade-in duration-300">
         <h3 className="text-sm text-000000/68 font-MontserratNormal">
           Order progress
         </h3>
 
-        <div className="flex overflow-x-auto scrollbar-hide py-2">
-          {/* Step 1 */}
-          <div className="h-15 max-w-21.5 flex-shrink-0">
-            <div className="w-full gap-1 flex items-center">
-              <div
-                className={`w-6 h-6 rounded-full flex justify-center items-center transition-colors ${getCircleClass(
-                  1
-                )}`}
-              >
-                <Image
-                  src={PaymentPendingIcon}
-                  alt="pending"
-                  height={12}
-                  width={12}
-                />
-              </div>
-              <div className={`w-14.5 border ${getLineClass(1)}`} />
-            </div>
-            <span
-              className={`font-MontserratNormal text-c10 tracking-[2%] ${getTextClass(
-                1
-              )}`}
-            >
-              Payment pending
-            </span>
-          </div>
+        {/* Scrollable progress row — scrolls horizontally on small screens */}
+        <div className="w-full overflow-x-auto pb-2">
+          <div className="flex items-start w-full min-w-[560px] gap-0">
 
-          {/* Step 2 */}
-          <div className="h-15 max-w-32.25 flex-shrink-0">
-            <div className="w-full gap-1 flex items-center">
-              <div
-                className={`w-6 h-6 rounded-full flex justify-center items-center transition-colors ${getCircleClass(
-                  2
-                )}`}
-              >
-                <Image
-                  src={AwaitingSellersConfrirmationIcon}
-                  alt="Awaiting seller confirmation"
-                  height={12}
-                  width={12}
-                />
+            {/* Step 1 — Payment pending */}
+            <div className="flex flex-col items-center flex-1 min-w-[70px]">
+              <div className="flex items-center w-full">
+                <div className="flex-1 invisible" />
+                <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(1)}`}>
+                  <Image src={PaymentPendingIcon} alt="pending" height={12} width={12} />
+                </div>
+                <div className={`flex-1 h-px border-t ${getLineClass(1)}`} />
               </div>
-              <div className={`w-25.25 border ${getLineClass(2)}`} />
+              <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(1)}`}>
+                Payment pending
+              </span>
             </div>
-            <span
-              className={`font-MontserratNormal text-c10 tracking-[2%] ${getTextClass(
-                2
-              )}`}
-            >
-              Awaiting seller’s confirmation
-            </span>
-          </div>
 
-          {/* Step 3 */}
-          <div className="h-15 max-w-21.5 flex-shrink-0">
-            <div className="w-full gap-1 flex items-center">
-              <div
-                className={`w-6 h-6 rounded-full flex justify-center items-center transition-colors ${getCircleClass(
-                  3
-                )}`}
-              >
-                <Image
-                  src={SentFromSellerIcon}
-                  alt="Sent from seller"
-                  height={12}
-                  width={12}
-                />
-              </div>
-              <div className={`w-15.25 border ${getLineClass(3)}`} />
-            </div>
-            <span
-              className={`font-MontserratNormal text-c10 tracking-[2%] ${getTextClass(
-                3
-              )}`}
+            {/* Step 2 — Awaiting seller's confirmation */}
+            <div
+              className="flex flex-col items-center"
+              style={{ flex: "1.6 1 0%", minWidth: "115px" }}
             >
-              Sent from seller
-            </span>
-          </div>
+              <div className="flex items-center w-full">
+                <div className={`flex-1 h-px border-t ${getLineClass(1)}`} />
+                <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(2)}`}>
+                  <Image src={AwaitingSellersConfrirmationIcon} alt="Awaiting seller confirmation" height={12} width={12} />
+                </div>
+                <div className={`flex-1 h-px border-t ${getLineClass(2)}`} />
+              </div>
+              <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(2)}`}>
+                Awaiting seller&apos;s confirmation
+              </span>
+            </div>
 
-          {/* Step 4 */}
-          <div className="h-15 max-w-21.5 flex-shrink-0">
-            <div className="w-full gap-1 flex items-center">
-              <div
-                className={`w-6 h-6 rounded-full flex justify-center items-center transition-colors ${getCircleClass(
-                  4
-                )}`}
-              >
-                <Image
-                  src={RecievedAtWarehouseIcon}
-                  alt="Received at warehouse"
-                  height={12}
-                  width={12}
-                />
+            {/* Step 3 — Sent from seller */}
+            <div className="flex flex-col items-center flex-1 min-w-[70px]">
+              <div className="flex items-center w-full">
+                <div className={`flex-1 h-px border-t ${getLineClass(2)}`} />
+                <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(3)}`}>
+                  <Image src={SentFromSellerIcon} alt="Sent from seller" height={12} width={12} />
+                </div>
+                <div className={`flex-1 h-px border-t ${getLineClass(3)}`} />
               </div>
-              <div className={`w-15.25 border ${getLineClass(4)}`} />
+              <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(3)}`}>
+                Sent from seller
+              </span>
             </div>
-            <span
-              className={`font-MontserratNormal text-c10 tracking-[2%] ${getTextClass(
-                4
-              )}`}
-            >
-              Received at warehouse
-            </span>
-          </div>
 
-          {/* Step 5 */}
-          <div className="h-15 max-w-25.75 flex-shrink-0">
-            <div className="w-full gap-1 flex items-center">
-              <div
-                className={`w-6 h-6 rounded-full flex justify-center items-center transition-colors ${getCircleClass(
-                  5
-                )}`}
-              >
-                <Image
-                  src={ShippedWarehouseIcon}
-                  alt="Shipped from warehouse"
-                  height={12}
-                  width={12}
-                />
+            {/* Step 4 — Received at warehouse */}
+            <div className="flex flex-col items-center flex-1 min-w-[75px]">
+              <div className="flex items-center w-full">
+                <div className={`flex-1 h-px border-t ${getLineClass(3)}`} />
+                <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(4)}`}>
+                  <Image src={RecievedAtWarehouseIcon} alt="Received at warehouse" height={12} width={12} />
+                </div>
+                <div className={`flex-1 h-px border-t ${getLineClass(4)}`} />
               </div>
-              <div className={`w-18.75 border ${getLineClass(5)}`} />
+              <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(4)}`}>
+                Received at warehouse
+              </span>
             </div>
-            <span
-              className={`font-MontserratNormal text-c10 tracking-[2%] ${getTextClass(
-                5
-              )}`}
-            >
-              Shipped from warehouse
-            </span>
-          </div>
 
-          {/* Step 6 */}
-          <div className="h-15 max-w-23.75 flex-shrink-0">
-            <div className="w-full gap-1 flex items-center">
-              <div
-                className={`w-6 h-6 rounded-full flex justify-center items-center transition-colors ${getCircleClass(
-                  6
-                )}`}
-              >
-                <Image
-                  src={DeliveredToBuyerIcon}
-                  alt="Delivered to buyer"
-                  height={12}
-                  width={12}
-                />
+            {/* Step 5 — Shipped from warehouse */}
+            <div className="flex flex-col items-center flex-1 min-w-[75px]">
+              <div className="flex items-center w-full">
+                <div className={`flex-1 h-px border-t ${getLineClass(4)}`} />
+                <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(5)}`}>
+                  <Image src={ShippedWarehouseIcon} alt="Shipped from warehouse" height={12} width={12} />
+                </div>
+                <div className={`flex-1 h-px border-t ${getLineClass(5)}`} />
               </div>
-              <div className={`w-16.75 border ${getLineClass(6)}`} />
+              <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(5)}`}>
+                Shipped from warehouse
+              </span>
             </div>
-            <span
-              className={`font-MontserratNormal text-c10 tracking-[2%] ${getTextClass(
-                6
-              )}`}
-            >
-              Delivered to buyer
-            </span>
-          </div>
 
-          {/* Step 7 (Dispute) */}
-          <div className="h-15 max-w-18.25 flex-shrink-0">
-            <div className="w-full gap-1 flex items-center">
-              <div
-                className={`w-6 h-6 rounded-full flex justify-center items-center transition-colors ${
-                  isDispute ? "bg-[#E8334A]" : "bg-gray-300"
-                }`}
-              >
-                <Image
-                  src={DisputeIcon}
-                  alt="Indispute"
-                  height={7.5}
-                  width={7.5}
-                />
+            {/* Step 6 — Delivered to buyer */}
+            <div className="flex flex-col items-center flex-1 min-w-[70px]">
+              <div className="flex items-center w-full">
+                <div className={`flex-1 h-px border-t ${getLineClass(5)}`} />
+                <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(6)}`}>
+                  <Image src={DeliveredToBuyerIcon} alt="Delivered to buyer" height={12} width={12} />
+                </div>
+                <div className={`flex-1 h-px border-t ${getLineClass(6)}`} />
               </div>
+              <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(6)}`}>
+                Delivered to buyer
+              </span>
             </div>
-            <span
-              className={`font-MontserratNormal text-c10 tracking-[2%] ${
-                isDispute
-                  ? "text-[#E8334A] font-MontserratMedium"
-                  : "text-000000/44"
-              }`}
+
+            {/* Step 7 — In dispute (no trailing line) */}
+            <div
+              className="flex flex-col items-center"
+              style={{ flex: "0.7 1 0%", minWidth: "55px" }}
             >
-              In dispute
-            </span>
+              <div className="flex items-center w-full">
+                <div className={`flex-1 h-px border-t ${getLineClass(6)}`} />
+                <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${isDispute ? "bg-[#E8334A]" : "bg-gray-300"}`}>
+                  <Image src={DisputeIcon} alt="In dispute" height={7.5} width={7.5} />
+                </div>
+                <div className="flex-1 invisible" />
+              </div>
+              <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${isDispute ? "text-[#E8334A] font-MontserratMedium" : "text-000000/44"}`}>
+                In dispute
+              </span>
+            </div>
+
           </div>
         </div>
       </div>
     </main>
   );
 }
+

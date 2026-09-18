@@ -121,11 +121,15 @@ export default function RejectOrderPage() {
     }));
   };
 
-  const isAllSelected = order?.items?.length > 0 && 
-    order.items.every((item: any, idx: number) => {
+  // True when at least one item checkbox is checked
+  const hasAnySelected = order?.items?.length > 0 &&
+    order.items.some((item: any, idx: number) => {
       const itemId = item.id || idx.toString();
-      return selectedItems[itemId] && itemQuantities[itemId] === item.quantity;
+      return selectedItems[itemId];
     });
+
+  // Keep isAllSelected for internal submit logic (all items fully rejected)
+  const isAllSelected = !hasAnySelected;
 
   const handleActionTrigger = () => {
     if (!reason) {
@@ -138,8 +142,10 @@ export default function RejectOrderPage() {
   const handleHandleResult = () => {
     setShowWarningModal(false);
     if (isAllSelected) {
-      handleFinalSubmit(true); // pass true to indicate we're bypassing modal
+      // No boxes checked → reject the entire order
+      handleFinalSubmit(true);
     } else {
+      // Some boxes checked → partial reject, need warehouse + delivery partner
       setShowWarehouseModal(true);
     }
   };
@@ -286,7 +292,7 @@ export default function RejectOrderPage() {
 
             <div className="space-y-4">
               <h3 className="font-MontserratSemiBold text-sm text-000000">
-                Select item(s) that are not available for order fulfilment
+                Select item(s) that are  available for order fulfilment
               </h3>
 
               {/* Mobile View: Card-based items */}
@@ -443,14 +449,15 @@ export default function RejectOrderPage() {
             <Button
               onClick={handleActionTrigger}
               disabled={rejecting || !reason?.id}
-              className="w-full py-4 bg-ff715b hover:bg-ff715b/90 text-white rounded-xl font-MontserratMedium shadow-sm transition-all h-[56px] disabled:opacity-50"
+              className=""
             >
               {rejecting ? <LoadingSpinner /> : (isAllSelected ? "Reject all" : "Proceed")}
             </Button>
             <Button
+            variant="secondary"
               onClick={() => router.back()}
               disabled={rejecting}
-              className="w-full py-4 bg-transparent border border-ff715b text-ff715b hover:bg-ff715b/5 rounded-xl font-MontserratMedium transition-all h-[56px]"
+              className=""
             >
               Cancel
             </Button>

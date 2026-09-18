@@ -1098,7 +1098,12 @@ export const AdminDetails = (id?: string) => {
   };
 
   const fetchAdminDisputesList = (
-    params: { status?: string; dispute_type?: string; page?: number; search?: string } = {},
+    params: {
+      status?: string;
+      dispute_type?: string;
+      page?: number;
+      search?: string;
+    } = {},
     callback?: (data: any) => void,
     errorCallback?: (err: any) => void,
   ) => {
@@ -1109,7 +1114,9 @@ export const AdminDetails = (id?: string) => {
       queryParts.push(`status=${encodeURIComponent(params.status)}`);
     }
     if (params.dispute_type) {
-      queryParts.push(`dispute_type=${encodeURIComponent(params.dispute_type)}`);
+      queryParts.push(
+        `dispute_type=${encodeURIComponent(params.dispute_type)}`,
+      );
     }
     if (params.page) {
       queryParts.push(`page=${params.page}`);
@@ -1216,9 +1223,13 @@ export const AdminDetails = (id?: string) => {
   ) => {
     if (!token || !disputeId) return;
 
+    console.log(
+      `[AdminDetails] Fetching dispute details for UUID ${disputeId} from /disputes/admin/${disputeId}/`,
+    );
+
     sendHttpRequest({
       requestConfig: {
-        url: `/disputes/admin/${disputeId}`,
+        url: `/disputes/admin/${disputeId}/`,
         method: "GET",
         token,
         isAuth: true,
@@ -1226,15 +1237,21 @@ export const AdminDetails = (id?: string) => {
       },
       successRes: (responseData: any) => {
         const data = responseData?.data ?? responseData;
-        console.log("Admin dispute detail fetched:", data);
+        console.log(
+          "[AdminDetails] Admin dispute detail fetched successfully:",
+          data,
+        );
         if (callback) callback(data);
       },
       errorRes: (err: any) => {
-        console.error("Fetch admin dispute detail error:", err);
-        // Fallback retry with trailing slash if needed
+        console.error(
+          "Fetch admin dispute detail error, trying fallback without trailing slash:",
+          err,
+        );
+        // Fallback retry without trailing slash if needed
         sendHttpRequest({
           requestConfig: {
-            url: `/disputes/admin/${disputeId}/`,
+            url: `/disputes/admin/${disputeId}`,
             method: "GET",
             token,
             isAuth: true,
@@ -1242,9 +1259,17 @@ export const AdminDetails = (id?: string) => {
           },
           successRes: (fbRes: any) => {
             const fbData = fbRes?.data ?? fbRes;
+            console.log(
+              "[AdminDetails] Admin dispute detail fetched (no slash):",
+              fbData,
+            );
             if (callback) callback(fbData);
           },
           errorRes: (fbErr: any) => {
+            console.error(
+              "[AdminDetails] Admin dispute detail fetch error:",
+              fbErr,
+            );
             if (errorCallback) errorCallback(fbErr);
           },
         });
@@ -1403,7 +1428,11 @@ export const AdminDetails = (id?: string) => {
 
   const rejectAdminDispute = (
     disputeId: string,
-    payload: { rejection_reason?: string; rejection_notes?: string; reason?: string },
+    payload: {
+      rejection_reason?: string;
+      rejection_notes?: string;
+      reason?: string;
+    },
     callback?: (data: any) => void,
     errorCallback?: (err: any) => void,
   ) => {
@@ -1458,6 +1487,108 @@ export const AdminDetails = (id?: string) => {
       },
       errorRes: (err: any) => {
         console.error("Admin return mark received error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const resolveAdminDispute = (
+    disputeId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/resolve/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin dispute resolved:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin dispute resolve error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const confirmReturnShippedToSeller = (
+    disputeId: string,
+    formData: FormData,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/confirm-return-delivered/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: formData,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin confirm return shipped to seller:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin confirm return shipped error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const closeAdminDispute = (
+    disputeId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/disputes/admin/${disputeId}/close/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin dispute closed:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin dispute close error:", err);
+        if (err?.response?.status === 404 || err?.status === 404) {
+          sendHttpRequest({
+            requestConfig: {
+              url: `/disputes/admin/${disputeId}/close`,
+              method: "POST",
+              token,
+              isAuth: true,
+              userType: "admin",
+            },
+            successRes: (fbRes: any) => {
+              const fbData = fbRes?.data ?? fbRes;
+              if (callback) callback(fbData);
+            },
+            errorRes: (fbErr: any) => {
+              if (errorCallback) errorCallback(fbErr);
+            },
+          });
+          return;
+        }
         if (errorCallback) errorCallback(err);
       },
     });
@@ -1546,6 +1677,180 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const confirmTracking = (
+    sellerOrderId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !sellerOrderId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/seller-orders/${sellerOrderId}/confirm-tracking/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin tracking confirmed:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin tracking confirm error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const receiveAtHub = (
+    hubOrderId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !hubOrderId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/hub/${hubOrderId}/receive/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin hub receive confirmed:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin hub receive error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const requestItemPickup = (
+    sellerOrderId: string,
+    payload: { pickup_reason: string; notes?: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !sellerOrderId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/seller-orders/${sellerOrderId}/request-pickup/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin pickup requested:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin pickup request error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+  const DisputeReviewConfirm = (
+    disputeId: string,
+    payload: { resolution_type: string; admin_notes?: string },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !disputeId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `disputes/admin/${disputeId}/approve/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin comfirms dispute:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin comfirms dispute:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const shipSellerOrder = (
+    sellerOrderId: string,
+    payload:
+      | FormData
+      | { admin_tracking_id_to_buyer: string; [key: string]: any },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !sellerOrderId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/seller-orders/${sellerOrderId}/ship/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin order shipped to buyer:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin order ship error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+  const ConfirmItemDelivered = (
+    sellerOrderId: string,
+    payload:
+      | FormData
+      | { admin_tracking_id_to_buyer: string; [key: string]: any },
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !sellerOrderId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/seller-orders/${sellerOrderId}/mark-delivered/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin order shipped to buyer:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin order ship error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   const fetchOrderTracking = (
     trackingNumber: string,
     callback?: (data: any) => void,
@@ -1568,6 +1873,33 @@ export const AdminDetails = (id?: string) => {
       },
       errorRes: (err: any) => {
         console.error("Order tracking error:", err);
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const searchAdminOrder = (
+    query: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !query) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/orders/admin/search/order/?q=${encodeURIComponent(query.trim())}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin order search fetched:", data);
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        console.error("Admin order search error:", err);
         if (errorCallback) errorCallback(err);
       },
     });
@@ -1628,7 +1960,7 @@ export const AdminDetails = (id?: string) => {
   const createAdminRefund = (
     refundId: string,
     payload: {
-       refundId?: string;
+      refundId?: string;
       refund_type: string;
       reason: string;
       deduction_amount: string;
@@ -1640,7 +1972,9 @@ export const AdminDetails = (id?: string) => {
   ) => {
     if (!token) return;
 
-    const endpoint = refundId ? `/refunds/admin/create/` : `/refunds/admin/create/`;
+    const endpoint = refundId
+      ? `/refunds/admin/create/`
+      : `/refunds/admin/create/`;
 
     sendHttpRequest({
       requestConfig: {
@@ -1811,8 +2145,14 @@ export const AdminDetails = (id?: string) => {
     fetchOrdersSummary,
     fetchAdminOrderDetail,
     fetchOrderTracking,
+    searchAdminOrder,
     createOrderTrackingUpdate,
     updateAdminOrderStatus,
+    confirmTracking,
+    receiveAtHub,
+    requestItemPickup,
+    shipSellerOrder,
+    ConfirmItemDelivered,
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
     approveAdminProduct,
@@ -1847,7 +2187,10 @@ export const AdminDetails = (id?: string) => {
     updateAdminBuyer,
     verifyAdminSeller,
     rejectAdminSeller,
-
+    DisputeReviewConfirm,
+    resolveAdminDispute,
+    confirmReturnShippedToSeller,
+    closeAdminDispute,
     success,
     setSuccess: setsuccess,
     request,

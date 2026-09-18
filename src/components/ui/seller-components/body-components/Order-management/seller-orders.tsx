@@ -8,16 +8,19 @@ import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 import SellerSearch from "../over-view/Filter-components/SellerSearch";
 import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
 
-export default function  SelleOrderspage() {
+export default function SelleOrderspage({
+  initialSection = "myorders",
+}: {
+  initialSection?: string;
+} = {}) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const { fetchOrders } = useFetchProducts();
 
   useEffect(() => {
-    fetchOrders()
+    fetchOrders();
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
-    
   }, []);
 
   if (loading) return <DashboardTableSkeleton />;
@@ -26,15 +29,15 @@ export default function  SelleOrderspage() {
     <div className="w-full">
       <SellerMobileHeader 
         title="Orders"
-        showBackButton={true}
+        showBorder ={false}
+        showBackButton={false}
         rightElement={
-          <div className="hidden md:block  w-auto">
+          <div className="hidden md:block w-[388px]">
             <SellerSearch 
               value={searchQuery}
               onChange={setSearchQuery}
               placeholder="Search by order ID, items, date..." 
               alwaysOpen={true}
-              
             />
           </div>
         }
@@ -49,8 +52,8 @@ export default function  SelleOrderspage() {
         />
       </div>
 
-      <div className="mt-6 px-3">
-        <OrderSecions searchQuery={searchQuery} />
+      <div className="mt-6 ">
+        <OrderSecions searchQuery={searchQuery} initialSection={initialSection} />
       </div>
     </div>
   );

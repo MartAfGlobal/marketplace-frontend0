@@ -44,7 +44,7 @@ export default function Header() {
   const buyer = useSelector((state: any) => state.buyer.BuyerData);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
-   const { sendHttpRequest, loading } = useHttp();
+  const { sendHttpRequest, loading } = useHttp();
 
   // const [openDropdown, setOpenDropdown] = useState(false);
 
@@ -67,29 +67,28 @@ export default function Header() {
     }
   }, [showLogin, resetToken]);
 
-//  const fetchLogs = useCallback(() => {
-//   console.log("fetching notification logs......");
+  //  const fetchLogs = useCallback(() => {
+  //   console.log("fetching notification logs......");
 
-//   if (!token) return;
+  //   if (!token) return;
 
-//   sendHttpRequest({
-//     requestConfig: {
-//       url: "notifications/logs/?page=1076",
-//       method: "GET",
-//       token,
-//       isAuth: true,
-//       userType: "buyer",
-//     },
-//     successRes: (responseData: any) => {
-//       console.log("dispute logs", responseData.data);
-//     },
-//   });
-// }, [token, sendHttpRequest]);
+  //   sendHttpRequest({
+  //     requestConfig: {
+  //       url: "notifications/logs/?page=1076",
+  //       method: "GET",
+  //       token,
+  //       isAuth: true,
+  //       userType: "buyer",
+  //     },
+  //     successRes: (responseData: any) => {
+  //       console.log("dispute logs", responseData.data);
+  //     },
+  //   });
+  // }, [token, sendHttpRequest]);
 
-// useEffect(() => {
-//   fetchLogs();
-// }, [fetchLogs]);
-
+  // useEffect(() => {
+  //   fetchLogs();
+  // }, [fetchLogs]);
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const [mounted, setMounted] = useState(false);
@@ -158,7 +157,7 @@ export default function Header() {
                 user?.profile?.preferred_payment_method ?? null,
               created_at: user?.profile?.created_at ?? "",
             },
-          })
+          }),
         );
       },
     });
@@ -167,13 +166,15 @@ export default function Header() {
   const getProfileImage = (userObj: any) => {
     const pic = userObj?.profile?.profile_picture || userObj?.profile_picture;
     if (!pic || typeof pic !== "string") return User;
-    if (pic.startsWith("http://") || pic.startsWith("https://") || pic.startsWith("/")) {
+    if (
+      pic.startsWith("http://") ||
+      pic.startsWith("https://") ||
+      pic.startsWith("/")
+    ) {
       return pic;
     }
     return User;
   };
-
-  console.log("lets check coundydy", cartCount);
 
   return (
     <div className="pb-20 h-fit">
@@ -182,25 +183,31 @@ export default function Header() {
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full bg-6a0dad hidden h-20 px-8 justify-center lg:px-14 lg:flex gap-4 items-center lg:justify-between"
+          className="w-full bg-6a0dad hidden h-20 px-8 justify-center lg:px-14 py-4 lg:flex gap-4 items-center lg:justify-between"
         >
           <Link href="/" className="flex items-center gap-3">
-            <Image src={Logo} alt="Logo" width={40} height={33} />
+            <Image src={Logo} alt="Logo" width={40} height={32.59} />
             <h1 className="font-MontserratBold text-2xl text-ffffff">MARTAF</h1>
           </Link>
-          <div></div>
-          {changeSearch ? <OtherSearchInput /> : <SearchInput className=" md:max-w-80 xl:max-w-116" />}
-          <div className="flex gap-6 items-center">
+
+          {changeSearch ? (
+            <OtherSearchInput />
+          ) : (
+            <SearchInput className=" md:max-w-80 xl:max-w-116" />
+          )}
+          <div className="flex gap-8 items-center">
             <div className="flex items-center gap-2">
-              <h1 className="text-ffffff font-MontserratMedium text-[18px]">
-                EN
-              </h1>
-              <Image
-                src={NigeriaFlag}
-                alt="NigeriaFlag"
-                width={24}
-                height={24}
-              />
+              <div className="flex items-center gap-1">
+                <h1 className="text-ffffff font-MontserratMedium text-[18px]">
+                  EN
+                </h1>
+                <Image
+                  src={NigeriaFlag}
+                  alt="NigeriaFlag"
+                  width={24}
+                  height={24}
+                />
+              </div>
 
               <button>
                 <Image src={DropIcon} alt="DropIcon" width={16.5} height={9} />
@@ -252,12 +259,11 @@ export default function Header() {
           </div>
         </motion.header>
 
-
         <motion.header
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full bg-[#6A0DAD] lg:hidden h-[56px]  px-4 flex items-center justify-between"
+          className="w-full bg-[#6A0DAD] lg:hidden h-[56px]  px-3 flex items-center justify-between"
         >
           <div className="flex gap-3 items-center">
             <button
@@ -299,7 +305,7 @@ export default function Header() {
               </div>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <h1 className="text-ffffff font-MontserratMedium text-c14">EN</h1>
               <Image
                 src={NigeriaFlag}
@@ -333,14 +339,18 @@ export default function Header() {
                   {token ? (
                     <Link
                       href="/dashboard/buyer"
-                       onClick={() => setUserOpen(false)}
+                      onClick={() => setUserOpen(false)}
                       className="gap-2.5 items-baseline-last text-ff715b px-4 h-6 flex "
                     >
                       <Image src={Gear} alt="gear" width={12} height={12} />
                       Settings
                     </Link>
                   ) : (
-                    <Link href="/auth/login"  onClick={() => setUserOpen(false)} className="block px-4 py-2  h-6">
+                    <Link
+                      href="/auth/login"
+                      onClick={() => setUserOpen(false)}
+                      className="block px-4 py-2  h-6"
+                    >
                       Login
                     </Link>
                   )}
@@ -348,7 +358,10 @@ export default function Header() {
                 <li>
                   {token ? (
                     <button
-                      onClick={() => { setUserOpen(false); setLogoutModalOpen(true); }}
+                      onClick={() => {
+                        setUserOpen(false);
+                        setLogoutModalOpen(true);
+                      }}
                       className="gap-2.5 items-baseline-last text-000000/50 px-4 py-2 flex"
                     >
                       <Image src={LogOut} alt="gear" width={12} height={12} />
@@ -396,7 +409,10 @@ export default function Header() {
       {/* Logout Confirmation Modal */}
       <LogoutConfirmModal
         isOpen={logoutModalOpen}
-        onConfirm={() => { setLogoutModalOpen(false); logout(); }}
+        onConfirm={() => {
+          setLogoutModalOpen(false);
+          logout();
+        }}
         onCancel={() => setLogoutModalOpen(false)}
       />
     </div>

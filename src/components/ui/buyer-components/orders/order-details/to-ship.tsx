@@ -25,6 +25,7 @@ import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import AdressSkeleton from "@/components/reloadSpinner/addressSkeleton";
@@ -66,7 +67,7 @@ export default function ToShipOrderDetails({ id }: { id: string }) {
 
   const orderItems = order?.order_items || (order as any).items || [];
   const handleTrackOrder = (orderId: string) => {
-    router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
+    router.push(getBuyerOrderTrackingPath(orderId));
   };
 
   const handleReturnAndRefund = (returnid: string) => {

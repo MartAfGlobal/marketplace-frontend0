@@ -7,7 +7,7 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, valid = true, autoResize = true, onChange, ...props }, ref) => {
+  ({ className, valid = true, autoResize = false, onChange, ...props }, ref) => {
     const innerRef = React.useRef<HTMLTextAreaElement>(null);
     React.useImperativeHandle(ref, () => innerRef.current!);
 
@@ -29,7 +29,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     };
 
     const textareaClasses = cn(
-      "p-4 w-full max-w-full box-border rounded-c12 border outline-none md:text-sm resize-none whitespace-pre-wrap break-words",
+      "p-4 w-full max-w-full box-border rounded-c8 border h-full outline-none md:text-sm resize-none whitespace-pre-wrap break-words",
       valid
         ? "border-efefef focus:border-ff715b focus:ring-1 focus:ring-ff715b"
         : "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500",

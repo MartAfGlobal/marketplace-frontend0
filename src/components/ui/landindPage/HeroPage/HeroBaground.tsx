@@ -5,15 +5,24 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Cart from "@/assets/headerIcon/cart.svg";
+import { Button } from "../../Button/Button";
+import { useRouter } from "next/navigation";
 
 
-const backgrounds = [
+
+
+
+export default function HeroBackground() {
+  const [index, setIndex] = useState(0);
+  const router = useRouter();
+
+  const backgrounds = [
   {
     id: 1,
     className: "bg-hero",
     content: (
-      <div className="max-w-[458px] h-[302px]">
-        <h1 className="font-MontserratSemiBold text-5xl leading-[56px] text-[#131313] pb-4">
+      <div className="max-w-[468px] ">
+        <h1 className="font-MontserratSemiBold max-w-[328px] text-5xl leading-[56px] text-[#131313] pb-4">
           Discover the best of Africa
         </h1>
         <p className="font-MontserratNormal text-lg text-[#131313] pb-[48px]">
@@ -22,23 +31,24 @@ const backgrounds = [
           everyone.
         </p>
         <div className="flex items-center gap-3">
-          <Link
-            href="/auth/seller/sign-up"
-            className="w-[179px] h-[44px] rounded-[8px] border border-[#FF715B] text-[#FF715B] flex items-center justify-center"
+          <Button
+            variant="secondary"
+            onClick={() => router.push("/auth/seller/sign-up")}
+            className="w-[179px]"
           >
             Become a seller
-          </Link>
-          <button
+          </Button>
+          <Button
             onClick={() => {
               document.getElementById("production-section")?.scrollIntoView({
                 behavior: "smooth",
               });
             }}
-            className="w-[179px] h-[44px] rounded-[8px] bg-[#FF715B] text-white flex items-center justify-center gap-3"
+            className="w-[173.15px]  flex items-center justify-center gap-3"
           >
             <Image src={Cart} alt="cart" width={24.15} height={24.15} />
             <p>Shop now</p>
-          </button>
+          </Button>
         </div>
       </div>
     ),
@@ -46,14 +56,9 @@ const backgrounds = [
   {
     id: 2,
     className: "ad-hero",
-   content: <div className="text-white wfull h-full text-4xl font-bold">
-
-   </div>,
+    content: <div className="text-white wfull h-full text-4xl font-bold"></div>,
   },
 ];
-
-export default function HeroBackground() {
-  const [index, setIndex] = useState(0);
 
   // Auto swipe every 5s
   useEffect(() => {
@@ -64,7 +69,7 @@ export default function HeroBackground() {
   }, []);
 
   return (
-    <div className="relative  w-full md:h-125 xl:h-134 overflow-hidden rounded-2xl">
+    <div className="relative w-full h-full md:h-125 lg:h-134 overflow-hidden rounded-[16px]">
       <AnimatePresence mode="sync">
         {" "}
         {/* sync keeps both present until animation ends */}
@@ -80,7 +85,7 @@ export default function HeroBackground() {
             bounce: 0.3, // bounce intensity
             duration: 0.3,
           }}
-          className={`absolute h-full w-full inset-0 flex items-center pl-[34px] ${backgrounds[index].className}`}
+          className={`absolute h-full w-full inset-0 flex items-center hero-contentPadding lg:pl-[61px] ${backgrounds[index].className}`}
         >
           {backgrounds[index].content}
         </motion.div>

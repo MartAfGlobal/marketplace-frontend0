@@ -9,14 +9,14 @@ const CategoryButton: React.FC<Props> = ({ iconSrc, label, isSelected, onClick }
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-4 transition pl-c32 h-[40px] px-4 w-full overflow-x-hidden
-        ${isSelected ? "bg-white" : "bg-transparent"}`}
+      className={`flex items-center gap-4 transition px-c32  h-[40px]  w-full overflow-x-hidden
+        ${isSelected ? "bg-white " : "bg-transparent"}`}
     >
       {/* Render Image only if iconSrc exists */}
       {iconSrc ? (
         <Image
-          height={16}
-          width={16}
+          height={18}
+          width={24}
           src={iconSrc}
           alt={label}
           className="w-6 h-6 object-contain"
@@ -26,8 +26,8 @@ const CategoryButton: React.FC<Props> = ({ iconSrc, label, isSelected, onClick }
       )}
 
       <span
-        className={`text-sm font-MontserratBold text-nowrap overflow-x-hidden
-          ${isSelected ? "text-black" : "text-gray-700"}`}
+        className={`text-xs font-MontserratSemiBold text-nowrap truncate
+          ${isSelected ? "text-000000/64" : "text-000000"}`}
       >
         {label}
       </span>

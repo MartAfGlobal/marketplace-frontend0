@@ -304,6 +304,9 @@ select option {
   .innerShadow {
     box-shadow: inset 0px 1px 8px 0px #ffffff9c;
   }
+.quickTrackShadow {
+  box-shadow: 0px 3px 8px 0px rgba(106, 13, 173, 0.08);
+}
   .NewShadow {
     box-shadow: 2px 2px 4px 0px #6a0dad1f;
   }
@@ -343,11 +346,26 @@ select option {
     box-shadow: -1px 4px 4px 0px #00000040;
   }
 
-  .no-scrollbar {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
+ .no-scrollbar {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Edge */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+  .wno-scrollbar {
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.wno-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
   section {
     scroll-margin-top: 7rem; /* same as your sticky header height */
   }
@@ -550,16 +568,37 @@ header,
 @media (min-width: 1300px) {
   .ad-hero {
     background-image: url("/assets/images/AdBanner.svg");
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     width: 100%;
     flex-shrink: 0;
     background-repeat: no-repeat;
   }
+
 }
+
+@media (min-width: 720px) {
+  .products-section {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 912px) {
+  .products-section {
+    grid-template-columns: repeat(4, 1fr);
+    justify-content: center;
+  }
+}
+
 @media (min-width: 945px) {
   .hide-text {
     display: none !important;
+  }
+}
+
+@media (max-width: 1300px) {
+   .hero-contentPadding{
+    padding-left: 18px;
+    
   }
 }
 

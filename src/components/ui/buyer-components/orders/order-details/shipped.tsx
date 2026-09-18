@@ -29,12 +29,14 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import AdressSkeleton from "@/components/reloadSpinner/addressSkeleton";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 
 export default function ShippedOrderDetails({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
 
   const { orders } = useSelector((state: any) => state.orders);
   const { fetchOrderDetails, loading } = useFetchOrders(id);
+  
   const [open, setOpen] = useState(false);
   const order = orders?.find((o: OrderItem) => o.id === id);
   const router = useRouter();
@@ -88,7 +90,7 @@ export default function ShippedOrderDetails({ id }: { id: string }) {
 
   const orderItems = order?.order_items || (order as any).items || [];
   const handleTrackOrder = (orderId: string) => {
-    router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
+    router.push(getBuyerOrderTrackingPath(orderId));
   };
 
   const handleReturnAndRefund = (returnid: string) => {

@@ -351,8 +351,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                     disabled={
                       loading ||
                       !selectedAddressId ||
-                      TotalItems === 0 ||
-                      !checkoutSummary
+                      TotalItems === 0 
                     }
                   >
                     {loading ? <LoadingSpinner /> : ` Checkout (${TotalItems})`}

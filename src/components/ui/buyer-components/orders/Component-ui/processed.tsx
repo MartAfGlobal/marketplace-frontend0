@@ -8,23 +8,65 @@ import { OrderItem, TrackOrders } from "@/types/global";
 import { Button } from "@/components/ui/Button/Button";
 import Copy from "@/assets/icons/Copy.png";
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import { useRouter } from "next/navigation";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
+import AddCartModal from "@/components/ui/Modals/addToCart/addTocart-modal";
+import { toast } from "sonner";
+import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
+import { useHttp } from "@/hooks/use-http";
 interface OrdersProps {
   searchTerm: string;
 }
 
 export default function ProccessedDetais({ searchTerm }: OrdersProps) {
+  const dispatch = useDispatch();
+  const { sendHttpRequest: addToCartReq } = useHttp();
   const [copied, setCopied] = useState(false);
   const router = useRouter();
+
+  const [addToCartOpen, setAddToCartOpen] = useState(false);
+  const [selectedProductSlug, setSelectedProductSlug] = useState("");
+  const [selectedVariationId, setSelectedVariationId] = useState("");
+
+  const handleAddToCart = (slug: string, varId?: string) => {
+    if (!slug) {
+      toast.error("Product information not available");
+      return;
+    }
+
+    const isMobile =
+      typeof window !== "undefined" &&
+      (window.innerWidth < 768 ||
+        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+
+    if (isMobile) {
+      const url = varId
+        ? `/product/${slug}?variationId=${encodeURIComponent(varId)}`
+        : `/product/${slug}`;
+      router.push(url);
+    } else {
+      setSelectedProductSlug(slug);
+      setSelectedVariationId(varId || "");
+      setAddToCartOpen(true);
+    }
+  };
+
+  const token = useSelector((state: any) => state.token?.token);
+
+  const handleAddOrderItemToCart = async (item: any) => {
+    await addOrderItemToCart(addToCartReq, token, item, dispatch);
+  };
 
   const { orders, loading } = useSelector((state: any) => state.orders);
 
   const delivered = orders.filter(
     (order: OrderItem) =>
-      order.status === "DELIVERED" || order.status === "CANCELLED" || order.status === "Confirmed",
+      order.status === "DELIVERED" ||
+      order.status === "CANCELLED" ||
+      order.status === "Confirmed",
   );
   const filteredOrders = delivered.filter((order: OrderItem) => {
     if (!searchTerm) return true;
@@ -104,18 +146,48 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                 className="space-y-c24"
               >
                 {filteredOrders.map((item: OrderItem) => {
-                  const orderItems = item.order_items || (item as any).items || [];
+                  const orderItems =
+                    item.order_items || (item as any).items || [];
                   const isSingleItemOrder = orderItems.length === 1;
+                  const firstItem = orderItems[0] as any;
+                  const productSlug =
+                    firstItem?.product_slug ||
+                    firstItem?.product?.slug ||
+                    firstItem?.slug ||
+                    (firstItem?.product_name
+                      ? firstItem.product_name
+                          .toLowerCase()
+                          .trim()
+                          .replace(/\s+/g, "-")
+                      : "");
+                  const variationId =
+                    (typeof firstItem?.variation === "string"
+                      ? firstItem.variation
+                      : firstItem?.variation?.id) ||
+                    firstItem?.variation_id ||
+                    firstItem?.variant_id ||
+                    (typeof firstItem?.product === "string"
+                      ? firstItem.product
+                      : "") ||
+                    "";
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
                       {item.status === "DELIVERED" && (
                         <>
-                          <Button onClick={() => router.push(`/dashboard/buyer/orders/confirm-delivery/${item.id}`)}>
+                          <Button
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/buyer/orders/confirm-delivery/${item.id}`,
+                              )
+                            }
+                          >
                             Confirm delivery
                           </Button>
                           <Button
                             variant="secondary"
-                            onClick={() => router.push(`/dashboard/buyer/orders/tracking/${item.id}`)}
+                            onClick={() =>
+                              router.push(getBuyerOrderTrackingPath(item.id))
+                            }
                           >
                             Track order
                           </Button>
@@ -123,7 +195,11 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                       )}
                       {item.status === "Confirmed" && (
                         <>
-                          <Button className="">Add to cart</Button>
+                          <Button
+                            onClick={() => handleAddOrderItemToCart(item)}
+                          >
+                            Add to cart
+                          </Button>
                           <Button
                             onClick={() => handleReview(item.id)}
                             variant="secondary"
@@ -145,21 +221,30 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                     >
                       <div className="w-full flex items-center md:gap-0 justify-between mb-3 md:mb-c32">
                         <div>
-                          {item.status ==="DELIVERED"? <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
-                            Delivered
-                          </p> : item.status === "Confirmed" ? <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
-                            Delivered
-                          </p> : item.status === "CANCELLED" ? <p className="text-sm font-MontserratSemiBold leading-c20 text-ca0202">
-                            Cancelled
-                          </p>: <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
-                            {item.status}
-                          </p> }
+                          {item.status === "DELIVERED" ? (
+                            <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
+                              Delivered
+                            </p>
+                          ) : item.status === "Confirmed" ? (
+                            <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
+                              Delivered
+                            </p>
+                          ) : item.status === "CANCELLED" ? (
+                            <p className="text-sm font-MontserratSemiBold leading-c20 text-ca0202">
+                              Cancelled
+                            </p>
+                          ) : (
+                            <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
+                              {item.status}
+                            </p>
+                          )}
                           <div className="md:flex hidden gap-2 mt-2">
-                            <p className="text-c12  font-MontserratNormal">
-                              Order ID: {item.order_no}
+                            <p className="text-c12 font-MontserratNormal">
+                              Order ID: {item.order_id}
                             </p>
                             <button
-                              onClick={() => handleCopy(item.order_no || "")}
+                              key={item.id}
+                              onClick={() => handleCopy(item.order_id ?? "")}
                             >
                               <Image
                                 src={Copy}
@@ -176,187 +261,246 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                           </div>
                         </div>
                         <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                          {item.estimated_delivery_date}
+                          Delivery:{" "}
+                          {item.estimated_delivery_date
+                            ? ` ${item.estimated_delivery_date}`
+                            : item.created_at
+                              ? new Date(item.created_at).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  },
+                                )
+                              : ""}
                         </p>
                       </div>
 
                       <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
                         {isSingleItemOrder ? (
                           <>
-                          <Link
-                            href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
-                            className="flex flex-col md:flex-row gap-4 items-start"
-                          >
-                            {orderItems.map((prod) => (
-                              <div
-                                key={prod.id}
-                                className="flex gap-4 items-start  w-full"
-                              >
-                                <Image
-                                  src={prod?.product_image}
-                                  alt={prod.product_name || "Product Image"}
-                                  width={96}
-                                  height={96}
-                                  className="h-24 w-24 "
-                                />
-                                <div className="w-full">
-                                  <p className="font-MontserratSemiBold text-base mb-1">
-                                    {prod.product_name}
-                                  </p>
-                                  <p className=" text-c12 font-MontserratMedium mb-3">
-                                    {item.manufacturer}
-                                  </p>
-                                  <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
-                                    {prod.fulfilled_quantity ?? prod.quantity}Pc,
-                                    {prod.variation_name || prod.product_name}
-                                  </p>
-                                  <p className="font-MontserratSemiBold text-c16 pt-3">
-                                    ₦{(prod.price_at_purchase * (prod.fulfilled_quantity ?? prod.quantity ?? 0)).toLocaleString()}
-                                  </p>
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="flex flex-col md:flex-row gap-4 items-start"
+                            >
+                              {orderItems.map((prod) => (
+                                <div
+                                  key={prod.id}
+                                  className="flex gap-4 items-start  w-full"
+                                >
+                                  <Image
+                                    src={prod?.product_image}
+                                    alt={prod.product_name || "Product Image"}
+                                    width={96}
+                                    height={96}
+                                    className="h-24 w-24 "
+                                  />
+                                  <div className="w-full">
+                                    <p className="font-MontserratSemiBold text-base mb-1">
+                                      {prod.product_name}
+                                    </p>
+                                    <p className=" text-c12 font-MontserratMedium mb-3">
+                                      {item.manufacturer}
+                                    </p>
+                                    <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
+                                      {prod.fulfilled_quantity ?? prod.quantity}
+                                      Pc,
+                                      {prod.variation_name || prod.product_name}
+                                    </p>
+                                    <p className="font-MontserratSemiBold text-c16 pt-3">
+                                      ₦
+                                      {(
+                                        prod.price_at_purchase *
+                                        (prod.fulfilled_quantity ??
+                                          prod.quantity ??
+                                          0)
+                                      ).toLocaleString()}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
-                          </Link>
-                          {MobileActions}
+                              ))}
+                            </Link>
+                            {MobileActions}
                           </>
                         ) : (
                           <>
-                          <Link
-                            href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
-                            className="flex gap-4 w-full"
-                          >
-                            <div className="hidden sm:flex gap-4">
-                              <div
-                                className={`grid gap-4 ${
-                                  orderItems.length === 1
-                                    ? "grid-cols-1"
-                                    : orderItems.length === 2
-                                      ? "grid-cols-2"
-                                      : "grid-cols-3"
-                                }`}
-                              >
-                                {orderItems?.slice(0, 3).map((prod) => (
-                                  <div
-                                    key={prod.id}
-                                    className="flex flex-col items-center"
-                                  >
-                                    <div className="w-24 h-24 relative">
-                                      <Image
-                                        src={
-                                          prod.product_image ||
-                                          "/placeholder.png"
-                                        }
-                                        alt={
-                                          prod.product_name || "Product Image"
-                                        }
-                                        width={96}
-                                        height={96}
-                                        className="w-24 h-24 object-cover"
-                                      />
-                                      <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                        x{prod.fulfilled_quantity ?? prod.quantity}
-                                      </p>
+                            <Link
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              className="flex gap-4 w-full"
+                            >
+                              <div className="hidden sm:flex gap-4">
+                                <div
+                                  className={`grid gap-4 ${
+                                    orderItems.length === 1
+                                      ? "grid-cols-1"
+                                      : orderItems.length === 2
+                                        ? "grid-cols-2"
+                                        : "grid-cols-3"
+                                  }`}
+                                >
+                                  {orderItems?.slice(0, 3).map((prod) => (
+                                    <div
+                                      key={prod.id}
+                                      className="flex flex-col items-center"
+                                    >
+                                      <div className="w-24 h-24 relative">
+                                        <Image
+                                          src={
+                                            prod.product_image ||
+                                            "/placeholder.png"
+                                          }
+                                          alt={
+                                            prod.product_name || "Product Image"
+                                          }
+                                          width={96}
+                                          height={96}
+                                          className="w-24 h-24 object-cover"
+                                        />
+                                        <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
+                                          x
+                                          {prod.fulfilled_quantity ??
+                                            prod.quantity}
+                                        </p>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
-                              </div>
+                                  ))}
+                                </div>
 
-                              <div>
-                                <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                  {orderItems
-                                    ?.slice(0, 3)
-                                    .map((prod, index) => (
-                                      <span
-                                        key={prod.id}
-                                        className="flex items-center"
-                                      >
+                                <div>
+                                  <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
+                                    {orderItems
+                                      ?.slice(0, 3)
+                                      .map((prod, index) => (
                                         <span
-                                          className="max-w-[110px] truncate inline-block align-middle"
-                                          title={prod.product_name}
+                                          key={prod.id}
+                                          className="flex items-center"
                                         >
-                                          {prod.product_name}
+                                          <span
+                                            className="max-w-[110px] truncate inline-block align-middle"
+                                            title={prod.product_name}
+                                          >
+                                            {prod.product_name}
+                                          </span>
+                                          {index <
+                                            Math.min(orderItems.length, 3) -
+                                              1 && <span>,&nbsp;</span>}
                                         </span>
-                                        {index <
-                                          Math.min(orderItems.length, 3) -
-                                            1 && <span>,&nbsp;</span>}
-                                      </span>
-                                    ))}
-                                  {orderItems.length > 3 && (
-                                    <span>...</span>
-                                  )}
-                                </p>
+                                      ))}
+                                    {orderItems.length > 3 && <span>...</span>}
+                                  </p>
 
-                                <p className="text-c12 font-MontserratMedium mb-3">
-                                  {item.manufacturer}
-                                </p>
+                                  <p className="text-c12 font-MontserratMedium mb-3">
+                                    {item.manufacturer}
+                                  </p>
 
-                                <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                  {orderItems.reduce(
-                                    (sum: number, i: any) => sum + (i.fulfilled_quantity ?? i.quantity ?? 0),
-                                    0,
-                                  )}{" "}
-                                  <span className="pl-0.5">Items</span>
-                                </p>
+                                  <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
+                                    {orderItems.reduce(
+                                      (sum: number, i: any) =>
+                                        sum +
+                                        (i.fulfilled_quantity ??
+                                          i.quantity ??
+                                          0),
+                                      0,
+                                    )}{" "}
+                                    <span className="pl-0.5">Items</span>
+                                  </p>
 
-                                <p className="font-MontserratSemiBold text-c16 pt-3">
-                                  ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
-                                </p>
+                                  <p className="font-MontserratSemiBold text-c16 pt-3">
+                                    ₦
+                                    {orderItems
+                                      .reduce(
+                                        (sum: number, i: any) =>
+                                          sum +
+                                          i.price_at_purchase *
+                                            (i.fulfilled_quantity ??
+                                              i.quantity ??
+                                              0),
+                                        0,
+                                      )
+                                      .toLocaleString()}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
 
-                            <div className="flex sm:hidden w-full items-start gap-4">
-                              {orderItems?.[0] && (
-                                <Image
-                                  src={
-                                    orderItems[0].product_image ||
-                                    "/placeholder.png"
-                                  }
-                                  alt={
-                                    orderItems[0].product_name ||
-                                    "Product Image"
-                                  }
-                                  width={96}
-                                  height={96}
-                                  className="w-24 h-24"
-                                />
-                              )}
+                              <div className="flex sm:hidden w-full items-start gap-4">
+                                {orderItems?.[0] && (
+                                  <Image
+                                    src={
+                                      orderItems[0].product_image ||
+                                      "/placeholder.png"
+                                    }
+                                    alt={
+                                      orderItems[0].product_name ||
+                                      "Product Image"
+                                    }
+                                    width={96}
+                                    height={96}
+                                    className="w-24 h-24"
+                                  />
+                                )}
 
-                              <div className="w-full ">
-                                <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
-                                  {orderItems?.[0]?.product_name}
-                                </p>
+                                <div className="w-full ">
+                                  <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
+                                    {orderItems?.[0]?.product_name}
+                                  </p>
 
-                                <p className="text-c12 font-MontserratMedium mb-2">
-                                  {item.manufacturer}
-                                </p>
+                                  <p className="text-c12 font-MontserratMedium mb-2">
+                                    {item.manufacturer}
+                                  </p>
 
-                                <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                  {orderItems.reduce(
-                                    (sum: number, i: any) => sum + (i.fulfilled_quantity ?? i.quantity ?? 0),
-                                    0,
-                                  )}{" "}
-                                  <span className="pl-0.5">Items</span>
-                                </p>
+                                  <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
+                                    {orderItems.reduce(
+                                      (sum: number, i: any) =>
+                                        sum +
+                                        (i.fulfilled_quantity ??
+                                          i.quantity ??
+                                          0),
+                                      0,
+                                    )}{" "}
+                                    <span className="pl-0.5">Items</span>
+                                  </p>
 
-                                <p className="font-MontserratSemiBold text-c16 pt-2">
-                                  ₦{(orderItems.reduce((sum: number, i: any) => sum + (i.price_at_purchase * (i.fulfilled_quantity ?? i.quantity ?? 0)), 0)).toLocaleString()}
-                                </p>
+                                  <p className="font-MontserratSemiBold text-c16 pt-2">
+                                    ₦
+                                    {orderItems
+                                      .reduce(
+                                        (sum: number, i: any) =>
+                                          sum +
+                                          i.price_at_purchase *
+                                            (i.fulfilled_quantity ??
+                                              i.quantity ??
+                                              0),
+                                        0,
+                                      )
+                                      .toLocaleString()}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          </Link>
-                          {MobileActions}
+                            </Link>
+                            {MobileActions}
                           </>
                         )}
 
                         <div className="w-full  pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
                           {item.status === "DELIVERED" && (
                             <>
-                              <Button onClick={() => router.push(`/dashboard/buyer/orders/confirm-delivery/${item.id}`)}>
+                              <Button
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/buyer/orders/confirm-delivery/${item.id}`,
+                                  )
+                                }
+                              >
                                 Confirm delivery
                               </Button>
                               <Button
                                 variant="secondary"
-                                onClick={() => router.push(`/dashboard/buyer/orders/tracking/${item.id}`)}
+                                onClick={() =>
+                                  router.push(
+                                    getBuyerOrderTrackingPath(item.id),
+                                  )
+                                }
                               >
                                 Track order
                               </Button>
@@ -364,7 +508,11 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                           )}
                           {item.status === "Confirmed" && (
                             <>
-                              <Button className="">Add to cart</Button>
+                              <Button
+                                onClick={() => handleAddOrderItemToCart(item)}
+                              >
+                                Add to cart
+                              </Button>
                               <Button
                                 onClick={() => handleReview(item.id)}
                                 variant="secondary"
@@ -387,6 +535,12 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
           </AnimatePresence>
         </div>
       </div>
+      <AddCartModal
+        isOpen={addToCartOpen}
+        onClose={() => setAddToCartOpen(false)}
+        productSlug={selectedProductSlug}
+        selectedVariationId={selectedVariationId}
+      />
     </div>
   );
 }

@@ -22,12 +22,14 @@ interface AddToCartModalProps {
   isOpen: boolean;
   onClose: () => void;
   productSlug: string;
+  selectedVariationId?: string;
 }
 
 export default function AddCartModal({
   isOpen,
   onClose,
   productSlug,
+  selectedVariationId,
 }: AddToCartModalProps) {
   const { loading: creating, sendHttpRequest: createLabelReq } = useHttp();
   const token = useSelector((state: RootState) => state.token.token);
@@ -150,7 +152,10 @@ export default function AddCartModal({
 
                     <div className="flex w-full flex-col md:flex-row gap-6 h-fit overflow-y-auto md:overflow-x-auto md:overflow-y-hidden p-1 custom-scrollrailes">
                       <div className="w-full h-fit">
-                        <ProductVariation isModal={true} />
+                        <ProductVariation
+                          isModal={true}
+                          selectedVariaton={selectedVariationId}
+                        />
                       </div>
                     </div>
                   </motion.div>

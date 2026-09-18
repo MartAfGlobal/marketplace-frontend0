@@ -25,12 +25,17 @@ import { useFetchOrders } from "@/helpers/fetchOrders";
 
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
 import CartWithBoxesIcon from "../CartWithBoxesIcon";
+import AddCartModal from "@/components/ui/Modals/addToCart/addTocart-modal";
+import { toast } from "sonner";
+import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 
 interface OrdersProps {
   searchTerm: string;
 }
 
 export default function Orders({ searchTerm }: OrdersProps) {
+  const dispatch = useDispatch();
   const [copied, setCopied] = useState(false);
   const [open, setOpen] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);
@@ -45,6 +50,10 @@ export default function Orders({ searchTerm }: OrdersProps) {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [loadingIds, setLoadingIds] = useState<string | null>(null);
 
+  const [addToCartOpen, setAddToCartOpen] = useState(false);
+  const [selectedProductSlug, setSelectedProductSlug] = useState("");
+  const [selectedVariationId, setSelectedVariationId] = useState("");
+
   console.log("orders from redux store:", orders);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -58,15 +67,20 @@ export default function Orders({ searchTerm }: OrdersProps) {
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
   const { loading: comfirming, sendHttpRequest: ComfirmReq } = useHttp();
+  const { sendHttpRequest: addToCartReq } = useHttp();
 
   const filteredOrders = orders.filter((order: OrderItem) => {
     if (!searchTerm) return true;
 
     const term = searchTerm.toLowerCase();
 
-    const matchesOrderId = (order.order_no || order.id || "").toLowerCase().includes(term);
+    const matchesOrderId = (order.order_no || order.id || "")
+      .toLowerCase()
+      .includes(term);
 
-    const matchesStore = (  order.manufacturer || "").toLowerCase().includes(term);
+    const matchesStore = (order.manufacturer || "")
+      .toLowerCase()
+      .includes(term);
 
     const orderItems = order.order_items || (order as any).items || [];
     const matchesProduct = orderItems.some((item: any) =>
@@ -133,7 +147,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
   };
 
   const handleTrackOrder = (orderId: string) => {
-    router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
+    router.push(getBuyerOrderTrackingPath(orderId));
   };
 
   useEffect(() => {
@@ -153,20 +167,50 @@ export default function Orders({ searchTerm }: OrdersProps) {
     }
   };
 
-  const handleClick = (id: string) => {
-    if (isMobile) {
-      router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`);
-    } else {
-      setSelectedId(id);
-      setOpen(true);
-    }
+  // const handleClick = (id: string) => {
+  //   if (isMobile) {
+  //     router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`);
+  //   } else {
+  //     setSelectedId(id);
+  //     setOpen(true);
+  //   }
+  // };
+
+  // const handleAddToCart = (slug: string, varId?: string) => {
+  //   if (!slug) {
+  //     toast.error("Product information not available");
+  //     return;
+  //   }
+  //   const mobile =
+  //     typeof window !== "undefined" &&
+  //     (window.innerWidth < 768 ||
+  //       /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+  //   if (mobile) {
+  //     router.push(
+  //       varId
+  //         ? `/product/${slug}?variationId=${encodeURIComponent(varId)}`
+  //         : `/product/${slug}`,
+  //     );
+  //   } else {
+  //     setSelectedProductSlug(slug);
+  //     setSelectedVariationId(varId || "");
+  //     setAddToCartOpen(true);
+  //   }
+  // };
+
+  const handleAddOrderItemToCart = async (item: any) => {
+    await addOrderItemToCart(addToCartReq, token, item, dispatch);
+  };
+
+  const handleReview = (id: string) => {
+    router.push(`/dashboard/buyer/orders/leave-review/${id}`);
   };
   console.log(
     "tracking id:",
     orders.filter((order: any) => order.id),
   );
 
-  const mode = filteredOrders.map((item: OrderItem) => item.status);
+  const mode = filteredOrders.map((item: OrderItem) => item.buyer_status);
 
   const handleCopy = (orderNo: string) => {
     navigator.clipboard
@@ -237,8 +281,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
                 }}
                 className="space-y-c24"
               >
-                {filteredOrders.map((item: any) => {
-                  const orderItems = item.order_items || (item as any).items || [];
+                {filteredOrders.map((item: OrderItem) => {
+                  const orderItems =
+                    item.order_items || (item as any).items || [];
                   const hasOrderItems = orderItems.length > 0;
                   const isSingleItemOrder = orderItems.length === 1;
 
@@ -258,18 +303,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         ? orderItems.reduce(
                             (sum: number, i: any) =>
                               sum +
-                              (Number(i.price_at_purchase || 0) *
-                                Number(i.fulfilled_quantity ?? i.quantity ?? 1)),
+                              Number(i.price_at_purchase || 0) *
+                                Number(i.fulfilled_quantity ?? i.quantity ?? 1),
                             0,
                           )
                         : 0),
                   );
 
-                  const orderNo =
-                    (item as any).payment_no ||
-                    item.order_no ||
-                    (item as any).payment_reference ||
-                    item.id;
+                  const orderNo = item.order_id;
 
                   const storeName =
                     item.manufacturer ||
@@ -280,31 +321,52 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
-                      {(item.status?.toLowerCase() === "shipped" || item.status?.toLowerCase() === "shipped_to_buyer") && (
+                      {(item.buyer_status?.toLowerCase() === "shipped" ||
+                        item.buyer_status?.toLowerCase() ===
+                          "shipped_to_buyer") && (
                         <>
                           <div className="w-full"></div>
-                          <Button onClick={() => handleTrackOrder(item.id)}>Track order</Button>
-                        </>
-                      )}
-                      {item.status === "DELIVERED" && (
-                        <>
-                          <Button onClick={() => handleClick(item.id)}>Confirm delivery</Button>
-                          <Button variant="secondary" onClick={() => handleTrackOrder(item.id)}>
+                          <Button onClick={() => handleTrackOrder(item.id)}>
                             Track order
                           </Button>
                         </>
                       )}
-                      {item.status === "RECEIVED_AT_HUB" && (
+                      {item.buyer_status?.toLowerCase() === "cancelled" && (
+                        <Button onClick={() => handleAddOrderItemToCart(item)}>
+                          Add to cart
+                        </Button>
+                      )}
+                      {item.buyer_status === "DELIVERED" && (
+                        <>
+                          <Button
+                            onClick={() => handleAddOrderItemToCart(item)}
+                          >
+                            Add to cart
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleReview(item.id)}
+                          >
+                            Leave a review
+                          </Button>
+                        </>
+                      )}
+                      {item.buyer_status === "RECEIVED_AT_HUB" && (
                         <>
                           <div className="w-full"></div>
-                          <Button variant="secondary" onClick={() => handleTrackOrder(item.id)}>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleTrackOrder(item.id)}
+                          >
                             Track order
                           </Button>
                         </>
                       )}
-                      {item.status === "PENDING" && item.can_cancel && (
+                      {item.buyer_status === "PENDING" && item.can_cancel && (
                         <>
-                          <Button onClick={() => handleEditAddress(item.id)}>Edit address</Button>
+                          <Button onClick={() => handleEditAddress(item.id)}>
+                            Edit address
+                          </Button>
                           <Button
                             variant="secondary"
                             onClick={() => {
@@ -316,12 +378,22 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
-                      {item.status === "AWAITING_PAYMENT" && (
+                      {item.buyer_status === "AWAITING_PAYMENT" && (
                         <>
-                          <Button disabled={repaying} onClick={() => handleRepay(item.id, totalPrice)}>
-                            {selectedId === item.id && repaying ? <LoadingSpinner /> : "Confirm & pay"}
+                          <Button
+                            disabled={repaying}
+                            onClick={() => handleRepay(item.id, totalPrice)}
+                          >
+                            {selectedId === item.id && repaying ? (
+                              <LoadingSpinner />
+                            ) : (
+                              "Confirm & pay"
+                            )}
                           </Button>
-                          <Button variant="secondary" onClick={() => handleEditAddress(item.id)}>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleEditAddress(item.id)}
+                          >
                             Edit address
                           </Button>
                         </>
@@ -342,35 +414,47 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         <div>
                           <p
                             className={`font-MontserratSemiBold text-c16  ${
-                              item.status === "CANCELLED"
+                              item.buyer_status === "CANCELLED"
                                 ? "text-ca0202"
-                                : item.status === "DELIVERED"
+                                : item.buyer_status === "DELIVERED"
                                   ? "text-2d7565"
                                   : "text-161616"
                             }`}
                           >
-                            {item.status === "RECEIVED_AT_HUB"
+                            {item.buyer_status === "RECEIVED_AT_HUB"
                               ? "To ship"
-                              : item.status === "SHIPPED" || item.status === "SHIPPED_TO_BUYER"
+                              : item.buyer_status === "SHIPPED" ||
+                                  item.buyer_status === "SHIPPED_TO_BUYER"
                                 ? "Order on its way"
-                                : item.status === "DELIVERED"
+                                : item.buyer_status === "DELIVERED"
                                   ? "Delivered"
-                                  : item.status === "Confirmed"
+                                  : item.buyer_status === "Confirmed"
                                     ? "Delivered"
-                                    : item.status === "AWAITING_PAYMENT"
+                                    : item.buyer_status === "AWAITING_PAYMENT"
                                       ? "Awaiting payment"
-                                      : item.status === "PENDING" || item.status === "ACCEPTED" || item.status === "IN_TRANSIT_TO_HUB"  
+                                      : item.buyer_status === "PENDING" ||
+                                          item.buyer_status === "ACCEPTED" ||
+                                          item.buyer_status === "Processing" ||
+                                          item.status === "TRACKING_SUBMITTED" 
                                         ? "Order is being processed"
-                                        : item.status === "CANCELLED"
+                                        : item.buyer_status === "CANCELLED"
                                           ? "Cancelled"
-                                          : item.status}
+                                          : item.buyer_status}
                           </p>
                           <div className="md:flex hidden gap-2 mt-2">
                             <p className="text-c12 font-MontserratNormal">
                               Order ID: {orderNo || "Not available"}
                             </p>
-                            <button key={item.id} onClick={() => handleCopy(orderNo ?? "")}>
-                              <Image src={Copy} alt="copy" width={16} height={16} />
+                            <button
+                              key={item.id}
+                              onClick={() => handleCopy(orderNo ?? "")}
+                            >
+                              <Image
+                                src={Copy}
+                                alt="copy"
+                                width={16}
+                                height={16}
+                              />
                             </button>
                             {copied && (
                               <span className="text-green-600 text-c12 font-MontserratMedium">
@@ -379,16 +463,20 @@ export default function Orders({ searchTerm }: OrdersProps) {
                             )}
                           </div>
                         </div>
-                        {item.status !== "CANCELLED" && (
+                        {item.buyer_status !== "CANCELLED" && (
                           <p className="text-c12 font-MontserratNormal leading-4 text-000000">
+                            Delivery:{" "}
                             {item.estimated_delivery_date
-                              ? `Delivery: ${item.estimated_delivery_date}`
+                              ? ` ${item.estimated_delivery_date}`
                               : item.created_at
-                                ? new Date(item.created_at).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })
+                                ? new Date(item.created_at).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    },
+                                  )
                                 : ""}
                           </p>
                         )}
@@ -398,25 +486,32 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         {!hasOrderItems ? (
                           <>
                             <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
                               className="flex flex-col md:flex-row gap-4 items-start flex-1"
                             >
                               <div className="flex gap-4 items-start w-full">
-                                <CartWithBoxesIcon className="h-24 w-24" itemsCount={itemsCount} />
+                                <CartWithBoxesIcon
+                                  className="h-24 w-24"
+                                  itemsCount={itemsCount}
+                                />
                                 <div className="w-full">
                                   <p className="font-MontserratSemiBold text-base mb-1 text-000000">
-                                    Order #{orderNo}
+                                    Order #{item.order_id}
                                   </p>
                                   <p className="text-c12 font-MontserratMedium mb-2 text-000000/70">
                                     {storeName}
                                   </p>
                                   <div className="flex flex-wrap gap-2 items-center">
                                     <p className="rounded-c12 bg-000000/10 text-000000/60 h-fit py-1.5 px-3 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
-                                      {itemsCount} {itemsCount === 1 ? "Item" : "Items"}
+                                      {itemsCount}{" "}
+                                      {itemsCount === 1 ? "Item" : "Items"}
                                     </p>
                                     {(item as any).shipping_cost > 0 && (
                                       <p className="text-c12 font-MontserratMedium text-000000/50">
-                                        + ₦{Number((item as any).shipping_cost).toLocaleString()}{" "}
+                                        + ₦
+                                        {Number(
+                                          (item as any).shipping_cost,
+                                        ).toLocaleString()}{" "}
                                         Shipping
                                       </p>
                                     )}
@@ -432,13 +527,18 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         ) : isSingleItemOrder ? (
                           <>
                             <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
                               {orderItems.map((prod: any) => (
-                                <div key={prod.id} className="flex gap-4 items-start  w-full">
+                                <div
+                                  key={prod.id}
+                                  className="flex gap-4 items-start  w-full"
+                                >
                                   <Image
-                                    src={prod?.product_image || "/placeholder.png"}
+                                    src={
+                                      prod?.product_image || "/placeholder.png"
+                                    }
                                     alt={prod.product_name || "Product Image"}
                                     width={96}
                                     height={96}
@@ -452,14 +552,17 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                       {item.manufacturer || item.seller_name}
                                     </p>
                                     <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
-                                      {prod.fulfilled_quantity ?? prod.quantity}Pc,
+                                      {prod.fulfilled_quantity ?? prod.quantity}
+                                      Pc,
                                       {prod.variation_name || prod.product_name}
                                     </p>
                                     <p className="font-MontserratSemiBold text-c16 pt-3">
                                       ₦
                                       {(
                                         (prod.price_at_purchase || 0) *
-                                        (prod.fulfilled_quantity ?? prod.quantity ?? 1)
+                                        (prod.fulfilled_quantity ??
+                                          prod.quantity ??
+                                          1)
                                       ).toLocaleString()}
                                     </p>
                                   </div>
@@ -471,7 +574,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         ) : (
                           <>
                             <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
                               className="flex gap-4 w-full"
                             >
                               <div className="hidden sm:flex gap-4">
@@ -485,17 +588,25 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                   }`}
                                 >
                                   {orderItems.slice(0, 3).map((prod: any) => (
-                                    <div key={prod.id} className="flex flex-col items-center">
+                                    <div
+                                      key={prod.id}
+                                      className="flex flex-col items-center"
+                                    >
                                       <div className="w-24 h-24 relative">
                                         <Image
-                                          src={prod.product_image || "/placeholder.png"}
-                                          alt={prod.product_name || "Product Image"}
+                                          src={
+                                            prod.product_image ||
+                                            "/placeholder.png"
+                                          }
+                                          alt={
+                                            prod.product_name || "Product Image"
+                                          }
                                           width={96}
                                           height={96}
                                           className="w-24 h-24 object-cover rounded-lg"
                                         />
                                         <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                          x{prod.fulfilled_quantity ?? prod.quantity}
+                                          {`x${prod.fulfilled_quantity ?? prod.quantity}`}
                                         </p>
                                       </div>
                                     </div>
@@ -503,26 +614,32 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                 </div>
                                 <div>
                                   <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                    {orderItems.slice(0, 3).map((prod: any, index: number) => (
-                                      <span key={prod.id} className="flex items-center">
+                                    {orderItems
+                                      .slice(0, 3)
+                                      .map((prod: any, index: number) => (
                                         <span
-                                          className="max-w-[110px] truncate inline-block align-middle"
-                                          title={prod.product_name}
+                                          key={prod.id}
+                                          className="flex items-center"
                                         >
-                                          {prod.product_name}
+                                          <span
+                                            className="max-w-[110px] truncate inline-block align-middle"
+                                            title={prod.product_name}
+                                          >
+                                            {prod.product_name}
+                                          </span>
+                                          {index <
+                                            Math.min(orderItems.length, 3) -
+                                              1 && <span>,&nbsp;</span>}
                                         </span>
-                                        {index < Math.min(orderItems.length, 3) - 1 && (
-                                          <span>,&nbsp;</span>
-                                        )}
-                                      </span>
-                                    ))}
+                                      ))}
                                     {orderItems.length > 3 && <span>...</span>}
                                   </p>
                                   <p className="text-c12 font-MontserratMedium mb-3">
                                     {item.manufacturer || item.seller_name}
                                   </p>
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {itemsCount} <span className="pl-0.5">Items</span>
+                                    {itemsCount}{" "}
+                                    <span className="pl-0.5">Items</span>
                                   </p>
                                   <p className="font-MontserratSemiBold text-c16 pt-3">
                                     ₦{totalPrice.toLocaleString()}
@@ -532,8 +649,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               <div className="flex sm:hidden w-full items-start gap-4">
                                 {orderItems[0] && (
                                   <Image
-                                    src={orderItems[0].product_image || "/placeholder.png"}
-                                    alt={orderItems[0].product_name || "Product Image"}
+                                    src={
+                                      orderItems[0].product_image ||
+                                      "/placeholder.png"
+                                    }
+                                    alt={
+                                      orderItems[0].product_name ||
+                                      "Product Image"
+                                    }
                                     width={96}
                                     height={96}
                                     className="w-24 h-24 object-cover rounded-lg"
@@ -547,7 +670,8 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                     {item.manufacturer || item.seller_name}
                                   </p>
                                   <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {itemsCount} <span className="pl-0.5">Items</span>
+                                    {itemsCount}{" "}
+                                    <span className="pl-0.5">Items</span>
                                   </p>
                                   <p className="font-MontserratSemiBold text-c16 pt-2">
                                     ₦{totalPrice.toLocaleString()}
@@ -559,7 +683,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </>
                         )}
                         <div className="hidden w-full gap-4 pl-4 md:flex md:flex-col md:max-w-70 space-y-4">
-                          {(item.status?.toLowerCase() === "shipped" || item.status?.toLowerCase() === "shipped_to_buyer") && (
+                          {(item.buyer_status?.toLowerCase() === "shipped" ||
+                            item.buyer_status?.toLowerCase() ===
+                              "shipped_to_buyer") && (
                             <>
                               <div className="w-full"></div>
                               <Button
@@ -571,63 +697,83 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               </Button>
                             </>
                           )}
-
-                          {item.status === "DELIVERED" && (
-                            <>
-                              <Button onClick={() => handleClick(item.id)}>
-                                Confirm delivery
-                              </Button>
-                              <Button
-                                variant="secondary"
-                                key={item.id}
-                                onClick={() => handleTrackOrder(item.id)}
-                              >
-                                Track order
-                              </Button>
-                            </>
+                          {item.buyer_status?.toLowerCase() === "cancelled" && (
+                            <Button
+                              onClick={() => handleAddOrderItemToCart(item)}
+                            >
+                              Add to cart
+                            </Button>
                           )}
 
-                          {item.status === "RECEIVED_AT_HUB"   && (
+                          {item.buyer_status === "DELIVERED" && (
                             <>
                               <Button
-                                variant="secondary"
-                                key={item.id}
-                                onClick={() => handleTrackOrder(item.id)}
+                                className=""
+                                onClick={() => handleAddOrderItemToCart(item)}
                               >
-                                Track order
+                                Add to cart
                               </Button>
-                            </>
-                          )}
-
-                          {item.status === "PENDING" && item.can_cancel && (
-                            <>
-                              {/* <Button
-                                onClick={() => handleEditAddress(item.id)}
-                              >
-                                Edit address
-                              </Button> */}
                               <Button
+                                onClick={() => handleReview(item.id)}
                                 variant="secondary"
-                                onClick={() => {
-                                  setSelectedOrderId(item.id);
-                                  setOpenCancelModal(true);
-                                }}
+                                className=""
                               >
-                                Cancel order
-                              </Button>
-                            </>
-                          )}
-
-                          {item.status === "Confirmed" && (
-                            <>
-                              <Button className="">Add to cart</Button>
-                              <Button variant="secondary" className="">
                                 Leave a review
                               </Button>
                             </>
                           )}
 
-                          {item.status === "AWAITING_PAYMENT" && (
+                          {item.buyer_status === "RECEIVED_AT_HUB" && (
+                            <>
+                              <Button
+                                variant="secondary"
+                                key={item.id}
+                                onClick={() => handleTrackOrder(item.id)}
+                              >
+                                Track order
+                              </Button>
+                            </>
+                          )}
+
+                          {item.buyer_status === "PENDING" &&
+                            item.can_cancel && (
+                              <>
+                                {/* <Button
+                                onClick={() => handleEditAddress(item.id)}
+                              >
+                                Edit address
+                              </Button> */}
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => {
+                                    setSelectedOrderId(item.id);
+                                    setOpenCancelModal(true);
+                                  }}
+                                >
+                                  Cancel order
+                                </Button>
+                              </>
+                            )}
+
+                          {item.buyer_status === "Delivered" && (
+                            <>
+                              <Button
+                                className=""
+                                onClick={() => handleAddOrderItemToCart(item)}
+                              >
+                                Add to cart
+                              </Button>
+                              <Button
+                                onClick={() => handleReview(item.id)}
+                                variant="secondary"
+                                className=""
+                              >
+                                Leave a review
+                              </Button>
+                            </>
+                          )}
+
+                          {item.buyer_status === "AWAITING_PAYMENT" && (
                             <>
                               <Button
                                 variant="secondary"
@@ -656,7 +802,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                             "To Ship",
                             "Delivered",
                             "Awaiting Payment",
-                          ].includes(item.status) && (
+                          ].includes(item.buyer_status) && (
                             <Button variant="secondary" className="">
                               View details
                             </Button>
@@ -664,7 +810,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                           <div className="w-full hidden md:flex justify-center">
                             <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.status.toLowerCase()}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
                               className="text-c14 font-MontserratSemiBold text-ff715b"
                             >
                               Order details

@@ -19,6 +19,7 @@ import DisputeTabs, {
 } from "@/components/admin-components/disputes/DisputeTabs";
 import DisputesTable from "@/components/admin-components/disputes/DisputesTable";
 import type { AdminDisputeItem, AdminDisputeStats, DisputeTableRow } from "@/types/admin";
+import DisputeDetailSideModal from "@/components/ui/Modals/admin/DisputeDetailSideModal";
 
 const PAGE_SIZE = 20;
 
@@ -136,6 +137,7 @@ export default function AdminRefundAndDisputePage() {
   const [rawDisputes, setRawDisputes] = useState<any[]>([]);
   const [disputesTotalCount, setDisputesTotalCount] = useState(0);
   const [disputesLoading, setDisputesLoading] = useState(false);
+  const [selectedDispute, setSelectedDispute] = useState<DisputeTableRow | null>(null);
 
   const {
     fetchOrdersSummary,
@@ -363,13 +365,7 @@ export default function AdminRefundAndDisputePage() {
           onSelectAll={handleSelectAll}
           onToggleRow={handleToggleRow}
           onSetActiveRowId={setActiveRowId}
-          onViewDetails={(row) =>
-            router.push(
-              `/dashboard/admin/orders/refund-dispute/${row.id}${
-                activeTab === "REFUND" ? "?type=refund" : "?type=dispute"
-              }`
-            )
-          }
+          onViewDetails={(row) => setSelectedDispute(row)}
         />
 
         {/* Pagination */}
@@ -383,6 +379,13 @@ export default function AdminRefundAndDisputePage() {
           </div>
         )}
       </div>
+      <DisputeDetailSideModal
+        isOpen={Boolean(selectedDispute)}
+        onClose={() => setSelectedDispute(null)}
+        disputeId={selectedDispute?.id ?? null}
+        initialData={selectedDispute?.raw ?? null}
+        onStatusUpdated={() => setSelectedDispute(null)}
+      />
     </div>
   );
 }

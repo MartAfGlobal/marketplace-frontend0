@@ -122,7 +122,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
       <div>
         {/* Mobile Title */}
         {/* Orders Title */}
-        <div className="mb-6">
+        <div className="mb-8">
           <p className="text-c18 font-MontserratSemiBold text-000000">Orders</p>
         </div>
 

@@ -29,6 +29,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import AdressSkeleton from "@/components/reloadSpinner/addressSkeleton";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 
 export default function CancelledOrderDetails({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
@@ -66,7 +67,7 @@ export default function CancelledOrderDetails({ id }: { id: string }) {
 
   const orderItems = order?.order_items || (order as any).items || [];
   const handleTrackOrder = (orderId: string) => {
-    router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
+    router.push(getBuyerOrderTrackingPath(orderId));
   };
   console.log("order item", order);
 

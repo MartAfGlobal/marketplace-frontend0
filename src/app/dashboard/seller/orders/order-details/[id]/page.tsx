@@ -22,6 +22,7 @@ import { FulfillOrderModal } from "./components/FulfillOrderModal";
 import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
 import downloadIcon from "@/assets/Seller/colourDownload.svg";
 import Image from "next/image";
+import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -32,6 +33,7 @@ export default function OrderDetailsPage() {
     acceptOrder,
     rejectOrder,
     fulfillOrder,
+    submitTrackingToHub,
     fetchWarehouses,
     fetchDeliveryPartners,
     loading,
@@ -49,12 +51,14 @@ export default function OrderDetailsPage() {
   const [selectedWarehouse, setSelectedWarehouse] = useState<any>(null);
   const [deliveryPartners, setDeliveryPartners] = useState<any[]>([]);
   const [loadingDeliveryPartners, setLoadingDeliveryPartners] = useState(false);
-  const [selectedDeliveryPartner, setSelectedDeliveryPartner] = useState<any>(null);
+  const [selectedDeliveryPartner, setSelectedDeliveryPartner] =
+    useState<any>(null);
   const [accepting, setAccepting] = useState(false);
 
   // Fulfill Modal State
   const [showFulfillModal, setShowFulfillModal] = useState(false);
-  const [parcelId, setParcelId] = useState("");
+  const [seller_tracking_id_to_hub, setSeller_tracking_id_to_hub] = useState("");
+  const [notes, setNotes] = useState("");
   const [fulfilling, setFulfilling] = useState(false);
 
   // Result Modal State
@@ -93,7 +97,7 @@ export default function OrderDetailsPage() {
   }, [timeLeft]);
 
   useEffect(() => {
-    if (showAcceptModal) {
+    if (showAcceptModal || showFulfillModal) {
       if (warehouses.length === 0) {
         setLoadingWarehouses(true);
         fetchWarehouses((data) => {
@@ -109,7 +113,7 @@ export default function OrderDetailsPage() {
         });
       }
     }
-  }, [showAcceptModal]);
+  }, [showAcceptModal, showFulfillModal]);
 
   const handleAccept = (e: any) => {
     e.preventDefault();
@@ -143,9 +147,10 @@ export default function OrderDetailsPage() {
           result: "error",
           title: "Failed to accept order",
           message:
-            err?.response?.data?.message || "Something went wrong. Please try again.",
+            err?.response?.data?.message ||
+            "Something went wrong. Please try again.",
         });
-      }
+      },
     );
   };
 
@@ -158,19 +163,28 @@ export default function OrderDetailsPage() {
   const handleFulfill = (e: any) => {
     e.preventDefault();
 
+    if (!seller_tracking_id_to_hub.trim()) {
+      alert("Please enter a tracking/waybill number");
+      return;
+    }
+
     setFulfilling(true);
-    fulfillOrder(
+    submitTrackingToHub(
       id as string,
-      parcelId.trim() ? { parcel_id: parcelId.trim() } : undefined,
+      {
+        seller_tracking_id_to_hub: seller_tracking_id_to_hub.trim(),
+        ...(notes.trim() ? { notes: notes.trim() } : {}),
+      },
       () => {
         setFulfilling(false);
         setShowFulfillModal(false);
-        setParcelId("");
+        setSeller_tracking_id_to_hub("");
+        setNotes("");
         setResultModal({
           isOpen: true,
           result: "success",
-          title: "Order marked as shipped",
-          message: "The order status has been updated successfully",
+          title: "Tracking details submitted",
+          message: "Tracking details have been submitted to hub. Awaiting admin confirmation.",
         });
         fetchOrderById(id as string, (data) => setOrder(data));
       },
@@ -179,11 +193,13 @@ export default function OrderDetailsPage() {
         setResultModal({
           isOpen: true,
           result: "error",
-          title: "Failed to mark order as shipped",
+          title: "Failed to submit tracking details",
           message:
-            err?.response?.data?.message || "Something went wrong. Please try again.",
+            err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            "Something went wrong. Please try again.",
         });
-      }
+      },
     );
   };
 
@@ -261,7 +277,9 @@ export default function OrderDetailsPage() {
   if (!order) {
     return (
       <div className="p-8 text-center space-y-4">
-        <p className="text-xl font-MontserratSemiBold text-ff715b">Order Not Found</p>
+        <p className="text-xl font-MontserratSemiBold text-ff715b">
+          Order Not Found
+        </p>
         <button onClick={() => router.back()} className="text-ff715b underline">
           Go Back
         </button>
@@ -271,12 +289,23 @@ export default function OrderDetailsPage() {
 
   const getStatusBadgeClass = (status: string) => {
     switch (status?.toLowerCase()) {
+      case "dispute closed":
+      case "closed":
+        return "bg-[#6A0DAD1A] text-[#6A0DAD]";
+      case "disputed":
+      case "dispute raised":
+      case "dispute ongoing":
+        return "bg-[#E8334A1A] text-[#E8334A]";
       case "unprocessed":
       case "pending":
         return "bg-[#FFAC061A] text-[#FFAC06]";
       case "processed":
+      case "processing":
       case "accepted":
         return "bg-[#FFAC061A] text-[#FFAC06]";
+      case "tracking_submitted":
+      case "tracking submitted":
+        return "bg-[#0070E91A] text-[#0070E9]";
       case "fulfilled":
         return "bg-[#0070E91A] text-[#0070E9]";
       case "shipped":
@@ -295,29 +324,51 @@ export default function OrderDetailsPage() {
   };
 
   const getMappedStatus = (ord: any) => {
-    const stage = ord?.order_timeline_stage?.toLowerCase();
+    const displayStatus = getOrderDisplayStatus(ord);
+    if (
+      displayStatus === "Dispute closed" ||
+      displayStatus === "Dispute raised" ||
+      displayStatus === "Dispute ongoing"
+    ) {
+      return displayStatus.toLowerCase();
+    }
+
+    const stage = ord?.seller_status?.toLowerCase();
     if (stage) {
       if (stage === "pending") return "unprocessed";
-      if (stage === "accepted" || stage === "processed") return "processed";
+      if (stage === "accepted" || stage === "processed") {
+        // Use seller_status to distinguish Processing vs Processed
+        const sellerStatus = ord?.seller_status?.toLowerCase();
+        if (sellerStatus === "processing") return "processing";
+        return "processed";
+      }
       if (stage === "partially_accepted") return "partially accepted";
-      if (stage === "in_transit_to_hub" || stage === "fulfilled") return "fulfilled";
+      if (stage === "tracking_submitted") return "tracking submitted";
+      if (stage === "in_transit_to_hub" || stage === "fulfilled")
+        return "fulfilled";
       return stage;
     }
     const status = ord?.status;
     if (!status) return "unprocessed";
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === "pending") return "unprocessed";
-    if (lowerStatus === "accepted" || lowerStatus === "processed") return "processed";
+    if (lowerStatus === "accepted" || lowerStatus === "processed") {
+      // Use seller_status to distinguish Processing vs Processed
+      const sellerStatus = ord?.seller_status?.toLowerCase();
+      if (sellerStatus === "processing") return "processing";
+      return "processed";
+    }
     if (lowerStatus === "partially_accepted") return "partially accepted";
-    if (lowerStatus === "in_transit_to_hub" || lowerStatus === "fulfilled") return "fulfilled";
+    if (lowerStatus === "tracking_submitted") return "tracking submitted";
+    if (lowerStatus === "in_transit_to_hub" || lowerStatus === "fulfilled")
+      return "fulfilled";
     return lowerStatus;
   };
 
   return (
     <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen  lg:py-4 space-y-6">
-      <SellerMobileHeader 
+      <SellerMobileHeader
         title="Order details"
-        
         rightElement={
           <button
             onClick={handleDownload}
@@ -335,13 +386,17 @@ export default function OrderDetailsPage() {
         }
       />
 
-      <div ref={pdfRef} className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none">
+      <div
+        ref={pdfRef}
+        className="bg-white rounded-[16px] p-[24px] lg:p-0 lg:rounded-none"
+      >
         {/* Mobile Layout (lg:hidden) */}
         <div className="lg:hidden flex flex-col gap-6">
           {/* Time Left */}
           <div className="w-full flex justify-between items-center mb-2">
             <p className="font-MontserratSemiBold text-sm text-[#161616]">
-              {getMappedStatus(order) === "unprocessed" || (order?.status ?? "").toLowerCase() === "pending"
+              {getMappedStatus(order) === "unprocessed" ||
+              (order?.status ?? "").toLowerCase() === "pending"
                 ? "Time left for accepting order:"
                 : "Time left to fulfill order:"}
             </p>
@@ -373,27 +428,30 @@ export default function OrderDetailsPage() {
 
         {/* Desktop Layout (hidden lg:block) */}
         <div className="hidden lg:block space-y-8">
-          <OrderSummary
-            order={order}
-            timeLeft={timeLeft}
-            formatTime={formatTime}
-            getStatusBadgeClass={getStatusBadgeClass}
-            getMappedStatus={getMappedStatus}
-          />
+          <div className="flex justify-between">
+            <div className="space-y-8">
+              <OrderSummary
+                order={order}
+                timeLeft={timeLeft}
+                formatTime={formatTime}
+                getStatusBadgeClass={getStatusBadgeClass}
+                getMappedStatus={getMappedStatus}
+              />
 
-          <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
-            <OrderInfoSections order={order} />
-
-            <OrderActions
-              order={order}
-              getMappedStatus={getMappedStatus}
-              onAcceptClick={() => setShowAcceptModal(true)}
-              onRejectClick={handleReject}
-              onFulfillClick={() => setShowFulfillModal(true)}
-              timeLeft={timeLeft}
-              formatTime={formatTime}
-              isDesktop={true}
-            />
+              <OrderInfoSections order={order} />
+            </div>
+            <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
+              <OrderActions
+                order={order}
+                getMappedStatus={getMappedStatus}
+                onAcceptClick={() => setShowAcceptModal(true)}
+                onRejectClick={handleReject}
+                onFulfillClick={() => setShowFulfillModal(true)}
+                timeLeft={timeLeft}
+                formatTime={formatTime}
+                isDesktop={true}
+              />
+            </div>
           </div>
 
           <OrderProgress order={order} getMappedStatus={getMappedStatus} />
@@ -443,8 +501,17 @@ export default function OrderDetailsPage() {
             isOpen={showFulfillModal}
             onClose={() => setShowFulfillModal(false)}
             onFulfill={handleFulfill}
-            parcelId={parcelId}
-            setParcelId={setParcelId}
+            recievingLocation={
+              order?.warehouse?.name ||
+              order?.warehouse_name ||
+              order?.receiving_location ||
+              (typeof order?.warehouse === "string" ? order?.warehouse : "") ||
+              "Designated Hub"
+            }
+            seller_tracking_id_to_hub={seller_tracking_id_to_hub}
+            setSeller_tracking_id_to_hub={setSeller_tracking_id_to_hub}
+            notes={notes}
+            setNotes={setNotes}
             fulfilling={fulfilling}
           />
         )}

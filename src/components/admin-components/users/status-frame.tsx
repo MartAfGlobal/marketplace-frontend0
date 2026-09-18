@@ -3,7 +3,7 @@ import Image, { StaticImageData } from "next/image";
 
 type props = {
   title: string;
-  quantity: number;
+  quantity: number | string;
   width: number
   height: number
   icon: string | StaticImageData;

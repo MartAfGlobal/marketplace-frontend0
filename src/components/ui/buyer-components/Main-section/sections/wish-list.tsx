@@ -37,7 +37,7 @@ export default function Wishlist() {
         )}
       </div>
       {wishlistProducts.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 ">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 w-full ">
           {wishlistProducts.slice(0, visible).map((item) => (
             <ProductCard key={item.id} product={item} />
           ))}

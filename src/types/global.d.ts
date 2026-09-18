@@ -469,12 +469,14 @@ export interface OrderProduct {
   images: [];
 }
 export interface OrderItem {
+  buyer_status: string;
   seller_name?: string;
   can_cancel?: boolean;
   id: string;
   items_count: number;
   checkout: string;
   order_no: string;
+  order_id: string;
   created_at: string;
   updated_at: string;
   status: string; // "To Ship"
@@ -1174,8 +1176,6 @@ export interface SellerProfile {
   last_login?: string | null;
 }
 
-
-
 interface SellerVerification {
   percentage: number;
   isIncomplete: boolean;
@@ -1550,6 +1550,7 @@ export interface SellerOrderResult {
   fulfillment_deadline: string | null;
   hub_delivery_status: string;
   id: string;
+  order_id: string;
   is_acceptance_deadline_passed: boolean;
   is_fulfillment_deadline_passed: boolean;
   items: SellerOrderItemPayload[];

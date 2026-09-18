@@ -13,6 +13,9 @@ import { ChevronRight } from "lucide-react";
 
 const getStatusClass = (status: string) => {
   switch (status?.toLowerCase()) {
+    case "closed":
+    case "dispute closed":
+      return "text-[#6A0DAD] bg-[#6A0DAD]/10 px-8 py-2 rounded-c16 w-fit mx-auto";
     case "open":
       return "text-[#0070E9] bg-[#0070E9]/10 px-8 py-2 rounded-c16 w-fit mx-auto";
     case "resolved":
@@ -29,6 +32,9 @@ const getStatusClass = (status: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status?.toLowerCase()) {
+    case "closed":
+    case "dispute closed":
+      return "#6A0DAD";
     case "open":
       return "#0070E9";
     case "resolved":

@@ -76,7 +76,6 @@ export default function UserAddress({
     }
   }, [buyerAddresses, selectedAddressId, onSelectAddress]);
 
-  console.log("buyer addresssss", buyerAddresses);
 
   const handleEdit = (id: string) => {
     setIsEdit(true);

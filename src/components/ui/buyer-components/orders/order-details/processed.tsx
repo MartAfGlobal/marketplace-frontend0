@@ -30,6 +30,8 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import AdressSkeleton from "@/components/reloadSpinner/addressSkeleton";
 import { fetchDisputeDetails } from "@/store/orders/order-slice";
+import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
+import { toast } from "sonner";
 export default function ProessedOrderDetails({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -103,6 +105,10 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
   };
   const handleReview = (id: string) => {
     router.push(`/dashboard/buyer/orders/leave-review/${id}`);
+  };
+
+  const handleAddOrderItemsToCart = async () => {
+    await addOrderItemToCart(sendHttpRequest, token, order, dispatch);
   };
 
   const showMore = () => setVisible((prev) => prev + 10);
@@ -212,7 +218,7 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
                 </div>
                 <div className=" hidden md:flex flex-col gap-c32 w-full max-w-84">
                   <>
-                    <Button className="">Add to cart</Button>
+                    <Button className="" onClick={handleAddOrderItemsToCart}>Add to cart</Button>
                     <Button
                       onClick={() => handleReview(order.id)}
                       variant="secondary"
@@ -419,7 +425,7 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
         <div className="w-full  h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
           <div className="flex gap-4 items-center justify-center w-full text-c12 font-MontserratSemiBold">
             <>
-              <Button className="">Add to cart</Button>
+              <Button className="" onClick={handleAddOrderItemsToCart}>Add to cart</Button>
               <Button variant="secondary" className="">
                 Leave a review
               </Button>

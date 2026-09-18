@@ -123,7 +123,9 @@ const dispatch = useDispatch() as AppDispatch;
 
     // Find the variation that matches the given ID
     const match = productDetails.variations.find(
-      (v) => v.id === selectedVariaton // IDs in your data are strings
+      (v) =>
+        String(v.id) === String(selectedVariaton) ||
+        String((v as any).variation_id) === String(selectedVariaton)
     );
 
     if (!match) return;

@@ -3,9 +3,14 @@ import CopyIcon from "@/assets/icons/Copy.png";
 
 const getStatusColor = (status: string) => {
   switch (status?.toLowerCase()) {
+    case "dispute closed":
+    case "closed":
+      return "#6A0DAD";
     case "open":
     case "fulfilled":
     case "partially_accepted":
+    case "tracking_submitted":
+    case "tracking submitted":
     case "shipped":
     case "in transit":
       return "#0070E9";
@@ -15,6 +20,9 @@ const getStatusColor = (status: string) => {
     case "escalated":
     case "cancelled":
     case "rejected":
+    case "disputed":
+    case "dispute raised":
+    case "dispute ongoing":
       return "#CA0202";
     case "pending":
     case "requested":
@@ -98,11 +106,11 @@ export const OrderSummary = ({
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <span className="font-MontserratSemiBold text-sm">
-              Order ID: {order.order_no || order.id}
+              Order ID: {order.order_id}
             </span>
             <button
               onClick={() =>
-                navigator.clipboard.writeText(order.order_no || order.id)
+                navigator.clipboard.writeText(order.order_id || order.id)
               }
               className="p-1 hover:bg-gray-100 rounded"
             >

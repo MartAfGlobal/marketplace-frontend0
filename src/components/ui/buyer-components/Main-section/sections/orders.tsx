@@ -12,7 +12,7 @@ import { OrderHistoryItem, OrderItem } from "@/types/global";
 import { Button } from "@/components/ui/Button/Button";
 import Link from "next/link";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
@@ -21,19 +21,28 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-order-modal";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
 import CartWithBoxesIcon from "@/components/ui/buyer-components/orders/CartWithBoxesIcon";
+import AddCartModal from "@/components/ui/Modals/addToCart/addTocart-modal";
+import { toast } from "sonner";
+import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 
 export default function Orders() {
+  const dispatch = useDispatch();
   const { orders, loading } = useSelector((state: any) => state.orders);
 
   const [open, setOpen] = useState(false);
+   const { loading: confirming, sendHttpRequest: confirmReq } = useHttp();
   const [cancelOrderOpen, setCancelOrderOpen] = useState(false);
   const { fetchOrders } = useFetchOrders();
 
   const [loadingIds, setLoadingIds] = useState<string | null>(null);
 
-
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addressOpen, setAddressOpen] = useState(false);
+const [itemId, setItemId] = useState("")
+  const [addToCartOpen, setAddToCartOpen] = useState(false);
+  const [selectedProductSlug, setSelectedProductSlug] = useState("");
+  const [selectedVariationId, setSelectedVariationId] = useState("");
 
   const token: string | undefined = useSelector(
     (state: RootState) => state.token?.token ?? undefined,
@@ -42,23 +51,24 @@ export default function Orders() {
   // const token = useSelector((state: any) => state.token?.token);
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
   const { sendHttpRequest: cancelReq } = useHttp();
+  const { sendHttpRequest: addToCartReq } = useHttp();
 
   const router = useRouter();
 
   const totalToShip = orders.filter(
-    (order: OrderItem) => order.status === "RECEIVED_AT_HUB",
+    (order: OrderItem) => order.buyer_status === "Processing",
   ).length;
   const totalShipped = orders.filter(
-    (order: OrderItem) => order.status === "SHIPPED",
+    (order: OrderItem) => order.buyer_status === "Shipped",
   ).length;
   const totalDelivered = orders.filter(
-    (order: OrderItem) => order.status === "DELIVERED",
+    (order: OrderItem) => order.buyer_status === "Delivered",
   ).length;
   const totalAwaitingPayment = orders.filter(
-    (order: OrderItem) => order.status === "AWAITING_PAYMENT",
+    (order: OrderItem) => order.buyer_status === "AWAITING_PAYMENT",
   ).length;
   const totalCancelled = orders.filter(
-    (order: OrderItem) => order.status === "Cancelled",
+    (order: OrderItem) => order.buyer_status === "Cancelled",
   ).length;
 
   const isAwaitingPayment = (order: OrderItem) =>
@@ -88,7 +98,7 @@ export default function Orders() {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleTrackOrder = (orderId: string) => {
-    router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
+    router.push(getBuyerOrderTrackingPath(orderId));
   };
 
   const Orderahistory: OrderHistoryItem[] = [
@@ -154,8 +164,59 @@ export default function Orders() {
     if (isMobile) {
       router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`);
     } else {
+      setItemId(id)
       setOpen(true);
+
     }
+  };
+    const executeConfirmDelivery = (id:string) => {
+    if (!token || !id) return;
+    confirmReq({
+      requestConfig: {
+        url: `/orders/buyer/${id}/confirm-delivery/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        successMessage: "Delivery confirmed successfully!",
+      },
+      successRes: () => {
+        setOpen(false);
+        router.refresh();
+      },
+    });
+  }
+
+  const handleReview = (id: string) => {
+    router.push(`/dashboard/buyer/orders/leave-review/${id}`);
+  };
+
+  const handleAddToCart = (slug: string, varId?: string) => {
+    if (!slug) {
+      toast.error("Product information not available");
+      return;
+    }
+
+    const mobileCheck =
+      isMobile ||
+      (typeof window !== "undefined" &&
+        (window.innerWidth < 768 ||
+          /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)));
+
+    if (mobileCheck) {
+      const url = varId
+        ? `/product/${slug}?variationId=${encodeURIComponent(varId)}`
+        : `/product/${slug}`;
+      router.push(url);
+    } else {
+      setSelectedProductSlug(slug);
+      setSelectedVariationId(varId || "");
+      setAddToCartOpen(true);
+    }
+  };
+
+  const handleAddOrderItemToCart = async (item: any) => {
+    await addOrderItemToCart(addToCartReq, token, item, dispatch);
   };
 
   const handleRepay = (repay_order_id: any) => {
@@ -190,11 +251,6 @@ export default function Orders() {
       },
     });
   };
-
-  ;
-  // const handleTrackOrder = (orderId: string) => {
-  //   router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
-  // };
 
   return (
     <div className="space-y-c24">
@@ -263,53 +319,87 @@ export default function Orders() {
                 firstItem?.product_name ||
                 firstItem?.name ||
                 firstItem?.product?.name ||
-                (item.order_no || (item as any).payment_no ? `Order #${item.order_no || (item as any).payment_no}` : "Order");
+                (item.order_no || (item as any).payment_no
+                  ? `Order #${item.order_no || (item as any).payment_no}`
+                  : "Order");
               const sellerName =
                 item.manufacturer ||
                 item.seller_name ||
                 (item as any).seller?.store_name ||
                 "";
               const variationName =
-                firstItem?.variation_name ||
-                firstItem?.variation_display ||
-                "";
+                firstItem?.variation_name || firstItem?.variation_display || "";
               const totalPrice =
                 item.total_price ??
                 (item as any).total ??
                 (item as any).subtotal ??
                 0;
-              const itemsCount = (item as any).items_count ?? (hasOrderItems ? orderItems.length : 1);
+              const itemsCount =
+                (item as any).items_count ??
+                (hasOrderItems ? orderItems.length : 1);
+              const productSlug =
+                firstItem?.product_slug ||
+                firstItem?.product?.slug ||
+                firstItem?.slug ||
+                (firstItem?.product_name
+                  ? firstItem.product_name
+                      .toLowerCase()
+                      .trim()
+                      .replace(/\s+/g, "-")
+                  : "");
+              const variationId =
+                (typeof firstItem?.variation === "string"
+                  ? firstItem.variation
+                  : firstItem?.variation?.id) ||
+                firstItem?.variation_id ||
+                firstItem?.variant_id ||
+                (typeof firstItem?.product === "string"
+                  ? firstItem.product
+                  : "") ||
+                "";
 
               return (
                 <div key={item.id}>
                   <div className="w-full flex justify-between mb-c32">
                     <p
                       className={`font-MontserratSemiBold text-c16  ${
-                        item.status === "CANCELLED"
+                        item.buyer_status === "CANCELLED"
                           ? "text-ca0202"
-                          : item.status === "DELIVERED"
+                          : item.buyer_status === "DELIVERED"
                             ? "text-2d7565"
                             : "text-161616"
                       }`}
                     >
-                      {item.status === "RECEIVED_AT_HUB"
+                      {item.buyer_status === "RECEIVED_AT_HUB"
                         ? "Received at Central hub"
-                        : item.status === "SHIPPED"
+                        : item.buyer_status === "Shipped"
                           ? "Order on its way"
-                          : item.status === "DELIVERED"
+                          : item.buyer_status === "DELIVERED"
                             ? "Delivered"
-                            : item.status === "Confirmed"
+                            : item.buyer_status === "Confirmed"
                               ? "Delivered"
-                              : item.status === "AWAITING_PAYMENT"
+                              : item.buyer_status === "AWAITING_PAYMENT"
                                 ? "Awaiting payment"
-                                : item.status === "PENDING" || item.status==="ACCEPTED" || item.status === "IN_TRANSIT_TO_HUB"
+                                : item.buyer_status === "PENDING" ||
+                                    item.buyer_status === "ACCEPTED" ||
+                                    item.buyer_status === "IN_TRANSIT_TO_HUB"
                                   ? "Order is being processed"
-                                  : item.status === "CANCELLED"
+                                  : item.buyer_status === "CANCELLED"
                                     ? "Cancelled"
-                                    : item.status}
+                                    : item.buyer_status}
                     </p>
                     <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                      {item.estimated_delivery_date || (item.created_at ? new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "pending")}
+                      {item.estimated_delivery_date ||
+                        (item.created_at
+                          ? new Date(item.created_at).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              },
+                            )
+                          : "pending")}
                     </p>
                   </div>
                   <div className="w-full justify-between flex">
@@ -327,7 +417,10 @@ export default function Orders() {
                             className="rounded-lg h-24 w-24 object-cover"
                           />
                         ) : (
-                          <CartWithBoxesIcon className="h-24 w-24" itemsCount={itemsCount} />
+                          <CartWithBoxesIcon
+                            className="h-24 w-24"
+                            itemsCount={itemsCount}
+                          />
                         )}
 
                         <div className="w-full max-w-143.75">
@@ -341,7 +434,8 @@ export default function Orders() {
                           )}
                           <div className="w-fit p-2 justify-center rounded-c12 bg-black/3 flex items-center">
                             <span className="text-black opacity-32 font-MontserratSemiBold text-c12 ">
-                              {itemsCount}PC{variationName ? `, ${variationName}` : ""}
+                              {itemsCount}PC
+                              {variationName ? `, ${variationName}` : ""}
                             </span>
                           </div>
                           <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
@@ -350,26 +444,25 @@ export default function Orders() {
                         </div>
                       </div>
                     </Link>
-                  <div className="w-full gap-4 pl hidden  md:flex md:flex-col md:max-w-50 xl:max-w-70 space-y-4">
-                    {item.status === "SHIPPED" && (
-                      <>
-                        <Button
-                          variant="secondary"
-                          key={item.id}
-                          onClick={() => handleTrackOrder(item.id)}
-                        >
-                          Track order
-                        </Button>
+                    <div className="w-full gap-4 pl hidden  md:flex md:flex-col md:max-w-50 xl:max-w-70 space-y-4">
+                      {item.buyer_status === "Shipped" && (
+                        <>
+                          <Button onClick={() => handleClick(item.id)}>
+                            Confirm delivery
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            key={item.id}
+                            onClick={() => handleTrackOrder(item.id)}
+                          >
+                            Track order
+                          </Button>
+                        </>
+                      )}
 
-                        <Button onClick={() => handleClick(item.id)}>
-                          Confirm delivery
-                        </Button>
-                      </>
-                    )}
-
-                    {item.status === "RECEIVED_AT_HUB" && (
-                      <>
-                        {/* <Button
+                      {item.buyer_status === "Shipped" && (
+                        <>
+                          {/* <Button
                           onClick={() => handleEditAddress(item.id)}
                           variant="secondary"
                           className=""
@@ -377,81 +470,139 @@ export default function Orders() {
                           Edit address
                         </Button> */}
 
-                        <Button
-                          variant="secondary"
-                          key={item.id}
-                          onClick={() => handleTrackOrder(item.id)}
-                        >
-                          Track order
-                        </Button>
-                      </>
-                    )}
-                    {item.status === "PENDING" && item.can_cancel && (
-                      <>
-                        {/* <Button
+                         
+                        </>
+                      )}
+                      {item.buyer_status === "PENDING" && item.can_cancel && (
+                        <>
+                          {/* <Button
                           onClick={() => handleEditAddress(item.id)}
                           variant="secondary"
                           className=""
                         >
                           Edit address
                         </Button> */}
-                        <Button
-                          onClick={() => handleCancelOrder(item.id)}
-                          variant="primary"
-                        >
-                          Cancel order
-                        </Button>
-                      </>
-                    )}
+                          <Button
+                            onClick={() => handleCancelOrder(item.id)}
+                            variant="primary"
+                          >
+                            Cancel order
+                          </Button>
+                        </>
+                      )}
 
-                    {item.status === "DELIVERED" && (
-                      <>
-                        <Button className="">Add to cart</Button>
-                        <Button variant="secondary" className="">
-                          Leave a review
-                        </Button>
-                      </>
-                    )}
+                      {(item.buyer_status === "Delivered" ||
+                        item.buyer_status === "Confirmed") && (
+                        <>
+                          <Button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleAddOrderItemToCart(item);
+                            }}
+                            className=""
+                          >
+                            Add to cart
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleReview(item.id);
+                            }}
+                            className=""
+                          >
+                            Leave a review
+                          </Button>
+                        </>
+                      )}
 
-                    {(item.status === "Awaiting Confirmation" ||
-                      item.status === "Processing" ||
-                      item.status === "AWAITING_PAYMENT") && (
-                      <>
-                        {/* <Button
+                      {(item.buyer_status === "Awaiting Confirmation" ||
+                        item.buyer_status === "Processing" ||
+                        item.buyer_status === "AWAITING_PAYMENT") && (
+                        <>
+                          {/* <Button
                           onClick={() => handleEditAddress(item.id)}
                           variant="secondary"
                           className=""
                         >
                           Edit address
                         </Button> */}
-                        <Button
-                          disabled={repaying}
-                          onClick={() => {
-                            handleRepay(item.id);
-                          }}
-                          className=""
-                        >
-                          {repaying ? <LoadingSpinner /> : "Confirm & pay"}
-                        </Button>
-                      </>
-                    )}
+                          <Button
+                            disabled={repaying}
+                            onClick={() => {
+                              handleRepay(item.id);
+                            }}
+                            className=""
+                          >
+                            {repaying ? <LoadingSpinner /> : "Confirm & pay"}
+                          </Button>
+                        </>
+                      )}
 
-                    {/* Default fallback (optional)
+                      {/* Default fallback (optional)
                           {![
                             "Shipped",
                             "To Ship",
                             "Delivered",
                             "AWAITING_PAYMENT",
-                          ].includes(item.status) && (
+                          ].includes(item.buyer_status) && (
                             <Button variant="secondary" className="">
                               View details
                             </Button>
                           )} */}
+                    </div>
+                    {/* Mobile action buttons */}
+                    <div className="w-full gap-3 flex flex-row-reverse md:hidden mt-4">
+                      {(item.buyer_status === "Delivered" ||
+                        item.buyer_status === "Confirmed") && (
+                        <>
+                          <Button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleAddOrderItemToCart(item);
+                            }}
+                            className="flex-1 text-xs py-2 h-9"
+                          >
+                            Add to cart
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleReview(item.id);
+                            }}
+                            className="flex-1 text-xs py-2 h-9"
+                          >
+                            Leave a review
+                          </Button>
+                        </>
+                      )}
+                      {item.buyer_status === "Shipped" && (
+                        <>
+                          <Button
+                            onClick={() => handleClick(item.id)}
+                            className="flex-1 text-xs py-2 h-9"
+                          >
+                            Confirm delivery
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleTrackOrder(item.id)}
+                            className="flex-1 text-xs py-2 h-9"
+                          >
+                            Track order
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
           </div>
         </div>
       ) : (
@@ -468,12 +619,13 @@ export default function Orders() {
 
       <ConfirmModal
         isOpen={open}
-        onClose={() => setIsOpen(false)}
+        loading= {confirming}
+        onClose={() => setOpen(false)}
         title="Did you receive this package?"
         description="Confirming helps us complete your order and improve service."
-        onYes={() => console.log("Confirmed")}
+        onYes={() => executeConfirmDelivery(itemId)}
         onNo={() => console.log("Cancelled")}
-        yesText="Delete"
+        yesText="Yes"
         noText="Cancel"
         className="w-full max-w-106.5 text-center"
       />
@@ -487,6 +639,12 @@ export default function Orders() {
         isOpen={cancelOrderOpen}
         orderId={selectedId}
         onClose={() => setCancelOrderOpen(false)}
+      />
+      <AddCartModal
+        isOpen={addToCartOpen}
+        onClose={() => setAddToCartOpen(false)}
+        productSlug={selectedProductSlug}
+        selectedVariationId={selectedVariationId}
       />
     </div>
   );

@@ -20,6 +20,8 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
 import AdressSkeleton from "@/components/reloadSpinner/addressSkeleton";
 import { setShippingAddress } from "@/store/orders/order-slice";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -39,6 +41,9 @@ export default function OrderDetailsPage() {
   const [cancelOrderOpen, setCancelOrderOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+
+
+    const { fetchOrders } = useFetchOrders();
 
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
   const { loading: confirming, sendHttpRequest: confirmReq } = useHttp();
@@ -194,8 +199,9 @@ export default function OrderDetailsPage() {
       itemsTotal + shippingCost - discountAmount,
   );
 
-  // Status handling
+  // Status handling — buyer_status is the source of truth for the buyer-facing view
   const status = (
+    order?.buyer_status ||
     order?.status ||
     order?.seller_order_status ||
     "PENDING"
@@ -228,7 +234,7 @@ export default function OrderDetailsPage() {
   };
 
   const handleTrackOrder = () => {
-    router.push(`/dashboard/buyer/orders/tracking/${id}`);
+    router.push(getBuyerOrderTrackingPath(String(id)));
   };
 
   const handleReturnAndRefund = (returnid: string) => {
@@ -261,6 +267,7 @@ export default function OrderDetailsPage() {
         successMessage: "Delivery confirmed successfully!",
       },
       successRes: () => {
+        fetchOrders()
         setOpenConfirmModal(false);
         router.refresh();
       },
@@ -380,7 +387,7 @@ export default function OrderDetailsPage() {
                     ? "Order has been delivered"
                     : status === "AWAITING_PAYMENT"
                       ? "Awaiting payment"
-                      : status === "PENDING" || status === "ACCEPTED" || status === "IN_TRANSIT_TO_HUB"
+                      : status === "PENDING" || status === "ACCEPTED" || status === "IN_TRANSIT_TO_HUB" || status === "PROCESSING" || status === "PROCESSED"
                         ? "Order is being processed"
                         : status === "CANCELLED"
                           ? "Cancelled"
@@ -806,6 +813,7 @@ export default function OrderDetailsPage() {
 
       {/* Modals */}
       <ConfirmModal
+      yesText="Yes"
         isOpen={openConfirmModal}
         onClose={() => setOpenConfirmModal(false)}
         title="Did you receive this package?"

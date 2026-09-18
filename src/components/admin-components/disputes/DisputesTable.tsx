@@ -18,6 +18,15 @@ import type { DisputeTableRow } from "@/types/admin";
 export const renderDisputeStatus = (status: string) => {
   const s = (status ?? "").trim().toUpperCase();
 
+  if (s === "CLOSED") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[#000000]/60 bg-[#000000]/8 h-6 rounded-c32 px-3 text-[10px] font-MontserratMedium whitespace-nowrap">
+        <CheckCircle2 size={13} />
+        Closed
+      </span>
+    );
+  }
+
   if (
     s === "RESOLVED" ||
     s === "APPROVED" ||
@@ -228,9 +237,9 @@ export default function DisputesTable({
                 <td className="py-3 px-4">
                   <span
                     className="block max-w-[100px] truncate text-left font-MontserratMedium cursor-pointer"
-                    title={row.orderId}
+                    title={row.disputeNumber}
                   >
-                    {row.orderId}
+                    {row.disputeNumber}
                   </span>
                 </td>
                 <td className="py-3 px-4">

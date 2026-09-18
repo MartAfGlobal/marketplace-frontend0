@@ -817,6 +817,8 @@ export default function AdminTrackOrderPage() {
             subtotalAmount={subtotalAmount}
             shippingFeeAmount={shippingFeeAmount}
             grandTotalAmount={grandTotalAmount}
+            depatureEvidence={order?.departure_evidence}
+            deliveryEvidence={order?.delivery_evidence}
           />
         </div>
       )}

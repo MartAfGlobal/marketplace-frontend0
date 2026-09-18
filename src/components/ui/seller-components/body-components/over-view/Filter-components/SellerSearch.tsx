@@ -13,13 +13,13 @@ interface SellerSearchProps {
   onToggle?: (isOpen: boolean) => void;
 }
 
-export default function SellerSearch({ 
-  placeholder = "Search...", 
-  value, 
-  onChange, 
+export default function SellerSearch({
+  placeholder = "Search...",
+  value,
+  onChange,
   disabled = false,
   alwaysOpen = false,
-  onToggle
+  onToggle,
 }: SellerSearchProps) {
   const [isVisible, setIsVisible] = useState(alwaysOpen);
 
@@ -32,19 +32,28 @@ export default function SellerSearch({
   };
 
   return (
-    <div 
+    <div
       onClick={toggleSearch}
-      className={`flex items-center justify-center bg-ffffff rounded-c8 circle-shadow h-10 transition-all duration-300 border-000000/10 border px-3 gap-2 ${
+      className={`flex items-center justify-center bg-ffffff rounded-c8 circle-shadow h-10 transition-all duration-300 border-000000/10 border p-4 gap-2 ${
         isVisible || alwaysOpen ? "w-full max-w-90" : "w-10"
       } ${disabled ? "opacity-50 cursor-not-allowed" : alwaysOpen ? "cursor-default" : "cursor-pointer"}`}
     >
-      <Image src={SearchIcon} height={13.01} width={13.01} alt="search" className="flex-shrink-0" />
-      <input 
-        type="text" 
+      <div className="flex-shrink-0 w-4 h-4">
+        <Image
+          src={SearchIcon}
+          height={16}
+          width={16}
+          alt="search"
+          className="object-cover"
+        />
+      </div>
+
+      <input
+        type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        placeholder={placeholder} 
+        placeholder={placeholder}
         autoFocus={isVisible && !alwaysOpen}
         onBlur={() => {
           if (!value && !alwaysOpen) {

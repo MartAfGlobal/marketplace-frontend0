@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import Link from "next/link";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
+import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 
 interface OrdersProps {
   searchTerm: string;
@@ -77,7 +78,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
     }
   };
   const handleTrackOrder = (orderId: string) => {
-    router.push(`/dashboard/buyer/orders/tracking/${orderId}`);
+    router.push(getBuyerOrderTrackingPath(orderId));
   };
   const [copied, setCopied] = useState(false);
 
