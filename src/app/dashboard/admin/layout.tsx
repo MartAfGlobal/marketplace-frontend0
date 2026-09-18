@@ -215,7 +215,25 @@ export default function AdminLayout({
     },
     { name: "Support", icon: SupportIcon, path: "/dashboard/admin/support" },
     { name: "Reports", icon: ReportsIcon, path: "/dashboard/admin/reports" },
-    { name: "Staff", icon: StaffIcon, path: "/dashboard/admin/staff" },
+    {
+      name: "Staff",
+      icon: StaffIcon,
+      path: "/dashboard/admin/staff",
+      subItems: [
+        {
+          name: "Staff management",
+          path: "/dashboard/admin/staff",
+          icon: InactiveBuyerIcon,
+          activeIcon: BuyerIcon,
+        },
+        {
+          name: "Roles & permissions",
+          path: "/dashboard/admin/staff/roles-permissions",
+          icon: Categories,
+          activeIcon: ActiveCategories,
+        },
+      ],
+    },
   ];
 
   // Filter sidebar items dynamically based on selected role
@@ -347,13 +365,23 @@ export default function AdminLayout({
                               "/dashboard/admin/categories",
                             );
                           }
+                        } else if (pathname.startsWith("/dashboard/admin/staff")) {
+                          if (sub.path.includes("roles-permissions")) {
+                            isSubActive = pathname.startsWith(
+                              "/dashboard/admin/staff/roles-permissions",
+                            );
+                          } else {
+                            isSubActive = !pathname.startsWith(
+                              "/dashboard/admin/staff/roles-permissions",
+                            );
+                          }
                         }
 
                         return (
                           <Link
                             key={sub.name}
                             href={sub.path}
-                            className={`flex items-center text-nowrap truncate  gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all  ${
+                            className={`w-full flex items-center text-nowrap  gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all  ${
                               isSubActive
                                 ? "text-white bg-[#6A0DAD] font-MontserratBold shadow-md shadow-[#6A0DAD]/15"
                                 : "text-gray-600 bg-ffffff hover:bg-6a0dad/20"

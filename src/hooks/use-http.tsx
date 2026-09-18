@@ -226,7 +226,12 @@ export const useHttp = () => {
         }
 
         setError(errorMessage);
-        if (!error?.response?.data?.requires_2fa) {
+        // requires_confirmation (409 from staff role-reassign) is the same
+        // "this isn't really an error, a modal needs to take over" shape as
+        // requires_2fa — the toast would otherwise show whatever string it
+        // finds first in the body (role_name) instead of the real message,
+        // and the caller's own confirm modal already surfaces that message.
+        if (!error?.response?.data?.requires_2fa && !error?.response?.data?.requires_confirmation) {
           const isSilentTokenError = isTokenError && !requestConfig.isAuth;
           if (!isSilentTokenError) {
             if (typeof window !== "undefined" && window.innerWidth < 768) {

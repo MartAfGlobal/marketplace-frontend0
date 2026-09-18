@@ -9,58 +9,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
 import { Button } from "@/components/ui/Button/Button";
 import { toast } from "sonner";
-
-// ─── Shared Drawer Wrapper ─────────────────────────────────────────────────────
-function DrawerWrapper({
-  isOpen,
-  onClose,
-  children,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  // Lock body scroll when open
-  useEffect(() => {
-    if (isOpen) {
-      const w = window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden";
-      if (w > 0) document.body.style.paddingRight = `${w}px`;
-    } else {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-    };
-  }, [isOpen]);
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/40 flex items-center justify-end z-[9998] p-4 sm:pr-[29px]"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ opacity: 0, x: 160 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 160 }}
-            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white shadow-xl flex flex-col p-8 w-full max-w-[426px] max-h-[92vh] rounded-[16px] relative overflow-hidden"
-          >
-            {children}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+import DrawerWrapper from "@/components/ui/Modals/DrawerWrapper";
 
 // ─── Items Table (shared between Approve modals) ───────────────────────────────
 interface ModalItem {

@@ -19,6 +19,11 @@ import { setAdminCategoryStats } from "@/store/admin/categories/categoryStatsSli
 import { setAdminCategoriesData } from "@/store/admin/categories/adminCategoriesSlice";
 import { setAdminCategoryDetail } from "@/store/admin/categories/adminCategoryDetailSlice";
 import { setAdminOrdersData } from "@/store/admin/orders/adminOrdersSlice";
+import { setAdminRolesData } from "@/store/admin/roles/adminRolesSlice";
+import { setAdminRoleDetail } from "@/store/admin/roles/adminRoleDetailSlice";
+import { setAdminStaffData } from "@/store/admin/staff/adminStaffSlice";
+import { setAdminStaffDetail } from "@/store/admin/staff/adminStaffDetailSlice";
+import type { PermissionMatrix } from "@/types/admin";
 
 export const AdminDetails = (id?: string) => {
   const dispatch = useDispatch();
@@ -2124,6 +2129,696 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  // =========================================================
+  // Roles & Permissions (departments/rbac_views.py)
+  // =========================================================
+
+  const fetchAdminPermissionCategories = (
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/permission-categories/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const fetchAdminRoles = (
+    params: {
+      search?: string;
+      access_level?: string;
+      status?: string;
+      page?: number;
+      page_size?: number;
+    } = {},
+    callback?: (data: any) => void,
+  ) => {
+    if (!token) return;
+
+    const queryParts: string[] = [];
+    if (params.search && params.search.trim()) queryParts.push(`search=${encodeURIComponent(params.search.trim())}`);
+    if (params.access_level) queryParts.push(`access_level=${encodeURIComponent(params.access_level)}`);
+    if (params.status) queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    if (params.page) queryParts.push(`page=${params.page}`);
+    if (params.page_size) queryParts.push(`page_size=${params.page_size}`);
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${queryString}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const results = responseData?.data?.results ?? [];
+        const count = responseData?.data?.count ?? results.length;
+        const summary = responseData?.data?.summary;
+        console.log("Admin roles fetched:", results, "Total:", count);
+        dispatch(setAdminRolesData({ results, count, summary }));
+        if (callback) callback(responseData?.data);
+      },
+    });
+  };
+
+  const fetchAdminRoleById = (
+    roleId: number | string,
+    callback?: (data: any) => void,
+  ) => {
+    if (!token || !roleId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${roleId}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin role detail fetched:", data);
+        dispatch(setAdminRoleDetail(data));
+        if (callback) callback(data);
+      },
+    });
+  };
+
+  const createAdminRole = (
+    payload: {
+      name: string;
+      description?: string;
+      access_level: string;
+      status?: string;
+      permissions?: PermissionMatrix;
+    },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const updateAdminRole = (
+    roleId: number | string,
+    payload: Partial<{
+      name: string;
+      description: string;
+      access_level: string;
+      status: string;
+      permissions: PermissionMatrix;
+    }>,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !roleId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${roleId}/`,
+        method: "PATCH",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const updateAdminRolePermissions = (
+    roleId: number | string,
+    permissions: PermissionMatrix,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !roleId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${roleId}/permissions/`,
+        method: "PUT",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { permissions },
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const deleteAdminRole = (
+    roleId: number | string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !roleId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${roleId}/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const suspendAdminRole = (
+    roleId: number | string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !roleId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${roleId}/suspend/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const reactivateAdminRole = (
+    roleId: number | string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !roleId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${roleId}/reactivate/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const duplicateAdminRole = (
+    roleId: number | string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !roleId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${roleId}/duplicate/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const fetchAdminRoleStaffAssigned = (
+    roleId: number | string,
+    params: { page?: number; search?: string } = {},
+    callback?: (data: any) => void,
+  ) => {
+    if (!token || !roleId) return;
+
+    const queryParts: string[] = [];
+    if (params.page) queryParts.push(`page=${params.page}`);
+    if (params.search && params.search.trim()) queryParts.push(`search=${encodeURIComponent(params.search.trim())}`);
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/roles/${roleId}/staff/${queryString}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+    });
+  };
+
+  // =========================================================
+  // Staff Management (departments/rbac_views.py)
+  // =========================================================
+
+  const fetchAdminStaffList = (
+    params: { search?: string; status?: string; role_id?: string | number; page?: number } = {},
+    callback?: (data: any) => void,
+  ) => {
+    if (!token) return;
+
+    const queryParts: string[] = [];
+    if (params.search && params.search.trim()) queryParts.push(`search=${encodeURIComponent(params.search.trim())}`);
+    if (params.status) queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    if (params.role_id) queryParts.push(`role_id=${params.role_id}`);
+    if (params.page) queryParts.push(`page=${params.page}`);
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${queryString}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const results = responseData?.data?.results ?? [];
+        const count = responseData?.data?.count ?? results.length;
+        const summary = responseData?.data?.summary;
+        const staffByRole = responseData?.data?.staff_by_role;
+        const recentActivity = responseData?.data?.recent_activity;
+        console.log("Admin staff fetched:", results, "Total:", count);
+        dispatch(setAdminStaffData({ results, count, summary, staffByRole, recentActivity }));
+        if (callback) callback(responseData?.data);
+      },
+    });
+  };
+
+  const fetchAdminStaffActivityFeed = (
+    page: number = 1,
+    callback?: (data: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/activity-log/?page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+    });
+  };
+
+  const inviteAdminStaff = (
+    payload: { role_id: number; first_name: string; last_name: string; email: string; phone?: string },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/invite/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const resendAdminStaffInvite = (
+    userId: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/resend-invite/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const fetchAdminStaffDetail = (
+    userId: string,
+    callback?: (data: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        console.log("Admin staff detail fetched:", data);
+        dispatch(setAdminStaffDetail(data));
+        if (callback) callback(data);
+      },
+    });
+  };
+
+  const updateAdminStaffProfile = (
+    userId: string,
+    payload: FormData | Record<string, any>,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/`,
+        method: "PATCH",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        const data = responseData?.data ?? responseData;
+        dispatch(setAdminStaffDetail(data));
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const reassignAdminStaffRole = (
+    userId: string,
+    payload: { role_id: number; confirm_role_name?: string },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/reassign-role/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        const data = responseData?.data ?? responseData;
+        dispatch(setAdminStaffDetail(data));
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        // 409 means the target role is high-risk and needs
+        // confirm_role_name — surfaced as-is so the caller can show the
+        // "type the role name to confirm" modal instead of a plain toast.
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const suspendAdminStaff = (
+    userId: string,
+    payload: { reason: string; note?: string },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/suspend/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        const data = responseData?.data ?? responseData;
+        dispatch(setAdminStaffDetail(data));
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const reactivateAdminStaff = (
+    userId: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/reactivate/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        const data = responseData?.data ?? responseData;
+        dispatch(setAdminStaffDetail(data));
+        if (callback) callback(data);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const deactivateAdminStaff = (
+    userId: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/deactivate/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const securityLogoutAdminStaff = (
+    userId: string,
+    payload: { reason: string },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/security-logout/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const securityLogoutAdminStaffBulk = (
+    payload: { user_ids: string[]; reason: string },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/security-logout/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const fetchAdminStaffActivityLogs = (
+    userId: string,
+    page: number = 1,
+    callback?: (data: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/activity-logs/?page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+    });
+  };
+
+  const fetchAdminStaffTickets = (
+    userId: string,
+    page: number = 1,
+    callback?: (data: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/tickets/?page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData?.data ?? responseData;
+        if (callback) callback(data);
+      },
+    });
+  };
+
   return {
     fetchOrdersList,
     fetchCancellationRequests,
@@ -2187,10 +2882,42 @@ export const AdminDetails = (id?: string) => {
     updateAdminBuyer,
     verifyAdminSeller,
     rejectAdminSeller,
+
     DisputeReviewConfirm,
     resolveAdminDispute,
     confirmReturnShippedToSeller,
     closeAdminDispute,
+
+
+    // Roles & Permissions
+    fetchAdminPermissionCategories,
+    fetchAdminRoles,
+    fetchAdminRoleById,
+    createAdminRole,
+    updateAdminRole,
+    updateAdminRolePermissions,
+    deleteAdminRole,
+    suspendAdminRole,
+    reactivateAdminRole,
+    duplicateAdminRole,
+    fetchAdminRoleStaffAssigned,
+
+    // Staff Management
+    fetchAdminStaffList,
+    fetchAdminStaffActivityFeed,
+    inviteAdminStaff,
+    resendAdminStaffInvite,
+    fetchAdminStaffDetail,
+    updateAdminStaffProfile,
+    reassignAdminStaffRole,
+    suspendAdminStaff,
+    reactivateAdminStaff,
+    deactivateAdminStaff,
+    securityLogoutAdminStaff,
+    securityLogoutAdminStaffBulk,
+    fetchAdminStaffActivityLogs,
+    fetchAdminStaffTickets,
+
     success,
     setSuccess: setsuccess,
     request,
