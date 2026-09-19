@@ -458,7 +458,7 @@ export default function OrderDetailsPage() {
                     </Button>
                   )}
 
-                  {status === "PENDING" && (
+                  {status === "Processing" && (
                     <Button
                       onClick={() => handleCancelOrder(order.id)}
                       variant="primary"

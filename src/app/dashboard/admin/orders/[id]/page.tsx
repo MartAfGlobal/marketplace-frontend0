@@ -1160,10 +1160,11 @@ export default function AdminOrderDetailsPage() {
               </div>
             )}
 
-            {order.can_cancel && (
+            {(order?.can_cancel ?? order?.seller_orders?.[0]?.can_cancel) && (
               <Button
                 variant="secodary danger"
                 className="w-[140px] flex-shrink-0"
+                onClick={() => setCancelModalOpen(true)}
               >
                 Cancel order
               </Button>
@@ -1215,6 +1216,7 @@ export default function AdminOrderDetailsPage() {
               (order?.dispute_status ?? "").toUpperCase() === "CLOSED"
             }
             adminStatus={order?.admin_status}
+            statusBeforeCancellation={order?.admin_status_before_cancellation}
             disputeStatus={order?.dispute_status || order?.disputes?.[0]?.status || order?.dispute?.status || order?.status}
           />
 
@@ -1350,11 +1352,13 @@ export default function AdminOrderDetailsPage() {
       />
       <AdminCancelOrderModal
         isOpen={cancelModalOpen}
+        orderId={order?.id || rawId}
+        displayOrderId={displayOrderId}
+        items={orderItems}
         paymentId={paymentId}
         onClose={() => setCancelModalOpen(false)}
         onSuccess={() => {
           setCancelModalOpen(false);
-          setCancelSuccessModalOpen(true);
           if (token && rawId) {
             loadOrder(order?.id || rawId, false);
           }

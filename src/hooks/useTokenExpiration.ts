@@ -55,11 +55,15 @@ export const useTokenExpiration = () => {
   };
 
   useEffect(() => {
+    // Guest checkout is allowed on /cart/checkout paths
+    if (pathname.startsWith("/cart/checkout")) {
+      return;
+    }
+
     const isProtectedPath =
       pathname.startsWith("/dashboard/admin") ||
       pathname.startsWith("/dashboard/seller") ||
-      pathname.startsWith("/dashboard/buyer") ||
-      pathname.startsWith("/cart/checkout");
+      pathname.startsWith("/dashboard/buyer");
 
     if (!isProtectedPath) return;
 

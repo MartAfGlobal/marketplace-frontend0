@@ -36,6 +36,38 @@ type ProductVariationProp = {
   selectedVariaton?:string
 };
 
+const COLOR_MAP: Record<string, string> = {
+  white: "#FFFFFF",
+  black: "#000000",
+  blue: "#0080FF",
+  red: "#D32F2F",
+  green: "#2E7D32",
+  brown: "#5D4037",
+  yellow: "#FBC02D",
+  orange: "#F57C00",
+  purple: "#7B1FA2",
+  pink: "#E91E63",
+  gray: "#757575",
+  grey: "#757575",
+  beige: "#F5F5DC",
+  navy: "#000080",
+  cream: "#FFFDD0",
+  gold: "#FFD700",
+  silver: "#C0C0C0",
+  maroon: "#800000",
+  teal: "#008080",
+  olive: "#808000",
+};
+
+const getColorHex = (value: string, extraData?: Record<string, string>): string => {
+  if (extraData?.hex_code) return extraData.hex_code;
+  if (extraData?.hex) return extraData.hex;
+  if (extraData?.color) return extraData.color;
+  if (value.startsWith("#")) return value;
+  const normalized = value.toLowerCase().trim();
+  return COLOR_MAP[normalized] || normalized;
+};
+
 export default function ProductVariation({
   isModal = true,
   selectedVariaton
@@ -292,28 +324,29 @@ const dispatch = useDispatch() as AppDispatch;
 
   return (
     <div
-      className={`flex w-full gap-6 md:gap-8 lg:gap-10 xl:gap-23 flex-col md:flex-row justify-center  ${
+      className={`flex w-full gap-6 md:gap-8 lg:justify-between flex-col md:flex-row justify-center  ${
         !isModal ? "mt-c32" : "mt-0"
       }`}
     >
-      <div className="md:flex-1 w-full min-w-0">
-        <div className="w-full flex md:flex-row gap-6 md:gap-8 xl:gap-c48 flex-col h-fit relative">
+      <div className="md:flex-1 w-full   space-y-c32  min-w-0" >
+        <div className={`w-full flex md:flex-row gap-6  md:gap-8 xl:gap-c48 flex-col h-fit relative    ${
+              isModal ? "h-fit" : "border-b border-b-000000/12 pb-[5.65px] "}`}>
           {/* IMAGES */}
           <div
-            className={`w-full md:max-w-[280px] lg:max-w-[320px] xl:max-w-94.75 md:pb-12 flex-shrink-0 ${
-              isModal ? "h-fit overflow-visible" : ""
+            className={`w-full md:max-w-[280px] lg:max-w-[320px] xl:max-w-[397px]    flex-shrink-0 ${
+              isModal ? "h-fit  overflow-visible " : "h-fit"
             }`}
           >
-            <div className="relative w-full rounded-c12 overflow-hidden bg-gray-50 flex items-center justify-center">
+            <div className="relative w-full  overflow-hidden bg-ffffff flex items-center justify-center">
               <Image
                 src={mainImageSrc}
                 alt={productDetails?.name || "Product image"}
                 height={410}
                 width={397}
                 priority={true}
-                className={`w-full object-cover md:max-w-full lg:max-w-[320px] xl:max-w-92.25 ${
-                  isModal ? "h-60" : "h-92.25"
-                } rounded-c12`}
+                className={`w-full object-cover md:max-w-full lg:max-w-[320px] xl:max-w-92.25  ${
+                  isModal ? "h-70" : "h-92.25"
+                }`}
               />
             </div>
 
@@ -340,7 +373,7 @@ const dispatch = useDispatch() as AppDispatch;
             )}
 
             {images.length > 1 && (
-              <div className="flex gap-4 mt-6 mb-4 h-19 w-full overflow-x-auto hcustom-scroll">
+              <div className="flex gap-4 mt-6 mb-4 h-19  w-full overflow-x-auto  hcustom-scroll">
                 {images.map((thumb: any, index: number) => {
                   const thumbId = typeof thumb === "object" ? thumb?.id : thumb;
                   const thumbSrc = getThumbUrl(thumb) || "/placeholder.png";
@@ -374,8 +407,8 @@ const dispatch = useDispatch() as AppDispatch;
           {/* DETAILS */}
           <div
             ref={detailsContainerRef}
-            className={`w-full min-w-0 md:pb-40 relative ${
-              isModal ? "h-c557-39 w-full overflow-y-auto no-scrollbar" : "md:flex-1"
+            className={`w-full min-w-0   relative ${
+              isModal ? "h-fit  w-full overflow-y-auto no-scrollbar" : ""
             }`}
           >
             <div className="flex justify-between">
@@ -464,72 +497,167 @@ const dispatch = useDispatch() as AppDispatch;
                   </p>
                 )}
 
-                <div className="flex gap-4 flex-wrap items-start">
-                  {Object.values(productDetails.variation_options).map(
-                    (variation: VariationOption) => {
+                <div className="flex flex-col gap-5">
+                  {Object.values(productDetails.variation_options)
+                    .sort((a: any, b: any) => {
+                      const aIsSize = a.attribute_name?.toLowerCase().includes("size");
+                      const bIsSize = b.attribute_name?.toLowerCase().includes("size");
+                      if (aIsSize && !bIsSize) return -1;
+                      if (!aIsSize && bIsSize) return 1;
+                      return (a.display_order ?? 0) - (b.display_order ?? 0);
+                    })
+                    .map((variation: VariationOption) => {
                       const name = variation.attribute_name;
-                      const isOpen = openAttribute === name;
-                      const selectedVal = selectedAttributes[name];
+                      const isSize = name?.toLowerCase().includes("size");
+                      const isColor =
+                        name?.toLowerCase().includes("color") ||
+                        name?.toLowerCase().includes("colour");
 
-                      return (
-                        <div key={variation.attribute_id} className="flex flex-col gap-2">
-                          <button
-                            onClick={() =>
-                              setOpenAttribute(
-                                isOpen ? null : name
-                              )
-                            }
-                            className={`px-4 py-2 rounded-lg border text-sm flex items-center gap-1.5 transition-colors ${
-                              isOpen
-                                ? "border-ff715b bg-ff715b/10 text-ff715b font-MontserratMedium"
-                                : selectedVal
-                                ? "border-ff715b text-161616 bg-ff715b/5 font-MontserratMedium"
-                                : "border-gray-300 text-gray-700 hover:border-gray-400 bg-white"
-                            }`}
-                          >
-                            <span>{selectedVal ? `${name}: ${selectedVal}` : name}</span>
-                            <span className={`text-xs transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>▾</span>
-                          </button>
+                      const values: string[] =
+                        variation.values && variation.values.length > 0
+                          ? variation.values.map((v: any) =>
+                              typeof v === "string" ? v : v.value
+                            )
+                          : getAvailableValues(name);
 
-                          <AnimatePresence>
-                            {isOpen && (
-                              <motion.div
-                                ref={attributePanelRef}
-                                initial={{ opacity: 0, y: -4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -4 }}
-                                className="flex gap-2 flex-wrap pt-1 max-w-[260px]"
+                      if (isSize) {
+                        return (
+                          <div key={variation.attribute_id || name} className="flex flex-col gap-3">
+                            <div className="flex justify-between items-center">
+                              <p className="font-MontserratSemiBold text-sm text-161616">
+                                Size guide
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setIsModalOpen(true)}
+                                className="p-1 hover:opacity-75 transition-opacity"
+                                aria-label="Size guide"
                               >
-                                {getAvailableValues(name).map((value) => {
-                                  const isSelected =
-                                    selectedAttributes[name] === value;
+                                <Image
+                                  src={NavButton}
+                                  alt="nav button"
+                                  width={7.5}
+                                  height={13.75}
+                                />
+                              </button>
+                            </div>
 
-                                  return (
-                                    <motion.button
-                                      key={value}
-                                      onClick={() =>
-                                        setSelectedAttributes((prev) => ({
-                                          ...prev,
-                                          [name]: value,
-                                        }))
-                                      }
-                                      className={`px-3 py-1 text-xs md:text-sm border rounded-md transition-all ${
-                                        isSelected
-                                          ? "border-ff715b bg-ff715b text-white font-MontserratMedium shadow-sm"
-                                          : "border-gray-300 text-gray-700 hover:border-gray-400 bg-white"
-                                      }`}
-                                    >
-                                      {value}
-                                    </motion.button>
-                                  );
-                                })}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                            <div className="flex gap-2.5 overflow-x-auto no-scrollbar flex-wrap pb-1">
+                              {values.map((val) => {
+                                const isSelected = selectedAttributes[name] === val;
+
+                                return (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedAttributes((prev) => ({
+                                        ...prev,
+                                        [name]: val,
+                                      }))
+                                    }
+                                    className={`w-c44 h-c47 border rounded-lg flex items-center justify-center text-sm font-MontserratSemiBold transition-colors ${
+                                      isSelected
+                                        ? "border-ff715b text-161616 shadow-xs"
+                                        : "border-gray-300 text-161616 bg-white hover:border-gray-400"
+                                    }`}
+                                  >
+                                    {val}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      if (isColor) {
+                        return (
+                          <div key={variation.attribute_id || name} className="flex flex-col gap-2.5">
+                            <p className="font-MontserratSemiBold text-sm text-161616">
+                              {name}:
+                            </p>
+
+                            <div className="flex gap-3 overflow-x-auto no-scrollbar flex-wrap pb-2">
+                              {values.map((val) => {
+                                const isSelected = selectedAttributes[name] === val;
+                                const valObj = variation.values?.find(
+                                  (v: any) =>
+                                    (typeof v === "string" ? v : v.value) === val
+                                );
+                                const hex = getColorHex(val, valObj?.extra_data);
+                                const isLightColor =
+                                  hex.toLowerCase() === "#ffffff" ||
+                                  hex.toLowerCase() === "white" ||
+                                  hex.toLowerCase() === "#fff" ||
+                                  hex.toLowerCase() === "#fafafa";
+
+                                return (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedAttributes((prev) => ({
+                                        ...prev,
+                                        [name]: val,
+                                      }))
+                                    }
+                                    className={`flex flex-col items-center justify-between w-c48 min-h-c48 px-1 pt-1 transition-all rounded-none cursor-pointer focus:outline-none ${
+                                      isSelected
+                                        ? "border border-ff715b"
+                                        : "border border-transparent hover:border-gray-200"
+                                    }`}
+                                  >
+                                    <div
+                                      className="w-full h-c24 shadow-[0_2px_4px_rgba(0,0,0,0.15)]"
+                                      style={{ backgroundColor: hex }}
+                                    />
+                                    <span className="mt-2 text-c12 font-MontserratNormal text-161616 text-center select-none capitalize">
+                                      {val}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Other attributes (e.g. Material, Version, Style, etc.)
+                      return (
+                        <div key={variation.attribute_id || name} className="flex flex-col gap-2.5">
+                          <p className="font-MontserratSemiBold text-sm text-161616">
+                            {name}:
+                          </p>
+
+                          <div className="flex gap-2.5 overflow-x-auto no-scrollbar flex-wrap pb-1">
+                            {values.map((val) => {
+                              const isSelected = selectedAttributes[name] === val;
+
+                              return (
+                                <button
+                                  key={val}
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedAttributes((prev) => ({
+                                      ...prev,
+                                      [name]: val,
+                                    }))
+                                  }
+                                  className={`h-10 px-3.5 border rounded-lg flex items-center justify-center text-sm font-MontserratMedium transition-colors ${
+                                    isSelected
+                                      ? "border-ff715b text-161616 bg-ff715b/5 font-MontserratSemiBold"
+                                      : "border-gray-300 text-gray-700 bg-white hover:border-gray-400"
+                                  }`}
+                                >
+                                  {val}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
-                    }
-                  )}
+                    })}
                 </div>
               </div>
             )}
@@ -545,7 +673,7 @@ const dispatch = useDispatch() as AppDispatch;
             )}
 
             {isModal && (
-              <div className=" hidden md:block mt-8">
+              <div className=" hidden md:block mt-8 w-full ">
                 <ItemAddToCart
                   selectedVariation={selectedVariation}
                   productId={productDetails?.id || ""}
@@ -578,9 +706,9 @@ const dispatch = useDispatch() as AppDispatch;
       </div>
       {!isModal && (
         <>
-          <div className="w-full md:max-w-[260px] lg:max-w-[300px] xl:max-w-110.5 hidden md:block h-screen sticky top-24 ">
+          <div className="w-full md:max-w-[260px] lg:max-w-[300px] xl:max-w-110.5 hidden md:block p-6 bg-ffffff rounded-c16 shadow-customW h-fit sticky top-32 ">
             <div className="">
-              <div className=" flex flex-col mt-c32 m  gap-c24 pb-4 md:border-b md:border-gray-100">
+              <div className=" flex flex-col   gap-c24 pb-4 md:border-b md:border-gray-100">
                 <div className="w-full flex justify-between items-start">
                   <div className="flex gap-4">
                     <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center">
@@ -650,7 +778,7 @@ const dispatch = useDispatch() as AppDispatch;
                   </div> */}
                 </div>
                 {/* Security & Refund */}
-                <div className="space-y-6 bg-0070e9">
+                <div className="space-y-6 ">
                   <div className="flex gap-4 items-start">
                     <Image
                       src={Security}

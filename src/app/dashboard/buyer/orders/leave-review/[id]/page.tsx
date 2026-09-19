@@ -30,6 +30,7 @@ import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import { ChevronDown } from "lucide-react";
 import { Textarea } from "@/components/ui/forms/auth/text-area";
@@ -59,8 +60,40 @@ export default function OrderDetailsPage() {
   const { fetchOrders } = useFetchOrders();
   const { sendHttpRequest, loading } = useHttp();
   const [success, setSucess] = useState(false);
+  const [forbidden, setForbidden] = useState(false);
   const { orders } = useSelector((state: any) => state.orders);
   const selectedOrder = orders?.find((order: OrderItem) => order.id === id);
+  const [directOrder, setDirectOrder] = useState<any>(null);
+  const { sendHttpRequest: fetchOrderReq } = useHttp();
+
+
+
+
+  useEffect(() => {
+    if (!token || !id) return;
+    if (!selectedOrder) {
+      fetchOrderReq({
+        requestConfig: {
+          url: `/orders/buyer/${id}/`,
+          method: "GET",
+          token,
+          isAuth: true,
+          userType: "buyer",
+        },
+        successRes: (res: any) => {
+          const orderData = res?.data;
+          if (orderData) {
+            setDirectOrder({
+              ...orderData,
+              order_items: orderData.order_items || orderData.items || [],
+            });
+          }
+        },
+      });
+    }
+  }, [id, token, selectedOrder]);
+
+  const activeOrder = selectedOrder || directOrder;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<
@@ -99,26 +132,54 @@ export default function OrderDetailsPage() {
     setImages((prev) => [...prev, ...newImages]);
   };
 
-  const handleReturnItem = (reviewId: string) => {
+  // POST /products/reviews/${productId}/
+  // Body (multipart/form-data):
+  //   order_item_id  – string   REQUIRED. OrderItem being reviewed (verified purchase gate)
+  //   rating         – integer  REQUIRED. Integer 1-5
+  //   comment        – string   OPTIONAL. Buyer review comment
+  //   images         – File(s)  OPTIONAL. 0 or more image files uploaded to Cloudinary
+  const handleReturnItem = (productId: string, orderItemId: string) => {
     if (!token) return;
 
-    const formData = new FormData();
+    if (!rating || rating < 1 || rating > 5) {
+      toast.error("Please select a rating between 1 and 5 stars.");
+      return;
+    }
 
+    if (!orderItemId) {
+      toast.error("Invalid order item.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("order_item_id", orderItemId);
     formData.append("rating", String(rating));
-    formData.append("comment", comment);
+
+    if (comment.trim()) {
+      formData.append("comment", comment.trim());
+    }
+
+    images.forEach((img) => {
+      formData.append("images", img.file);
+    });
 
     sendHttpRequest({
       requestConfig: {
-        url: `/products/reviews/${reviewId}/`,
+        url: `/products/reviews/${productId}/`,
         method: "POST",
         token,
         isAuth: true,
-        body: formData, // multipart/form-data
+        body: formData,
         userType: "buyer",
       },
       successRes: () => {
         fetchOrders();
         setSucess(true);
+      },
+      errorRes: (err: any) => {
+        if (err?.response?.status === 403) {
+          setForbidden(true);
+        }
       },
     });
   };
@@ -190,15 +251,24 @@ export default function OrderDetailsPage() {
             </button>
             <div className="md:pt-c32  pt-7 md:pb-c64 md:px-62.5 ">
               <div className="md:p-c32  md:rounded-2xl md:border border-000000/10">
-                {(selectedOrder?.order_items || (selectedOrder as any)?.items || []).map((item: OrderLineItem) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.8 }}
-                    className=" "
-                  >
+                {(activeOrder?.order_items || (activeOrder as any)?.items || []).map((item: OrderLineItem) => {
+                  const productId =
+                    typeof item.product === "object"
+                      ? (item.product as any)?.id
+                      : item.product || (item as any)?.product_id;
+                  const orderItemId = item.id;
+                  const isReviewed = item.has_reviewed;
+                  const canReview = item.can_review ?? true;
+
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.8 }}
+                      className=" "
+                    >
                     <Link
                       href={{
                         pathname: `/product/${item.product_slug}`,
@@ -394,15 +464,24 @@ export default function OrderDetailsPage() {
                       </div>
 
                       <Button
-                        disabled={loading}
-                        onClick={() => handleReturnItem(item.product)}
+                        disabled={loading || rating === 0 }
+                        onClick={() => handleReturnItem(productId, orderItemId)}
                         className="mt-8"
                       >
-                        {loading ? <LoadingSpinner /> : "Submit"}
+                        {loading ? (
+                          <LoadingSpinner />
+                        ) : isReviewed ? (
+                          "Already Reviewed"
+                        ) : canReview === false ? (
+                          "Cannot Review (Not Delivered)"
+                        ) : (
+                          "Submit"
+                        )}
                       </Button>
                     </div>
                   </motion.div>
-                ))}
+                );
+              })}
               </div>
             </div>
           </div>
@@ -423,6 +502,15 @@ export default function OrderDetailsPage() {
         discRescription="Your review has been received and will help other buyers make informed decisions."
         onConfirm={handleConfirm}
         buttenText="Back to shopping"
+      />
+      <ResultModal
+        isOpen={forbidden}
+        result="error"
+        title="Unable to Review"
+        message="Review creation is gated on a verified purchase."
+        discRescription="You can only review items you have purchased that have been delivered and not previously reviewed."
+        onConfirm={() => setForbidden(false)}
+        buttenText="OK"
       />
     </>
   );

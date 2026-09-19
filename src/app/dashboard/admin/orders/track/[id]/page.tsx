@@ -710,7 +710,12 @@ export default function AdminTrackOrderPage() {
             </div>
 
             {/* Order Progress Section */}
-            <OrderProgressBar currentStep={currentStep} />
+            <OrderProgressBar
+              currentStep={currentStep}
+              status={order?.status}
+              adminStatus={order?.admin_status}
+              statusBeforeCancellation={order?.admin_status_before_cancellation}
+            />
 
             {/* 3-Column Party Details Row (Buyer | Shipping | Seller) */}
             <div className="">

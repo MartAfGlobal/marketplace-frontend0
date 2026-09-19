@@ -19,7 +19,8 @@ import Image, { StaticImageData } from "next/image";
 export interface ProgressStep {
   key: string;
   label: string;
-  icon: StaticImageData;
+  icon?: StaticImageData;
+  customRenderIcon?: () => React.ReactNode;
 }
 
 export const ORDER_PROGRESS_STEPS: ProgressStep[] = [
@@ -131,6 +132,7 @@ export interface OrderProgressBarProps {
   className?: string;
   isDisputed?: boolean;
   adminStatus?: string | null;
+  statusBeforeCancellation?: string | null;
   disputeStatus?: string | null;
 }
 
@@ -142,10 +144,31 @@ export default function OrderProgressBar({
   className = "",
   isDisputed = false,
   adminStatus,
+  statusBeforeCancellation,
   disputeStatus,
 }: OrderProgressBarProps) {
-  const activeIndex =
-    typeof currentStep === "number" ? currentStep : getProgressIndex(status);
+  const normalizedStatus = (adminStatus || status || "").trim().toLowerCase();
+  const isCancelled =
+    normalizedStatus === "cancelled" || normalizedStatus === "canceled";
+  const cancellationStepIndex = getProgressIndex(statusBeforeCancellation);
+  const progressSteps: ProgressStep[] = isCancelled
+    ? [
+        ...steps.slice(0, cancellationStepIndex + 1),
+        {
+          key: "cancelled",
+          label: "Order cancelled",
+          customRenderIcon: () => (
+            <span className="text-white text-[14px] font-bold leading-none">X</span>
+          ),
+        },
+        ...steps.slice(cancellationStepIndex + 1),
+      ]
+    : steps;
+  const activeIndex = isCancelled
+    ? cancellationStepIndex + 1
+    : typeof currentStep === "number"
+      ? currentStep
+      : getProgressIndex(status);
 
   // ── Dispute progress bar ────────────────────────────────────────────────────
   if (isDisputed) {
@@ -239,10 +262,11 @@ export default function OrderProgressBar({
 
       <div className="w-full py-2 overflow-x-auto wno-scrollbar">
         <div className="w-full flex items-start min-w-[610px]">
-          {steps.map((step, index) => {
+          {progressSteps.map((step, index) => {
             const isFirst = index === 0;
-            const isLast = index === steps.length - 1;
+            const isLast = index === progressSteps.length - 1;
             const isCurrentOrPassed = index <= activeIndex;
+            const isCancellationStep = step.key === "cancelled";
             const StepIcon = step.icon;
 
             const isLeftLineActive = index <= activeIndex;
@@ -267,12 +291,18 @@ export default function OrderProgressBar({
                   />
                   <div
                     className={`w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center transition-colors ${
-                      isCurrentOrPassed
+                      isCancellationStep
+                        ? "bg-[#D92D20] text-white shadow-sm"
+                        : isCurrentOrPassed
                         ? "bg-[#6A0DAD]/68 text-white shadow-sm"
                         : "bg-[#EAECF0] text-[#98A2B3]"
                     }`}
                   >
-                    <Image src={StepIcon} alt={step.label} width={12} height={12} />
+                    {step.customRenderIcon ? (
+                      step.customRenderIcon()
+                    ) : StepIcon ? (
+                      <Image src={StepIcon} alt={step.label} width={12} height={12} />
+                    ) : null}
                   </div>
                   <div
                     className={`flex-1 h-[1px] transition-colors ${
@@ -286,7 +316,11 @@ export default function OrderProgressBar({
                 </div>
                 <span
                   className={`mt-2 text-[10px] break-words w-full text-center leading-tight font-MontserratNormal tracking-[2%] px-1 ${
-                    isCurrentOrPassed ? "text-[#6A0DAD]/68" : "text-[#98A2B3]"
+                    isCancellationStep
+                      ? "text-[#D92D20]"
+                      : isCurrentOrPassed
+                        ? "text-[#6A0DAD]/68"
+                        : "text-[#98A2B3]"
                   }`}
                 >
                   {step.label}

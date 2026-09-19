@@ -29,6 +29,10 @@ import AddCartModal from "@/components/ui/Modals/addToCart/addTocart-modal";
 import { toast } from "sonner";
 import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
 import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
+import {
+  getBuyerOrderDateLabel,
+  getBuyerOrderStatusLabel,
+} from "@/utils/buyerOrderDisplay";
 
 interface OrdersProps {
   searchTerm: string;
@@ -311,6 +315,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                   );
 
                   const orderNo = item.order_id;
+                  const orderDate = getBuyerOrderDateLabel(item);
 
                   const storeName =
                     item.manufacturer ||
@@ -331,12 +336,18 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
-                      {item.buyer_status?.toLowerCase() === "cancelled" && (
-                        <Button onClick={() => handleAddOrderItemToCart(item)}>
-                          Add to cart
-                        </Button>
-                      )}
-                      {item.buyer_status === "DELIVERED" && (
+                       {(item.buyer_status === "Completed" || item.buyer_status === "delivered" || item.buyer_status === "Cancelled" ) && (
+                            <>
+                              <div></div>
+                              <Button
+                                className=""
+                                onClick={() => handleAddOrderItemToCart(item)}
+                              >
+                                Add to cart
+                              </Button>
+                            </>
+                          )}
+                      {item.buyer_status === "Delivered" && (
                         <>
                           <Button
                             onClick={() => handleAddOrderItemToCart(item)}
@@ -378,6 +389,17 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
+                      {item.buyer_status === "Processing" && item.can_cancel && (
+                        <Button
+                          onClick={() => {
+                            setSelectedOrderId(item.id);
+                            setOpenCancelModal(true);
+                          }}
+                          variant="primary"
+                        >
+                          Cancel order
+                        </Button>
+                      )}
                       {item.buyer_status === "AWAITING_PAYMENT" && (
                         <>
                           <Button
@@ -414,32 +436,17 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         <div>
                           <p
                             className={`font-MontserratSemiBold text-c16  ${
-                              item.buyer_status === "CANCELLED"
+                              item.buyer_status === "Cancelled"
                                 ? "text-ca0202"
-                                : item.buyer_status === "DELIVERED"
+                                : item.buyer_status === "Delivered"
                                   ? "text-2d7565"
-                                  : "text-161616"
+                                  : item.buyer_status === "Completed" &&
+                                      item.status === "RETURN_CLOSED"
+                                    ? "text-[#FFAC06]"
+                                    : "text-161616"
                             }`}
                           >
-                            {item.buyer_status === "RECEIVED_AT_HUB"
-                              ? "To ship"
-                              : item.buyer_status === "SHIPPED" ||
-                                  item.buyer_status === "SHIPPED_TO_BUYER"
-                                ? "Order on its way"
-                                : item.buyer_status === "DELIVERED"
-                                  ? "Delivered"
-                                  : item.buyer_status === "Confirmed"
-                                    ? "Delivered"
-                                    : item.buyer_status === "AWAITING_PAYMENT"
-                                      ? "Awaiting payment"
-                                      : item.buyer_status === "PENDING" ||
-                                          item.buyer_status === "ACCEPTED" ||
-                                          item.buyer_status === "Processing" ||
-                                          item.status === "TRACKING_SUBMITTED" 
-                                        ? "Order is being processed"
-                                        : item.buyer_status === "CANCELLED"
-                                          ? "Cancelled"
-                                          : item.buyer_status}
+                            {getBuyerOrderStatusLabel(item)}
                           </p>
                           <div className="md:flex hidden gap-2 mt-2">
                             <p className="text-c12 font-MontserratNormal">
@@ -463,21 +470,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
                             )}
                           </div>
                         </div>
-                        {item.buyer_status !== "CANCELLED" && (
+                        {item.buyer_status !== "Cancelled" && (
                           <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                            Delivery:{" "}
-                            {item.estimated_delivery_date
-                              ? ` ${item.estimated_delivery_date}`
-                              : item.created_at
-                                ? new Date(item.created_at).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                      month: "short",
-                                      day: "numeric",
-                                      year: "numeric",
-                                    },
-                                  )
-                                : ""}
+                            {orderDate.label}: {orderDate.date}
                           </p>
                         )}
                       </div>
@@ -697,15 +692,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               </Button>
                             </>
                           )}
-                          {item.buyer_status?.toLowerCase() === "cancelled" && (
-                            <Button
-                              onClick={() => handleAddOrderItemToCart(item)}
-                            >
-                              Add to cart
-                            </Button>
-                          )}
+                        
 
-                          {item.buyer_status === "DELIVERED" && (
+                          {item.buyer_status === "Delivered" && (
                             <>
                               <Button
                                 className=""
@@ -723,6 +712,17 @@ export default function Orders({ searchTerm }: OrdersProps) {
                             </>
                           )}
 
+                          {(item.buyer_status === "Completed" || item.buyer_status === "delivered" || item.buyer_status === "Cancelled" ) && (
+                            <>
+                              <div></div>
+                              <Button
+                                className=""
+                                onClick={() => handleAddOrderItemToCart(item)}
+                              >
+                                Add to cart
+                              </Button>
+                            </>
+                          )}
                           {item.buyer_status === "RECEIVED_AT_HUB" && (
                             <>
                               <Button
@@ -735,7 +735,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                             </>
                           )}
 
-                          {item.buyer_status === "PENDING" &&
+                          {item.buyer_status === "Processing" &&
                             item.can_cancel && (
                               <>
                                 {/* <Button
@@ -755,23 +755,19 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               </>
                             )}
 
-                          {item.buyer_status === "Delivered" && (
-                            <>
-                              <Button
-                                className=""
-                                onClick={() => handleAddOrderItemToCart(item)}
-                              >
-                                Add to cart
-                              </Button>
-                              <Button
-                                onClick={() => handleReview(item.id)}
-                                variant="secondary"
-                                className=""
-                              >
-                                Leave a review
-                              </Button>
-                            </>
+                          {item.buyer_status === "Processing" && item.can_cancel && (
+                            <Button
+                              onClick={() => {
+                                setSelectedOrderId(item.id);
+                                setOpenCancelModal(true);
+                              }}
+                              variant="primary"
+                            >
+                              Cancel order
+                            </Button>
                           )}
+
+                     
 
                           {item.buyer_status === "AWAITING_PAYMENT" && (
                             <>

@@ -17,6 +17,7 @@ import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-or
 import CartWithBoxesIcon from "../CartWithBoxesIcon";
 import { li } from "framer-motion/client";
 import Link from "next/link";
+import { getBuyerOrderDateLabel } from "@/utils/buyerOrderDisplay";
 
 interface OrdersProps {
   searchTerm: string;
@@ -209,13 +210,7 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                       ? `${(item as any).sellers_count} Store${(item as any).sellers_count > 1 ? "s" : ""}`
                       : "MartAf Order");
 
-                  const formattedDate = item.created_at
-                    ? new Date(item.created_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })
-                    : "";
+                  const orderDate = getBuyerOrderDateLabel(item);
 
                   return (
                     <motion.div
@@ -236,9 +231,9 @@ export default function AwaitingOrders({ searchTerm }: OrdersProps) {
                             </p>
                           )}
                         </div>
-                        {formattedDate && (
+                        {orderDate.date && (
                           <p className="text-c12 font-MontserratNormal leading-4 text-000000/60">
-                            {formattedDate}
+                            {orderDate.label}: {orderDate.date}
                           </p>
                         )}
                       </div>

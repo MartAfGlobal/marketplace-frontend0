@@ -13,6 +13,7 @@ import Copy from "@/assets/icons/Copy.png";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import { useSelector } from "react-redux";
 import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
+import { getBuyerOrderDateLabel } from "@/utils/buyerOrderDisplay";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import { useHttp } from "@/hooks/use-http";
 
@@ -160,6 +161,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                   const orderItems =
                     item.order_items || (item as any).items || [];
                   const isSingleItemOrder = orderItems.length === 1;
+                  const orderDate = getBuyerOrderDateLabel(item);
 
                   return (
                     <motion.div
@@ -196,19 +198,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                           </div>
                         </div>
                         <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                          Delivery:{" "}
-                          {item.estimated_delivery_date
-                            ? ` ${item.estimated_delivery_date}`
-                            : item.created_at
-                              ? new Date(item.created_at).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  },
-                                )
-                              : ""}
+                          {orderDate.label}: {orderDate.date}
                         </p>
                       </div>
 

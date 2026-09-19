@@ -70,7 +70,7 @@ export function Processed({
       <AllOrderTable
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
-        statusFilter="processed"
+        statusFilter="processing"
         filters={filters}
         onFilteredCount={onFilteredCount}
         onSelectionChange={onSelectionChange}
@@ -92,7 +92,7 @@ export function Fulfilled({
       <AllOrderTable
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
-        statusFilter="fulfilled"
+        statusFilter="processed"
         filters={filters}
         onFilteredCount={onFilteredCount}
         onSelectionChange={onSelectionChange}

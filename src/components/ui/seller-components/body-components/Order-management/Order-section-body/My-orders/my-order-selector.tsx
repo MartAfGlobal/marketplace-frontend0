@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 const navItems = [
   { id: "all", label: "All" },
   { id: "unprocessed", label: "Unprocessed" },
-  { id: "processed", label: "Processed" },
-  { id: "fulfilled", label: "Fulfilled" },
+  { id: "processed", label: "Processing" },
+  { id: "fulfilled", label: "Processed" },
   { id: "delivered", label: "Delivered" },
   { id: "cancelled", label: "Cancelled" },
 ];

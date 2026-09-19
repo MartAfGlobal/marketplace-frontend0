@@ -36,7 +36,7 @@ export default function FilterDropdown({
         onClick={() => setIsOpen(!isOpen)}
         disabled ={isIncomplete}
         className={`flex  text-c12 font-MontserratNormal text-ff715b bg-ffffff border-[0.5px] border-ff715b
-        items-center w-full max-w-fit p-3 text-nowrap rounded-c8 justify-center flex-shrink-0 gap-4.5 h-10  ${isIncomplete? "cursor-not-allowed" : "cursor-pointer"} ${className}`}
+        items-center w-full max-w-fit p-3 text-nowrap rounded-c8 justify-between flex-shrink-0 gap-4.5 h-12  ${isIncomplete? "cursor-not-allowed" : "cursor-pointer"} ${className}`}
       >
         <span>{selected}</span>
         <Image src={CaretDown} alt="dropdown" width={11} height={6} />
@@ -49,14 +49,14 @@ export default function FilterDropdown({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-40 left-0 mt-2 w-full py-3 px-4 space-y-2.5 
+            className="absolute z-80 left-0 mt-2 w-full py-3 px-4 space-y-2.5 
             text-c12 font-MontserratNormal text-000000/50 bg-white rounded circle-shadow h-fit"
           >
             {options.map((option) => (
               <div
                 key={option}
                 onClick={() => handleSelect(option)}
-                className="h-6 cursor-pointer hover:text-ff715b whitespace-nowrap text-center"
+                className="h-6 cursor-pointer hover:text-ff715b whitespace-nowrap "
               >
                 {option}
               </div>

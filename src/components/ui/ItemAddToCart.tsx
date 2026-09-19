@@ -10,6 +10,8 @@ import QuantitySelector from "./cart/quantityControl";
 import {
   addToCart,
   addGuestItemToCart,
+  clearCart,
+  setCheckoutItems,
   setCartItems,
   CartItem,
 } from "@/store/cart/cartSlice";
@@ -18,6 +20,8 @@ import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "./loading-spinner";
 import { ProductVariation } from "@/types/global";
+import CheckoutModal from "./cart/CheckoutModal";
+import GuestCheckoutModal from "./Modals/guestCheckoutModal";
 
 // export type SelectedVariationSize = {
 //   variation_id: string;
@@ -39,12 +43,13 @@ import { ProductVariation } from "@/types/global";
 // };
 
 type addToCartProp = {
-  selectedVariation: ProductVariation;
+  selectedVariation: ProductVariation | null;
   isModal: boolean;
   onIncompleteVariation?: () => void;
   productId: string;
   product_slug: string;
   product_name: string;
+  hideButtons?: boolean;
 };
 
 export default function ItemAddToCart({
@@ -54,11 +59,16 @@ export default function ItemAddToCart({
   productId,
   product_name,
   onIncompleteVariation,
+  hideButtons = false,
 }: addToCartProp) {
   const dispatch = useDispatch();
   const router = useRouter();
   const { loading, sendHttpRequest } = useHttp();
+  const [buyNowLoading, setBuyNowLoading] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [guestCheckoutOpen, setGuestCheckoutOpen] = useState(false);
   const token = useSelector((state: RootState) => state.token.token);
+  const cartItems = useSelector((state: RootState) => state.cart.items);
 
   // const variationId = selectedVariation?.variation_id;
 
@@ -149,6 +159,136 @@ export default function ItemAddToCart({
     }
   };
 
+  const request = (requestConfig: any) =>
+    new Promise<boolean>((resolve) => {
+      sendHttpRequest({
+        requestConfig,
+        successRes: () => resolve(true),
+        errorRes: () => resolve(false),
+      });
+    });
+
+  const handleBuyNow = async () => {
+    if (!selectedVariationId || !selectedVariation) return;
+
+    setBuyNowLoading(true);
+    const quantity = Math.max(localQty || 1, 1);
+    const buyNowItem: CartItem = {
+      product_slug,
+      id: productId,
+      variation_id: selectedVariationId,
+      quantity,
+      variation_display: selectedVariation.name,
+      product_name,
+      product_image: selectedVariation.main_image_url,
+      price:
+        selectedVariation.final_price ?? selectedVariation.base_price,
+      price_at_purchase:
+        selectedVariation.final_price ?? selectedVariation.base_price,
+      checked: true,
+    };
+
+    if (!token) {
+      dispatch(clearCart());
+      dispatch(
+        addGuestItemToCart({
+          product_slug,
+          id: productId,
+          variation_id: selectedVariationId,
+          quantity,
+          variation_display: selectedVariation.name,
+          product_name,
+          product_image: selectedVariation.main_image_url,
+          price:
+            selectedVariation.final_price ?? selectedVariation.base_price,
+          checked: true,
+        }),
+      );
+      dispatch(setCheckoutItems([buyNowItem]));
+      setBuyNowLoading(false);
+      setCheckoutModalOpen(true);
+      return;
+    }
+
+    const itemIds = cartItems
+      .map((item) => item.variation_id || item.id)
+      .filter(Boolean);
+
+    if (itemIds.length > 0) {
+      const cleared = await request({
+        url: "/cart/item/batch_delete/",
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        body: { item_ids: itemIds.map((id) => ({ variation_id: id })) },
+      });
+
+      if (!cleared) {
+        setBuyNowLoading(false);
+        return;
+      }
+    } else {
+      dispatch(clearCart());
+    }
+
+    const added = await request({
+      url: "/cart/add",
+      method: "POST",
+      token,
+      isAuth: true,
+      userType: "buyer",
+      body: { variation_id: selectedVariationId, quantity },
+    });
+
+    if (!added) {
+      setBuyNowLoading(false);
+      return;
+    }
+
+    // Seed checkout immediately; the checkout page replaces this with the
+    // backend summary once the buyer's address is available.
+    dispatch(setCheckoutItems([buyNowItem]));
+
+    await new Promise<void>((resolve) => {
+      sendHttpRequest({
+        requestConfig: {
+          url: "/cart/",
+          method: "GET",
+          token,
+          isAuth: true,
+          userType: "buyer",
+        },
+        successRes: (res: any) => {
+          const items: CartItem[] = (res?.data?.items || []).map(
+            (item: any) => ({
+              id: item.id || item.product_id || "",
+              product_id: item.product_id || item.id || "",
+              variation_id: item.variation_id || null,
+              product_name: item.product_name || item.name || "",
+              price: item.price || item.unit_price || 0,
+              price_at_purchase:
+                item.price_at_purchase || item.price || item.unit_price || 0,
+              quantity: item.quantity ?? 1,
+              product_slug: item.product_slug || "",
+              variation_display:
+                item.variation_display || item.variation_name || "",
+              product_image: item.product_image || item.image || "/placeholder.png",
+              checked: true,
+            }),
+          );
+          dispatch(setCartItems(items.length > 0 ? items : [buyNowItem]));
+          if (items.length > 0) dispatch(setCheckoutItems(items));
+          resolve();
+        },
+        errorRes: () => resolve(),
+      });
+    });
+
+    router.push("/cart/checkout");
+    setBuyNowLoading(false);
+  };
+
   const fetchBackendCart = async () => {
     if (!token) return;
 
@@ -206,7 +346,7 @@ export default function ItemAddToCart({
   return (
     <>
       {isModal && (
-        <div className="w-full flex justify-end gap-4 mt-8">
+        <div className="sticky bottom-0 left-0 w-full bg-white border-t border-gray-100 flex justify-end gap-4 pt-4 pb-4 px-1 mt-6 z-10">
           {existingCartItem ? (
             <QuantitySelector
               quantity={localQty}
@@ -266,7 +406,12 @@ export default function ItemAddToCart({
               </Button>
             )}
 
-            <Button>Buy now</Button>
+            <Button
+              onClick={handleBuyNow}
+              disabled={!selectedVariationId || loading || buyNowLoading}
+            >
+              Buy now
+            </Button>
           </div>
           <div className=" flex w-full md:hidden items-center gap-3  ">
             {existingCartItem ? (
@@ -287,10 +432,36 @@ export default function ItemAddToCart({
               </Button>
             )}
 
-            <Button>Buy now</Button>
+            <Button
+              onClick={handleBuyNow}
+              disabled={!selectedVariationId || loading || buyNowLoading}
+            >
+              Buy now
+            </Button>
           </div>
         </div>
       )}
+      <CheckoutModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        onGuestCheckout={() => {
+          setCheckoutModalOpen(false);
+          setGuestCheckoutOpen(true);
+        }}
+      />
+      <GuestCheckoutModal
+        isEditing={false}
+        isOpen={guestCheckoutOpen}
+        onClose={() => setGuestCheckoutOpen(false)}
+        selectedItems={[
+          {
+            product_id: productId,
+            variation_id: selectedVariationId,
+            quantity: Math.max(localQty || 1, 1),
+            checked: true,
+          },
+        ]}
+      />
     </>
   );
 }

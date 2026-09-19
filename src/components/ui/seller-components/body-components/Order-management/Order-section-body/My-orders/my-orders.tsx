@@ -31,7 +31,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(4);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [selectedData, setSelectedData] = useState<any[]>([]);
   const topRef = useRef<HTMLDivElement>(null);
@@ -81,7 +81,12 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
 
   useEffect(() => {
     setFilters((prev) => ({ ...prev, search: searchQuery }));
+    setCurrentPage(1);
   }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
 
   const handleExportPDF = () => {
     if (selectedData.length === 0) return;
@@ -144,15 +149,31 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
             {filterOpen && (
               <div className="absolute top-full right-0 lg:left-0 mt-2 z-50 w-[300px] lg:w-fit">
                 <FilterModal
-                  onFiltersChange={(newFilters) => setFilters(newFilters)}
+                  onFiltersChange={(newFilters) => {
+                    setFilters((previous) => {
+                      const nextFilters = { ...previous, ...newFilters };
+                      ["date", "perc", "sku", "qty"].forEach((key) => {
+                        if (!(key in newFilters)) delete nextFilters[key];
+                      });
+                      return nextFilters;
+                    });
+                    setCurrentPage(1);
+                  }}
                   onClose={() => setFilterOpen(false)}
                 />
               </div>
             )}
 
             <FilterDropdown
-              options={filterOptions}
-              onChange={(value) => console.log("Selected:", value)}
+              options={["All time", ...filterOptions]}
+              defaultValue="All time"
+              onChange={(value) => {
+                setFilters((previous) => ({
+                  ...previous,
+                  timeFilter: value,
+                }));
+                setCurrentPage(1);
+              }}
             />
 
             <button 
@@ -184,6 +205,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
                     {value.end}
                   </span>
                 )}
+                {key === "timeFilter" && value}
                 {key === "perc" && (
                   <span className="flex items-center gap-1">
                     <Image src={PercentageIcon} alt="%" width={13} height={13} />
@@ -216,7 +238,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
             Results per page
           </p>
           <FilterDropdown 
-            options={Array.from(new Set([4, 8, 12, totalRows]))
+            options={Array.from(new Set([10, 20, 50, totalRows]))
               .filter(n => n > 0 && n <= totalRows)
               .sort((a, b) => a - b)
               .map(String)}

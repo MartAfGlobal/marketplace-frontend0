@@ -25,6 +25,10 @@ import AddCartModal from "@/components/ui/Modals/addToCart/addTocart-modal";
 import { toast } from "sonner";
 import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
 import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
+import {
+  getBuyerOrderDateLabel,
+  getBuyerOrderStatusLabel,
+} from "@/utils/buyerOrderDisplay";
 
 export default function Orders() {
   const dispatch = useDispatch();
@@ -357,49 +361,27 @@ const [itemId, setItemId] = useState("")
                   ? firstItem.product
                   : "") ||
                 "";
+              const orderDate = getBuyerOrderDateLabel(item);
 
               return (
                 <div key={item.id}>
                   <div className="w-full flex justify-between mb-c32">
                     <p
                       className={`font-MontserratSemiBold text-c16  ${
-                        item.buyer_status === "CANCELLED"
+                        item.buyer_status === "Cancelled"
                           ? "text-ca0202"
-                          : item.buyer_status === "DELIVERED"
+                          : item.buyer_status === "Delivered"
                             ? "text-2d7565"
-                            : "text-161616"
+                            : item.buyer_status === "Completed" &&
+                                item.status === "RETURN_CLOSED"
+                              ? "text-[#FFAC06]"
+                              : "text-161616"
                       }`}
                     >
-                      {item.buyer_status === "RECEIVED_AT_HUB"
-                        ? "Received at Central hub"
-                        : item.buyer_status === "Shipped"
-                          ? "Order on its way"
-                          : item.buyer_status === "DELIVERED"
-                            ? "Delivered"
-                            : item.buyer_status === "Confirmed"
-                              ? "Delivered"
-                              : item.buyer_status === "AWAITING_PAYMENT"
-                                ? "Awaiting payment"
-                                : item.buyer_status === "PENDING" ||
-                                    item.buyer_status === "ACCEPTED" ||
-                                    item.buyer_status === "IN_TRANSIT_TO_HUB"
-                                  ? "Order is being processed"
-                                  : item.buyer_status === "CANCELLED"
-                                    ? "Cancelled"
-                                    : item.buyer_status}
+                      {getBuyerOrderStatusLabel(item)}
                     </p>
                     <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                      {item.estimated_delivery_date ||
-                        (item.created_at
-                          ? new Date(item.created_at).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )
-                          : "pending")}
+                      {orderDate.label}: {orderDate.date || "pending"}
                     </p>
                   </div>
                   <div className="w-full justify-between flex">
@@ -473,7 +455,7 @@ const [itemId, setItemId] = useState("")
                          
                         </>
                       )}
-                      {item.buyer_status === "PENDING" && item.can_cancel && (
+                      {item.buyer_status === "Processing" && item.can_cancel && (
                         <>
                           {/* <Button
                           onClick={() => handleEditAddress(item.id)}
@@ -491,8 +473,9 @@ const [itemId, setItemId] = useState("")
                         </>
                       )}
 
-                      {(item.buyer_status === "Delivered" ||
-                        item.buyer_status === "Confirmed") && (
+                      {["DELIVERED", "CONFIRMED", "COMPLETED", "CANCELLED"].includes(
+                        (item.buyer_status || "").toUpperCase(),
+                      ) && (
                         <>
                           <Button
                             onClick={(e) => {
@@ -504,23 +487,24 @@ const [itemId, setItemId] = useState("")
                           >
                             Add to cart
                           </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleReview(item.id);
-                            }}
-                            className=""
-                          >
-                            Leave a review
-                          </Button>
+                          {item.buyer_status?.toUpperCase() === "DELIVERED" && (
+                            <Button
+                              variant="secondary"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleReview(item.id);
+                              }}
+                              className=""
+                            >
+                              Leave a review
+                            </Button>
+                          )}
                         </>
                       )}
 
-                      {(item.buyer_status === "Awaiting Confirmation" ||
-                        item.buyer_status === "Processing" ||
-                        item.buyer_status === "AWAITING_PAYMENT") && (
+                      {(
+                        item.buyer_status === "Awaiting payment") && (
                         <>
                           {/* <Button
                           onClick={() => handleEditAddress(item.id)}
@@ -555,8 +539,9 @@ const [itemId, setItemId] = useState("")
                     </div>
                     {/* Mobile action buttons */}
                     <div className="w-full gap-3 flex flex-row-reverse md:hidden mt-4">
-                      {(item.buyer_status === "Delivered" ||
-                        item.buyer_status === "Confirmed") && (
+                      {["DELIVERED", "CONFIRMED", "COMPLETED"].includes(
+                        (item.buyer_status || "").toUpperCase(),
+                      ) && (
                         <>
                           <Button
                             onClick={(e) => {
@@ -568,17 +553,19 @@ const [itemId, setItemId] = useState("")
                           >
                             Add to cart
                           </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleReview(item.id);
-                            }}
-                            className="flex-1 text-xs py-2 h-9"
-                          >
-                            Leave a review
-                          </Button>
+                          {item.buyer_status?.toUpperCase() === "DELIVERED" && (
+                            <Button
+                              variant="secondary"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleReview(item.id);
+                              }}
+                              className="flex-1 text-xs py-2 h-9"
+                            >
+                              Leave a review
+                            </Button>
+                          )}
                         </>
                       )}
                       {item.buyer_status === "Shipped" && (

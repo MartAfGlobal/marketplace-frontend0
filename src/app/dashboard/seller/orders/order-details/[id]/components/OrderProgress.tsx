@@ -18,7 +18,7 @@ interface StepItem {
   customRenderIcon?: () => React.ReactNode;
   width?: number;
   height?: number;
-  highlightColor?: "purple" | "orange" | "green";
+  highlightColor?: "purple" | "orange" | "green" | "red";
 }
 
 export const OrderProgress = ({
@@ -28,6 +28,11 @@ export const OrderProgress = ({
   const rawStatus = (order?.status || "").toUpperCase();
   const sellerStatus = (order?.seller_status || "").toLowerCase();
   const mappedStatus = getMappedStatus(order).toLowerCase();
+  const isCancelled = [
+    rawStatus,
+    sellerStatus.toUpperCase(),
+    (order?.order_timeline_stage || "").toUpperCase(),
+  ].some((status) => status === "CANCELLED" || status === "CANCELED");
 
   const disputeObj = order?.dispute || order?.disputes?.[0];
   const disputeStatus = (
@@ -148,7 +153,57 @@ export const OrderProgress = ({
   let steps: StepItem[] = [...baseSteps];
   let currentStepIndex = 0;
 
-  if (hasDispute) {
+  if (isCancelled) {
+    const statusBeforeCancellation = (
+      order?.seller_status_before_cancellation || "unprocessed"
+    ).toLowerCase();
+    const normalizedStatusBeforeCancellation =
+      statusBeforeCancellation === "pending"
+        ? "unprocessed"
+        : statusBeforeCancellation === "accepted"
+        ? "processed"
+        : statusBeforeCancellation === "partially_accepted" ||
+          statusBeforeCancellation === "tracking_submitted"
+        ? "processed"
+        : statusBeforeCancellation === "in_transit_to_hub" ||
+          statusBeforeCancellation === "fulfilled"
+        ? "received_at_hub"
+        : statusBeforeCancellation;
+    const previousStepIndex = Math.max(
+      0,
+      baseSteps.findIndex(
+        (step) =>
+          step.key === normalizedStatusBeforeCancellation ||
+          step.label.toLowerCase() === normalizedStatusBeforeCancellation
+      )
+    );
+
+    steps = [
+      ...baseSteps.slice(0, previousStepIndex + 1),
+      {
+        label: "Order cancelled",
+        key: "cancelled",
+        customRenderIcon: () => (
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            className="text-white"
+          >
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+          </svg>
+        ),
+        highlightColor: "red",
+      },
+      ...baseSteps.slice(previousStepIndex + 1),
+    ];
+    currentStepIndex = previousStepIndex + 1;
+  } else if (hasDispute) {
     if (isReturnInvolved) {
       if (isReturnConfirmed || isClosed) {
         // Image 3: 9 steps (Delivered -> Dispute raised -> Items to be returned -> Item returned)
@@ -353,6 +408,9 @@ export const OrderProgress = ({
       if (step.highlightColor === "orange") {
         return "bg-[#FFAC06] text-white shadow-sm";
       }
+      if (step.highlightColor === "red") {
+        return "bg-[#CA0202] text-white shadow-sm";
+      }
       return "bg-6a0dad/68 text-white shadow-sm";
     }
     return "bg-gray-200 text-gray-400";
@@ -368,6 +426,9 @@ export const OrderProgress = ({
       }
       if (step.highlightColor === "orange") {
         return "text-[#FFAC06] font-MontserratSemiBold";
+      }
+      if (step.highlightColor === "red") {
+        return "text-[#CA0202] font-MontserratSemiBold";
       }
       return "text-6a0dad/68 font-MontserratSemiBold";
     }
@@ -393,6 +454,9 @@ export const OrderProgress = ({
       }
       if (nextStep?.highlightColor === "orange") {
         return "bg-[#FFAC06]";
+      }
+      if (nextStep?.highlightColor === "red") {
+        return "bg-[#CA0202]";
       }
       return "bg-6a0dad/68";
     }

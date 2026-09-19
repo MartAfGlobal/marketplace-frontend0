@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FilteredOrders from "./my-order-selector";
 import {
@@ -32,6 +32,10 @@ export default function OrderFiltered({
   onSelectionChange,
 }: OrderFilteredProps) {
   const [activeTab, setActiveTab] = useState("all");
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, setCurrentPage]);
 
   const sharedProps = {
     filters,

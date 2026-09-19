@@ -3,7 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../Button/Button";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -17,6 +18,19 @@ export default function CheckoutModal({
   onGuestCheckout,
 }: CheckoutModalProps) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -24,7 +38,9 @@ export default function CheckoutModal({
     router.push("/auth/login?from=/cart");
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -33,7 +49,7 @@ export default function CheckoutModal({
           exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.3 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
         >    <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999]">
            <motion.div
             initial={{ y: "100%", opacity: 0 }}
@@ -86,6 +102,7 @@ export default function CheckoutModal({
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

@@ -38,6 +38,8 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
   const { orders } = useSelector((state: any) => state.orders);
   const { fetchOrderDetails, loading } = useFetchOrders(id);
   const order = orders?.find((o: OrderItem) => o.id === id);
+  const isDelivered =
+    (order?.buyer_status || order?.status || "").toUpperCase() === "DELIVERED";
   const router = useRouter();
   const orderid = order.order_no;
   const [visible, setVisible] = useState(10);
@@ -219,13 +221,15 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
                 <div className=" hidden md:flex flex-col gap-c32 w-full max-w-84">
                   <>
                     <Button className="" onClick={handleAddOrderItemsToCart}>Add to cart</Button>
-                    <Button
-                      onClick={() => handleReview(order.id)}
-                      variant="secondary"
-                      className=""
-                    >
-                      Leave a review
-                    </Button>
+                    {isDelivered && (
+                      <Button
+                        onClick={() => handleReview(order.id)}
+                        variant="secondary"
+                        className=""
+                      >
+                        Leave a review
+                      </Button>
+                    )}
                   </>
                 </div>
               </div>
@@ -426,9 +430,11 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
           <div className="flex gap-4 items-center justify-center w-full text-c12 font-MontserratSemiBold">
             <>
               <Button className="" onClick={handleAddOrderItemsToCart}>Add to cart</Button>
-              <Button variant="secondary" className="">
-                Leave a review
-              </Button>
+              {isDelivered && (
+                <Button variant="secondary" className="">
+                  Leave a review
+                </Button>
+              )}
             </>
           </div>
         </div>

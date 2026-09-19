@@ -13,7 +13,7 @@ interface DetailPageNavbarProps {
 
 export default function DetailPageNavbar({ categoryName, subCategoryName, productName, categorySlug, subCategorySlug }: DetailPageNavbarProps) {
   return (
-     <div className="py-8 flex items-center gap-1 text-sm font-semibold">
+     <div className="pt-8 pb-2 flex items-center  gap-1 text-sm font-semibold">
         <Link href="/" className="opacity-40">
           Home
         </Link>

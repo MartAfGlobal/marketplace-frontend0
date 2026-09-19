@@ -22,19 +22,19 @@ interface ModalItem {
 
 function ModalItemsTable({ items }: { items: ModalItem[] }) {
   return (
-    <table className="w-full text-sm mb-0">
+    <table className="w-full text-xs mb-0">
       <thead>
-        <tr className="bg-[#7F56D9] text-white">
-          <th className="py-2.5 px-4 text-left font-MontserratNormal text-xs">
+        <tr className="bg-[#7C69EF] text-white">
+          <th className="py-2.5 px-4 text-left font-MontserratMedium text-xs">
             Items
           </th>
-          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">
+          <th className="py-2.5 px-4 text-right font-MontserratMedium text-xs">
             Unit price
           </th>
-          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">
+          <th className="py-2.5 px-4 text-right font-MontserratMedium text-xs">
             Quantity
           </th>
-          <th className="py-2.5 px-4 text-right font-MontserratNormal text-xs">
+          <th className="py-2.5 px-4 text-right font-MontserratMedium text-xs">
             Total
           </th>
         </tr>
@@ -42,7 +42,7 @@ function ModalItemsTable({ items }: { items: ModalItem[] }) {
       <tbody>
         {items.map((item, idx) => (
           <tr key={idx} className="border-b border-gray-100">
-            <td className="py-3 px-4">
+            <td className="py-2.5 px-4">
               <div className="flex items-center gap-3">
                 {item.image ? (
                   <Image
@@ -55,16 +55,16 @@ function ModalItemsTable({ items }: { items: ModalItem[] }) {
                 ) : (
                   <div className="w-10 h-10 bg-gray-100 rounded flex-shrink-0" />
                 )}
-                <span className=" leading-tight">{item.name}</span>
+                <span className="text-xs font-MontserratNormal leading-tight">{item.name}</span>
               </div>
             </td>
-            <td className="py-3 px-4 text-right text-xs font-MontserratNormal text-[#161616]">
+            <td className="py-2.5 px-4 text-right text-xs font-MontserratNormal text-[#161616]">
               ₦{item.unitPrice.toLocaleString()}
             </td>
-            <td className="py-3 px-4 text-right text-xs font-MontserratNormal text-[#161616]">
+            <td className="py-2.5 px-4 text-right text-xs font-MontserratNormal text-[#161616]">
               {item.quantity}
             </td>
-            <td className="py-3 px-4 text-right text-xs font-MontserratSemiBold text-[#161616]">
+            <td className="py-2.5 px-4 text-right text-xs font-MontserratSemiBold text-[#161616]">
               ₦{item.total.toLocaleString()}
             </td>
           </tr>
@@ -160,12 +160,11 @@ export function ApproveFullRefundDrawer({
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
         <div>
-          <h2 className="text-base font-MontserratSemiBold text-[#161616]">
+          <h2 className="text-c18 font-MontserratMedium text-000000 leading-[26px]">
             Approve Full Refund
           </h2>
-          <p className="text-xs font-MontserratNormal text-gray-400 mt-0.5">
-            Please review the refund amount and confirm to approve this partial
-            refund request.
+          <p className="text-xs font-MontserratNormal text-000000/68 leading-[16px] mt-1">
+            Review the refund details and confirm your decision.
           </p>
         </div>
         <button
@@ -298,21 +297,22 @@ export function ApproveFullRefundDrawer({
 
       {/* Footer Buttons */}
       <div className="flex items-center gap-3 px-6 py-5 border-t border-gray-100 flex-shrink-0">
-        <button
+        <Button
           onClick={onApprove}
           disabled={!confirmed || loading}
-          className="flex-1 h-11 bg-[#2D7565] hover:bg-[#245f52] text-white text-xs font-MontserratSemiBold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          loading={loading}
+          className="flex-1"
         >
-          {loading ? <LoadingSpinner size={16} color="border-white" /> : null}
           Approve Full Refund
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onReject}
           disabled={loading}
-          className="flex-1 h-11 bg-[#CA0202] hover:bg-[#a80101] text-white text-xs font-MontserratSemiBold rounded-xl transition-colors disabled:opacity-50"
+          variant="danger"
+          className="flex-1"
         >
           Reject Request
-        </button>
+        </Button>
       </div>
     </DrawerWrapper>
   );
@@ -373,12 +373,11 @@ export function ApprovePartialRefundDrawer({
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
         <div>
-          <h2 className="text-base font-MontserratSemiBold text-[#161616]">
+          <h2 className="text-c18 font-MontserratMedium text-000000 leading-[26px]">
             Approve Partial Refund
           </h2>
-          <p className="text-xs font-MontserratNormal text-gray-400 mt-0.5">
-            Please review the refund amount and confirm to approve this partial
-            refund request.
+          <p className="text-xs font-MontserratNormal text-000000/68 leading-[16px] mt-1">
+            Review the refund details and confirm your decision.
           </p>
         </div>
         <button
@@ -515,21 +514,22 @@ export function ApprovePartialRefundDrawer({
 
       {/* Footer Buttons */}
       <div className="flex items-center gap-3 px-6 py-5 border-t border-gray-100 flex-shrink-0">
-        <button
+        <Button
           onClick={onApprove}
           disabled={!confirmed || loading}
-          className="flex-1 h-11 bg-[#2D7565] hover:bg-[#245f52] text-white text-xs font-MontserratSemiBold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          loading={loading}
+          className="flex-1"
         >
-          {loading ? <LoadingSpinner size={16} color="border-white" /> : null}
           Approve Partial Refund
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={onReject}
           disabled={loading}
-          className="flex-1 h-11 bg-[#CA0202] hover:bg-[#a80101] text-white text-xs font-MontserratSemiBold rounded-xl transition-colors disabled:opacity-50"
+          variant="danger"
+          className="flex-1"
         >
           Reject Request
-        </button>
+        </Button>
       </div>
     </DrawerWrapper>
   );
@@ -565,7 +565,7 @@ export function ConfirmRefundRequestDrawer({
       <div className="flex items-center justify-between pb-8 flex-shrink-0">
         <div>
           <div>
-            <h2 className="text-C18 font-MontserratMedium text-center">
+            <h2 className="text-c18 font-MontserratMedium text-center text-000000 leading-[26px]">
               Approve Refund
             </h2>
             <button
@@ -576,8 +576,8 @@ export function ConfirmRefundRequestDrawer({
             </button>
           </div>
 
-          <p className="text-xs font-MontserratMedium text-center mt-3">
-            Confirm the refund details and approve this refund request.
+          <p className="text-xs font-MontserratNormal text-000000/68 text-center mt-1 leading-[16px]">
+            Review the refund details and confirm your decision.
           </p>
         </div>
       </div>
@@ -699,25 +699,21 @@ export function RequestPartialRefundDrawer({
   return (
     <DrawerWrapper isOpen={isOpen} onClose={onClose}>
       {/* Header */}
-      <div className="flex items-center justify-between pb-8 flex-shrink-0 ">
+      <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 flex-shrink-0">
         <div>
-          <div className="">
-            <h2 className="text-C18 font-MontserratMedium text-center">
-              Request Partial Refund
-            </h2>
-            <button
-              onClick={onClose}
-              className=" text-000000 hover:bg-gray-100 rounded-full absolute right-8 top-8 s transition-colors flex-shrink-0"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <p className="text-xs font-MontserratMedium text-center mt-3">
-            Confirm the refund amount and submit this partial refund request for
-            approval.
+          <h2 className="text-c18 font-MontserratMedium text-000000 leading-[26px]">
+            Request Partial Refund
+          </h2>
+          <p className="text-xs font-MontserratNormal text-000000/68 leading-[16px] mt-1">
+            Review the deduction and submit this partial refund request.
           </p>
         </div>
+        <button
+          onClick={onClose}
+          className="ml-4 text-[#343330] hover:bg-gray-100 rounded-full p-1 transition-colors flex-shrink-0"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Scrollable Body */}

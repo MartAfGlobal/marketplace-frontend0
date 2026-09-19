@@ -14,16 +14,13 @@ import { AdminDetails } from "@/helpers/admin/adminHelper";
 import AdminOrdersAndDisputesSummaryCards, {
   OrdersSummaryStats,
 } from "@/components/admin-components/orders/AdminOrdersAndDisputesSummaryCards";
-import DisputeTabs, {
-  DisputeStatusTabKey,
-} from "@/components/admin-components/disputes/DisputeTabs";
 import DisputesTable from "@/components/admin-components/disputes/DisputesTable";
 import type { AdminDisputeItem, AdminDisputeStats, DisputeTableRow } from "@/types/admin";
 import DisputeDetailSideModal from "@/components/ui/Modals/admin/DisputeDetailSideModal";
 
 const PAGE_SIZE = 20;
 
-function mapToDisputeRow(raw: any, activeTab?: DisputeStatusTabKey): DisputeTableRow {
+function mapToDisputeRow(raw: any, activeTab?: "DISPUTE_RETURNS" | "REFUND"): DisputeTableRow {
   const buyer = raw.buyer ?? {};
   const buyerName =
     raw.buyer_name ||
@@ -128,15 +125,17 @@ export default function AdminRefundAndDisputePage() {
 
   const [searchVal, setSearchVal] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [refundPage, setRefundPage] = useState(1);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [trackingNo, setTrackingNo] = useState("");
 
-  // Default active tab is "DISPUTE_RETURNS"
-  const [activeTab, setActiveTab] = useState<DisputeStatusTabKey>("DISPUTE_RETURNS");
   const [rawDisputes, setRawDisputes] = useState<any[]>([]);
   const [disputesTotalCount, setDisputesTotalCount] = useState(0);
   const [disputesLoading, setDisputesLoading] = useState(false);
+  const [rawRefunds, setRawRefunds] = useState<any[]>([]);
+  const [refundsTotalCount, setRefundsTotalCount] = useState(0);
+  const [refundsLoading, setRefundsLoading] = useState(false);
   const [selectedDispute, setSelectedDispute] = useState<DisputeTableRow | null>(null);
 
   const {
@@ -211,12 +210,13 @@ export default function AdminRefundAndDisputePage() {
     );
   }, [token]);
 
-  // Load table data when tab, page, or search changes
+  // Load both table datasets when their page or the shared search changes.
   useEffect(() => {
     if (!token) return;
     setDisputesLoading(true);
+    setRefundsLoading(true);
 
-    const onSuccess = (resData: any) => {
+    const getResults = (resData: any) => {
       const results =
         resData?.results ??
         resData?.data?.results ??
@@ -226,31 +226,38 @@ export default function AdminRefundAndDisputePage() {
         resData?.count ??
         resData?.data?.count ??
         (Array.isArray(results) ? results.length : 0);
-
-      console.log("items:", results, "total:", total);
-      setRawDisputes(Array.isArray(results) ? results : []);
-      setDisputesTotalCount(total);
-      setDisputesLoading(false);
+      return { results: Array.isArray(results) ? results : [], total };
     };
 
-    const onError = () => setDisputesLoading(false);
+    fetchAdminDisputesList(
+      { page: currentPage, search: searchVal },
+      (resData: any) => {
+        const { results, total } = getResults(resData);
+        setRawDisputes(results);
+        setDisputesTotalCount(total);
+        setDisputesLoading(false);
+      },
+      () => setDisputesLoading(false),
+    );
 
-    if (activeTab === "REFUND") {
-      // /refunds/admin?status=PENDING
-      fetchAdminRefundsList(
-        { status: "PENDING", page: currentPage, search: searchVal },
-        onSuccess,
-        onError,
-      );
-    } else {
-      // /disputes/admin — all disputes & returns
-      fetchAdminDisputesList(
-        { page: currentPage, search: searchVal },
-        onSuccess,
-        onError,
-      );
-    }
-  }, [token, activeTab, currentPage, searchVal]);
+    fetchAdminRefundsList(
+      { status: "PENDING", page: refundPage, search: searchVal },
+      (resData: any) => {
+        const { results, total } = getResults(resData);
+        setRawRefunds(results);
+        setRefundsTotalCount(total);
+        setRefundsLoading(false);
+      },
+      () => setRefundsLoading(false),
+    );
+  }, [token, currentPage, refundPage, searchVal]);
+
+  const rows: DisputeTableRow[] = rawDisputes.map((r) =>
+    mapToDisputeRow(r, "DISPUTE_RETURNS")
+  );
+  const refundRows: DisputeTableRow[] = rawRefunds.map((r) =>
+    mapToDisputeRow(r, "REFUND")
+  );
 
   // Close row popup on outside click
   useEffect(() => {
@@ -282,10 +289,6 @@ export default function AdminRefundAndDisputePage() {
       `/dashboard/admin/orders/track/${encodeURIComponent(trackingNo.trim())}`
     );
   };
-
-  const rows: DisputeTableRow[] = rawDisputes.map((r) =>
-    mapToDisputeRow(r, activeTab)
-  );
 
   return (
     <div className="space-y-8 duration-300">
@@ -328,21 +331,11 @@ export default function AdminRefundAndDisputePage() {
         disputeStats={disputeStats}
       />
 
-      {/* ── Disputes & Returns Table Section (Without order filter tabs) ── */}
+      {/* ── Disputes & Returns Table ── */}
       <div className="bg-white rounded-2xl p-6 border border-000000/4">
         <h2 className="text-base font-MontserratNormal text-000000/68 mb-6">
           List of Disputes &amp; Returns
         </h2>
-
-        {/* Status filter tabs for disputes */}
-        <DisputeTabs
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            setActiveTab(tab);
-            setCurrentPage(1);
-          }}
-         
-        />
 
         {/* Filter header with search */}
         <AdminListHeader
@@ -350,6 +343,7 @@ export default function AdminRefundAndDisputePage() {
           setSearchVal={(val) => {
             setSearchVal(val);
             setCurrentPage(1);
+            setRefundPage(1);
           }}
           placeholder="Search disputes by ID, order number, buyer or vendor..."
           searchExpandable={true}
@@ -361,7 +355,7 @@ export default function AdminRefundAndDisputePage() {
           selectedIds={selectedIds}
           activeRowId={activeRowId}
           loading={disputesLoading}
-          showCaseId={activeTab === "DISPUTE_RETURNS"}
+          showCaseId={true}
           onSelectAll={handleSelectAll}
           onToggleRow={handleToggleRow}
           onSetActiveRowId={setActiveRowId}
@@ -375,6 +369,36 @@ export default function AdminRefundAndDisputePage() {
               currentPage={currentPage}
               totalPages={Math.ceil(disputesTotalCount / PAGE_SIZE)}
               onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Refund Table ── */}
+      <div className="bg-white rounded-2xl p-6 border border-000000/4">
+        <h2 className="text-base font-MontserratNormal text-000000/68 mb-6">
+          Refund Requests
+        </h2>
+
+        <DisputesTable
+          rows={refundRows}
+          selectedIds={selectedIds}
+          activeRowId={activeRowId}
+          loading={refundsLoading}
+          showCaseId={false}
+          showOrderId={false}
+          onSelectAll={handleSelectAll}
+          onToggleRow={handleToggleRow}
+          onSetActiveRowId={setActiveRowId}
+          onViewDetails={(row) => setSelectedDispute(row)}
+        />
+
+        {refundsTotalCount > PAGE_SIZE && (
+          <div className="flex justify-end mt-6">
+            <Pagination
+              currentPage={refundPage}
+              totalPages={Math.ceil(refundsTotalCount / PAGE_SIZE)}
+              onPageChange={(page) => setRefundPage(page)}
             />
           </div>
         )}

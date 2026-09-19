@@ -83,6 +83,7 @@ interface DisputesTableProps {
   activeRowId: string | null;
   loading: boolean;
   showCaseId?: boolean;
+  showOrderId?: boolean;
   onSelectAll: () => void;
   onToggleRow: (id: string) => void;
   onSetActiveRowId: (id: string | null) => void;
@@ -95,6 +96,7 @@ export default function DisputesTable({
   activeRowId,
   loading,
   showCaseId = true,
+  showOrderId = true,
   onSelectAll,
   onToggleRow,
   onSetActiveRowId,
@@ -157,7 +159,9 @@ export default function DisputesTable({
             {showCaseId && (
               <th className="p-3 font-MontserratMedium text-xs leading-[1%]">Case ID</th>
             )}
-            <th className="p-3 font-MontserratMedium text-xs leading-[1%]">Order ID</th>
+            {showOrderId && (
+              <th className="p-3 font-MontserratMedium text-xs leading-[1%]">Order ID</th>
+            )}
             <th className="p-3 font-MontserratMedium text-xs leading-[1%] ">
               Buyer
             </th>
@@ -177,7 +181,7 @@ export default function DisputesTable({
         <tbody className="text-xs text-000000/68 font-MontserratMedium">
           {loading ? (
             <tr>
-              <td colSpan={showCaseId ? 10 : 9} className="py-12 text-center">
+              <td colSpan={8 + Number(showCaseId) + Number(showOrderId)} className="py-12 text-center">
                 <div className="flex justify-center items-center">
                   <LoadingSpinner size={32} color="border-[#ff715b]" />
                 </div>
@@ -234,14 +238,16 @@ export default function DisputesTable({
                     </span>
                   </td>
                 )}
-                <td className="py-3 px-4">
-                  <span
-                    className="block max-w-[100px] truncate text-left font-MontserratMedium cursor-pointer"
-                    title={row.disputeNumber}
-                  >
-                    {row.disputeNumber}
-                  </span>
-                </td>
+                {showOrderId && (
+                  <td className="py-3 px-4">
+                    <span
+                      className="block max-w-[100px] truncate text-left font-MontserratMedium cursor-pointer"
+                      title={row.orderId}
+                    >
+                      {row.orderId}
+                    </span>
+                  </td>
+                )}
                 <td className="py-3 px-4">
                   <span className="block max-w-[140px] truncate" title={row.buyer}>
                     {row.buyer}

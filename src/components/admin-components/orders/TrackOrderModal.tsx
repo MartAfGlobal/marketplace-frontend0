@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Button } from "@/components/ui/Button/Button";
 
 interface TrackOrderModalProps {
   isOpen: boolean;
@@ -146,21 +147,22 @@ export default function TrackOrderModal({
 
         {/* Actions */}
         <div className="flex items-center gap-3 mt-7">
-          <button
+          <Button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 border border-[#FF715B] text-[#FF715B] bg-white rounded-[10px] font-MontserratMedium text-sm hover:bg-red-50/50 transition-colors"
+            variant="secondary"
+            className="flex-1"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={handleSearch}
             disabled={searching}
-            className="flex-1 h-11 bg-[#FF715B] text-white rounded-[10px] font-MontserratMedium text-sm hover:bg-[#e6604a] transition-colors shadow-sm flex items-center justify-center disabled:opacity-70 cursor-pointer"
+            className="flex-1"
           >
             {searching ? <LoadingSpinner size={16} color="border-white" /> : "Search"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

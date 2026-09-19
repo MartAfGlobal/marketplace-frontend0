@@ -33,6 +33,7 @@ const getStatusClass = (status: string) => {
     case "rejected":
       return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
     case "delivered":
+    case "completed":
       return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
     case "disputed":
     case "dispute raised":
@@ -67,6 +68,7 @@ const getStatusColor = (status: string) => {
     case "rejected":
       return "#CA0202";
     case "delivered":
+    case "completed":
       return "#2D7565";
     case "disputed":
     case "dispute raised":
@@ -87,6 +89,7 @@ export type InventoryFullTableProps = {
     sku?: string;
     qty?: number;
     search?: string;
+    timeFilter?: string;
   };
   onFilteredCount?: (count: number) => void;
   onSelectionChange?: (data: any[]) => void;
@@ -121,6 +124,7 @@ export default function AllOrderTable({
       id: order.id,
       orderId: order.order_id,
       date: order.created_at ? new Date(order.created_at).toLocaleDateString() : "N/A",
+      dateValue: order.created_at || null,
       sku: order.items?.length > 1 ? "Multiple SKU" : (order.items?.[0]?.variation_sku || "N/A"),
       items: order.items?.length > 1 ? "Multiple items" : (order.items?.[0]?.product_name || "N/A"),
       amount: order.subtotal ? `#${order.subtotal}` : "N/A",
@@ -131,7 +135,7 @@ export default function AllOrderTable({
           ? "Dispute closed"
           : displayStatus === "Dispute raised" || displayStatus === "Dispute ongoing"
           ? "disputed"
-          : (order as any).order_timeline_stage?.toLowerCase() ||
+          : (order as any).seller_status?.toLowerCase() ||
             (order.status?.toLowerCase() === "pending" ? "unprocessed" : order.status),
       country: order.shipping_address?.country || "N/A",
       accepted_quantity: order.accepted_quantity || 0,
@@ -143,9 +147,12 @@ export default function AllOrderTable({
   let filteredRows =
     externalFilter === "all"
       ? allRows
-      : allRows.filter(
-          (row: any) => row.status.toLowerCase() === externalFilter.toLowerCase()
-        );
+      : allRows.filter((row: any) => {
+          const status = row.status.toLowerCase();
+          const filter = externalFilter.toLowerCase();
+
+          return status === filter;
+        });
 
   // ✅ other filters
   if (filters.search) {
@@ -160,7 +167,26 @@ export default function AllOrderTable({
 
   if (filters.date?.start && filters.date?.end) {
     filteredRows = filteredRows.filter(
-      (row: any) => row.date >= filters.date!.start && row.date <= filters.date!.end
+      (row: any) => {
+        if (!row.dateValue) return false;
+        const orderDate = new Date(row.dateValue);
+        const startDate = new Date(`${filters.date!.start}T00:00:00`);
+        const endDate = new Date(`${filters.date!.end}T23:59:59.999`);
+        return orderDate >= startDate && orderDate <= endDate;
+      },
+    );
+  }
+  if (filters.timeFilter && filters.timeFilter !== "All time") {
+    const days =
+      filters.timeFilter === "This Week"
+        ? 7
+        : filters.timeFilter === "This Month"
+          ? 30
+          : 365;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    filteredRows = filteredRows.filter(
+      (row: any) => row.dateValue && new Date(row.dateValue) >= cutoff,
     );
   }
   if (filters.perc) {

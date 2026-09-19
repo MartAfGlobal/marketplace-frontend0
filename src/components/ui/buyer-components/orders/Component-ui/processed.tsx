@@ -17,6 +17,10 @@ import AddCartModal from "@/components/ui/Modals/addToCart/addTocart-modal";
 import { toast } from "sonner";
 import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
 import { useHttp } from "@/hooks/use-http";
+import {
+  getBuyerOrderDateLabel,
+  getBuyerOrderStatusLabel,
+} from "@/utils/buyerOrderDisplay";
 interface OrdersProps {
   searchTerm: string;
 }
@@ -62,12 +66,13 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
 
   const { orders, loading } = useSelector((state: any) => state.orders);
 
-  const delivered = orders.filter(
-    (order: OrderItem) =>
-      order.status === "DELIVERED" ||
-      order.status === "CANCELLED" ||
-      order.status === "Confirmed",
-  );
+  const delivered = orders.filter((order: OrderItem) => {
+    const status = (order.buyer_status || order.status || "").toLowerCase();
+
+    return ["delivered", "cancelled", "confirmed", "completed"].includes(
+      status,
+    );
+  });
   const filteredOrders = delivered.filter((order: OrderItem) => {
     if (!searchTerm) return true;
 
@@ -149,6 +154,7 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                   const orderItems =
                     item.order_items || (item as any).items || [];
                   const isSingleItemOrder = orderItems.length === 1;
+                  const orderDate = getBuyerOrderDateLabel(item);
                   const firstItem = orderItems[0] as any;
                   const productSlug =
                     firstItem?.product_slug ||
@@ -172,7 +178,8 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                     "";
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
-                      {item.status === "DELIVERED" && (
+                      {(item.buyer_status || item.status)?.toUpperCase() ===
+                        "DELIVERED" && (
                         <>
                           <Button
                             onClick={() =>
@@ -191,21 +198,22 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                           >
                             Track order
                           </Button>
+                          <Button
+                            variant="secondary"
+                            onClick={() => handleReview(item.id)}
+                          >
+                            Leave a review
+                          </Button>
                         </>
                       )}
-                      {item.status === "Confirmed" && (
+                      {["CONFIRMED", "COMPLETED", "CANCELLED"].includes(
+                        (item.buyer_status || item.status)?.toUpperCase() || "",
+                      ) && (
                         <>
                           <Button
                             onClick={() => handleAddOrderItemToCart(item)}
                           >
                             Add to cart
-                          </Button>
-                          <Button
-                            onClick={() => handleReview(item.id)}
-                            variant="secondary"
-                            className=""
-                          >
-                            Leave a review
                           </Button>
                         </>
                       )}
@@ -221,23 +229,20 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                     >
                       <div className="w-full flex items-center md:gap-0 justify-between mb-3 md:mb-c32">
                         <div>
-                          {item.status === "DELIVERED" ? (
-                            <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
-                              Delivered
-                            </p>
-                          ) : item.status === "Confirmed" ? (
-                            <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
-                              Delivered
-                            </p>
-                          ) : item.status === "CANCELLED" ? (
-                            <p className="text-sm font-MontserratSemiBold leading-c20 text-ca0202">
-                              Cancelled
-                            </p>
-                          ) : (
-                            <p className="text-sm font-MontserratSemiBold leading-c20 text-2d7565">
-                              {item.status}
-                            </p>
-                          )}
+                          <p
+                            className={`font-MontserratSemiBold text-c16  ${
+                              item.buyer_status === "Cancelled"
+                                ? "text-ca0202"
+                                : item.buyer_status === "Delivered"
+                                  ? "text-2d7565"
+                                  : item.buyer_status === "Completed" &&
+                                      item.status === "RETURN_CLOSED"
+                                    ? "text-[#FFAC06]"
+                                    : "text-161616"
+                            }`}
+                          >
+                            {getBuyerOrderStatusLabel(item)}
+                          </p>
                           <div className="md:flex hidden gap-2 mt-2">
                             <p className="text-c12 font-MontserratNormal">
                               Order ID: {item.order_id}
@@ -260,21 +265,11 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                             )}
                           </div>
                         </div>
-                        <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                          Delivery:{" "}
-                          {item.estimated_delivery_date
-                            ? ` ${item.estimated_delivery_date}`
-                            : item.created_at
-                              ? new Date(item.created_at).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  },
-                                )
-                              : ""}
-                        </p>
+                        {item.buyer_status !== "Cancelled" && (
+                          <p className="text-c12 font-MontserratNormal leading-4 text-000000">
+                            {orderDate.label}: {orderDate.date}
+                          </p>
+                        )}
                       </div>
 
                       <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
@@ -483,32 +478,10 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                         )}
 
                         <div className="w-full  pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
-                          {item.status === "DELIVERED" && (
+                           {item.buyer_status === "Delivered" && (
                             <>
                               <Button
-                                onClick={() =>
-                                  router.push(
-                                    `/dashboard/buyer/orders/confirm-delivery/${item.id}`,
-                                  )
-                                }
-                              >
-                                Confirm delivery
-                              </Button>
-                              <Button
-                                variant="secondary"
-                                onClick={() =>
-                                  router.push(
-                                    getBuyerOrderTrackingPath(item.id),
-                                  )
-                                }
-                              >
-                                Track order
-                              </Button>
-                            </>
-                          )}
-                          {item.status === "Confirmed" && (
-                            <>
-                              <Button
+                                className=""
                                 onClick={() => handleAddOrderItemToCart(item)}
                               >
                                 Add to cart
@@ -519,6 +492,18 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
                                 className=""
                               >
                                 Leave a review
+                              </Button>
+                            </>
+                          )}
+                          {["CONFIRMED", "COMPLETED", "CANCELLED"].includes(
+                            (item.buyer_status || item.status)?.toUpperCase() ||
+                              "",
+                          ) && (
+                            <>
+                              <Button
+                                onClick={() => handleAddOrderItemToCart(item)}
+                              >
+                                Add to cart
                               </Button>
                             </>
                           )}

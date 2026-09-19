@@ -383,122 +383,122 @@ export default function DisputeDetailSideModal({
           className="fixed inset-0 bg-black/40 flex items-center justify-end z-[9998] p-4 sm:pr-[29px]"
           onClick={onClose}
         >
-        <motion.div
-          initial={{ opacity: 0, x: 160 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 160 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-white  flex flex-col w-full  space-y-8 p-8 max-w-[581px] rounded-[16px] relative max-h-[92vh] overflow-hidden"
-        >
-          {/* Header */}
-
-          <div className="flex flex-col gap-1 ">
-            <span className="text-[12px] font-MontserratNormal text-000000/44  leading-[20px] tracking-[2%]">
-              Dispute ID
-            </span>
-            <h2 className="text-[20px] font-MontserratMedium text-000000  leading-[28px]">
-              {displayId}
-            </h2>
-            <span
-              className={`text-sm font-MontserratNormal ${statusInfo.colorClass}`}
-            >
-              {statusInfo.label}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className=" absolute top-[38px] right-[38px]   transition-colors cursor-pointer"
-            aria-label="Close"
+          <motion.div
+            initial={{ opacity: 0, x: 160 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 160 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white  flex flex-col w-full  space-y-8 p-8 max-w-[581px] rounded-[16px] relative max-h-[92vh] overflow-hidden"
           >
-            <Image
-              src={Xicon}
-              alt="close"
-              height={20}
-              width={20}
-              className=""
-            />
-          </button>
+            {/* Header */}
 
-          {/* Body Content */}
-          <div className="flex-1 overflow-y-auto    space-y-8 wno-scrollbar">
-            {loading ? (
-              <div className="py-16 flex flex-col items-center justify-center gap-3">
-                <LoadingSpinner size={32} />
-                <p className="text-xs font-MontserratNormal text-000000/44">
-                  Loading dispute details...
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Reason for return */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-MontserratNormal leading-[21px] text-000000/44">
-                    Reason for return
-                  </h3>
-                  <p className="text-base font-MontserratNormal text-000000 leading-[28px] tracking-[1%]">
-                    {reason}
+            <div className="flex flex-col gap-1 ">
+              <span className="text-[12px] font-MontserratNormal text-000000/44  leading-[20px] tracking-[2%]">
+                Dispute ID
+              </span>
+              <h2 className="text-[20px] font-MontserratMedium text-000000  leading-[28px]">
+                {displayId}
+              </h2>
+              <span
+                className={`text-sm font-MontserratNormal ${statusInfo.colorClass}`}
+              >
+                {statusInfo.label}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className=" absolute top-[38px] right-[38px]   transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <Image
+                src={Xicon}
+                alt="close"
+                height={20}
+                width={20}
+                className=""
+              />
+            </button>
+
+            {/* Body Content */}
+            <div className="flex-1 overflow-y-auto    space-y-8 wno-scrollbar">
+              {loading ? (
+                <div className="py-16 flex flex-col items-center justify-center gap-3">
+                  <LoadingSpinner size={32} />
+                  <p className="text-xs font-MontserratNormal text-000000/44">
+                    Loading dispute details...
                   </p>
                 </div>
-
-                {/* Dispute type & Created by (2 columns) */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="">
-                    <span className="text-sm  leading-[21px] tracking-[1%] font-MontserratNormal text-000000/44">
-                      Dispute type
-                    </span>
-                    <p className="text-base pt-2 font-MontserratNormal text-000000 leading-[24px] tracking-[1%]">
-                      {disputeType}
+              ) : (
+                <>
+                  {/* Reason for return */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-MontserratNormal leading-[21px] text-000000/44">
+                      Reason for return
+                    </h3>
+                    <p className="text-base font-MontserratNormal text-000000 leading-[28px] tracking-[1%]">
+                      {reason}
                     </p>
                   </div>
-                  <div className="">
-                    <span className="text-sm  leading-[21px] tracking-[1%] font-MontserratNormal text-000000/44">
-                      Created by
-                    </span>
-                    <p className="text-base pt-2 font-MontserratNormal text-000000 leading-[24px] tracking-[1%]">
-                      {createdByName}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Additional information */}
-                <div className="space-y-2">
-                  <h3 className="text-sm leading-[21px] tracking-[1%] font-MontserratNormal text-000000/44">
-                    Additional information
-                  </h3>
-                  <p className="text-base font-MontserratNormal text-000000 leading-[24px] tracking-[1%]">
-                    {additionalInfo}
-                  </p>
-                </div>
-
-                {/* Evidence submitted Card */}
-                <div className="bg-ffffff rounded-[16px]  border-[0.5px] border-000000/12 space-y-6">
-                  <div className="flex items-center justify-between overflow-hidden rounded-tr-[16px] rounded-tl-[16px] py-4 px-6 bg-000000/4">
-                    <span className="text-base  font-MontserratNormal leading-[21px] text-000000/68">
-                      Evidence submitted
-                    </span>
-                    {productImage && (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewImage(productImage)}
-                        className="text-base font-MontserratNormal text-[#FF715B] hover:underline cursor-pointer"
-                      >
-                        View product image
-                      </button>
-                    )}
-                  </div>
-
-                  {evidenceList.length === 0 ? (
-                    <div className="py-6 flex items-center justify-center text-center">
-                      <p className="text-xs font-MontserratNormal text-000000/40">
-                        No evidence photos submitted.
+                  {/* Dispute type & Created by (2 columns) */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="">
+                      <span className="text-sm  leading-[21px] tracking-[1%] font-MontserratNormal text-000000/44">
+                        Dispute type
+                      </span>
+                      <p className="text-base pt-2 font-MontserratNormal text-000000 leading-[24px] tracking-[1%]">
+                        {disputeType}
                       </p>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2 px-4 pb-6">
-                      {/* {evidenceList.map((imgUrl, idx) => (
+                    <div className="">
+                      <span className="text-sm  leading-[21px] tracking-[1%] font-MontserratNormal text-000000/44">
+                        Created by
+                      </span>
+                      <p className="text-base pt-2 font-MontserratNormal text-000000 leading-[24px] tracking-[1%]">
+                        {createdByName}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Additional information */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm leading-[21px] tracking-[1%] font-MontserratNormal text-000000/44">
+                      Additional information
+                    </h3>
+                    <p className="text-base font-MontserratNormal text-000000 leading-[24px] tracking-[1%]">
+                      {additionalInfo}
+                    </p>
+                  </div>
+
+                  {/* Evidence submitted Card */}
+                  <div className="bg-ffffff rounded-[16px]  border-[0.5px] border-000000/12 space-y-6">
+                    <div className="flex items-center justify-between overflow-hidden rounded-tr-[16px] rounded-tl-[16px] py-4 px-6 bg-000000/4">
+                      <span className="text-base  font-MontserratNormal leading-[21px] text-000000/68">
+                        Evidence submitted
+                      </span>
+                      {productImage && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImage(productImage)}
+                          className="text-base font-MontserratNormal text-[#FF715B] hover:underline cursor-pointer"
+                        >
+                          View product image
+                        </button>
+                      )}
+                    </div>
+
+                    {evidenceList.length === 0 ? (
+                      <div className="py-6 flex items-center justify-center text-center">
+                        <p className="text-xs font-MontserratNormal text-000000/40">
+                          No evidence photos submitted.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 px-4 pb-6">
+                        {/* {evidenceList.map((imgUrl, idx) => (
                         <div
                           key={idx}
                           onClick={() => setPreviewImage(imgUrl)}
@@ -520,295 +520,295 @@ export default function DisputeDetailSideModal({
                           </div>
                         </div>
                       ))} */}
-                      {disputeEvidence.map((items: any, index: number) => {
-                        return (
-                          <div
-                            key={items.id}
-                            onClick={() => setPreviewImage(items.file_url)}
-                            className="w-[139px] h-[139px] justify-between overflow-hidden bg-white relative cursor-pointer group "
-                          >
-                            <Image
-                              src={items.file_url}
-                              alt={`evidence ${index}`}
-                              width={139}
-                              height={139}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+                        {disputeEvidence.map((items: any, index: number) => {
+                          return (
+                            <div
+                              key={items.id}
+                              onClick={() => setPreviewImage(items.file_url)}
+                              className="w-[139px] h-[139px] justify-between overflow-hidden bg-white relative cursor-pointer group "
+                            >
+                              <Image
+                                src={items.file_url}
+                                alt={`evidence ${index}`}
+                                width={139}
+                                height={139}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
 
-          {/* Action Buttons */}
-          <div className=" flex items-center  justify-end gap-4">
-            {(dispute?.status === "RETURN_REQUESTED" ||
-              dispute?.status === "PENDING" ||
-              dispute?.status === "OPEN" ||
-              dispute?.status === "dispute raised") && (
-              <>
-                <Button
-                  variant="secodary danger"
-                  type="button"
-                  disabled={actionLoading || reviewing}
-                  onClick={() => setRejectConfirmOpen(true)}
-                  className="w-[154px]"
-                >
-                  Reject request
-                </Button>
-                <Button
-                  type="button"
-                  disabled={actionLoading || reviewing}
-                  onClick={() => setReviewOpen(true)}
-                  className="w-[160px] bg-[#FFAC06] hover:bg-[#e09805] text-white  font-MontserratMedium text-xs transition-colors cursor-pointer  disabled:opacity-50"
-                >
-                  Review request
-                </Button>
-              </>
-            )}
+            {/* Action Buttons */}
+            <div className=" flex items-center  justify-end gap-4">
+              {dispute?.status_display === "Pending" &&
+                dispute?.status === "REQUESTED" && (
+                  <>
+                    <Button
+                      variant="secodary danger"
+                      type="button"
+                      disabled={actionLoading || reviewing}
+                      onClick={() => setRejectConfirmOpen(true)}
+                      className="w-[154px]"
+                    >
+                      Reject request
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={actionLoading || reviewing}
+                      onClick={() => setReviewOpen(true)}
+                      className="w-[160px] bg-[#FFAC06] hover:bg-[#e09805] text-white  font-MontserratMedium text-xs transition-colors cursor-pointer  disabled:opacity-50"
+                    >
+                      Review request
+                    </Button>
+                  </>
+                )}
 
-            {dispute?.status_display === "Accepted" && (
-              <Button
-                type="button"
-                disabled={actionLoading || reviewing}
-                onClick={() => setResolveWarningOpen(true)}
-                className="w-[203px] "
-              >
-                Confirm item's return
-              </Button>
-            )}
+              {(() => {
+                const statusUpper = (
+                  dispute?.status ||
+                  dispute?.status_display ||
+                  ""
+                ).toUpperCase();
+                const isResolvedOrApproved =
+                  statusUpper === "APPROVED" ||
+                  statusUpper === "RESOLVED" ||
+                  statusUpper === "ACCEPTED" ||
+                  dispute?.status_display === "Approved" ||
+                  dispute?.status_display === "Resolved";
 
-            {(() => {
-              const statusUpper = (
-                dispute?.status ||
-                dispute?.status_display ||
-                ""
-              ).toUpperCase();
-              const isResolvedOrApproved =
-                statusUpper === "APPROVED" ||
-                statusUpper === "RESOLVED" ||
-                statusUpper === "ACCEPTED" ||
-                dispute?.status_display === "Approved" ||
-                dispute?.status_display === "Resolved";
+                const resType = (
+                  dispute?.resolution_type ||
+                  dispute?.resolution_type_display ||
+                  dispute?.dispute_type ||
+                  ""
+                ).toUpperCase();
 
-              const resType = (
-                dispute?.resolution_type ||
-                dispute?.resolution_type_display ||
-                dispute?.dispute_type ||
-                ""
-              ).toUpperCase();
+                const isRefundBothParties =
+                  resType === "REFUND_BOTH_PARTIES" || resType.includes("BOTH");
 
-              const isRefundBothParties =
-                resType === "REFUND_BOTH_PARTIES" || resType.includes("BOTH");
+                const isDeliveryConfirmed = Boolean(
+                  dispute?.return_delivery_confirmed ||
+                  dispute?.delivery_to_seller_confirmed ||
+                  dispute?.return_received_at_seller,
+                );
 
-              const isDeliveryConfirmed = Boolean(
-                dispute?.return_delivery_confirmed ||
-                dispute?.delivery_to_seller_confirmed ||
-                dispute?.return_received_at_seller
-              );
+                const isClosed =
+                  statusUpper === "CLOSED" ||
+                  dispute?.status_display === "Closed";
 
-              const isClosed =
-                statusUpper === "CLOSED" ||
-                dispute?.status_display === "Closed";
+                if (!isResolvedOrApproved || isClosed) return null;
 
-              if (!isResolvedOrApproved || isClosed) return null;
+                {
+                  dispute?.status_display === "Accepted" &&
+                    !isRefundBothParties && (
+                      <Button
+                        type="button"
+                        disabled={actionLoading || reviewing}
+                        onClick={() => setResolveWarningOpen(true)}
+                        className="w-[203px] "
+                      >
+                        Confirm item's return
+                      </Button>
+                    );
+                }
+                if (!isRefundBothParties && !isDeliveryConfirmed) {
+                  return (
+                    <Button
+                      type="button"
+                      disabled={actionLoading || reviewing}
+                      onClick={() => setConfirmDeliveryOpen(true)}
+                      className="w-[203px]"
+                    >
+                      Confirm delivery
+                    </Button>
+                  );
+                }
 
-              if (!isRefundBothParties && !isDeliveryConfirmed) {
                 return (
                   <Button
                     type="button"
                     disabled={actionLoading || reviewing}
-                    onClick={() => setConfirmDeliveryOpen(true)}
-                    className="w-[203px]"
+                    onClick={() => setCloseWarningOpen(true)}
+                    className="w-[146px] text-white"
                   >
-                    Confirm delivery
+                    Close dispute
                   </Button>
                 );
-              }
+              })()}
+            </div>
+          </motion.div>
+        </div>
+      </AnimatePresence>
 
-              return (
-                <Button
-                  type="button"
-                  disabled={actionLoading || reviewing}
-                  onClick={() => setCloseWarningOpen(true)}
-                  className="w-[146px] text-white"
-                >
-                  Close dispute
-                </Button>
-              );
-            })()}
-          </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
-
-        {/* Image Preview Lightbox */}
-        <AnimatePresence>
-          {previewImage && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"
-              onClick={() => setPreviewImage(null)}
+      {/* Image Preview Lightbox */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"
+            onClick={() => setPreviewImage(null)}
+          >
+            <div
+              className="relative max-w-2xl max-h-[85vh] bg-white rounded-2xl overflow-hidden p-3 shadow-2xl flex flex-col items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="relative max-w-2xl max-h-[85vh] bg-white rounded-2xl overflow-hidden p-3 shadow-2xl flex flex-col items-center justify-center"
-                onClick={(e) => e.stopPropagation()}
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black text-white rounded-full p-1.5 transition-colors cursor-pointer"
               >
-                <button
-                  type="button"
-                  onClick={() => setPreviewImage(null)}
-                  className="absolute top-4 right-4 z-10 bg-black/60 hover:bg-black text-white rounded-full p-1.5 transition-colors cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
-                <img
-                  src={previewImage}
-                  alt="Evidence Preview"
-                  className="max-w-full max-h-[75vh] object-contain rounded-xl"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLElement).style.display = "none";
-                  }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <X size={18} />
+              </button>
+              <img
+                src={previewImage}
+                alt="Evidence Preview"
+                className="max-w-full max-h-[75vh] object-contain rounded-xl"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = "none";
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <DisputReviewModal
-          onClose={() => setReviewOpen(false)}
-          isOpen={isReviewOpen}
-          DisputeId={displayId}
-          onConfirm={handleReviewStep1Submit}
-        />
-        <ConfirmDisputReviewModal
-          isOpen={recomfirmOpen}
-          DisputeId={displayId}
-          onClose={() => setReComfirmOpen(false)}
-          onConfirm={handleFinalDisputeReviewConfirm}
-          loading={reviewing}
-        />
-        <ConfirmRejectDisputeModal
-          isOpen={rejectConfirmOpen}
-          DisputeId={displayId}
-          onClose={() => setRejectConfirmOpen(false)}
-          onConfirm={handleFinalRejectConfirm}
-          loading={actionLoading}
-        />
-        <ResultModal
-          isOpen={resolveWarningOpen}
-          result="warning"
-          title="Confirm item's return?"
-          message={`Submit confirmation that the return has been delivered for ${displayId}. This will resolve the dispute.`}
-          discRescription="This will terminate/complete the return process and mark the dispute as resolved."
-          buttenText="Confirm"
-          loading={actionLoading}
-          onCancel={() => setResolveWarningOpen(false)}
-          onConfirm={handleConfirmResolve}
-        />
-        <ResultModal
-          isOpen={resolveSuccess}
-          result="success"
-          title="Dispute Resolved"
-          message="The item return has been confirmed and the dispute has been resolved."
-          discRescription="Both buyer and seller have been notified that the dispute is resolved."
-          buttenText="Okay"
-          onConfirm={() => {
-            setResolveSuccess(false);
-            onClose();
-          }}
-          onCancel={() => {
-            setResolveSuccess(false);
-            onClose();
-          }}
-        />
-        <ResultModal
-          isOpen={reviewSuccess}
-          result="success"
-          title="Dispute Review Submitted"
-          message="The dispute review decision has been recorded and the resolution process has been initiated."
-          discRescription="Both buyer and seller have been notified of the resolution decision."
-          buttenText="Okay"
-          onConfirm={() => {
-            setReviewSucess(false);
-            onClose();
-          }}
-          onCancel={() => {
-            setReviewSucess(false);
-            onClose();
-          }}
-        />
-        <ResultModal
-          isOpen={rejectSuccess}
-          result="success"
-          title="Return Request Rejected"
-          message="The return/refund request has been rejected and the process terminated."
-          discRescription="Both buyer and seller have been notified of this rejection."
-          buttenText="Okay"
-          onConfirm={() => {
-            setRejectSuccess(false);
-            onClose();
-          }}
-          onCancel={() => {
-            setRejectSuccess(false);
-            onClose();
-          }}
-        />
-        <ConfirmDeliveryModal
-          isOpen={confirmDeliveryOpen}
-          disputeId={displayId}
-          onClose={() => setConfirmDeliveryOpen(false)}
-          onConfirm={handleConfirmDelivery}
-          loading={actionLoading}
-        />
-        <ResultModal
-          isOpen={confirmDeliverySuccess}
-          result="success"
-          title="Delivery Confirmed"
-          message="The returned item has been confirmed as shipped back to the seller."
-          discRescription="The seller has been notified and the dispute record has been updated."
-          buttenText="Okay"
-          onConfirm={() => {
-            setConfirmDeliverySuccess(false);
-            onClose();
-          }}
-          onCancel={() => {
-            setConfirmDeliverySuccess(false);
-            onClose();
-          }}
-        />
-        <ResultModal
-          isOpen={closeWarningOpen}
-          result="warning"
-          title="Close dispute?"
-          message={`Are you sure you want to close dispute ${displayId}?`}
-          discRescription="Final step: seller confirms they've received the returned good back. No money moves here. Dispute status will become Closed."
-          buttenText="Close"
-          loading={actionLoading}
-          onCancel={() => setCloseWarningOpen(false)}
-          onConfirm={handleConfirmClose}
-        />
-        <ResultModal
-          isOpen={closeSuccess}
-          result="success"
-          title="Dispute Closed"
-          message="The dispute has been successfully closed."
-          discRescription="The seller has confirmed receipt of returned goods, and this dispute is now finalized and marked as Closed."
-          buttenText="Okay"
-          onConfirm={() => {
-            setCloseSuccess(false);
-            onClose();
-          }}
-          onCancel={() => {
-            setCloseSuccess(false);
-            onClose();
-          }}
-        />
+      <DisputReviewModal
+        onClose={() => setReviewOpen(false)}
+        isOpen={isReviewOpen}
+        DisputeId={displayId}
+        onConfirm={handleReviewStep1Submit}
+      />
+      <ConfirmDisputReviewModal
+        isOpen={recomfirmOpen}
+        DisputeId={displayId}
+        onClose={() => setReComfirmOpen(false)}
+        onConfirm={handleFinalDisputeReviewConfirm}
+        loading={reviewing}
+      />
+      <ConfirmRejectDisputeModal
+        isOpen={rejectConfirmOpen}
+        DisputeId={displayId}
+        onClose={() => setRejectConfirmOpen(false)}
+        onConfirm={handleFinalRejectConfirm}
+        loading={actionLoading}
+      />
+      <ResultModal
+        isOpen={resolveWarningOpen}
+        result="warning"
+        title="Confirm item's return?"
+        message={`Submit confirmation that the return has been delivered for ${displayId}. This will resolve the dispute.`}
+        discRescription="This will terminate/complete the return process and mark the dispute as resolved."
+        buttenText="Confirm"
+        loading={actionLoading}
+        onCancel={() => setResolveWarningOpen(false)}
+        onConfirm={handleConfirmResolve}
+      />
+      <ResultModal
+        isOpen={resolveSuccess}
+        result="success"
+        title="Dispute Resolved"
+        message="The item return has been confirmed and the dispute has been resolved."
+        discRescription="Both buyer and seller have been notified that the dispute is resolved."
+        buttenText="Okay"
+        onConfirm={() => {
+          setResolveSuccess(false);
+          onClose();
+        }}
+        onCancel={() => {
+          setResolveSuccess(false);
+          onClose();
+        }}
+      />
+      <ResultModal
+        isOpen={reviewSuccess}
+        result="success"
+        title="Dispute Review Submitted"
+        message="The dispute review decision has been recorded and the resolution process has been initiated."
+        discRescription="Both buyer and seller have been notified of the resolution decision."
+        buttenText="Okay"
+        onConfirm={() => {
+          setReviewSucess(false);
+          onClose();
+        }}
+        onCancel={() => {
+          setReviewSucess(false);
+          onClose();
+        }}
+      />
+      <ResultModal
+        isOpen={rejectSuccess}
+        result="success"
+        title="Return Request Rejected"
+        message="The return/refund request has been rejected and the process terminated."
+        discRescription="Both buyer and seller have been notified of this rejection."
+        buttenText="Okay"
+        onConfirm={() => {
+          setRejectSuccess(false);
+          onClose();
+        }}
+        onCancel={() => {
+          setRejectSuccess(false);
+          onClose();
+        }}
+      />
+      <ConfirmDeliveryModal
+        isOpen={confirmDeliveryOpen}
+        disputeId={displayId}
+        onClose={() => setConfirmDeliveryOpen(false)}
+        onConfirm={handleConfirmDelivery}
+        loading={actionLoading}
+      />
+      <ResultModal
+        isOpen={confirmDeliverySuccess}
+        result="success"
+        title="Delivery Confirmed"
+        message="The returned item has been confirmed as shipped back to the seller."
+        discRescription="The seller has been notified and the dispute record has been updated."
+        buttenText="Okay"
+        onConfirm={() => {
+          setConfirmDeliverySuccess(false);
+          onClose();
+        }}
+        onCancel={() => {
+          setConfirmDeliverySuccess(false);
+          onClose();
+        }}
+      />
+      <ResultModal
+        isOpen={closeWarningOpen}
+        result="warning"
+        title="Close dispute?"
+        message={`Are you sure you want to close dispute ${displayId}?`}
+        discRescription="Final step: seller confirms they've received the returned good back. No money moves here. Dispute status will become Closed."
+        buttenText="Close"
+        loading={actionLoading}
+        onCancel={() => setCloseWarningOpen(false)}
+        onConfirm={handleConfirmClose}
+      />
+      <ResultModal
+        isOpen={closeSuccess}
+        result="success"
+        title="Dispute Closed"
+        message="The dispute has been successfully closed."
+        discRescription="The seller has confirmed receipt of returned goods, and this dispute is now finalized and marked as Closed."
+        buttenText="Okay"
+        onConfirm={() => {
+          setCloseSuccess(false);
+          onClose();
+        }}
+        onCancel={() => {
+          setCloseSuccess(false);
+          onClose();
+        }}
+      />
     </>
   );
 }

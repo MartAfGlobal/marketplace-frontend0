@@ -16,6 +16,7 @@ import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-or
 import { li } from "framer-motion/client";
 import Link from "next/link";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
+import { getBuyerOrderDateLabel } from "@/utils/buyerOrderDisplay";
 
 interface OrdersProps {
   searchTerm: string;
@@ -118,6 +119,7 @@ export default function ProcessingOrders({ searchTerm }: OrdersProps) {
                 {filteredOrders.map((item: OrderItem) => {
                   const orderItems = item.order_items || (item as any).items || [];
                   const isSingleItemOrder = orderItems.length === 1;
+                  const orderDate = getBuyerOrderDateLabel(item);
 
                   return (
                     <motion.div
@@ -133,6 +135,11 @@ export default function ProcessingOrders({ searchTerm }: OrdersProps) {
                             Order is being processed
                           </p>
                         </div>
+                        {orderDate.date && (
+                          <p className="text-c12 font-MontserratNormal leading-4 text-000000">
+                            {orderDate.label}: {orderDate.date}
+                          </p>
+                        )}
                       </div>
 
                       <div className="w-full md:justify-between flex-col  pb-c32 flex md:flex-row">
@@ -177,15 +184,17 @@ export default function ProcessingOrders({ searchTerm }: OrdersProps) {
                             </Link>
                             <div className="w-full gap-4 text-c10 pl flex md:hidden  mt-4 space-y-4">
                               <div className="w-full"></div>
-                              <Button
-                                onClick={() => {
-                                  setSelectedOrderId(item.id);
-                                  setOpenCancelModal(true);
-                                }}
-                                variant="primary"
-                              >
-                                Cancel order
-                              </Button>
+                              {item.buyer_status === "Processing" && item.can_cancel && (
+                                <Button
+                                  onClick={() => {
+                                    setSelectedOrderId(item.id);
+                                    setOpenCancelModal(true);
+                                  }}
+                                  variant="primary"
+                                >
+                                  Cancel order
+                                </Button>
+                              )}
                             </div>
                           </>
                         ) : (
@@ -337,15 +346,17 @@ export default function ProcessingOrders({ searchTerm }: OrdersProps) {
                           {/* <Button onClick={()=>  handleEditAddress(item.id)} variant="secondary" className="">
                             Edit address
                           </Button> */}
-                          <Button
-                            onClick={() => {
-                              setSelectedOrderId(item.id);
-                              setOpenCancelModal(true);
-                            }}
-                            variant="primary"
-                          >
-                            Cancel order
-                          </Button>
+                          {item.buyer_status === "Processing" && item.can_cancel && (
+                            <Button
+                              onClick={() => {
+                                setSelectedOrderId(item.id);
+                                setOpenCancelModal(true);
+                              }}
+                              variant="primary"
+                            >
+                              Cancel order
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </motion.div>

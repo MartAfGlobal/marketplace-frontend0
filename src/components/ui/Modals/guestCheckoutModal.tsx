@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button/Button";
 import { Label } from "../forms/Label";
@@ -83,6 +84,12 @@ export default function GuestCheckoutModal({
   useEffect(() => {
     console.log("Selected Items in Guest Checkout Modal:", selectedItems);
   }, [selectedItems]);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
@@ -233,11 +240,13 @@ export default function GuestCheckoutModal({
     setStreetError("");
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/60 flex h-dvh items-center justify-center z-50"
+          className="fixed inset-0 z-[9999] flex h-dvh items-center justify-center overflow-hidden bg-black/60 p-4"
           initial={{ opacity: 0 }}
           animate={{
             opacity: 1,
@@ -252,7 +261,7 @@ export default function GuestCheckoutModal({
           role="dialog"
         >
           <motion.div
-            className="bg-white p-8 rounded-2xl max-w-157.25 w-full h-fit max-h-166 relative overflow-y-auto"
+            className="relative max-h-[calc(100dvh-2rem)] w-full max-w-157.25 overflow-y-auto rounded-2xl bg-white p-5 md:p-8"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{
               scale: 1,
@@ -481,6 +490,7 @@ export default function GuestCheckoutModal({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

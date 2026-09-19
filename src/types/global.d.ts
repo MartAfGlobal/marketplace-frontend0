@@ -496,6 +496,7 @@ export interface OrderItem {
 
   tracking_number: string | null;
   estimated_delivery_date: string | null;
+  delivered_at: string | null;
   return_reason: string | null;
 
   manufacturer: string | null;
@@ -692,6 +693,8 @@ export interface OrderLineItem {
   category_name: string;
   category_slug: string;
   can_raise_dispute: boolean;
+  can_review?: boolean;
+  has_reviewed?: boolean;
 
   quantity: number;
   fulfilled_quantity: number;

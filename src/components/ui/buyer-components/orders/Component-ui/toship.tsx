@@ -21,6 +21,7 @@ import { useFetchOrders } from "@/helpers/fetchOrders";
 import Link from "next/link";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
 import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
+import { getBuyerOrderDateLabel } from "@/utils/buyerOrderDisplay";
 
 interface OrdersProps {
   searchTerm: string;
@@ -144,6 +145,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                 {filteredOrders.map((item: OrderItem) => {
                   const orderItems = item.order_items || (item as any).items || [];
                   const isSingleItemOrder = orderItems.length === 1;
+                  const orderDate = getBuyerOrderDateLabel(item);
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex md:hidden mt-4 space-y-4">
                       {/* <Button
@@ -198,8 +200,7 @@ export default function ToShip({ searchTerm }: OrdersProps) {
                           </div>
                         </div>
                         <p className="text-c12 font-MontserratNormal leading-4 text-000000">
-                          Delivery:{" "}
-                          {item.estimated_delivery_date || " May 15, 2025"}
+                          {orderDate.label}: {orderDate.date}
                         </p>
                       </div>
 
