@@ -3,12 +3,13 @@ import type { ReactNode } from "react";
 // Small colored-circle wrapper for a lucide icon inside a StatusFrame tile —
 // shared by the Staff Management and Roles & Permissions stat rows so the
 // tone→color mapping lives in one place.
-type Tone = "neutral" | "positive" | "negative";
+type Tone = "neutral" | "positive" | "negative" | "warning";
 
 const TONE_CLASSES: Record<Tone, string> = {
   neutral: "bg-gray-100 text-gray-500",
   positive: "bg-[#2ea37d]/10 text-[#2ea37d]",
   negative: "bg-[#f44336]/10 text-[#f44336]",
+  warning: "bg-[#FFAC06]/12 text-[#FFAC06]",
 };
 
 export default function StatIcon({ tone, children }: { tone: Tone; children: ReactNode }) {

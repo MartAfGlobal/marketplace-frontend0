@@ -46,6 +46,21 @@ import RefundIcon from "@/assets/icons/refund.svg";
 import SupportIcon from "@/assets/icons/admin/supportIcon.svg";
 import ReportsIcon from "@/assets/icons/admin/ReportIcon.svg";
 import StaffIcon from "@/assets/icons/admin/staffIcon.svg";
+import FinancesIcon from "@/assets/icons/admin/financesIcon.svg";
+import FinanceOverviewIcon from "@/assets/icons/admin/financeOverview.svg";
+import FinanceOverviewActiveIcon from "@/assets/icons/admin/financeOverviewActive.svg";
+import FinanceTransactionsIcon from "@/assets/icons/admin/financeTransactions.svg";
+import FinanceTransactionsActiveIcon from "@/assets/icons/admin/financeTransactionsActive.svg";
+import FinanceTaxIcon from "@/assets/icons/admin/financeTax.svg";
+import FinanceTaxActiveIcon from "@/assets/icons/admin/financeTaxActive.svg";
+import FinancePayoutIcon from "@/assets/icons/admin/financePayout.svg";
+import FinancePayoutActiveIcon from "@/assets/icons/admin/financePayoutActive.svg";
+import FinanceTppIcon from "@/assets/icons/admin/financeTpp.svg";
+import FinanceEscrowIcon from "@/assets/icons/admin/financeEscrow.svg";
+import FinanceEscrowActiveIcon from "@/assets/icons/admin/financeEscrowActive.svg";
+import FinanceEarningsIcon from "@/assets/icons/admin/financeEarnings.svg";
+import FinanceEarningsActiveIcon from "@/assets/icons/admin/financeEarningsActive.svg";
+import FinanceTppActiveIcon from "@/assets/icons/admin/financeTppActive.svg";
 import ProductBoxIcon from "@/assets/icons/productBox.svg";
 import ProductListin from "@/assets/admin/productlistings.svg";
 import Categories from "@/assets/admin/Prodcategories.svg";
@@ -117,7 +132,9 @@ export default function AdminLayout({
     if (path.includes("/dashboard/admin/operational")) return "Operational";
     if (path.includes("/dashboard/admin/it")) return "IT";
     if (path.includes("/dashboard/admin/support-department")) return "Support";
-    if (path.includes("/dashboard/admin/finance")) return "Finance";
+    // Exact match/prefix with a trailing slash: "/finances/*" (the Finances
+    // section every admin sees) must not be mistaken for the Finance role.
+    if (path === "/dashboard/admin/finance" || path.startsWith("/dashboard/admin/finance/")) return "Finance";
     return "Super Admin";
   };
 
@@ -132,13 +149,14 @@ export default function AdminLayout({
       "Products",
       "Orders",
       "Support",
+      "Finances",
       "Reports",
       "Staff",
     ],
     Operational: ["Overview", "Users", "Verifications", "Products", "Orders"],
     IT: ["Overview", "Support", "Staff"],
     Support: ["Overview", "Users", "Support"],
-    Finance: ["Overview", "Orders", "Reports"],
+    Finance: ["Overview", "Orders", "Finances", "Reports"],
   };
 
   const sidebarItems: SidebarItem[] = [
@@ -214,6 +232,55 @@ export default function AdminLayout({
       ],
     },
     { name: "Support", icon: SupportIcon, path: "/dashboard/admin/support" },
+    {
+      name: "Finances",
+      icon: FinancesIcon,
+      path: "/dashboard/admin/finances",
+      subItems: [
+        {
+          name: "Overview",
+          path: "/dashboard/admin/finances",
+          icon: FinanceOverviewIcon,
+          activeIcon: FinanceOverviewActiveIcon,
+        },
+        {
+          name: "Transactions",
+          path: "/dashboard/admin/finances/transactions",
+          icon: FinanceTransactionsIcon,
+          activeIcon: FinanceTransactionsActiveIcon,
+        },
+        {
+          name: "Tax & compliance",
+          path: "/dashboard/admin/finances/tax-compliance",
+          icon: FinanceTaxIcon,
+          activeIcon: FinanceTaxActiveIcon,
+        },
+        {
+          name: "Payout management",
+          path: "/dashboard/admin/finances/payouts",
+          icon: FinancePayoutIcon,
+          activeIcon: FinancePayoutActiveIcon,
+        },
+        {
+          name: "Escrow release",
+          path: "/dashboard/admin/finances/escrow",
+          icon: FinanceEscrowIcon,
+          activeIcon: FinanceEscrowActiveIcon,
+        },
+        {
+          name: "Martaf earnings",
+          path: "/dashboard/admin/finances/earnings",
+          icon: FinanceEarningsIcon,
+          activeIcon: FinanceEarningsActiveIcon,
+        },
+        {
+          name: "TPP financials",
+          path: "/dashboard/admin/finances/tpp",
+          icon: FinanceTppIcon,
+          activeIcon: FinanceTppActiveIcon,
+        },
+      ],
+    },
     { name: "Reports", icon: ReportsIcon, path: "/dashboard/admin/reports" },
     {
       name: "Staff",
@@ -315,7 +382,9 @@ export default function AdminLayout({
 
                   {/* Subitems */}
                   {isOpen && (
-                    <div className="pl-8 mt-2 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div
+                      className={`${item.name === "Finances" ? "pl-4" : "pl-8"} mt-2 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-200`}
+                    >
                       {item.subItems!.map((sub) => {
                         const queryType = searchParams.get("type");
                         let isSubActive = false;
@@ -365,6 +434,13 @@ export default function AdminLayout({
                               "/dashboard/admin/categories",
                             );
                           }
+                        } else if (pathname.startsWith("/dashboard/admin/finances")) {
+                          // "Overview" is the section root, so it must match exactly
+                          // or it would stay lit on every other Finances page.
+                          isSubActive =
+                            sub.path === "/dashboard/admin/finances"
+                              ? pathname === sub.path
+                              : pathname.startsWith(sub.path);
                         } else if (pathname.startsWith("/dashboard/admin/staff")) {
                           if (sub.path.includes("roles-permissions")) {
                             isSubActive = pathname.startsWith(
@@ -381,7 +457,9 @@ export default function AdminLayout({
                           <Link
                             key={sub.name}
                             href={sub.path}
-                            className={`w-full flex items-center text-nowrap  gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all  ${
+                            className={`w-full flex items-center text-nowrap  gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all ${
+                              sub.icon ? "" : "justify-center"
+                            } ${
                               isSubActive
                                 ? "text-white bg-[#6A0DAD] font-MontserratBold shadow-md shadow-[#6A0DAD]/15"
                                 : "text-gray-600 bg-ffffff hover:bg-6a0dad/20"
