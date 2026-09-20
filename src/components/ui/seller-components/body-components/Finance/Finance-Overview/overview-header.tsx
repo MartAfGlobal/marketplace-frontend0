@@ -31,9 +31,16 @@ export default function OverViewHeader() {
     fetchData();
   }, [token]);
 
-  if (error && !error.includes("401")) {
-    console.error("Finance Balance Error:", error);
-  }
+  useEffect(() => {
+    if (
+      error &&
+      !error.includes("401") &&
+      !error.toLowerCase().includes("timeout") &&
+      !error.includes("temporarily unavailable")
+    ) {
+      console.warn("Finance Balance Warning:", error);
+    }
+  }, [error]);
 
   const formatCurrency = (amount: string | number | undefined) => {
     if (amount === undefined || amount === null) return "N0.00";

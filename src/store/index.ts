@@ -43,6 +43,7 @@ import registrationsReducer from "./slices/registration-slice";
 import AddProductReducer from "@/store/sellers/addProductSlice";
 import SellerProductReducer from "@/store/sellers/productSlice";
 import financeReducer from "@/store/finance/financeSlice";
+import transactionsReducer from "@/store/finance/transactionsSlice";
 
 const SellerPersistConfig = {
   key: "sellerProduct",
@@ -248,6 +249,7 @@ const rootReducer = combineReducers({
 
   ui: uiSliceReducer,
   finance: persistReducer(financePersistConfig, financeReducer),
+  transactions: transactionsReducer,
 });
 
 const store = configureStore({

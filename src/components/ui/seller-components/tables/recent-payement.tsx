@@ -1,36 +1,70 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import ArrowIcon from "@/assets/Seller/ArrowRight.svg";
+import { useAppSelector } from "@/store/Provider";
+import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import type { Transaction } from "@/store/finance/transactionsSlice";
+
+function formatDate(raw: string | undefined): string {
+  if (!raw) return "—";
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatAmount(amount: string | number | undefined): string {
+  if (amount === undefined || amount === null) return "—";
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  if (isNaN(num)) return String(amount);
+  return `N${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 export default function RecentPaymentTable() {
-  const allRows = Array.from({ length: 6 }, (_, i) => ({
-    id: i + 1,
-    date: "15/08/2026",
-    transactionid: "TRZ2038543453",
-    amount: "N25,000.00",
-    payoutmethod: i % 2 === 0 ? "Bank transfer" : "Credit card",
-  }));
-  const allRows2 = Array.from({ length: 6 }, (_, i) => ({
-    id: i + 1,
-    date: "15/08/2026",
-    transactionid: "TRZ2038543453",
-    discription: "Payment for order #12345",
-    amount: "N25,000.00",
-    type: i % 2 === 0 ? "sales" : "Credit card",
-  }));
+  const { fetchTransactions } = useFetchProducts();
+  const token = useSelector((state: RootState) => state.token?.token);
+  const { items, loading } = useAppSelector((state) => state.transactions);
+
+  useEffect(() => {
+    if (token && items.length === 0) {
+      fetchTransactions(1);
+    }
+  }, [token]);
+
+  const recentTransactions = items.slice(0, 6);
+
+  const payoutTransactions = items
+    .filter(
+      (t) =>
+        (t.type as string)?.toLowerCase().includes("payout") ||
+        (t.description as string)?.toLowerCase().includes("payout")
+    )
+    .slice(0, 6);
 
   return (
-    <div className="flex flex-col xl:flex-row justify-between pb-10 overflow-hidden">
+    <div className="flex flex-col lg:flex-row  gap-[75px] pb-10 overflow-hidden">
       {/* Payouts Table */}
-      <div className=" w-full max-w-104">
+      <div className="w-full max-w-104">
         <div className="flex justify-between items-center mb-6">
-          <p className="text-c18 font-MontserratNormal ">Recent Payouts</p>
-          <button className="">
-            <Image src={ArrowIcon} alt="view all" width={15} height={12.5} className="group-hover:translate-x-0.5 transition-transform" />
+          <p className="text-c18 font-MontserratNormal">Recent Payouts</p>
+          <button className="group">
+            <Image
+              src={ArrowIcon}
+              alt="view all"
+              width={15}
+              height={12.5}
+              className="group-hover:translate-x-0.5 transition-transform"
+            />
           </button>
         </div>
-        <div className="w-full overflow-hidden ">
+        <div className="w-full overflow-hidden">
           <table className="w-full text-left">
             <thead className="border-b border-[#947FFF] lg:text-nowrap">
               <tr className="text-[12px] font-MontserratSemiBold text-[#947fff]">
@@ -40,32 +74,59 @@ export default function RecentPaymentTable() {
                 <th className="p-3">Payout method</th>
               </tr>
             </thead>
-            <tbody className="">
-              {allRows.map((row) => (
-                <tr key={row.id} className="">
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68">{row.date}</td>
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68">{row.transactionid}</td>
-                  <td className="p-3 text-[10px] font-MontserratBold text-000000/68">{row.amount}</td>
-                  <td className="p-3 text-[10px] font-MontserratNormal text-000000/68">{row.payoutmethod}</td>
+            <tbody>
+              {payoutTransactions.map((row: Transaction) => (
+                <tr key={row.transaction_id}>
+                   <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[96px] truncate" title={formatDate(row.date as string)} >
+                    {formatDate(row.date as string)}
+                  </td>
+                  <td className="p-3 text-[12px] max-w-31 truncate font-MontserratSemiBold text-000000/68" title={row.transaction_id}>
+                    {row.transaction_id}
+                  </td>
+                 
+                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[121px] truncate" title= {formatAmount(row.amount)}>
+                    {formatAmount(row.amount)}
+                  </td>
+                  <td className="p-3 text-[12px] max-w-[121px] truncate font-MontserratNormal text-000000/68" title={(row.linked_entity as string) || (row.type as string) || "Bank transfer"}>
+                    {(row.linked_entity as string) || (row.type as string) || "Bank transfer"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {loading && (
+            <div className="py-8 text-center text-[11px] font-MontserratMedium text-[#999999] animate-pulse">
+              Loading payouts…
+            </div>
+          )}
+          {!loading && payoutTransactions.length === 0 && (
+            <div className="py-8 text-center text-[11px] font-MontserratMedium text-[#999999]">
+              No recent payouts.
+            </div>
+          )}
         </div>
       </div>
 
       {/* Vertical Divider for XL screens */}
-      <div className="hidden xl:block w-[1px]  self-stretch bg-[#f0f0f0]"></div>
+      <div className="hidden xl:block w-[1px] self-stretch bg-[#f0f0f0]"></div>
 
       {/* Transactions Table */}
-      <div className=" w-full max-w-128.25">
+      <div className="w-full max-w-128.25">
         <div className="flex justify-between items-center mb-6">
-          <p className="text-sm font-MontserratSemiBold text-[#333333]">Recent Transactions</p>
+          <p className="text-sm font-MontserratSemiBold text-[#333333]">
+            Recent Transactions
+          </p>
           <button className="p-1 hover:bg-gray-50 rounded-full transition-colors group">
-            <Image src={ArrowIcon} alt="view all" width={18} height={18} className="group-hover:translate-x-0.5 transition-transform" />
+            <Image
+              src={ArrowIcon}
+              alt="view all"
+              width={18}
+              height={18}
+              className="group-hover:translate-x-0.5 transition-transform"
+            />
           </button>
         </div>
-        <div className="w-full overflow-hidden ">
+        <div className="w-full overflow-hidden">
           <table className="w-full text-left">
             <thead className="border-b border-[#947FFF] lg:text-nowrap">
               <tr className="text-[12px] font-MontserratSemiBold text-[#947fff]">
@@ -76,18 +137,38 @@ export default function RecentPaymentTable() {
                 <th className="p-3">Type</th>
               </tr>
             </thead>
-            <tbody className="">
-              {allRows2.map((row) => (
-                <tr key={row.id} className="">
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68">{row.date}</td>
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68">{row.transactionid}</td>
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68">{row.discription}</td>
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68">{row.amount}</td>
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68">{row.type}</td>
+            <tbody>
+              {recentTransactions.map((row: Transaction) => (
+                <tr key={row.transaction_id}>
+                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[96px] truncate" title={formatDate(row.date as string)} >
+                    {formatDate(row.date as string)}
+                  </td>
+                  <td className="p-3 text-[12px] max-w-31 truncate font-MontserratSemiBold text-000000/68" title={row.transaction_id}>
+                    {row.transaction_id}
+                  </td>
+                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[168px] trucate" title={(row.description as string) || "—"}>
+                    {(row.description as string) || "—"}
+                  </td>
+                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[121px] truncate" title= {formatAmount(row.amount)}>
+                    {formatAmount(row.amount)}
+                  </td>
+                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[40px]" title={(row.type as string) || "—"}>
+                    {(row.type as string) || "—"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {loading && (
+            <div className="py-8 text-center text-[11px] font-MontserratMedium text-[#999999] animate-pulse">
+              Loading transactions…
+            </div>
+          )}
+          {!loading && recentTransactions.length === 0 && (
+            <div className="py-8 text-center text-[11px] font-MontserratMedium text-[#999999]">
+              No recent transactions.
+            </div>
+          )}
         </div>
       </div>
     </div>

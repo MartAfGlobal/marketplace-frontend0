@@ -173,7 +173,7 @@ const VerifyBankOtpModal = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[50] md:z-[100] md:flex md:items-center md:justify-center pt-18 md:pt-0"
+            className="fixed inset-0 z-[110] md:z-[120] md:flex md:items-center md:justify-center pt-18 md:pt-0"
           >
             {/* Overlay */}
             <div 

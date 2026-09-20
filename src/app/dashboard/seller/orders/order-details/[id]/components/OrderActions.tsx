@@ -22,6 +22,8 @@ export const OrderActions = ({
   isDesktop = true,
 }: OrderActionsProps) => {
   const mappedStatus = getMappedStatus(order);
+  const isTrackingSubmitted =
+    String(order.status ?? "").trim().toUpperCase() === "TRACKING_SUBMITTED";
 
   if (isDesktop) {
     return (
@@ -64,7 +66,10 @@ export const OrderActions = ({
           </div>
         )}
 
-        {(mappedStatus === "processing" || mappedStatus === "partially accepted" || mappedStatus === "accepted") && (
+        {(mappedStatus === "processing" ||
+          mappedStatus === "partially accepted" ||
+          mappedStatus === "accepted") &&
+          !isTrackingSubmitted && (
           <div className="flex flex-col gap-4">
             <Button
               disabled={timeLeft <= 0}
@@ -130,7 +135,8 @@ export const OrderActions = ({
             </Button>
           </>
         )}
-        {(mappedStatus === "processed" || mappedStatus === "partially accepted") && (
+        {(mappedStatus === "processed" || mappedStatus === "partially accepted") &&
+          !isTrackingSubmitted && (
           <Button
             disabled={timeLeft <= 0}
             onClick={onFulfillClick}

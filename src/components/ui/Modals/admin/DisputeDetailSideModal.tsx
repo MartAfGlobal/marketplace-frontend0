@@ -590,7 +590,7 @@ export default function DisputeDetailSideModal({
                 ).toUpperCase();
 
                 const isRefundBothParties =
-                  resType === "REFUND_BOTH_PARTIES" || resType.includes("BOTH");
+                  resType === "REFUND_BOTH_PARTIES";
 
                 const isDeliveryConfirmed = Boolean(
                   dispute?.return_delivery_confirmed ||
@@ -604,18 +604,17 @@ export default function DisputeDetailSideModal({
 
                 if (!isResolvedOrApproved || isClosed) return null;
 
-                {
-                  dispute?.status_display === "Accepted" &&
-                    !isRefundBothParties && (
-                      <Button
-                        type="button"
-                        disabled={actionLoading || reviewing}
-                        onClick={() => setResolveWarningOpen(true)}
-                        className="w-[203px] "
-                      >
-                        Confirm item's return
-                      </Button>
-                    );
+                if (dispute?.status_display === "Accepted") {
+                  return (
+                    <Button
+                      type="button"
+                      disabled={actionLoading || reviewing}
+                      onClick={() => setResolveWarningOpen(true)}
+                      className="w-[203px]"
+                    >
+                      Confirm item's return
+                    </Button>
+                  );
                 }
                 if (!isRefundBothParties && !isDeliveryConfirmed) {
                   return (

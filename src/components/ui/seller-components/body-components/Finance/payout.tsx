@@ -31,7 +31,7 @@ export default function Payout() {
       </motion.div>
 
       <div className="mt-8">
-        {Object.keys(filters).length > 0 && (
+        {/* {Object.keys(filters).length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {(Object.entries(filters) as [string, any][]).map(([key, value]) => (
               <span
@@ -48,7 +48,7 @@ export default function Payout() {
               </span>
             ))}
           </div>
-        )}
+        )} */}
 
         <PayOutTable currentPage={currentPage} rowsPerPage={rowsPerPage} filters={filters}/>
 
