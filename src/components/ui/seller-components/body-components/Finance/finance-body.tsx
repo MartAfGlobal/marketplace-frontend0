@@ -78,7 +78,7 @@ export default function FinanceSecions() {
 
         {/* Main Content Area */}
         <div className="flex-1 min-h-[70vh]">
-          <div className="bg-white rounded-2xl  p-6 transition-all duration-300">
+          <div className="bg-white rounded-2xl p-6 transition-all duration-300">
             {sections.find((s) => s.id === activeId)?.content}
           </div>
         </div>
