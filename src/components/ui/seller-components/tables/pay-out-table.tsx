@@ -116,30 +116,34 @@ export default function PayOutTable({
       <table className="w-full border-collapse">
         {/* Table Head */}
         <thead className="text-white font-MontserratSemiBold text-c12 bg-947fff h-10">
-          <tr className="h-13">
-            <th className="px-1 text-left">Date & time</th>
-            <th className="px-1 text-left">Transaction ID</th>
-            <th className="px-1 text-left">Amount</th>
-            <th className="px-1 text-left">Status</th>
-            <th className="px-1 text-left">Withdrawn to</th>
-            <th className="px-1 text-left">Description</th>
+          <tr className="h-10">
+            <th className="p-3 text-left">Date & time</th>
+            <th className="p-3 text-left">Transaction ID</th>
+            <th className="p-3 text-left">Amount</th>
+            <th className="p-3 text-left">Status</th>
+            <th className="p-3 text-left">Withdrawn to</th>
+            <th className="p-3 text-left">Description</th>
             <th></th>
           </tr>
         </thead>
 
         <tbody className="mt-3">
+          <tr className="h-3"></tr>
           {currentRows.map((row) => (
-            <tr
+            
+            
+             <tr
               key={row.id}
               className="h-10  text-c12 font-MontserratSemiBold  text-000000/60"
             >
-              <td className="px-1 text-left">{row.dateTime}</td>
-              <td className="px-1 text-left">{row.transactionid}</td>
-              <td className="px-1 text-left">{row.amount}</td>
-              <td className="px-1 text-left text-2d7565">{row.status}</td>
-              <td className="px-1 text-left">{row.withdrawnTo}</td>
+             
+              <td className="px-3 pt-3 pb-6 text-left">{row.dateTime}</td>
+              <td className="px-3 pt-3 pb-6 text-left">{row.transactionid}</td>
+              <td className="px-3 pt-3 pb-6 text-left">{row.amount}</td>
+              <td className="px-3 pt-3 pb-6 text-left text-2d7565">{row.status}</td>
+              <td className="px-3 pt-3 pb-6 text-left">{row.withdrawnTo}</td>
 
-              <td className="px-1">{row.description}</td>
+              <td className="px-3 pt-3 pb-6">{row.description}</td>
               <td>
                 <button className="w-6 h-6 flex-shrink-0">
                   <Image
@@ -152,6 +156,8 @@ export default function PayOutTable({
                 </button>
               </td>
             </tr>
+            
+           
           ))}
         </tbody>
       </table>

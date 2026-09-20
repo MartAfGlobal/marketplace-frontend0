@@ -15,6 +15,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { setSellerProduct } from "@/store/sellers/productSlice";
 import { setDraft } from "@/store/sellers/draftSlice";
 import { setBalance, setFinanceLoading, setFinanceError } from "@/store/finance/financeSlice";
+import {
+  setTransactions,
+  setTransactionsLoading,
+  setTransactionsError,
+} from "@/store/finance/transactionsSlice";
 import { useState } from "react";
 import { RequestType } from "@/types/global";
 
@@ -199,6 +204,103 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
         dispatch(setFinanceError(err.message || "Failed to fetch balance"));
         dispatch(setFinanceLoading(false));
       }
+    });
+  };
+
+  /**
+   * Fetch paginated wallet transactions (newest first).
+   * Calls: GET /commission/manufacturer/wallet/transactions?page=<page>
+   * API response shape (standard DRF pagination):
+   *   { count, next, previous, results: Transaction[] }
+   */
+  const fetchTransactions = (page: number = 1) => {
+    if (!token) return;
+
+    dispatch(setTransactionsLoading(true));
+    dispatch(setTransactionsError(null));
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/commission/manufacturer/wallet/transactions?page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (responseData: any) => {
+        const data = responseData.data;
+        const items = Array.isArray(data) ? data : (data?.results ?? []);
+        const totalCount = Array.isArray(data) ? items.length : (data?.count ?? items.length);
+        console.log("Transactions fetched:", items);
+        dispatch(setTransactions({ items, totalCount, page }));
+        dispatch(setTransactionsLoading(false));
+      },
+      errorRes: (err: any) => {
+        const errorMessage = String(
+          err?.response?.data?.detail || err?.message || "Failed to fetch transactions",
+        );
+        const isTimeout = errorMessage.toLowerCase().includes("timeout");
+        dispatch(
+          setTransactionsError(
+            isTimeout ? "Transactions temporarily unavailable." : errorMessage,
+          ),
+        );
+        dispatch(setTransactionsLoading(false));
+      },
+    });
+  };
+
+  /**
+   * Fetch time-series chart data for the Finance Overview income/expense chart.
+   * Calls: GET /commission/manufacturer/sales-chart/?range=<range>
+   * range options: "weekly" | "monthly" | "yearly"
+   */
+  const fetchSalesChart = (
+    range: "weekly" | "monthly" | "yearly" = "weekly",
+    onSuccess?: (data: any) => void
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/commission/manufacturer/sales-chart/?range=${range}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (responseData: any) => {
+        console.log("Sales chart data fetched successfully:", responseData.data);
+        onSuccess?.(responseData.data);
+      },
+      errorRes: (err: any) => {
+        console.warn("Sales chart fetch warning:", err?.message || err);
+      },
+    });
+  };
+
+  /**
+   * Fetch seller's registered bank details.
+   * Calls: GET /accounts/manufacturer/bank/list/
+   */
+  const fetchBanks = (callback?: (data: any[]) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/accounts/manufacturer/bank/list/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (responseData: any) => {
+        const banks = responseData?.data?.results ?? responseData?.data ?? [];
+        callback?.(Array.isArray(banks) ? banks : []);
+      },
+      errorRes: (err: any) => {
+        console.warn("Error fetching bank list:", err?.message || err);
+      },
     });
   };
 
@@ -445,6 +547,9 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
     fetchdDraft,
     fetchProducts,
     fetchBalance,
+    fetchTransactions,
+    fetchSalesChart,
+    fetchBanks,
     fetchOrders,
     fetchLogs,
     fetchOrderDetails,

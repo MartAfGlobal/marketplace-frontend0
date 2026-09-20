@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHttp } from "@/hooks/use-http";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toast } from "sonner";
-import { X, ChevronDown } from "lucide-react";
+import { X } from "lucide-react";
+import CaretDown from "@/assets/Seller/caretDown.png";
 import { LoadingSpinner } from "../loading-spinner";
 import { SellerMobileHeader } from "../seller-components/header-components/SellerMobileHeader";
 import { Input } from "@/components/ui/forms/Input";
@@ -33,9 +35,23 @@ const AddNewAccountModal = ({
   const [showBankDropdown, setShowBankDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [fetchingBanks, setFetchingBanks] = useState(false);
+  const bankDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const token = useSelector((state: RootState) => state.token.token);
   const { sendHttpRequest } = useHttp();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        bankDropdownRef.current &&
+        !bankDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowBankDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -114,7 +130,7 @@ const AddNewAccountModal = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[50] md:z-[100] md:flex md:items-center md:justify-center pt-18 md:pt-0"
+          className="fixed inset-0 z-[110] md:z-[120] md:flex md:items-center md:justify-center pt-18 md:pt-0"
         >
           {/* Overlay */}
           <div 
@@ -157,56 +173,75 @@ const AddNewAccountModal = ({
                 <div className="flex flex-col gap-4">
                   {/* Bank Name */}
                   <div className="flex flex-col gap-2">
-                    <Label>Bank name</Label>
-                    <div className="relative w-full">
+                    <Label className="uppercase tracking-wider text-[#999999]">Bank name</Label>
+                    <div className="relative w-full" ref={bankDropdownRef}>
                       <button 
-                        onClick={() => setShowBankDropdown(!showBankDropdown)}
-                        className="w-full flex items-center justify-between h-12 md:h-12 border border-[#e5e5e5] rounded-xl px-4 text-[13px] text-[#161616] font-MontserratMedium appearance-none outline-none focus:border-[#ff715b] bg-white transition-all"
+                        type="button"
+                        onClick={() => setShowBankDropdown((prev) => !prev)}
+                        className="flex text-c12 font-MontserratNormal bg-white border-[0.5px] border-ff715b items-center w-full p-3 rounded-c8 justify-between h-12 cursor-pointer transition-colors"
                       >
-                        <span className={selectedBank ? "" : "text-gray-400"}>
+                        <span className={`truncate ${selectedBank ? "text-[#161616] font-MontserratMedium" : "text-ff715b font-MontserratNormal"}`}>
                           {selectedBank || "Select bank"}
                         </span>
-                        <ChevronDown size={18} className={`text-[#666666] transition-transform ${showBankDropdown ? "rotate-180" : ""}`} />
+                        <Image
+                          src={CaretDown}
+                          alt="dropdown"
+                          width={11}
+                          height={6}
+                          className={`transition-transform duration-200 ${showBankDropdown ? "rotate-180" : ""}`}
+                        />
                       </button>
 
-                      {showBankDropdown && (
-                        <div className="absolute top-[110%] left-0 w-full max-h-56 overflow-hidden bg-white border border-[#f0f0f0] rounded-xl shadow-lg z-[110] flex flex-col">
-                          <div className=" border-b border-[#f0f0f0] bg-white sticky top-0">
-                            <Input
-                              type="text"
-                              autoFocus
-                              placeholder="Search bank..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                              
-                            />
-                          </div>
+                      <AnimatePresence>
+                        {showBankDropdown && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute z-50 left-0 mt-2 w-full py-2 px-2 text-c12 font-MontserratNormal bg-white rounded-c8 shadow-lg border border-gray-100 max-h-56 overflow-hidden flex flex-col"
+                          >
+                            <div className="border-b border-gray-100 pb-2 mb-1">
+                              <Input
+                                type="text"
+                                autoFocus
+                                placeholder="Search bank..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="h-9 text-c12"
+                              />
+                            </div>
 
-                          <div className="overflow-y-auto max-h-40 py-1 hcustom-scroll">
-                            {fetchingBanks ? (
-                              <div className="px-4 py-4 text-[13px] text-gray-500 text-center">Loading banks...</div>
-                            ) : filteredBanks.length === 0 ? (
-                              <div className="px-4 py-4 text-[13px] text-gray-500 text-center">No banks found</div>
-                            ) : (
-                              filteredBanks.map((bank: any, idx: number) => (
-                                <button 
-                                  key={idx} 
-                                  onClick={() => {
-                                    setSelectedBank(bank.name);
-                                    setSelectedBankCode(bank.code);
-                                    setShowBankDropdown(false);
-                                    setSearchQuery("");
-                                  }}
-                                  className={`w-full text-left px-4 py-3  hover:bg-gray-50 transition-colors ${selectedBank === bank.name ? "bg-[#fff5f5] text-[#ff715b]" : "text-[#666666]"}`}
-                                >
-                                  {bank.name}
-                                </button>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      )}
+                            <div className="overflow-y-auto max-h-40 py-1">
+                              {fetchingBanks ? (
+                                <div className="px-3 py-3 text-c12 text-gray-500 text-center">Loading banks...</div>
+                              ) : filteredBanks.length === 0 ? (
+                                <div className="px-3 py-3 text-c12 text-gray-500 text-center">No banks found</div>
+                              ) : (
+                                filteredBanks.map((bank: any, idx: number) => (
+                                  <div 
+                                    key={idx} 
+                                    onClick={() => {
+                                      setSelectedBank(bank.name);
+                                      setSelectedBankCode(bank.code);
+                                      setShowBankDropdown(false);
+                                      setSearchQuery("");
+                                    }}
+                                    className={`p-2.5 rounded cursor-pointer transition-colors flex justify-between items-center ${
+                                      selectedBank === bank.name 
+                                        ? "bg-ff715b/10 text-ff715b font-MontserratSemiBold" 
+                                        : "hover:bg-gray-50 text-[#161616]"
+                                    }`}
+                                  >
+                                    <span className="truncate">{bank.name}</span>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
 

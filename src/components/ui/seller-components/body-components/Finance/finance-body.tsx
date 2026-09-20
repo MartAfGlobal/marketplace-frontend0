@@ -51,8 +51,9 @@ export default function FinanceSecions() {
       <SellerMobileHeader 
         title="Finance"
         showBackButton={false}
+        showBorder = {false}
         rightElement={
-          <div className="hidden md:block w-[400px]">
+          <div className="hidden md:block w-[400px] ">
             <SearchInput placeholder="Search transactions, payout ID..." />
           </div>
         }
