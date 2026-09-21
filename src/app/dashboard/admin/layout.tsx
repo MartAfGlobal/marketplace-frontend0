@@ -46,6 +46,10 @@ import RefundIcon from "@/assets/icons/refund.svg";
 import SupportIcon from "@/assets/icons/admin/supportIcon.svg";
 import ReportsIcon from "@/assets/icons/admin/ReportIcon.svg";
 import StaffIcon from "@/assets/icons/admin/staffIcon.svg";
+import NoAccess from "@/components/admin-components/NoAccess";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useAdminAccess, useLoadAdminAccess } from "@/helpers/admin/useAdminAccess";
+import type { PermissionCategoryKey } from "@/types/admin";
 import FinancesIcon from "@/assets/icons/admin/financesIcon.svg";
 import FinanceOverviewIcon from "@/assets/icons/admin/financeOverview.svg";
 import FinanceOverviewActiveIcon from "@/assets/icons/admin/financeOverviewActive.svg";
@@ -79,6 +83,38 @@ interface SidebarItem {
     icon?: React.ComponentType<any> | StaticImageData;
   }[];
 }
+
+// Which permission category a menu group needs. Overview has none: every staff
+// member lands there. Sub-items share their group's category.
+const ITEM_CATEGORY: Record<string, PermissionCategoryKey> = {
+  Users: "USERS",
+  Verifications: "VERIFICATIONS",
+  Products: "PRODUCTS",
+  Orders: "ORDERS",
+  Support: "SUPPORT",
+  Finances: "FINANCES",
+  Reports: "REPORTS",
+  Staff: "STAFF",
+};
+
+// URL prefix -> category, for a staff member who types a restricted URL directly.
+const PATH_CATEGORY: [string, PermissionCategoryKey][] = [
+  ["/dashboard/admin/users", "USERS"],
+  ["/dashboard/admin/verifications", "VERIFICATIONS"],
+  ["/dashboard/admin/products", "PRODUCTS"],
+  ["/dashboard/admin/categories", "PRODUCTS"],
+  ["/dashboard/admin/orders", "ORDERS"],
+  ["/dashboard/admin/disputes", "ORDERS"],
+  ["/dashboard/admin/support", "SUPPORT"],
+  ["/dashboard/admin/support-department", "SUPPORT"],
+  ["/dashboard/admin/finances", "FINANCES"],
+  ["/dashboard/admin/finance", "FINANCES"],
+  ["/dashboard/admin/reports", "REPORTS"],
+  ["/dashboard/admin/staff", "STAFF"],
+];
+
+const requiredCategory = (path: string) =>
+  PATH_CATEGORY.find(([prefix]) => path === prefix || path.startsWith(prefix + "/"))?.[1];
 
 const isIconComponent = (
   icon: React.ComponentType<any> | StaticImageData,
@@ -119,6 +155,8 @@ export default function AdminLayout({
   const router = useRouter();
   const dispatch = useDispatch();
   useTokenExpiration();
+  useLoadAdminAccess();
+  const { loaded: accessLoaded, can } = useAdminAccess();
   const logout = useLogout(dispatch);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -305,8 +343,12 @@ export default function AdminLayout({
 
   // Filter sidebar items dynamically based on selected role
   const activeRoleItems = roleNavigation[currentRole] || [];
-  const filteredSidebarItems = sidebarItems.filter((item) =>
-    activeRoleItems.includes(item.name),
+  // Then only what this person's role actually allows. Until the server has answered
+  // nothing restricted is shown (fail closed), so a menu never flashes and vanishes.
+  const filteredSidebarItems = sidebarItems.filter(
+    (item) =>
+      activeRoleItems.includes(item.name) &&
+      (!ITEM_CATEGORY[item.name] || can(ITEM_CATEGORY[item.name])),
   );
 
   const toggleExpand = (name: string) => {
@@ -668,7 +710,20 @@ export default function AdminLayout({
         </aside>
 
         {/* Page Content View */}
-        <main className="flex-1 min-w-0 w-full mx-auto">{children}</main>
+        <main className="flex-1 min-w-0 w-full mx-auto">
+          {(() => {
+            const needed = requiredCategory(pathname);
+            if (!needed) return children;
+            if (!accessLoaded) {
+              return (
+                <div className="flex justify-center py-24">
+                  <LoadingSpinner size={32} color="border-ff715b" />
+                </div>
+              );
+            }
+            return can(needed) ? children : <NoAccess />;
+          })()}
+        </main>
       </div>
 
       {/* Mobile Drawer Backdrop */}

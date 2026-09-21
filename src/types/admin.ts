@@ -105,6 +105,14 @@ export type AccessLevel = "RESTRICTED" | "HIGH" | "STANDARD";
 export type RoleStatus = "ACTIVE" | "SUSPENDED";
 export type RoleType = "SYSTEM" | "CUSTOM";
 
+/** What GET /departments/me/access/ returns: the signed-in staff member's role and
+ *  effective matrix. Full admins (superusers) come back with everything true. */
+export interface AdminAccess {
+  is_full_access: boolean;
+  role: string | null;
+  permissions: PermissionMatrix;
+}
+
 export type PermissionMatrix = Record<
   PermissionCategoryKey,
   Record<PermissionAction, boolean>

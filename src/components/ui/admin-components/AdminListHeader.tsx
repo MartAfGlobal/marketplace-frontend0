@@ -215,7 +215,7 @@ export default function AdminListHeader({
           <button
             onClick={onExportClick}
             className="h-10 w-10 flex shrink-0 items-center justify-center bg-ff715b text-white rounded-c8   hover:bg-opacity-95 transition-all active:scale-95 cursor-pointer"
-            title="Export as PDF"
+            title="Download"
           >
             <Download className="w-4 h-4" />
           </button>
@@ -272,7 +272,7 @@ export default function AdminListHeader({
         <button
           onClick={onExportClick}
           className="h-11 w-11 flex shrink-0 items-center justify-center bg-[#FF715B] text-white rounded-xl shadow-md shadow-[#FF715B]/10 hover:bg-opacity-95 transition-all active:scale-95 cursor-pointer"
-          title="Export as PDF"
+          title="Download"
         >
           <Download className="w-4 h-4" />
         </button>

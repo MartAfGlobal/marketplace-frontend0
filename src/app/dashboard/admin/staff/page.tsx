@@ -7,6 +7,7 @@ import { ChevronDown, UserPlus, LogOut, Users, CheckCircle2, XCircle } from "luc
 import { toast } from "sonner";
 import { RootState } from "@/store";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
+import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
 import { Button } from "@/components/ui/Button/Button";
 import AdminListHeader from "@/components/ui/admin-components/AdminListHeader";
 import StatusFrame from "@/components/admin-components/users/status-frame";
@@ -17,13 +18,17 @@ import StaffTable from "@/components/admin-components/staff/StaffTable";
 import Pagination from "@/components/ui/seller-components/body-components/products/pignation-button";
 import InviteStaffModal from "@/components/ui/Modals/admin/InviteStaffModal";
 import StaffReasonModal from "@/components/ui/Modals/admin/StaffReasonModal";
+import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import type { AdminStaffListItem } from "@/types/admin";
 
 const PAGE_SIZE = 20;
 
 export default function AdminStaffPage() {
   const [searchVal, setSearchVal] = useState("");
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<string[]>([]);
   const [page, setPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<AdminStaffListItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -36,36 +41,67 @@ export default function AdminStaffPage() {
     (state: RootState) => state.adminStaff,
   );
 
+  const { adminRoles } = useSelector((state: RootState) => state.adminRoles);
+  const { can } = useAdminAccess();
+  const canCreate = can("STAFF", "create");
+  const canModify = can("STAFF", "modify");
+  const canDelete = can("STAFF", "delete");
+
   const {
     fetchAdminStaffList,
+    fetchAdminRoles,
+    deleteAdminStaff,
+    exportAdminStaff,
     securityLogoutAdminStaffBulk,
     suspendAdminStaff,
     resendAdminStaffInvite,
     loading,
   } = AdminDetails();
 
+  // Filter options: the four account states, then every role. Statuses go to ?status=,
+  // roles to ?role_id= (both accept several values); search is server-side too, so
+  // search, filters and pagination always agree.
+  const STATUS_FILTERS: Record<string, string> = {
+    Active: "ACTIVE",
+    Pending: "PENDING",
+    Suspended: "SUSPENDED",
+    Deactivated: "DEACTIVATED",
+  };
+  const roleIdByName = Object.fromEntries(adminRoles.map((r) => [r.name, String(r.id)]));
+  const filterOptions = [...Object.keys(STATUS_FILTERS), ...adminRoles.map((r) => r.name)];
+
+  const listParams = () => ({
+    search,
+    status: filters.filter((f) => STATUS_FILTERS[f]).map((f) => STATUS_FILTERS[f]).join(","),
+    role_id: filters.filter((f) => roleIdByName[f] && !STATUS_FILTERS[f]).map((f) => roleIdByName[f]).join(","),
+  });
+
   const refetch = () => {
     setListLoading(true);
-    fetchAdminStaffList({ page }, () => setListLoading(false));
+    fetchAdminStaffList({ page, ...listParams() }, () => setListLoading(false));
   };
 
   useEffect(() => {
-    if (!token) return;
-    setListLoading(true);
-    fetchAdminStaffList({ page }, () => setListLoading(false));
+    if (token) fetchAdminRoles({ page_size: 100 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, page]);
+  }, [token]);
 
-  const query = searchVal.trim().toLowerCase();
-  const filteredStaff = query
-    ? adminStaff.filter((row) =>
-        [row.full_name, row.email, row.role, row.location]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(query),
-      )
-    : adminStaff;
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchVal.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [searchVal]);
+
+  useEffect(() => {
+    if (!token) return;
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, page, search, filters]);
+
+  // Rows come back already filtered and paged by the server.
+  const filteredStaff = adminStaff;
 
   const handleToggleRow = (id: string) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
@@ -92,6 +128,20 @@ export default function AdminStaffPage() {
     });
   };
 
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    deleteAdminStaff(
+      deleteTarget.user_id,
+      () => {
+        toast.success(`${deleteTarget.full_name} was deleted.`);
+        setDeleteTarget(null);
+        setSelectedIds((prev) => prev.filter((id) => id !== deleteTarget.user_id));
+        refetch();
+      },
+      () => setDeleteTarget(null),
+    );
+  };
+
   const handleResendInvite = (row: AdminStaffListItem) => {
     resendAdminStaffInvite(
       row.user_id,
@@ -114,6 +164,7 @@ export default function AdminStaffPage() {
             <p className="text-c12 text-000000/44 font-MontserratNormal mt-0.5">Manage Staff access and roles</p>
           </div>
 
+          {(canCreate || canModify) && (
           <div className="relative w-full sm:w-auto">
             <Button
               variant="primary"
@@ -133,6 +184,7 @@ export default function AdminStaffPage() {
                   transition={{ duration: 0.2 }}
                   className="absolute right-0 top-12 w-48 rounded-c8 bg-white shadow-custom border border-000000/4 z-30 py-3 px-4 flex flex-col text-c12 font-MontserratNormal overflow-hidden"
                 >
+                  {canCreate && (
                   <button
                     onClick={() => {
                       setCreateMenuOpen(false);
@@ -142,6 +194,8 @@ export default function AdminStaffPage() {
                   >
                     <UserPlus className="w-4 h-4" /> Create New Staff
                   </button>
+                  )}
+                  {canModify && (
                   <button
                     onClick={() => {
                       setCreateMenuOpen(false);
@@ -153,10 +207,12 @@ export default function AdminStaffPage() {
                   >
                     <LogOut className="w-4 h-4" /> Security Logout
                   </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
+          )}
         </div>
 
         {/* Stat tiles */}
@@ -203,7 +259,15 @@ export default function AdminStaffPage() {
           <AdminListHeader
             searchVal={searchVal}
             setSearchVal={setSearchVal}
-            placeholder="Search staff members by name, email or role..."
+            placeholder="Search staff members by name, email or staff ID..."
+            hidePeriod
+            filterOptions={filterOptions}
+            selectedFilters={filters}
+            onFilterChange={(f) => {
+              setFilters(f);
+              setPage(1);
+            }}
+            onExportClick={() => exportAdminStaff(listParams())}
           />
 
           <StaffTable
@@ -214,6 +278,10 @@ export default function AdminStaffPage() {
             onSelectAll={handleSelectAll}
             onSuspendRow={setSuspendTarget}
             onResendInvite={handleResendInvite}
+            onDeleteRow={setDeleteTarget}
+            canCreate={canCreate}
+            canModify={canModify}
+            canDelete={canDelete}
           />
 
           {totalCount > PAGE_SIZE && (
@@ -230,6 +298,22 @@ export default function AdminStaffPage() {
         isOpen={inviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
         onSuccess={refetch}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete this staff record?"
+        description={
+          deleteTarget?.status === "PENDING"
+            ? `The invitation sent to ${deleteTarget?.email} will be cancelled and the record removed.`
+            : `${deleteTarget?.full_name}'s staff record will be removed for good. This can't be undone.`
+        }
+        onYes={handleDeleteConfirm}
+        onNo={() => setDeleteTarget(null)}
+        yesText="Delete"
+        noText="Cancel"
+        loading={loading}
       />
 
       <StaffReasonModal

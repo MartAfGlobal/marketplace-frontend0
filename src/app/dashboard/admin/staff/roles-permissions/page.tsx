@@ -6,6 +6,7 @@ import { Plus, Users, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { RootState } from "@/store";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
+import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
 import { Button } from "@/components/ui/Button/Button";
 import AdminListHeader from "@/components/ui/admin-components/AdminListHeader";
 import StatusFrame from "@/components/admin-components/users/status-frame";
@@ -21,6 +22,8 @@ const PAGE_SIZE = 20;
 
 export default function RolesAndPermissionsPage() {
   const [searchVal, setSearchVal] = useState("");
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [listLoading, setListLoading] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -31,26 +34,43 @@ export default function RolesAndPermissionsPage() {
 
   const token = useSelector((state: RootState) => state.token?.token);
   const { adminRoles, totalCount, summary } = useSelector((state: RootState) => state.adminRoles);
-  const { fetchAdminRoles, duplicateAdminRole, deleteAdminRole } = AdminDetails();
+  const { fetchAdminRoles, duplicateAdminRole, deleteAdminRole, exportAdminRoles } = AdminDetails();
+  const { can } = useAdminAccess();
+  const canCreate = can("STAFF", "create");
+  const canModify = can("STAFF", "modify");
+  const canDelete = can("STAFF", "delete");
+
+  // Filter options: how sensitive the role is, then whether it is in use. Both go to the
+  // server (as ?access_level= / ?status=), like search, so filters and pages agree.
+  const LEVEL_FILTERS: Record<string, string> = { Restricted: "RESTRICTED", High: "HIGH", Standard: "STANDARD" };
+  const STATUS_FILTERS: Record<string, string> = { Active: "ACTIVE", Suspended: "SUSPENDED" };
+  const listParams = () => ({
+    search,
+    access_level: filters.filter((f) => LEVEL_FILTERS[f]).map((f) => LEVEL_FILTERS[f]).join(","),
+    status: filters.filter((f) => STATUS_FILTERS[f]).map((f) => STATUS_FILTERS[f]).join(","),
+  });
 
   const refetch = () => {
     setListLoading(true);
-    fetchAdminRoles({ page }, () => setListLoading(false));
+    fetchAdminRoles({ page, ...listParams() }, () => setListLoading(false));
   };
 
   useEffect(() => {
-    if (!token) return;
-    setListLoading(true);
-    fetchAdminRoles({ page }, () => setListLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, page]);
+    const t = setTimeout(() => {
+      setSearch(searchVal.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [searchVal]);
 
-  const query = searchVal.trim().toLowerCase();
-  const filteredRoles = query
-    ? adminRoles.filter((role) =>
-        [role.name, role.description, ...role.access_areas].join(" ").toLowerCase().includes(query),
-      )
-    : adminRoles;
+  useEffect(() => {
+    if (!token) return;
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, page, search, filters]);
+
+  // Rows come back already filtered and paged by the server.
+  const filteredRoles = adminRoles;
 
   const handleToggleRow = (id: number) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
@@ -87,6 +107,7 @@ export default function RolesAndPermissionsPage() {
       <div className="bg-white rounded-2xl p-6 border border-000000/4 animate-in fade-in duration-300">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <h1 className="text-xl md:text-c18 font-MontserratSemiBold">Roles & Permissions</h1>
+          {canCreate && (
           <div className="w-full sm:w-auto">
             <Button
               variant="primary"
@@ -97,6 +118,7 @@ export default function RolesAndPermissionsPage() {
               <span>Create new role</span>
             </Button>
           </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pb-8 border-b border-000000/8 mb-8">
@@ -143,7 +165,15 @@ export default function RolesAndPermissionsPage() {
         <AdminListHeader
           searchVal={searchVal}
           setSearchVal={setSearchVal}
-          placeholder="Search roles by name or access area..."
+          placeholder="Search roles by name or description..."
+          hidePeriod
+          filterOptions={[...Object.keys(LEVEL_FILTERS), ...Object.keys(STATUS_FILTERS)]}
+          selectedFilters={filters}
+          onFilterChange={(f) => {
+            setFilters(f);
+            setPage(1);
+          }}
+          onExportClick={() => exportAdminRoles(listParams())}
         />
 
         <RolesTable
@@ -155,6 +185,9 @@ export default function RolesAndPermissionsPage() {
           onEdit={(role) => setDetailRoleId(role.id)}
           onDuplicate={handleDuplicate}
           onDelete={setDeleteTarget}
+          canModify={canModify}
+          canCreate={canCreate}
+          canDelete={canDelete}
         />
 
         {totalCount > PAGE_SIZE && (
