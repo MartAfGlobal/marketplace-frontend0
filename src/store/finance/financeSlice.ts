@@ -1,7 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface FinanceBalance {
-  balance: string | number;
+  wallet_balance: string | number;
+}
+
+export interface WalletOverview {
   sales: string | number;
   payouts: string | number;
   pending_sales: string | number;
@@ -9,13 +12,17 @@ interface FinanceBalance {
 }
 
 interface FinanceState {
-  balance: FinanceBalance | null;
+  wallet_balance: FinanceBalance | null;
+  wallet_overview: WalletOverview | null;
+  overview_loading: boolean;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: FinanceState = {
-  balance: null,
+  wallet_balance: null,
+  wallet_overview: null,
+  overview_loading: false,
   loading: false,
   error: null,
 };
@@ -28,7 +35,13 @@ const financeSlice = createSlice({
       state.error = null;
     },
     setBalance(state, action: PayloadAction<FinanceBalance>) {
-      state.balance = action.payload;
+      state.wallet_balance = action.payload;
+    },
+    setWalletOverview(state, action: PayloadAction<WalletOverview>) {
+      state.wallet_overview = action.payload;
+    },
+    setOverviewLoading(state, action: PayloadAction<boolean>) {
+      state.overview_loading = action.payload;
     },
     setFinanceLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
@@ -39,5 +52,12 @@ const financeSlice = createSlice({
   },
 });
 
-export const { clearFinanceError, setBalance, setFinanceLoading, setFinanceError } = financeSlice.actions;
+export const {
+  clearFinanceError,
+  setBalance,
+  setWalletOverview,
+  setOverviewLoading,
+  setFinanceLoading,
+  setFinanceError,
+} = financeSlice.actions;
 export default financeSlice.reducer;

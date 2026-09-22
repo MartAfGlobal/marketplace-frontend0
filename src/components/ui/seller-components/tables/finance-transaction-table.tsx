@@ -307,9 +307,9 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
       </div>
 
       {/* Desktop View */}
-      <div className="hidden lg:block w-full overflow-x-auto">
+      <div className="hidden lg:block w-full h-fit overflow-x-auto">
       <table className="w-full border-collapse">
-        <thead className="text-white font-MontserratSemiBold py-3 text-c12 bg-947fff h-10">
+        <thead className="text-white font-MontserratSemiBold py-3 text-c12 bg-947fff h-12">
           <tr className="text-left">
             <th className="px-3 whitespace-nowrap">Date &amp; time</th>
             <th className="px-3 whitespace-nowrap">Transaction ID</th>

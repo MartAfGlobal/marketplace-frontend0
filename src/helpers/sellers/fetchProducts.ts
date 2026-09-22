@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { setSellerProduct } from "@/store/sellers/productSlice";
 import { setDraft } from "@/store/sellers/draftSlice";
-import { setBalance, setFinanceLoading, setFinanceError } from "@/store/finance/financeSlice";
+import { setBalance, setFinanceLoading, setFinanceError, setWalletOverview, setOverviewLoading } from "@/store/finance/financeSlice";
 import {
   setTransactions,
   setTransactionsLoading,
@@ -204,6 +204,47 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
         dispatch(setFinanceError(err.message || "Failed to fetch balance"));
         dispatch(setFinanceLoading(false));
       }
+    });
+  };
+
+  /**
+   * Map UI filter label → API period query param value.
+   */
+  const labelToPeriod = (label: string): string => {
+    switch (label) {
+      case "This Week":  return "this_week";
+      case "This Month": return "this_month";
+      case "This Year":  return "this_year";
+      default:           return "this_month";
+    }
+  };
+
+  /**
+   * Fetch Money Flow overview (sales, payouts, pending_sales, refunds).
+   * Calls: GET /commission/manufacturer/wallet/overview?period=<period>
+   * period options: "this_week" | "this_month" | "this_year"
+   */
+  const fetchWalletOverview = (periodLabel: string = "This Month") => {
+    if (!token) return;
+    const period = labelToPeriod(periodLabel);
+    dispatch(setOverviewLoading(true));
+    sendHttpRequest({
+      requestConfig: {
+        url: `commission/manufacturer/wallet/overview?period=${period}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (responseData: any) => {
+        console.log("Wallet overview fetched:", responseData.data);
+        dispatch(setWalletOverview(responseData.data));
+        dispatch(setOverviewLoading(false));
+      },
+      errorRes: (err: any) => {
+        console.error("Error fetching wallet overview:", err);
+        dispatch(setOverviewLoading(false));
+      },
     });
   };
 
@@ -547,6 +588,7 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
     fetchdDraft,
     fetchProducts,
     fetchBalance,
+    fetchWalletOverview,
     fetchTransactions,
     fetchSalesChart,
     fetchBanks,

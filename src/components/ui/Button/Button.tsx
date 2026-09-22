@@ -1,9 +1,11 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { LoadingSpinner } from "../loading-spinner";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   variant?: "primary" | "secondary" | "danger" | "secodary danger";
+  color?: "white" | "ff715b"
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -30,7 +32,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         {...props}
       >
-        {loading ? "Loading..." : children}
+        {loading ? <LoadingSpinner color=""/>  : children}
       </button>
     );
   }

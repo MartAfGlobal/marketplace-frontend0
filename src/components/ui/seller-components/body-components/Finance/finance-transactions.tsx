@@ -34,7 +34,7 @@ export default function FinanceTransaction() {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -49,7 +49,7 @@ export default function FinanceTransaction() {
         />
       </motion.div>
 
-      <div className="mt-8 h-fit">
+      <div className="mt-8  h-fit">
         <FinanceTransactionsTable filters={filters} />
       </div>
 

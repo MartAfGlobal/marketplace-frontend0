@@ -34,7 +34,7 @@ interface ChartPoint {
 }
 
 export default function IncomeAndExpenseChart() {
-  const { balance: financeBalance } = useAppSelector((state) => state.finance);
+  const { wallet_balance: financeBalance, wallet_overview: overviewData } = useAppSelector((state) => state.finance);
   const token = useAppSelector((state) => state.token?.token);
   const { fetchSalesChart } = useFetchProducts();
 
@@ -84,12 +84,12 @@ export default function IncomeAndExpenseChart() {
   const pieData = [
     { 
       name: " Sales", 
-      value: financeBalance ? (typeof financeBalance.sales === 'string' ? parseFloat(financeBalance.sales) : financeBalance.sales) : 75, 
+      value: overviewData ? (typeof overviewData.sales === 'string' ? parseFloat(overviewData.sales) : overviewData.sales) : 75, 
       color: "#4DBEA7" 
     },
     { 
       name: "Refunds", 
-      value: financeBalance ? (typeof financeBalance.refunds === 'string' ? parseFloat(financeBalance.refunds) : financeBalance.refunds) : 15, 
+      value: overviewData ? (typeof overviewData.refunds === 'string' ? parseFloat(overviewData.refunds) : overviewData.refunds) : 15, 
       color: "#CA0202" 
     },
     { name: "Promotions", value: 10, color: "#FFAC06" },

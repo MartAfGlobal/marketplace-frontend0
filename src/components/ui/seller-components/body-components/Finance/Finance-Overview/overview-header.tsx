@@ -15,32 +15,36 @@ import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 
 export default function OverViewHeader() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState(filterOptions[1]); // default: "This Month"
   const dispatch = useAppDispatch();
-  const { balance: financeBalance, loading, error } = useAppSelector((state) => state.finance);
-  const token = useAppSelector((state) => state.token?.token);
-  const { fetchBalance } = useFetchProducts();
 
-  const fetchData = () => {
-    console.log("Finance Overview: Fetching wallet balance via helper store...");
+  const { wallet_balance: financeBalance, wallet_overview: overviewData, loading, overview_loading } =
+    useAppSelector((state) => state.finance);
+  const token = useAppSelector((state) => state.token?.token);
+  const { fetchBalance, fetchWalletOverview } = useFetchProducts();
+
+  useEffect(() => {
     if (token) {
       fetchBalance();
+      fetchWalletOverview(selectedPeriod);
     }
+  }, [token]);
+
+  // Re-fetch Money Flow when period filter changes
+  const handlePeriodChange = (value: string) => {
+    setSelectedPeriod(value);
+    fetchWalletOverview(value);
   };
 
   useEffect(() => {
-    fetchData();
-  }, [token]);
-
-  useEffect(() => {
     if (
-      error &&
-      !error.includes("401") &&
-      !error.toLowerCase().includes("timeout") &&
-      !error.includes("temporarily unavailable")
+      !loading &&
+      !overview_loading
     ) {
-      console.warn("Finance Balance Warning:", error);
+      console.log("Finance Balance:", financeBalance);
+      console.log("Wallet Overview:", overviewData);
     }
-  }, [error]);
+  }, [financeBalance, overviewData]);
 
   const formatCurrency = (amount: string | number | undefined) => {
     if (amount === undefined || amount === null) return "N0.00";
@@ -51,22 +55,22 @@ export default function OverViewHeader() {
   const moneyFlow = [
     {
       label: "Sales",
-      amount: formatCurrency(financeBalance?.sales),
+      amount: formatCurrency(overviewData?.sales),
       icon: Payin,
     },
     {
       label: "Payouts",
-      amount: formatCurrency(financeBalance?.payouts),
+      amount: formatCurrency(overviewData?.payouts),
       icon: Payout,
     },
     {
       label: "Pending sales",
-      amount: formatCurrency(financeBalance?.pending_sales),
+      amount: formatCurrency(overviewData?.pending_sales),
       icon: Pending,
     },
     {
       label: "Refunds",
-      amount: formatCurrency(financeBalance?.refunds),
+      amount: formatCurrency(overviewData?.refunds),
       icon: RefundIcon,
     },
   ];
@@ -88,7 +92,7 @@ export default function OverViewHeader() {
           <div>
             <p className="text-sm font-MontserratNormal mb-3">Balance</p>
             <h2 className={`text-2xl sm:text-c32 font-MontserratNormal ${loading ? "animate-pulse opacity-50" : ""}`}>
-              {formatCurrency(financeBalance?.balance)}
+              {formatCurrency(financeBalance?.wallet_balance)}
             </h2>
           </div>
         </div>
@@ -107,7 +111,8 @@ export default function OverViewHeader() {
           <h3 className="text-c18 font-MontserratNormal">Money flow</h3>
           <FilterDropdown
             options={filterOptions}
-            onChange={(value) => console.log("Selected:", value)}
+            defaultValue={selectedPeriod}
+            onChange={handlePeriodChange}
           />
         </div>
 
@@ -129,7 +134,7 @@ export default function OverViewHeader() {
                 <span className="text-sm font-MontserratNormal mb-2 text-000000/68 uppercase">
                   {item.label}
                 </span>
-                <p className={`text-xl sm:text-2xl md:text-c32 font-MontserratNormal ${loading ? "animate-pulse opacity-50" : ""}`}>
+                <p className={`text-xl sm:text-2xl md:text-c32 font-MontserratNormal ${overview_loading ? "animate-pulse opacity-50" : ""}`}>
                   {item.amount}
                 </p>
               </div>

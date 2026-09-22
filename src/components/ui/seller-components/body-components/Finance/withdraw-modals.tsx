@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import CaretDown from "@/assets/Seller/caretDown.png";
 import AddNewAccountModal from "@/components/ui/Modals/AddNewAccountModal";
 import VerifyBankOtpModal from "@/components/ui/Modals/VerifyBankOtpModal";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface WithdrawModalsProps {
   isOpen: boolean;
@@ -73,14 +74,14 @@ export default function WithdrawModals({
 
   const token = useAppSelector((state) => state.token?.token);
   const sellerEmail = useAppSelector((state) => state.seller?.data?.email);
-  const { balance: financeBalance } = useAppSelector((state) => state.finance);
+  const { wallet_balance : financeBalance } = useAppSelector((state) => state.finance);
   const { fetchBanks, fetchBalance, fetchTransactions } = useFetchProducts();
 
   const { loading: initiateLoading, sendHttpRequest: sendInitiateRequest } = useHttp();
   const { loading: confirmLoading, sendHttpRequest: sendConfirmRequest } = useHttp();
   const { loading: resendLoading, sendHttpRequest: sendResendRequest } = useHttp();
 
-  const availableBalance = financeBalance?.balance || 0;
+  const availableBalance = financeBalance?.wallet_balance || 0;
   const availableBalanceNum =
     typeof availableBalance === "string"
       ? parseFloat(availableBalance)
@@ -206,7 +207,7 @@ export default function WithdrawModals({
 
     sendInitiateRequest({
       requestConfig: {
-        url: "/commission/manufacturer/wallet/withdrawals/initiate",
+        url: "/commission/manufacturer/wallet/withdrawals/initiate/",
         method: "POST",
         token: token || undefined,
         isAuth: true,
@@ -289,7 +290,7 @@ export default function WithdrawModals({
 
     sendConfirmRequest({
       requestConfig: {
-        url: "/commission/manufacturer/wallet/withdrawals/confirm",
+        url: "/commission/manufacturer/wallet/withdrawals/confirm/",
         method: "POST",
         token: token || undefined,
         isAuth: true,
@@ -323,7 +324,7 @@ export default function WithdrawModals({
     const numericAmount = parseFloat(amount);
     sendResendRequest({
       requestConfig: {
-        url: "/commission/manufacturer/wallet/withdrawals/initiate",
+        url: "/commission/manufacturer/wallet/withdrawals/initiate/",
         method: "POST",
         token: token || undefined,
         isAuth: true,
@@ -575,6 +576,7 @@ export default function WithdrawModals({
                 type="submit"
                 disabled={!isAmountValid || !selectedBank}
                 loading={initiateLoading}
+                color="white"
                 variant="primary"
                 className="mt-4"
               >
@@ -591,39 +593,43 @@ export default function WithdrawModals({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="relative w-full max-w-[440px] bg-white rounded-[24px] p-8 shadow-2xl text-center"
+            className="relative w-full max-w-[440px] bg-white rounded-[16px] p-8 "
           >
-            <div className="flex justify-end absolute top-6 right-6">
-              <button
-                onClick={handleReset}
-                className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
-                aria-label="Close"
-              >
-                <X size={18} className="text-[#666666]" />
-              </button>
-            </div>
+            {/* Close button */}
+            <button
+              onClick={handleReset}
+              className="absolute top-6 right-6 p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Close"
+            >
+              <X size={18} className="text-[#666666]" />
+            </button>
 
-            <div className="mb-6 pt-2">
-              <h2 className="text-lg font-MontserratBold text-[#161616] mb-2">
-                Confirm OTP
-              </h2>
-              <p className="text-[12px] text-[#666666] font-MontserratMedium leading-relaxed">
-                Enter the 6-digit code sent to{" "}
-                <span className="font-MontserratSemiBold text-ff715b break-all">
-                  {sellerEmail || "your registered email"}
-                </span>
+            {/* Title — matches AuthenticationLayout heading style */}
+            <div className="text-center w-full max-w-100 m-auto mb-4">
+              <h1 className="font-MontserratSemiBold pb-1 text-c18 text-161616">
+                Enter verification code
+              </h1>
+              <p className="text-base font-MontserratNormal text-161616/70">
+                We sent a 6-digit code to your email
               </p>
             </div>
 
-            <form onSubmit={handleConfirm} className="space-y-6">
-              {/* 6 Digit Input Boxes (Identical to registration & forgot password flow) */}
-              <div className="flex gap-2.5 justify-center">
+            {/* Email hint — identical to auth OtpVerification */}
+            <p className="text-center font-MontserratMedium text-c12 text-161616 mb-c32">
+              Enter the 6-digit code sent to{" "}
+              <span className="font-MontserratSemiBold text-ff715b break-all">
+                {sellerEmail || "your registered email"}
+              </span>
+            </p>
+
+            {/* Form — identical layout to auth OtpVerification */}
+            <form onSubmit={handleConfirm} className="flex flex-col items-center gap-c32">
+              {/* OTP digit boxes — identical to auth: gap-3, w-12 h-14 */}
+              <div className="flex gap-3 justify-center">
                 {digits.map((digit, i) => (
                   <input
                     key={i}
-                    ref={(el) => {
-                      inputRefs.current[i] = el;
-                    }}
+                    ref={(el) => { inputRefs.current[i] = el; }}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
@@ -633,42 +639,42 @@ export default function WithdrawModals({
                     onPaste={handleOtpPaste}
                     aria-label={`OTP digit ${i + 1}`}
                     className={`
-                      w-11 h-13 sm:w-12 sm:h-14 text-center text-c18 font-MontserratSemiBold rounded-lg border-2
+                      w-12 h-14 text-center text-c18 font-MontserratSemiBold rounded-lg border-1
                       outline-none transition-all duration-200
-                      ${
-                        digit
-                          ? "border-ff715b bg-ff715b/5 text-161616"
-                          : "border-efefef bg-white text-161616"
+                      ${digit
+                        ? "border-ff715b  text-161616"
+                        : "border-efefef bg-white text-161616"
                       }
-                      focus:border-ff715b focus:ring-2 focus:ring-ff715b/20
+                      focus:border-ff715b focus:ring-1 focus:ring-ff715b/20
                       caret-ff715b
                     `}
                   />
                 ))}
               </div>
 
-              {/* Custom Button */}
+              {/* Submit button — full width, matches auth */}
               <Button
                 type="submit"
                 disabled={!isOtpComplete}
                 loading={confirmLoading}
                 variant="primary"
+                className="w-full"
+                color="ff715b"
               >
                 Confirm Withdrawal
               </Button>
             </form>
 
-            {/* Resend Timer & Button */}
-            <div className="flex flex-col items-center gap-2 mt-6 font-MontserratMedium text-c12">
+            {/* Resend + Back — identical structure to auth OtpVerification */}
+            <div className="flex flex-col items-center gap-2 mt-c24 font-MontserratMedium text-c12">
               <Button
                 type="button"
-                onClick={handleResendOtp}
                 variant="secondary"
+                onClick={handleResendOtp}
                 disabled={resendLoading || timer > 0}
-                className=""
               >
                 {resendLoading
-                  ? "Resending…"
+                  ? <LoadingSpinner color="white"/>
                   : timer > 0
                   ? `Resend OTP in (${formattedTimer})`
                   : "Resend OTP"}
@@ -676,7 +682,7 @@ export default function WithdrawModals({
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="text-[#999999] hover:text-[#161616] text-[11px] transition-colors"
+                className="text-161616/60 hover:text-ff715b transition-colors text-[11px]"
               >
                 ← Back to edit amount
               </button>
