@@ -19,6 +19,9 @@ interface AdminListHeaderProps {
   onFilterChange?: (filters: string[]) => void;
   onApplyFilters?: () => void;
   onOptionSelect?: (option: string) => void;
+  periodOptions?: string[];
+  /** For lists that aren't date-scoped (e.g. orders currently in escrow). */
+  hidePeriod?: boolean;
 }
 
 export default function AdminListHeader({
@@ -35,6 +38,8 @@ export default function AdminListHeader({
   onFilterChange,
   onApplyFilters,
   onOptionSelect,
+  periodOptions = ["This Week", "This Month", "This Year"],
+  hidePeriod = false,
 }: AdminListHeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
@@ -197,18 +202,20 @@ export default function AdminListHeader({
           </div>
 
           {/* Dropdown Select month */}
-          <FilterDropdown 
-            options={["This Week", "This Month", "This Year"]}
-            defaultValue={selectedMonth}
-            onChange={onMonthChange}
-            className="!rounded-c8 !h-10 !py-0 !px-3 !gap-4 !shadow-custom"
-          />
+          {!hidePeriod && (
+            <FilterDropdown
+              options={periodOptions}
+              defaultValue={selectedMonth}
+              onChange={onMonthChange}
+              className="!rounded-c8 !h-10 !py-0 !px-3 !gap-4 !shadow-custom"
+            />
+          )}
 
           {/* Red/Coral Export PDF Button */}
           <button
             onClick={onExportClick}
             className="h-10 w-10 flex shrink-0 items-center justify-center bg-ff715b text-white rounded-c8   hover:bg-opacity-95 transition-all active:scale-95 cursor-pointer"
-            title="Export as PDF"
+            title="Download"
           >
             <Download className="w-4 h-4" />
           </button>
@@ -252,18 +259,20 @@ export default function AdminListHeader({
         </div>
 
         {/* Dropdown Select month */}
-        <FilterDropdown 
-          options={["This Week", "This Month", "This Year"]}
-          defaultValue={selectedMonth}
-          onChange={onMonthChange}
-          className="border border-[#eef0f3] !rounded-xl !h-11 !py-0 !px-4 !gap-4 !text-000000/68 hover:bg-gray-50 !shadow-sm"
-        />
+        {!hidePeriod && (
+          <FilterDropdown
+            options={periodOptions}
+            defaultValue={selectedMonth}
+            onChange={onMonthChange}
+            className="border border-[#eef0f3] !rounded-xl !h-11 !py-0 !px-4 !gap-4 !text-000000/68 hover:bg-gray-50 !shadow-sm"
+          />
+        )}
 
         {/* Red/Coral Export PDF Button */}
         <button
           onClick={onExportClick}
           className="h-11 w-11 flex shrink-0 items-center justify-center bg-[#FF715B] text-white rounded-xl shadow-md shadow-[#FF715B]/10 hover:bg-opacity-95 transition-all active:scale-95 cursor-pointer"
-          title="Export as PDF"
+          title="Download"
         >
           <Download className="w-4 h-4" />
         </button>

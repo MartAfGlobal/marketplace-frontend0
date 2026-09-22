@@ -1,6 +1,8 @@
 "use client";
 
 import { RootState } from "@/store";
+import { toast } from "sonner";
+import axios from "@/lib/axios";
 
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch, useSelector } from "react-redux";
@@ -2639,6 +2641,80 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  // Permanently removes a staff record (a wrong-email invitation, or someone no
+  // longer needed). The API refuses active staff (deactivate first) and anyone senior.
+  const deleteAdminStaff = (
+    userId: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/departments/staff-management/${userId}/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  // Downloads the staff table as a CSV, with the same filters as the list on screen.
+  const exportAdminStaff = async (params: { search?: string; status?: string; role_id?: string } = {}) => {
+    if (!token) return;
+
+    const queryParts: string[] = [];
+    if (params.search && params.search.trim()) queryParts.push(`search=${encodeURIComponent(params.search.trim())}`);
+    if (params.status) queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    if (params.role_id) queryParts.push(`role_id=${encodeURIComponent(params.role_id)}`);
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+    try {
+      const res = await axios.get(`/departments/staff-management/export/${queryString}`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data], { type: "text/csv;charset=utf-8;" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "staff.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      toast.error(status === 403 ? "You don't have permission to download the staff list." : "Couldn't download the staff list. Please try again.");
+    }
+  };
+
+  // Downloads the roles table as a CSV, with the same filters as the list on screen.
+  const exportAdminRoles = async (params: { search?: string; access_level?: string; status?: string } = {}) => {
+    if (!token) return;
+
+    const queryParts: string[] = [];
+    if (params.search && params.search.trim()) queryParts.push(`search=${encodeURIComponent(params.search.trim())}`);
+    if (params.access_level) queryParts.push(`access_level=${encodeURIComponent(params.access_level)}`);
+    if (params.status) queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
+
+    try {
+      const res = await axios.get(`/departments/roles/export/${queryString}`, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data], { type: "text/csv;charset=utf-8;" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "roles.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      toast.error(status === 403 ? "You don't have permission to download the roles list." : "Couldn't download the roles list. Please try again.");
+    }
+  };
+
   const suspendAdminStaff = (
     userId: string,
     payload: { reason: string; note?: string },
@@ -2911,6 +2987,9 @@ export const AdminDetails = (id?: string) => {
     updateAdminStaffProfile,
     reassignAdminStaffRole,
     suspendAdminStaff,
+    deleteAdminStaff,
+    exportAdminRoles,
+    exportAdminStaff,
     reactivateAdminStaff,
     deactivateAdminStaff,
     securityLogoutAdminStaff,

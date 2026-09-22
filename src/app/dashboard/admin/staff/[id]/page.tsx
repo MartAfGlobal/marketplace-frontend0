@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import StaffReasonModal from "@/components/ui/Modals/admin/StaffReasonModal";
+import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
 import ReassignRoleModal from "@/components/admin-components/staff/ReassignRoleModal";
 import type {
   AdminStaffActivityLogItem,
@@ -100,6 +101,7 @@ export default function AdminStaffDetailPage() {
   const [reassignOpen, setReassignOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
   const [deactivateOpen, setDeactivateOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
 
   const [activityLogs, setActivityLogs] = useState<AdminStaffActivityLogItem[]>([]);
@@ -110,7 +112,12 @@ export default function AdminStaffDetailPage() {
   const token = useSelector((state: RootState) => state.token?.token);
   const { adminStaffDetail: staff } = useSelector((state: RootState) => state.adminStaffDetail);
 
+  const { can } = useAdminAccess();
+  const canModify = can("STAFF", "modify");
+  const canDelete = can("STAFF", "delete");
+
   const {
+    deleteAdminStaff,
     fetchAdminStaffDetail,
     updateAdminStaffProfile,
     suspendAdminStaff,
@@ -206,6 +213,24 @@ export default function AdminStaffDetailPage() {
     );
   };
 
+  const handleDelete = () => {
+    if (!userId) return;
+    setActionBusy(true);
+    deleteAdminStaff(
+      userId,
+      () => {
+        setActionBusy(false);
+        setDeleteOpen(false);
+        toast.success("Staff record deleted.");
+        router.push("/dashboard/admin/staff");
+      },
+      () => {
+        setActionBusy(false);
+        setDeleteOpen(false);
+      },
+    );
+  };
+
   if (!staff) {
     return (
       <div className="py-16 text-center text-c12 text-000000/44 font-MontserratNormal">
@@ -254,6 +279,7 @@ export default function AdminStaffDetailPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl md:text-c18 font-MontserratSemiBold">Staff details</h1>
 
+        {(canModify || canDelete) && (
         <div className="relative">
           <Button
             variant="secondary"
@@ -273,6 +299,7 @@ export default function AdminStaffDetailPage() {
                 transition={{ duration: 0.2 }}
                 className="absolute right-0 top-12 w-48 rounded-c8 bg-white shadow-custom border border-000000/4 z-30 py-3 px-4 flex flex-col text-c12 font-MontserratNormal overflow-hidden"
               >
+                {canModify && (<>
                 <button
                   onClick={() => {
                     setMenuOpen(false);
@@ -302,20 +329,36 @@ export default function AdminStaffDetailPage() {
                 >
                   <PauseCircle className="w-4 h-4" /> Suspend staff
                 </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setDeactivateOpen(true);
-                  }}
-                  disabled={staff.status === "DEACTIVATED"}
-                  className="w-full text-left py-2 flex items-center gap-3 text-[#CA0202] hover:text-[#CA0202]/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="w-4 h-4" /> Deactivate staff
-                </button>
+                </>)}
+                {canDelete && (
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setDeactivateOpen(true);
+                    }}
+                    disabled={staff.status === "DEACTIVATED"}
+                    className="w-full text-left py-2 flex items-center gap-3 text-[#CA0202] hover:text-[#CA0202]/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" /> Deactivate staff
+                  </button>
+                )}
+                {/* Active staff have to be deactivated first, so Delete only appears after that. */}
+                {canDelete && staff.status !== "ACTIVE" && (
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setDeleteOpen(true);
+                    }}
+                    className="w-full text-left py-2 flex items-center gap-3 text-[#CA0202] hover:text-[#CA0202]/80 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete record
+                  </button>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+        )}
       </div>
 
       {/* Body */}
@@ -543,6 +586,18 @@ export default function AdminStaffDetailPage() {
         loading={actionBusy}
         title="Reason for suspension"
         confirmLabel="Confirm, suspend staff"
+      />
+
+      <ConfirmModal
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Delete staff record"
+        description={`${fullName}'s staff record will be removed for good. This can't be undone.`}
+        onYes={handleDelete}
+        onNo={() => setDeleteOpen(false)}
+        yesText="Delete"
+        noText="Cancel"
+        loading={actionBusy}
       />
 
       <ConfirmModal

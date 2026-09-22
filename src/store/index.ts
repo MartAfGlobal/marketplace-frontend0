@@ -26,6 +26,7 @@ import AdminOrdersReducer from "@/store/admin/orders/adminOrdersSlice"
 import AdminRolesReducer from "@/store/admin/roles/adminRolesSlice"
 import AdminRoleDetailReducer from "@/store/admin/roles/adminRoleDetailSlice"
 import AdminStaffReducer from "@/store/admin/staff/adminStaffSlice"
+import AdminAccessReducer from "@/store/admin/access/adminAccessSlice"
 import AdminStaffDetailReducer from "@/store/admin/staff/adminStaffDetailSlice"
 
 import productReducer from "./user-data/products/product-slice";
@@ -213,6 +214,7 @@ const rootReducer = combineReducers({
  adminRoles:persistReducer(AdminRolesPersistConfig, AdminRolesReducer),
  adminRoleDetail:persistReducer(AdminRoleDetailPersistConfig, AdminRoleDetailReducer),
  adminStaff:persistReducer(AdminStaffPersistConfig, AdminStaffReducer),
+ adminAccess: AdminAccessReducer,
  adminStaffDetail:persistReducer(AdminStaffDetailPersistConfig, AdminStaffDetailReducer),
   sellerProduct: persistReducer(SellerPersistConfig, SellerProductReducer),
   tracking: persistReducer(trackingPersistCobfig, trackingReducer),

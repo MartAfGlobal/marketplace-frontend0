@@ -17,6 +17,11 @@ interface StaffTableProps {
   onSelectAll: () => void;
   onSuspendRow: (row: AdminStaffListItem) => void;
   onResendInvite: (row: AdminStaffListItem) => void;
+  onDeleteRow: (row: AdminStaffListItem) => void;
+  /** What the signed-in staff member may do -- actions they lack are not offered. */
+  canCreate: boolean;
+  canModify: boolean;
+  canDelete: boolean;
 }
 
 const STATUS_STYLES: Record<StaffStatus, string> = {
@@ -50,6 +55,10 @@ export default function StaffTable({
   onSelectAll,
   onSuspendRow,
   onResendInvite,
+  onDeleteRow,
+  canCreate,
+  canModify,
+  canDelete,
 }: StaffTableProps) {
   const router = useRouter();
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
@@ -139,7 +148,7 @@ export default function StaffTable({
                         >
                           <span className="text-[#ff715b] hover:text-[#ff715b]/80 transition-colors">More Details</span>
                         </button>
-                        {row.status === "PENDING" && (
+                        {canCreate && row.status === "PENDING" && (
                           <button
                             onClick={() => {
                               setActiveRowId(null);
@@ -150,15 +159,30 @@ export default function StaffTable({
                             Resend invitation
                           </button>
                         )}
-                        <button
-                          onClick={() => {
-                            setActiveRowId(null);
-                            onSuspendRow(row);
-                          }}
-                          className="w-full py-2 text-left text-000000/68 hover:text-000000 transition-colors flex items-center gap-3"
-                        >
-                          Suspend
-                        </button>
+                        {canModify && row.status !== "SUSPENDED" && row.status !== "DEACTIVATED" && (
+                          <button
+                            onClick={() => {
+                              setActiveRowId(null);
+                              onSuspendRow(row);
+                            }}
+                            className="w-full py-2 text-left text-000000/68 hover:text-000000 transition-colors flex items-center gap-3"
+                          >
+                            Suspend
+                          </button>
+                        )}
+                        {/* Active staff must be deactivated first, so Delete is only offered once
+                            an account is pending, suspended or deactivated. */}
+                        {canDelete && row.status !== "ACTIVE" && (
+                          <button
+                            onClick={() => {
+                              setActiveRowId(null);
+                              onDeleteRow(row);
+                            }}
+                            className="w-full py-2 text-left text-[#CA0202] hover:text-[#CA0202]/80 transition-colors flex items-center gap-3"
+                          >
+                            Delete
+                          </button>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>

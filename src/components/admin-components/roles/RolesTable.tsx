@@ -17,6 +17,9 @@ interface RolesTableProps {
   onEdit: (role: AdminRoleListItem) => void;
   onDuplicate: (role: AdminRoleListItem) => void;
   onDelete: (role: AdminRoleListItem) => void;
+  canModify: boolean;
+  canCreate: boolean;
+  canDelete: boolean;
 }
 
 const ACCESS_LEVEL_STYLES: Record<AccessLevel, string> = {
@@ -46,6 +49,9 @@ export default function RolesTable({
   onEdit,
   onDuplicate,
   onDelete,
+  canModify,
+  canCreate,
+  canDelete,
 }: RolesTableProps) {
   const [activeRowId, setActiveRowId] = useState<number | null>(null);
 
@@ -147,27 +153,31 @@ export default function RolesTable({
                             }}
                             className="w-full py-2 text-left flex items-center gap-3 text-[#ff715b] hover:text-[#ff715b]/80 transition-colors"
                           >
-                            Edit role
+                            {canModify ? "Edit role" : "View role"}
                           </button>
-                          <button
-                            onClick={() => {
-                              setActiveRowId(null);
-                              onDuplicate(role);
-                            }}
-                            className="w-full py-2 text-left flex items-center gap-3 text-000000/68 hover:text-000000 transition-colors"
-                          >
-                            Duplicate role
-                          </button>
-                          <button
-                            onClick={() => {
-                              setActiveRowId(null);
-                              onDelete(role);
-                            }}
-                            disabled={role.role_type === "SYSTEM"}
-                            className="w-full py-2 text-left flex items-center gap-3 text-[#CA0202] hover:text-[#CA0202]/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            Delete role
-                          </button>
+                          {canCreate && (
+                            <button
+                              onClick={() => {
+                                setActiveRowId(null);
+                                onDuplicate(role);
+                              }}
+                              className="w-full py-2 text-left flex items-center gap-3 text-000000/68 hover:text-000000 transition-colors"
+                            >
+                              Duplicate role
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => {
+                                setActiveRowId(null);
+                                onDelete(role);
+                              }}
+                              disabled={role.role_type === "SYSTEM"}
+                              className="w-full py-2 text-left flex items-center gap-3 text-[#CA0202] hover:text-[#CA0202]/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              Delete role
+                            </button>
+                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>

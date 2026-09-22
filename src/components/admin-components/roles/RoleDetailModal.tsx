@@ -6,6 +6,7 @@ import { X, ChevronDown, Pencil, PauseCircle, PlayCircle, Trash2, Search } from 
 import { toast } from "sonner";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { Button } from "@/components/ui/Button/Button";
+import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
 import PermissionMatrixEditor from "./PermissionMatrixEditor";
 import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import DrawerWrapper from "@/components/ui/Modals/DrawerWrapper";
@@ -60,6 +61,9 @@ export default function RoleDetailModal({ isOpen, roleId, onClose, onChanged }: 
   const [savingPermissions, setSavingPermissions] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const { can } = useAdminAccess();
+  const canModify = can("STAFF", "modify");
+  const canDelete = can("STAFF", "delete");
 
   const [staffRows, setStaffRows] = useState<AdminRoleStaffAssignedItem[]>([]);
   const [staffTotal, setStaffTotal] = useState(0);
@@ -171,7 +175,7 @@ export default function RoleDetailModal({ isOpen, roleId, onClose, onChanged }: 
             </button>
           </div>
 
-          {!editingPermissions && (
+          {!editingPermissions && (canModify || canDelete) && (
             <div className="relative mb-6 w-fit">
               <Button
                 variant="primary"
@@ -191,6 +195,7 @@ export default function RoleDetailModal({ isOpen, roleId, onClose, onChanged }: 
                     transition={{ duration: 0.2 }}
                     className="absolute left-0 top-12 w-48 bg-white border border-[#eef0f3] rounded-xl shadow-lg z-30 py-2 flex flex-col text-sm font-MontserratMedium overflow-hidden"
                   >
+                    {canModify && (<>
                     <button
                       onClick={() => {
                         setActionMenuOpen(false);
@@ -220,6 +225,8 @@ export default function RoleDetailModal({ isOpen, roleId, onClose, onChanged }: 
                         </>
                       )}
                     </button>
+                    </>)}
+                    {canDelete && (
                     <button
                       onClick={() => {
                         setActionMenuOpen(false);
@@ -231,6 +238,7 @@ export default function RoleDetailModal({ isOpen, roleId, onClose, onChanged }: 
                     >
                       <Trash2 className="w-4 h-4" /> Delete role
                     </button>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
