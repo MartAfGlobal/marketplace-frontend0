@@ -41,13 +41,14 @@ export default function DonutBreakdown({ rows, emptyMessage }: DonutBreakdownPro
               cy="50%"
               innerRadius="58%"
               outerRadius="100%"
-              // An open ring with a gap at the top, not a full closed
-              // circle — a 290° sweep leaves a ~70° gap centered on
-              // 12 o'clock (90°): drawn from 55° clockwise to -235°.
-              startAngle={55}
-              endAngle={-235}
-              paddingAngle={hasData && visible.length > 1 ? 4 : 0}
-              cornerRadius={8}
+              // A full closed ring, starting at 12 o'clock. A previous version
+              // left an intentional gap at the top, but with only 2-3 slices the
+              // gap plus the rounded segment ends read as a broken chart rather
+              // than a style choice.
+              startAngle={90}
+              endAngle={-270}
+              paddingAngle={hasData && visible.length > 1 ? 3 : 0}
+              cornerRadius={hasData && visible.length > 1 ? 4 : 0}
             >
               {hasData ? (
                 visible.map((row, i) => <Cell key={row.label} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />)
