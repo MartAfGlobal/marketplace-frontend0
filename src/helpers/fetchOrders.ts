@@ -1,4 +1,5 @@
 import { RootState } from "@/store";
+import { useCallback } from "react";
 import {
   fetchDisputeDetails,
   fetchDisputesSuccess,
@@ -158,7 +159,8 @@ export const useFetchOrders = (id?: string) => {
       },
       successRes: (responseData: any) => {
         console.log("dispute fetched", responseData);
-        dispatch(dispatch(fetchDisputesSuccess(responseData.data.results)));
+        const disputes = responseData?.data?.results ?? responseData?.data ?? [];
+        dispatch(fetchDisputesSuccess(Array.isArray(disputes) ? disputes : []));
       },
     });
   };
@@ -225,8 +227,7 @@ export const useFetchOrders = (id?: string) => {
 
 
 
-  const fetchAddress = () => {
-   
+  const fetchAddress = useCallback(() => {
     if (!token) return;
 
     sendHttpRequest({
@@ -242,6 +243,8 @@ export const useFetchOrders = (id?: string) => {
           ? res.data
           : Array.isArray(res?.data?.results)
           ? res.data.results
+          : Array.isArray(res?.data?.data)
+          ? res.data.data
           : [];
 
         const addresses = rawAddresses.map((addr: any) => ({
@@ -263,7 +266,7 @@ export const useFetchOrders = (id?: string) => {
         dispatch(buyerActions.setBuyerAddresses(addresses));
       },
     });
-  };
+  }, [token, sendHttpRequest, dispatch]);
 
 
   // sellers ordrs payloads

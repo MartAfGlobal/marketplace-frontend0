@@ -115,6 +115,19 @@ const DEFAULT_RESEND_TIMEOUT = 120;
     }
   };
 
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+
+    const nextOtp = Array(6).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+    setOtp(nextOtp);
+    document.getElementById(`signup-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
+  };
+
   const handleVerifySignupOtp = () => {
     const otpString = otp.join("");
     if (otpString.length < 6) {
@@ -419,6 +432,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                           value={digit}
                           onChange={(e) => handleOtpChange(idx, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                          onPaste={handleOtpPaste}
                           className="sm:max-w-12 max-w-[40.33px] h-c64 text-center text-xl font-MontserratBold px-0"
                         />
                       ))}
@@ -438,12 +452,8 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                       disabled={secondsLeft > 0 || resendLoading}
                       onClick={handleResendLink}
 
-                      variant={secondsLeft > 0 ? "secondary": "primary"}
-                      // className={`w-full h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center border ${
-                      //   secondsLeft > 0
-                      //     ? "border-[#EFEFEF] text-black/40 bg-transparent"
-                      //     : "border-ff715b text-ff715b hover:bg-ff715b/5 bg-transparent"
-                      // }`}
+                      variant= "secondary"
+                    
                     >
                       {resendLoading ? (
                         <LoadingSpinner color="border-ff715b" />

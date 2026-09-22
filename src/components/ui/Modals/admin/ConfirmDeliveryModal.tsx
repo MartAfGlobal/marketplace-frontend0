@@ -142,10 +142,10 @@ export default function ConfirmDeliveryModal({
         {/* Fixed Title & Description */}
         <div className="text-center space-y-1 pb-6 flex-shrink-0">
           <h2 className="text-c18 font-MontserratMedium text-000000 leading-[26px]">
-            Confirm item&apos;s return?
+            Confirm delivery?
           </h2>
           <p className="text-xs text-000000/68 font-MontserratNormal leading-[16px]">
-            Submit evidence confirming that the return has been delivered
+            Submit evidence confirming that the order has been delivered
           </p>
           {referenceNumber && (
             <p className="text-sm font-MontserratMedium text-000000 pt-1">

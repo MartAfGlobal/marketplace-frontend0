@@ -49,7 +49,7 @@ export default function FinanceTransaction() {
         />
       </motion.div>
 
-      <div className="mt-8">
+      <div className="mt-8 h-fit">
         <FinanceTransactionsTable filters={filters} />
       </div>
 

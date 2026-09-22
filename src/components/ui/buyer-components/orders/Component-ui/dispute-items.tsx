@@ -22,7 +22,7 @@ export default function Disputes({ searchTerm }: OrdersProps) {
   const router = useRouter();
 
   const allDisputes = useSelector((state: RootState) => state.orders.disputes);
-  const disputes = allDisputes.filter((item) => item.status === "REQUESTED");
+  const disputes = allDisputes;
   const [openCancelModal, setOpenCancelModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
@@ -124,7 +124,9 @@ export default function Disputes({ searchTerm }: OrdersProps) {
                       <div className="w-full flex items-center md:gap-0 justify-between mb-3 md:mb-c32">
                         <div>
                           <p className="text-sm font-MontserratSemiBold leading-c20 text-161616">
-                            Awaiting feedback
+                            {item.status_display ||
+                              item.status?.replace(/_/g, " ") ||
+                              "Dispute submitted"}
                           </p>
                           <div className="md:flex hidden gap-2 mt-2">
                             <p className="text-c12  font-MontserratNormal">
@@ -157,35 +159,29 @@ export default function Disputes({ searchTerm }: OrdersProps) {
                           href={`orders/dispute-details/${item.id}`}
                           className="flex flex-col md:flex-row gap-4 items-start  "
                         >
-                          {disputes.map((prod) => (
-                            <div
-                              key={prod.id}
-                              className="flex gap-4 items-start  w-full"
-                            >
-                              <Image
-                                src={prod?.product_image}
-                                alt={prod.product_name || "Product Image"}
-                                width={96}
-                                height={96}
-                                className="h-24 w-24 "
-                              />
-                              <div className="w-full">
-                                <p className="font-MontserratSemiBold text-base mb-1">
-                                  {prod.product_name}
-                                </p>
-                                <p className=" text-c12 font-MontserratMedium mb-3">
-                                  {item.seller_name}
-                                </p>
-                                <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
-                                  {/* {prod.}Pc, */}
-                                  {prod.variant_name || prod.product_name}
-                                </p>
-                                <p className="font-MontserratSemiBold text-c16 pt-3">
-                                  ₦{item.requested_refund_amount}
-                                </p>
-                              </div>
+                          <div className="flex gap-4 items-start w-full">
+                            <Image
+                              src={item.product_image || "/placeholder.png"}
+                              alt={item.product_name || "Product Image"}
+                              width={96}
+                              height={96}
+                              className="h-24 w-24"
+                            />
+                            <div className="w-full">
+                              <p className="font-MontserratSemiBold text-base mb-1">
+                                {item.product_name}
+                              </p>
+                              <p className="text-c12 font-MontserratMedium mb-3">
+                                {item.seller_name}
+                              </p>
+                              <p className="rounded-c12 bg-000000/10 text-000000/60 p-2 w-fit font-MontserratSemiBold text-c12 flex items-center">
+                                {item.variant_name || item.product_name}
+                              </p>
+                              <p className="font-MontserratSemiBold text-c16 pt-3">
+                                ₦{item.requested_refund_amount}
+                              </p>
                             </div>
-                          ))}
+                          </div>
                         </Link>
                         {MobileActions}
                         <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">

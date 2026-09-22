@@ -43,15 +43,19 @@ export default function RecentPaymentTable() {
   const payoutTransactions = items
     .filter(
       (t) =>
+        (t.transaction_type as string)?.toLowerCase().includes("payout") ||
         (t.type as string)?.toLowerCase().includes("payout") ||
-        (t.description as string)?.toLowerCase().includes("payout")
+        (t.category as string)?.toLowerCase().includes("payout") ||
+        (t.category as string)?.toLowerCase().includes("withdrawal") ||
+        (t.description as string)?.toLowerCase().includes("payout") ||
+        (t.description as string)?.toLowerCase().includes("withdrawal")
     )
     .slice(0, 6);
 
   return (
-    <div className="flex flex-col lg:flex-row  gap-[75px] pb-10 overflow-hidden">
+    <div className="flex w-full min-w-0 max-w-full flex-col md:flex-col lg:flex-row gap-10 pb-10 overflow-hidden justify-center">
       {/* Payouts Table */}
-      <div className="w-full max-w-104">
+      <div className="w-full min-w-0 md:w-full md:flex-none xl:w-auto xl:flex-1">
         <div className="flex justify-between items-center mb-6">
           <p className="text-c18 font-MontserratNormal">Recent Payouts</p>
           <button className="group">
@@ -64,8 +68,8 @@ export default function RecentPaymentTable() {
             />
           </button>
         </div>
-        <div className="w-full overflow-hidden">
-          <table className="w-full text-left">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-max text-left">
             <thead className="border-b border-[#947FFF] lg:text-nowrap">
               <tr className="text-[12px] font-MontserratSemiBold text-[#947fff]">
                 <th className="p-3">Date</th>
@@ -77,8 +81,8 @@ export default function RecentPaymentTable() {
             <tbody>
               {payoutTransactions.map((row: Transaction) => (
                 <tr key={row.transaction_id}>
-                   <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[96px] truncate" title={formatDate(row.date as string)} >
-                    {formatDate(row.date as string)}
+                   <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[96px] truncate" title={formatDate((row.created_at || row.date) as string)} >
+                    {formatDate((row.created_at || row.date) as string)}
                   </td>
                   <td className="p-3 text-[12px] max-w-31 truncate font-MontserratSemiBold text-000000/68" title={row.transaction_id}>
                     {row.transaction_id}
@@ -87,8 +91,8 @@ export default function RecentPaymentTable() {
                   <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[121px] truncate" title= {formatAmount(row.amount)}>
                     {formatAmount(row.amount)}
                   </td>
-                  <td className="p-3 text-[12px] max-w-[121px] truncate font-MontserratNormal text-000000/68" title={(row.linked_entity as string) || (row.type as string) || "Bank transfer"}>
-                    {(row.linked_entity as string) || (row.type as string) || "Bank transfer"}
+                  <td className="p-3 text-[12px] max-w-[121px] truncate font-MontserratNormal text-000000/68" title={((row.linked_entity || row.linked_entity_type) as string) || ((row.transaction_type || row.type) as string) || "Bank transfer"}>
+                    {((row.linked_entity || row.linked_entity_type) as string) || ((row.transaction_type || row.type) as string) || "Bank transfer"}
                   </td>
                 </tr>
               ))}
@@ -111,7 +115,7 @@ export default function RecentPaymentTable() {
       <div className="hidden xl:block w-[1px] self-stretch bg-[#f0f0f0]"></div>
 
       {/* Transactions Table */}
-      <div className="w-full max-w-128.25">
+      <div className="w-full min-w-0 md:w-full md:flex-none xl:w-auto xl:flex-1">
         <div className="flex justify-between items-center mb-6">
           <p className="text-sm font-MontserratSemiBold text-[#333333]">
             Recent Transactions
@@ -126,8 +130,8 @@ export default function RecentPaymentTable() {
             />
           </button>
         </div>
-        <div className="w-full overflow-hidden">
-          <table className="w-full text-left">
+        <div className="w-full  overflow-x-auto">
+          <table className="w-full min-w-max text-left">
             <thead className="border-b border-[#947FFF] lg:text-nowrap">
               <tr className="text-[12px] font-MontserratSemiBold text-[#947fff]">
                 <th className="p-3">Date</th>
@@ -140,20 +144,20 @@ export default function RecentPaymentTable() {
             <tbody>
               {recentTransactions.map((row: Transaction) => (
                 <tr key={row.transaction_id}>
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[96px] truncate" title={formatDate(row.date as string)} >
-                    {formatDate(row.date as string)}
+                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[96px] truncate" title={formatDate((row.created_at || row.date) as string)} >
+                    {formatDate((row.created_at || row.date) as string)}
                   </td>
                   <td className="p-3 text-[12px] max-w-31 truncate font-MontserratSemiBold text-000000/68" title={row.transaction_id}>
                     {row.transaction_id}
                   </td>
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[168px] trucate" title={(row.description as string) || "—"}>
+                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[108px] truncate" title={(row.description as string) || "—"}>
                     {(row.description as string) || "—"}
                   </td>
                   <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[121px] truncate" title= {formatAmount(row.amount)}>
                     {formatAmount(row.amount)}
                   </td>
-                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[40px]" title={(row.type as string) || "—"}>
-                    {(row.type as string) || "—"}
+                  <td className="p-3 text-[12px] font-MontserratSemiBold text-000000/68 max-w-[40px]" title={((row.transaction_type || row.type) as string) || "—"}>
+                    {((row.transaction_type || row.type) as string) || "—"}
                   </td>
                 </tr>
               ))}

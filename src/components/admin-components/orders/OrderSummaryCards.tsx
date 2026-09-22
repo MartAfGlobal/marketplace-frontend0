@@ -89,7 +89,7 @@ export default function OrderSummaryCards({
             : "bg-[#FFAC06]/12 text-[#FFAC06]";
 
   return (
-    <div className="w-[344px] h-[565px] bg-ffffff py-6 px-8 rounded-c16 space-y-3">
+    <div className="w-[344px] min-h-[565px] h-fit bg-ffffff py-6 px-8 rounded-c16 space-y-3">
       <h1 className="text-sm font-MontserratNormal leading-[21px]  text-000000/68">
         Order details
       </h1>

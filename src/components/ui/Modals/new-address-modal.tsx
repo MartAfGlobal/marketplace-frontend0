@@ -171,12 +171,28 @@ export default function AddressModal({
 
   const { loading, sendHttpRequest: saveRequest } = useHttp();
 
+  // All required fields must be non-empty to enable Save
+  const isFormValid =
+    formData.country.trim() !== "" &&
+    formData.first_name.trim() !== "" &&
+    formData.last_name.trim() !== "" &&
+    formData.phone.trim() !== "" &&
+    formData.state.trim() !== "" &&
+    formData.city.trim() !== "" &&
+    formData.postal_code.trim() !== "" &&
+    formData.address.trim() !== "";
+
   const SaveSuccess = (res: any) => {
     console.log("address INFO:", res);
-    dispatch(buyerActions.addBuyerAddress(res.data));
+    // Handle both flat {id, ...} and wrapped {data: {id, ...}} backend responses
+    const savedAddress = res?.data?.id ? res.data : res?.data?.data?.id ? res.data.data : res.data;
+    dispatch(buyerActions.addBuyerAddress(savedAddress));
+    if (savedAddress?.id) {
+      dispatch(buyerActions.setSelectedAddress(String(savedAddress.id)));
+    }
 
     setStreetError("");
-    onSave?.(formData);
+    onSave?.(savedAddress || formData);
     onClose();
 
     return;
@@ -211,7 +227,7 @@ export default function AddressModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/60 flex h-dvh items-center justify-center z-50"
+          className="fixed inset-0 bg-black/60 flex  items-center justify-center z-50"
           initial={{ opacity: 0 }}
           animate={{
             opacity: 1,
@@ -226,7 +242,7 @@ export default function AddressModal({
           role="dialog"
         >
           <motion.div
-            className="bg-white p-8 rounded-2xl max-w-157.25 w-full h-fit max-h-166 relative overflow-y-auto"
+            className="bg-white p-8 rounded-2xl max-w-157.25 w-full max-h-[90vh] relative custom-scroll overflow-y-auto"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{
               scale: 1,
@@ -436,9 +452,11 @@ export default function AddressModal({
 
             <div className="w-full flex justify-end mt-c24">
               <Button
-                disabled={loading}
+                disabled={loading || !isFormValid}
                 onClick={handleSave}
-                className="w-full max-w-50.5 bg-ff715b text-white flex justify-center items-center"
+                className={`w-full max-w-50.5 bg-ff715b text-white flex justify-center items-center transition-opacity ${
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 {loading ? <LoadingSpinner /> : "Save Address"}
               </Button>

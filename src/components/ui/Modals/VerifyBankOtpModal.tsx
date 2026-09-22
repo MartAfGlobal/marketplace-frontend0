@@ -91,6 +91,19 @@ const VerifyBankOtpModal = ({
     }
   };
 
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+
+    const nextOtp = Array(6).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+    setOtp(nextOtp);
+    document.getElementById(`bank-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
+  };
+
   const handleVerifyOtp = () => {
     const otpString = otp.join("");
     if (otpString.length < 6) {
@@ -224,6 +237,7 @@ const VerifyBankOtpModal = ({
                           value={digit}
                           onChange={(e) => handleOtpChange(idx, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                          onPaste={handleOtpPaste}
                           className="w-full  h-13.5 md:h-12 text-center text-xl font-MontserratBold px-0"
                         />
                       ))}

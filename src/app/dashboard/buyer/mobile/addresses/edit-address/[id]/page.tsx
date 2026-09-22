@@ -206,7 +206,7 @@ export default function EditAddressPage() {
     sendHttpRequest({
       requestConfig: {
         url: `/shipping/shipping-addresses/${addressId}/`,
-        method: "PATCH",
+        method: "POST",
         body: payload,
         token,
         isAuth: true,

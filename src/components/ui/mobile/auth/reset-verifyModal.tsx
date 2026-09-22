@@ -5,7 +5,7 @@ import { MobileLoginProps } from "@/types/global";
 import { toast } from "sonner";
 import { Button } from "../../Button/Button";
 import { LoadingSpinner } from "../../loading-spinner";
-import { useState, useEffect } from "react";
+import { ClipboardEvent, useState, useEffect } from "react";
 import { Input } from "@/components/ui/forms/Input";
 import { useRouter } from "next/navigation";
 
@@ -64,6 +64,19 @@ export default function ResetVerify({
       const prevInput = document.getElementById(`reset-otp-${index - 1}`);
       prevInput?.focus();
     }
+  };
+
+  const handleOtpPaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+
+    const nextOtp = Array(6).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+    setOtp(nextOtp);
+    document.getElementById(`reset-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
   };
 
   const handleVerifyOtp = () => {
@@ -160,6 +173,7 @@ export default function ResetVerify({
             value={digit}
             onChange={(e) => handleOtpChange(idx, e.target.value)}
             onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+            onPaste={handleOtpPaste}
             className="sm:max-w-12 max-w-[40.33px] h-c64 text-center text-xl font-MontserratBold px-0"
           />
         ))}

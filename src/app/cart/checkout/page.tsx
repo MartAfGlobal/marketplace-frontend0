@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -15,22 +15,23 @@ import { RootState } from "@/store";
 import CheckoutItems from "@/components/ui/checkouts/Items-to-checkout";
 
 import MobileCheckoutItems from "@/components/ui/mobile/checkout-items";
-import { useHttp } from "@/hooks/use-http";
-import { setCheckoutItems, setCheckoutSummary } from "@/store/cart/cartSlice";
 import DotSpinner from "@/components/reloadSpinner/DotSpinner";
 import UserAddress from "@/components/ui/buyer-components/Main-section/sections/address-selector";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 import GuestUserAddress from "@/components/ui/buyer-components/guest/address_selector";
-import { toast } from "sonner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
+import { useHttp } from "@/hooks/use-http";
+import { setCheckoutItems, setCheckoutSummary } from "@/store/cart/cartSlice";
 
 export default function CheckoutPage() {
-  const [visible, setVisible] = useState(10);
   const router = useRouter();
   const buyerAddresses = useSelector(
     (state: RootState) => state.buyer.BuyerAddresses,
   );
   const cartItems = useSelector((state: RootState) => state.cart.items);
+  const checkoutItems = useSelector(
+    (state: RootState) => state.cart.checkoutItems,
+  );
   const dispatch = useDispatch();
   // Prefer Redux token which is updated by login and axios refresh
   const token = useSelector((state: RootState) => state.token.token);
@@ -42,46 +43,26 @@ export default function CheckoutPage() {
     (state: RootState) => state.buyer.selectedAddressId,
   );
 
-  // 1. Fetch addresses if they don't exist
+  // If no items to checkout, redirect back to cart
   useEffect(() => {
-    if (token && buyerAddresses.length === 0) {
-      fetchAddress();
+    if (checkoutItems.length === 0 && cartItems.length === 0) {
+      router.replace("/cart");
     }
-  }, [token, buyerAddresses.length, fetchAddress]);
+  }, [checkoutItems.length, cartItems.length, router]);
 
-  // 2. Select default address
-  useEffect(() => {
-    if (!buyerAddresses.length) return;
-
-    // Use String() comparison to avoid number vs string mismatch (backend returns numeric IDs)
-    const exists = buyerAddresses.some((a) => String(a.id) === String(selectedAddressId));
-    if (!selectedAddressId || !exists) {
-      const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
-      const newId = defaultAddr?.id ?? buyerAddresses[0].id;
-      dispatch(buyerActions.setSelectedAddress(String(newId)));
-    }
-  }, [buyerAddresses, selectedAddressId, dispatch]);
-
+  // When user switches address on checkout page, refresh the summary
   const handleSelectAddress = (addressId: string) => {
-    dispatch(buyerActions.setSelectedAddress(String(addressId)));
-  };
+    const newId = String(addressId);
+    dispatch(buyerActions.setSelectedAddress(newId));
 
-  // 3. Fetch summary when address is selected
-  useEffect(() => {
-    if (!token || !selectedAddressId) return;
-    
-
-    // Send as a number — backend expects integer address ID
-    const addressIdNum = Number(selectedAddressId);
-    if (!addressIdNum) return; // guard against NaN / 0
+    if (!newId || !token) return;
 
     sendHttpRequest({
       requestConfig: {
         url: "/checkout/summary/",
         method: "POST",
         body: {
-          shipping_address_id: addressIdNum,
-          address_id: addressIdNum,
+          shipping_address_id: newId,
           discount_amount: "0.00",
         },
         token,
@@ -89,9 +70,7 @@ export default function CheckoutPage() {
         userType: "buyer",
       },
       successRes: (responseData: any) => {
-        const backendCart = responseData?.data;
-        console.log("summary datas:", backendCart);
-
+        const backendCart = responseData?.data?.data || responseData?.data;
         if (backendCart) {
           const mappedItems = (backendCart.items || []).map((item: any) => ({
             id: item.product_id,
@@ -105,9 +84,8 @@ export default function CheckoutPage() {
             variation_display: item.variation_name,
             variation_id: item.variation_id,
           }));
-          
-          dispatch(setCheckoutItems(mappedItems));
 
+          dispatch(setCheckoutItems(mappedItems));
           dispatch(
             setCheckoutSummary({
               all_addresses: backendCart.all_addresses || [],
@@ -123,7 +101,7 @@ export default function CheckoutPage() {
         }
       },
     });
-  }, [token, sendHttpRequest, dispatch, selectedAddressId]);
+  };
 
   return (
     <>

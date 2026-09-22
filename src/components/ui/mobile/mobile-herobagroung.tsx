@@ -85,7 +85,7 @@ export default function MobileHeroBackground() {
   return (
     <div
       className={`relative w-full mt-3.75  overflow-hidden transition-[height] duration-500 ease-in-out ${
-        backgrounds[index].type === "ad" ? "h-52.5 sm:h-74" : "h-95"
+        backgrounds[index].type === "ad" ? "h-95" : "h-95"
       }`}
     >
       <AnimatePresence mode="sync" initial={false}>

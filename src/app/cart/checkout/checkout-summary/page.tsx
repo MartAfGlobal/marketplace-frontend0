@@ -3,26 +3,19 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import NavBack from "@/assets/icons/navBacksmall.png";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { Button } from "@/components/ui/Button/Button";
-
-import { setCheckoutItems, setCheckoutSummary } from "@/store/cart/cartSlice";
+import axios from "@/lib/axios";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 import { Input } from "@/components/ui/forms/Input";
 
-import Master from "@/assets/mobile/cards/master.png";
-import CaretDwn from "@/assets/mobile/carent-down.png";
-import CareteRight from "@/assets/mobile/cards/CaretRight.png";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import CheckoutModal from "@/components/ui/cart/CheckoutModal";
-import GuestCheckoutModal from "@/components/ui/Modals/guestCheckoutModal";
-import { useFetchOrders } from "@/helpers/fetchOrders";
 
 export default function CheckoutSummary() {
   const router = useRouter();
@@ -68,93 +61,69 @@ export default function CheckoutSummary() {
     (state: RootState) => state.buyer.selectedAddressId,
   );
 
+  useEffect(() => {
+    if (!token) return;
+
+    const refreshAddresses = async () => {
+      try {
+        const response = await axios.get("/shipping/shipping-addresses/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const rawAddresses = Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response?.data?.results)
+          ? response.data.results
+          : Array.isArray(response?.data?.data)
+          ? response.data.data
+          : [];
+        const addresses = rawAddresses.map((address: any) => ({
+          ...address,
+          id: String(address.id),
+          defaultAddress: address.is_default || address.defaultAddress || false,
+          is_default: address.is_default || address.defaultAddress || false,
+        }));
+        dispatch(buyerActions.setBuyerAddresses(addresses));
+
+        const hasSelected = addresses.some(
+          (address: any) => String(address.id) === String(selectedAddressId),
+        );
+        if (!hasSelected && addresses.length > 0) {
+          const defaultAddress = addresses.find(
+            (address: any) => address.is_default || address.defaultAddress,
+          );
+          dispatch(
+            buyerActions.setSelectedAddress(
+              String((defaultAddress || addresses[0]).id),
+            ),
+          );
+        }
+      } catch (error: any) {
+        console.error("Error refreshing shipping addresses:", {
+          status: error?.response?.status,
+          data: error?.response?.data,
+        });
+      }
+    };
+
+    refreshAddresses();
+  }, [dispatch, selectedAddressId, token]);
+
   const selectedAddress = buyerAddresses.find(
-    (addr:any) => addr.id === selectedAddressId,
+    (addr:any) => String(addr.id) === String(selectedAddressId),
   );
 
   const [openModal, setOpenModal] = useState(false);
   const [visible, setVisible] = useState(10);
 
-  const { sendHttpRequest, loading } = useHttp();
+  const { sendHttpRequest: checkoutRequest, loading } = useHttp();
   const { sendHttpRequest: saveRequest, loading: saving } = useHttp();
-  const { fetchAddress } = useFetchOrders();
 
-  // 1. Fetch addresses if they don't exist
+  // If no checkout items in Redux, redirect back to cart
   useEffect(() => {
-    if (token && buyerAddresses.length === 0) {
-      fetchAddress();
+    if (checkoutItems.length === 0) {
+      router.replace("/cart");
     }
-  }, [token, buyerAddresses.length, fetchAddress]);
-
-  // 2. Select default address if none selected
-  useEffect(() => {
-    if (!buyerAddresses.length) return;
-
-    // Use String() comparison to avoid number vs string mismatch (backend returns numeric IDs)
-    const exists = buyerAddresses.some((a) => String(a.id) === String(selectedAddressId));
-    if (!selectedAddressId || !exists) {
-      const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
-      const newId = defaultAddr?.id ?? buyerAddresses[0].id;
-      dispatch(buyerActions.setSelectedAddress(String(newId)));
-    }
-  }, [buyerAddresses, selectedAddressId, dispatch]);
-
-  // 3. Fetch summary when address is selected
-  useEffect(() => {
-    if (!token || !selectedAddressId) return;
-
-    // Send as a number — backend expects integer address ID
-    const addressIdNum = Number(selectedAddressId);
-    if (!addressIdNum) return; // guard against NaN / 0
-
-    sendHttpRequest({
-      requestConfig: {
-        url: "/checkout/summary/",
-        method: "POST",
-        body: {
-          shipping_address_id: addressIdNum,
-          address_id: addressIdNum,
-          discount_amount: "0.00",
-        },
-        token,
-        isAuth: true,
-        userType: "buyer",
-      },
-      successRes: (responseData: any) => {
-        const backendCart = responseData?.data;
-
-        if (backendCart) {
-          const mappedItems = (backendCart.items || []).map((item: any) => ({
-            id: item.product_id,
-            product_id: item.product_id,
-            product_name: item.product_name,
-            product_image: item.product_image,
-            quantity: item.quantity,
-            subtotal: Number(item.total_price),
-            unit_price: Number(item.unit_price),
-            total_price: Number(item.total_price),
-            variation_display: item.variation_name,
-            variation_id: item.variation_id,
-          }));
-          
-          dispatch(setCheckoutItems(mappedItems));
-
-          dispatch(
-            setCheckoutSummary({
-              all_addresses: backendCart.all_addresses || [],
-              applied_coupon: backendCart.applied_coupon || null,
-              discount_amount: backendCart.discount_amount || "0.00",
-              shipping_address: backendCart.shipping_address || null,
-              shipping_cost: backendCart.shipping_cost || "0.00",
-              shipping_methods: backendCart.shipping_methods || [],
-              subtotal: backendCart.subtotal || "0.00",
-              total: backendCart.total || "0.00",
-            }),
-          );
-        }
-      },
-    });
-  }, [token, selectedAddressId, dispatch, sendHttpRequest]);
+  }, [checkoutItems.length, router]);
 
   const handleGuestCheckout = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -189,15 +158,24 @@ export default function CheckoutSummary() {
 
   const handleCheckout = () => {
     const shipping_method_id = checkoutSummary?.shipping_methods?.[0]?.id || "";
-    // Send as a number — backend expects integer address ID
-    const addressIdNum = Number(selectedAddressId);
+    const addressIdNum = (selectedAddressId);
 
-    sendHttpRequest({
+    console.log("checking address id", selectedAddressId)
+
+    // if (!Number.isInteger(addressIdNum) || addressIdNum <= 0) {
+    //   console.error("Cannot checkout without a valid shipping address ID", {
+    //     selectedAddressId,
+    //     buyerAddresses,
+    //   });
+    //   return;
+    // }
+
+    checkoutRequest({
       requestConfig: {
         url: "/checkout/",
         method: "POST",
         body: {
-          shipping_address_id: addressIdNum || selectedAddressId,
+          shipping_address_id: selectedAddressId,
           shipping_method_id: shipping_method_id,
           discount_amount: checkoutSummary?.discount_amount || "0.00",
         },
@@ -210,6 +188,13 @@ export default function CheckoutSummary() {
         if (res.data?.paystack_payment_url) {
           window.location.href = res.data.paystack_payment_url;
         }
+      },
+      errorRes: (error: any) => {
+        console.error("Checkout request failed:", {
+          status: error?.response?.status,
+          data: error?.response?.data,
+          headers: error?.response?.headers,
+        });
       },
     });
   };

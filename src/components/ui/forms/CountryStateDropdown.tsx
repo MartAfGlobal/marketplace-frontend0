@@ -85,7 +85,7 @@ export function CountryDropdown({ country, onChange }: DropdownProps) {
 
       <div
         onClick={() => setShow((p) => !p)}
-        className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
+        className="border border-efefef rounded-c8 h-12 px-3.5 flex justify-between items-center cursor-pointer bg-white"
       >
         <span className="text-gray-800 text-c12 font-MontserratMedium">
           {country || "Select Country"}
@@ -99,7 +99,7 @@ export function CountryDropdown({ country, onChange }: DropdownProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 overflow-y-auto w-full shadow-lg"
+            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 custom-scroll overflow-y-auto w-full shadow-lg"
           >
             <input
               type="text"
@@ -145,7 +145,7 @@ export function StateDropdown({ state, onChange }: DropdownProps) {
 
       <div
         onClick={() => setShow((p) => !p)}
-        className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
+        className="border border-efefef rounded-c8 h-12 px-3.5 flex justify-between items-center cursor-pointer bg-white"
       >
         <span className="text-gray-800 text-c12 font-MontserratMedium">
           {state || "Select State"}
@@ -159,7 +159,7 @@ export function StateDropdown({ state, onChange }: DropdownProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 overflow-y-auto w-full shadow-lg"
+            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 custom-scroll overflow-y-auto w-full shadow-lg"
           >
             {sharedStates.length ? (
               sharedStates.map((s) => (
@@ -204,7 +204,7 @@ export function CityDropdown({ city, onChange }: DropdownProps) {
 
       <div
         onClick={() => setShow((p) => !p)}
-        className="border border-efefef rounded-c8 h-10 px-3.5 flex justify-between items-center cursor-pointer bg-white"
+        className="border border-efefef rounded-c8 h-12 px-3.5 flex justify-between items-center cursor-pointer bg-white"
       >
         <span className="text-gray-800 text-c12 font-MontserratMedium">
           {city || "Select City"}
@@ -218,7 +218,7 @@ export function CityDropdown({ city, onChange }: DropdownProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 overflow-y-auto w-full shadow-lg"
+            className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 custom-scroll overflow-y-auto w-full shadow-lg"
           >
             {sharedCities.length ? (
               sharedCities.map((c) => (

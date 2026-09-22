@@ -165,7 +165,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
   };
 
   const handleConfirm = () => {
-    router.push(`/auth/seller/login`);
+    router.push(`/dashboard/seller/overview`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -551,7 +551,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
         <ResultModal
           isOpen={isOpen}
           title="Registration complete"
-          message="Welcome to the team! Your registration is pending admin approval."
+          message="Welcome to the team! Your account is ready, and you are already logged in."
           discRescription={emailVerification || ""}
           onConfirm={handleConfirm}
           buttenText="Continue"

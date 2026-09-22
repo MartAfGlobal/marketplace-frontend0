@@ -52,6 +52,8 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
     dispatch(buyerActions.setSelectedAddress(addressId));
   };
 
+
+
   // const token = useSelector((state: RootState) => state.token?.token);
   const token = useSelector((state: RootState) => state.token.token);
   const checkoutItems = useSelector(
@@ -98,6 +100,8 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
 
   const handleCheckout = () => {
     const shipping_method_id = checkoutSummary?.shipping_methods?.[0]?.id || "";
+
+    console.log("addresss id", selectedAddressId)
 
     sendHttpRequest({
       requestConfig: {

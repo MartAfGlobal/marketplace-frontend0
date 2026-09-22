@@ -94,7 +94,7 @@ export default function OrderProgressBar({
                 <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(1)}`}>
                   <Image src={PaymentPendingIcon} alt="pending" height={12} width={12} />
                 </div>
-                <div className={`flex-1 h-px border-t ${getLineClass(1)}`} />
+                <div className={`flex-1 max-w-[95px] h-px border-t ${getLineClass(1)}`} />
               </div>
               <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(1)}`}>
                 Payment pending
@@ -111,7 +111,7 @@ export default function OrderProgressBar({
                 <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(2)}`}>
                   <Image src={AwaitingSellersConfrirmationIcon} alt="Awaiting seller confirmation" height={12} width={12} />
                 </div>
-                <div className={`flex-1 h-px border-t ${getLineClass(2)}`} />
+                <div className={`flex-1 max-w-[95px] h-px border-t ${getLineClass(2)}`} />
               </div>
               <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(2)}`}>
                 Awaiting seller&apos;s confirmation
@@ -121,11 +121,11 @@ export default function OrderProgressBar({
             {/* Step 3 — Sent from seller */}
             <div className="flex flex-col items-center flex-1 min-w-[70px]">
               <div className="flex items-center w-full">
-                <div className={`flex-1 h-px border-t ${getLineClass(2)}`} />
+                <div className={`flex-1 max-w-[95px] h-px border-t ${getLineClass(2)}`} />
                 <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(3)}`}>
                   <Image src={SentFromSellerIcon} alt="Sent from seller" height={12} width={12} />
                 </div>
-                <div className={`flex-1 h-px border-t ${getLineClass(3)}`} />
+                <div className={`flex-1 max-w-[95px] h-px border-t ${getLineClass(3)}`} />
               </div>
               <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(3)}`}>
                 Sent from seller
@@ -139,7 +139,7 @@ export default function OrderProgressBar({
                 <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(4)}`}>
                   <Image src={RecievedAtWarehouseIcon} alt="Received at warehouse" height={12} width={12} />
                 </div>
-                <div className={`flex-1 h-px border-t ${getLineClass(4)}`} />
+                <div className={`flex-1 max-w-[95px] h-px border-t ${getLineClass(4)}`} />
               </div>
               <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(4)}`}>
                 Received at warehouse
@@ -153,7 +153,7 @@ export default function OrderProgressBar({
                 <div className={`w-6 h-6 flex-shrink-0 rounded-full flex justify-center items-center transition-colors ${getCircleClass(5)}`}>
                   <Image src={ShippedWarehouseIcon} alt="Shipped from warehouse" height={12} width={12} />
                 </div>
-                <div className={`flex-1 h-px border-t ${getLineClass(5)}`} />
+                <div className={`flex-1 max-w-[95px] h-px border-t ${getLineClass(5)}`} />
               </div>
               <span className={`mt-1.5 text-[10px] text-center break-words w-full px-1 leading-tight font-MontserratNormal tracking-[2%] ${getTextClass(5)}`}>
                 Shipped from warehouse

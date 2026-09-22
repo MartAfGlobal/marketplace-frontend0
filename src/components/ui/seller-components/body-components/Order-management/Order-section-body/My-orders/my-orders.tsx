@@ -125,8 +125,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
   return (
     <div className="w-full bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-4 lg:px-8 relative pb-20" ref={topRef}>
       <div>
-        {/* Mobile Title */}
-        {/* Orders Title */}
+        
         <div className="mb-8">
           <p className="text-c18 font-MontserratSemiBold text-000000">Orders</p>
         </div>
@@ -252,7 +251,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
         </div>
       </div>
 
-      <div className="w-full pt-6 lg:pt-c32 ">
+      <div className="w-full pt-6 lg:pt-c32  overflow-x-auto ">
         <OrderFiltered
           filters={filters}
           currentPage={currentPage}

@@ -148,6 +148,17 @@ export default function UserAddress({
         )}
       </div>
 
+      {buyerAddresses.length === 0 && mobile && (
+        <div className="flex min-h-72 flex-col items-center justify-center px-6 text-center md:hidden">
+          <p className="font-MontserratSemiBold text-base text-161616">
+            No saved addresses yet
+          </p>
+          <p className="mt-2 max-w-64 text-c12 leading-c16 text-000000/50">
+            Add a delivery address to make checkout faster.
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 md:flex-row w-full md:gap-6 md:flex-wrap">
         {/* Render addresses if available */}
         {buyerAddresses.length > 0

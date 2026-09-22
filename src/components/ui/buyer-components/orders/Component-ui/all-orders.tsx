@@ -47,6 +47,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [visible, setVisible] = useState(10); // Show 6 items by default
   const { orders } = useSelector((state: any) => state.orders);
+  const disputes = useSelector((state: RootState) => state.orders.disputes);
   const oneItem = orders.filter((order: any) => order.items?.length === 1);
   const { fetchOrders, fetchDisputeList } = useFetchOrders();
 
@@ -73,7 +74,20 @@ export default function Orders({ searchTerm }: OrdersProps) {
   const { loading: comfirming, sendHttpRequest: ComfirmReq } = useHttp();
   const { sendHttpRequest: addToCartReq } = useHttp();
 
-  const filteredOrders = orders.filter((order: OrderItem) => {
+  const ordersWithoutDisputes = orders.filter((order: OrderItem) => {
+    const orderItems = order.order_items || (order as any).items || [];
+    const orderNumber = String((order as any).order_no || (order as any).order_id || "");
+    const hasDispute = disputes.some((dispute) =>
+      String(dispute.order_number || "") === orderNumber ||
+      orderItems.some((item: any) =>
+        String(item.id || item.order_item_id || "") === String(dispute.order_item_id),
+      ),
+    );
+
+    return !hasDispute;
+  });
+
+  const filteredOrders = ordersWithoutDisputes.filter((order: OrderItem) => {
     if (!searchTerm) return true;
 
     const term = searchTerm.toLowerCase();

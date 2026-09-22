@@ -261,7 +261,7 @@ export default function GuestCheckoutModal({
           role="dialog"
         >
           <motion.div
-            className="relative max-h-[calc(100dvh-2rem)] w-full max-w-157.25 overflow-y-auto rounded-2xl bg-white p-5 md:p-8"
+            className="relative max-h-[calc(100dvh-2rem)] custom-scroll w-full max-w-157.25 overflow-y-auto rounded-2xl bg-white p-5 md:p-8"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{
               scale: 1,

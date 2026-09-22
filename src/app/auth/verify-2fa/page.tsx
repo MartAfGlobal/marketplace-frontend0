@@ -98,6 +98,19 @@ function Verify2faContent() {
     }
   };
 
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+
+    const nextOtp = Array(6).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+    setOtp(nextOtp);
+    document.getElementById(`page-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
+  };
+
   // ── Verify ──────────────────────────────────────────────────────────────────
   const handleVerifyOtp = () => {
     const otpString = otp.join("");
@@ -221,6 +234,7 @@ function Verify2faContent() {
               disabled={verifying}
               onChange={(e) => handleOtpChange(idx, e.target.value)}
               onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+              onPaste={handleOtpPaste}
               className="w-full aspect-square text-center text-xl font-MontserratBold border border-[#EFEFEF] rounded-lg p-0 focus:border-ff715b focus:ring-1 focus:ring-ff715b outline-none transition-all"
             />
           ))}
@@ -232,7 +246,7 @@ function Verify2faContent() {
             variant="secondary"
             onClick={handleResendOtp}
             disabled={!canResend || resending || verifying}
-            className="w-full py-4 text-sm font-MontserratSemiBold border border-ff715b text-ff715b hover:bg-ff715b/5 bg-transparent"
+            className="w-full "
           >
             {resending ? (
               <LoadingSpinner color="border-ff715b" />

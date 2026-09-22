@@ -660,18 +660,19 @@ export default function WithdrawModals({
 
             {/* Resend Timer & Button */}
             <div className="flex flex-col items-center gap-2 mt-6 font-MontserratMedium text-c12">
-              <button
+              <Button
                 type="button"
                 onClick={handleResendOtp}
+                variant="secondary"
                 disabled={resendLoading || timer > 0}
-                className="text-ff715b hover:underline disabled:opacity-50 transition-opacity"
+                className=""
               >
                 {resendLoading
                   ? "Resending…"
                   : timer > 0
                   ? `Resend OTP in (${formattedTimer})`
                   : "Resend OTP"}
-              </button>
+              </Button>
               <button
                 type="button"
                 onClick={() => setStep(1)}

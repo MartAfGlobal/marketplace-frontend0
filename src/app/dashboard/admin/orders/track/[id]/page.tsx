@@ -23,6 +23,7 @@ import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import OrderPartyDetails from "@/components/admin-components/orders/OrderPartyDetails";
 import OrderItemsAndSummary from "@/components/admin-components/orders/OrderItemsAndSummary";
+import OrderDocumentsCard from "@/components/admin-components/orders/OrderDocumentsCard";
 import OrderProgressBar, {
   getProgressIndex,
 } from "@/components/admin-components/orders/OrderProgressBar";
@@ -822,9 +823,18 @@ export default function AdminTrackOrderPage() {
             subtotalAmount={subtotalAmount}
             shippingFeeAmount={shippingFeeAmount}
             grandTotalAmount={grandTotalAmount}
-            depatureEvidence={order?.departure_evidence}
-            deliveryEvidence={order?.delivery_evidence}
           />
+
+          {/* ── 6. Order Documents Section (Seller, Admin & Buyer Dispute) ── */}
+          <div className="w-full flex justify-center">
+            <OrderDocumentsCard
+              order={order}
+              depatureEvidence={order?.departure_evidence}
+              deliveryEvidence={order?.delivery_evidence}
+              disputes={order?.disputes}
+              className="w-full max-w-[1104px]"
+            />
+          </div>
         </div>
       )}
 

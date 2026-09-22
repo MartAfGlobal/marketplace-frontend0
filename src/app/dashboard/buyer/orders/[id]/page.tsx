@@ -29,6 +29,7 @@ export default function OrderDetailsPage() {
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.token.token);
   const { orders } = useSelector((state: any) => state.orders);
+  const disputes = useSelector((state: RootState) => state.orders.disputes);
   const shippingAddress = useSelector(
     (state: RootState) => state.orders.shippingAddress,
   );
@@ -171,6 +172,11 @@ export default function OrderDetailsPage() {
 
   // Order Items
   const orderItems = order?.items || order?.order_items || [];
+
+  const getDisputeForItem = (itemId: string) =>
+    disputes.find(
+      (dispute) => String(dispute.order_item_id) === String(itemId),
+    );
 
   // Payment totals calculation
   const itemsTotal = orderItems.reduce(
@@ -623,6 +629,12 @@ export default function OrderDetailsPage() {
                               Number(item.quantity || 1),
                         );
 
+                        const dispute = getDisputeForItem(String(item.id));
+                        const disputeStatus =
+                          dispute?.status_display ||
+                          dispute?.status?.replace(/_/g, " ") ||
+                          "Dispute submitted";
+
                         return (
                           <motion.div
                             key={item.id}
@@ -673,16 +685,20 @@ export default function OrderDetailsPage() {
                               </div>
                             </Link>
 
-                            {status === "DELIVERED" &&
-                              item.status !== "PENDING" && (
+                            {dispute ? (
+                              <p className="text-ff715b text-sm font-MontserratSemiBold whitespace-nowrap">
+                                {disputeStatus}
+                              </p>
+                            ) : status === "DELIVERED" &&
+                              item.status !== "PENDING" ? (
                                 <Button
                                   onClick={() => handleReturnAndRefund(item.id)}
                                   variant="secondary"
                                   className="w-36 md:w-47.5 shrink-0 whitespace-nowrap"
                                 >
-                                  Return/Refund
+                                  Raise Dispute
                                 </Button>
-                              )}
+                              ) : null}
                           </motion.div>
                         );
                       })}

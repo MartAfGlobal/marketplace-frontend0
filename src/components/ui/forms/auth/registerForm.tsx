@@ -106,7 +106,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
           email: VerifiedEmail
         },
         userType: userType,
-        successMessage: "Registration Complete, Please login.",
+        successMessage: "Registration successful! You’re now logged in.",
       },
     });
 

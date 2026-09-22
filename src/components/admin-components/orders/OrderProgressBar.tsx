@@ -201,9 +201,9 @@ export default function OrderProgressBar({
                   <Image src={DeliveredIcon} alt="Received by buyer" width={12} height={12} />
                 </div>
                 {/* Halfway purple line */}
-                <div className="flex-1 h-[1.5px] bg-[#6A0DAD]/68" />
+                <div className="flex-1 max-w-[95px] h-[1.5px] bg-[#6A0DAD]/68" />
               </div>
-              <span className="mt-2 text-[10px] whitespace-nowrap font-MontserratNormal text-[#6A0DAD]/68">
+              <span className="mt-2 max-w-[95px] break-words whitespace-normal text-[10px] font-MontserratNormal text-[#6A0DAD]/68">
                 Received by buyer
               </span>
             </div>
@@ -212,14 +212,14 @@ export default function OrderProgressBar({
             <div className="flex flex-col items-center" style={{ flex: "1 1 0%", minWidth: "90px" }}>
               <div className="flex items-center w-full">
                 {/* Left line */}
-                <div className={`flex-1 h-[1.5px] ${isClosed || isOngoing ? "bg-[#FFAC06]" : "bg-[#FFAC06]"}`} />
+                <div className={`flex-1 max-w-[95px] h-[1.5px] ${isClosed || isOngoing ? "bg-[#FFAC06]" : "bg-[#FFAC06]"}`} />
                 <div className="w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#FFAC06] text-white shadow-sm">
                   <span className="text-white text-[12px] font-MontserratBold leading-none">!</span>
                 </div>
                 {/* Right line to Step 3 */}
-                <div className={`flex-1 h-[1.5px] ${isClosed || isOngoing ? "bg-[#FFAC06]" : "bg-[#EAECF0]"}`} />
+                <div className={`flex-1 max-w-[95px] h-[1.5px] ${isClosed || isOngoing ? "bg-[#FFAC06]" : "bg-[#EAECF0]"}`} />
               </div>
-              <span className="mt-2 text-[10px] whitespace-nowrap text-center font-MontserratNormal text-[#FFAC06]">
+              <span className="mt-2 max-w-[95px] break-words whitespace-normal text-[10px] text-center font-MontserratNormal text-[#FFAC06]">
                 Dispute raised
               </span>
             </div>
@@ -228,7 +228,7 @@ export default function OrderProgressBar({
             <div className="flex flex-col items-center" style={{ flex: "1 1 0%", minWidth: "90px" }}>
               <div className="flex items-center w-full">
                 {/* Left line from Step 2 */}
-                <div className={`flex-1 h-[1.5px] ${isClosed ? "bg-[#6A0DAD]/68" : isOngoing ? "bg-[#FFAC06]" : "bg-[#EAECF0]"}`} />
+                <div className={`flex-1 max-w-[95px] h-[1.5px] ${isClosed ? "bg-[#6A0DAD]/68" : isOngoing ? "bg-[#FFAC06]" : "bg-[#EAECF0]"}`} />
                 <div className={`w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center ${isClosed ? "bg-[#6A0DAD]/68 text-white shadow-sm" : isOngoing ? "bg-[#FFAC06] text-white shadow-sm" : "bg-[#EAECF0] text-[#98A2B3]"}`}>
                   {isClosed ? (
                     <Image src={ClosedIcon} alt="Order closed" width={8} height={8} className="brightness-200" />
@@ -239,9 +239,9 @@ export default function OrderProgressBar({
                   )}
                 </div>
                 {/* Trailing line */}
-                <div className="flex-1 h-[1.5px] invisible" />
+                <div className="flex-1 max-w-[95px] h-[1.5px] invisible" />
               </div>
-              <span className={`mt-2 text-[10px] whitespace-nowrap text-center font-MontserratNormal ${isClosed ? "text-[#6A0DAD]/68" : isOngoing ? "text-[#FFAC06]" : "text-[#98A2B3]"}`}>
+              <span className={`mt-2 max-w-[95px] break-words whitespace-normal text-[10px] text-center font-MontserratNormal ${isClosed ? "text-[#6A0DAD]/68" : isOngoing ? "text-[#FFAC06]" : "text-[#98A2B3]"}`}>
                 {isClosed ? "Order closed" : isOngoing ? "Dispute ongoing" : "Order closed"}
               </span>
             </div>
@@ -281,7 +281,7 @@ export default function OrderProgressBar({
               >
                 <div className="flex items-center w-full">
                   <div
-                    className={`flex-1 h-[1px] transition-colors ${
+                    className={`flex-1 max-w-[95px] h-[1px] transition-colors ${
                       isFirst
                         ? "invisible"
                         : isLeftLineActive
@@ -305,7 +305,7 @@ export default function OrderProgressBar({
                     ) : null}
                   </div>
                   <div
-                    className={`flex-1 h-[1px] transition-colors ${
+                    className={`flex-1 max-w-[95px] h-[1px] transition-colors ${
                       isLast
                         ? "invisible"
                         : isRightLineActive

@@ -219,17 +219,18 @@ export default function OtpVerification() {
 
       {/* Resend */}
       <div className="flex flex-col items-center gap-2 mt-c24 font-MontserratMedium text-c12">
-        <button
+        <Button
+        variant="secondary"
           onClick={handleResend}
           disabled={resendLoading || timer > 0}
-          className="text-ff715b hover:underline disabled:opacity-50 transition-opacity"
+          className=""
         >
           {resendLoading
             ? "Resending…"
             : timer > 0
             ? `Resend OTP in (${formattedTimer})`
             : "Resend OTP"}
-        </button>
+        </Button>
         <Link href="/auth/login" className="text-161616/60 hover:text-ff715b transition-colors">
           Return to login
         </Link>

@@ -18,6 +18,7 @@ import ReturnedItemsTable, {
   ReturnedItemData,
 } from "@/components/admin-components/disputes/ReturnedItemsTable";
 import ReturnRequestDetails from "@/components/admin-components/disputes/ReturnRequestDetails";
+import OrderDocumentsCard from "@/components/admin-components/orders/OrderDocumentsCard";
 import {
   ConfirmRefundRequestDrawer,
   RequestPartialRefundDrawer,
@@ -53,6 +54,7 @@ export default function AdminReturnDetailsPage() {
   // Pending Refund Status State (from GET /refunds/admin/?status=PENDING&search=<payment_no>)
   const [pendingRefundStatus, setPendingRefundStatus] = useState<string | null>(null);
   const [hasPendingRefund, setHasPendingRefund] = useState<boolean | null>(null);
+  const [relatedOrder, setRelatedOrder] = useState<any>(null);
 
   const [resultModalState, setResultModalState] = useState<{
     isOpen: boolean;
@@ -71,6 +73,7 @@ export default function AdminReturnDetailsPage() {
     fetchAdminDisputeDetail,
     fetchAdminRefundDetail,
     fetchAdminRefundsList,
+    fetchAdminOrderDetail,
     processAdminDisputeRefund,
     approveAdminDispute,
     createAdminRefund,
@@ -201,6 +204,36 @@ export default function AdminReturnDetailsPage() {
   useEffect(() => {
     loadDisputeData();
   }, [token, rawId, detailType]);
+
+  // Load related order so that all seller and admin order documents (departure, delivery, waybills) are shown
+  useEffect(() => {
+    if (!dispute || !token) return;
+
+    if (
+      dispute?.order &&
+      typeof dispute.order === "object" &&
+      (dispute.order.id || dispute.order.order_id)
+    ) {
+      setRelatedOrder(dispute.order);
+      return;
+    }
+
+    const orderIdToFetch =
+      dispute?.order_id ||
+      (typeof dispute?.order === "string" ? dispute.order : null) ||
+      dispute?.order_number ||
+      dispute?.order_no ||
+      dispute?.payment_number;
+
+    if (orderIdToFetch && fetchAdminOrderDetail) {
+      fetchAdminOrderDetail(String(orderIdToFetch), (ordData: any) => {
+        if (ordData) {
+          console.log("[AdminReturnDetailsPage] Related order fetched:", ordData);
+          setRelatedOrder(ordData);
+        }
+      });
+    }
+  }, [dispute, token]);
 
   const displayOrderId =
     dispute?.order_number ||
@@ -943,6 +976,25 @@ export default function AdminReturnDetailsPage() {
             }
             loading={actionLoading}
           />
+
+          {/* ── 6. Order & Dispute Documents (Seller, Admin & Buyer Dispute) ── */}
+          <div className="pt-8 space-y-4">
+            <h3 className="text-sm font-MontserratSemiBold text-000000/80">
+              Documents & Evidence
+            </h3>
+            <OrderDocumentsCard
+              order={
+                relatedOrder ||
+                (dispute?.order && typeof dispute.order === "object"
+                  ? dispute.order
+                  : undefined)
+              }
+              disputes={dispute ? [dispute] : []}
+              disputeEvidence={evidenceImages}
+              title="All Documents (Seller, Admin & Buyer Dispute)"
+              className="w-full lg:w-full xl:w-full"
+            />
+          </div>
         </div>
       )}
 

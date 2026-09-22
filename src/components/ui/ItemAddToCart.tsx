@@ -12,6 +12,7 @@ import {
   addGuestItemToCart,
   clearCart,
   setCheckoutItems,
+  setCheckoutSummary,
   setCartItems,
   CartItem,
 } from "@/store/cart/cartSlice";
@@ -22,6 +23,9 @@ import { LoadingSpinner } from "./loading-spinner";
 import { ProductVariation } from "@/types/global";
 import CheckoutModal from "./cart/CheckoutModal";
 import GuestCheckoutModal from "./Modals/guestCheckoutModal";
+import AddressModal from "./Modals/new-address-modal";
+import axios from "@/lib/axios";
+import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
 // export type SelectedVariationSize = {
 //   variation_id: string;
@@ -67,8 +71,12 @@ export default function ItemAddToCart({
   const [buyNowLoading, setBuyNowLoading] = useState(false);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [guestCheckoutOpen, setGuestCheckoutOpen] = useState(false);
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
   const token = useSelector((state: RootState) => state.token.token);
   const cartItems = useSelector((state: RootState) => state.cart.items);
+  const selectedAddressId = useSelector(
+    (state: RootState) => state.buyer.selectedAddressId,
+  );
 
   // const variationId = selectedVariation?.variation_id;
 
@@ -285,8 +293,134 @@ export default function ItemAddToCart({
       });
     });
 
-    router.push("/cart/checkout");
-    setBuyNowLoading(false);
+    try {
+      const res = await axios.get("/shipping/shipping-addresses/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("Addresses API response (BuyNow):", res?.data);
+
+      const rawAddresses = Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.data?.results)
+        ? res.data.results
+        : Array.isArray(res?.data?.data)
+        ? res.data.data
+        : [];
+
+      console.log("Parsed addresses count (BuyNow):", rawAddresses.length);
+
+      const addresses = rawAddresses.map((addr: any) => ({
+        id: String(addr.id),
+        country: addr.country_name || addr.country,
+        first_name: addr.first_name,
+        last_name: addr.last_name,
+        phone: addr.phone,
+        state: addr.state,
+        city: addr.city,
+        postal_code: addr.postal_code,
+        address: addr.address,
+        defaultAddress: addr.is_default || addr.defaultAddress || false,
+        is_default: addr.is_default || addr.defaultAddress || false,
+      }));
+
+      dispatch(buyerActions.setBuyerAddresses(addresses));
+
+      if (addresses.length === 0) {
+        setBuyNowLoading(false);
+        const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+        if (isMobile) {
+          router.push("/dashboard/buyer/mobile/addresses/add-address?redirect=checkout");
+        } else {
+          setAddressModalOpen(true);
+        }
+        return;
+      }
+
+      const exists = addresses.some((a: any) => String(a.id) === String(selectedAddressId));
+      const defaultAddr = addresses.find((a: any) => a.is_default || a.defaultAddress);
+      const chosenAddr = (exists ? addresses.find((a: any) => String(a.id) === String(selectedAddressId)) : null) || defaultAddr || addresses[0];
+      const chosenId = String(chosenAddr.id);
+      dispatch(buyerActions.setSelectedAddress(chosenId));
+
+      await fetchSummaryAndNavigate(chosenId);
+    } catch (err: any) {
+      console.error("Error during address check in buy now:", err);
+      toast.error("Failed to verify address. Please try again.");
+      setBuyNowLoading(false);
+    }
+  };
+
+  const fetchSummaryAndNavigate = async (addrId: string) => {
+    if (!addrId) {
+      setBuyNowLoading(false);
+      return;
+    }
+
+    try {
+      const summaryRes = await axios.post(
+        "/checkout/summary/",
+        {
+          shipping_address_id: addrId,
+          discount_amount: "0.00",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      const backendCart = summaryRes?.data?.data || summaryRes?.data;
+      if (backendCart) {
+        const mappedItems = (backendCart.items || []).map((item: any) => ({
+          id: item.product_id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          product_image: item.product_image,
+          quantity: item.quantity,
+          subtotal: Number(item.total_price),
+          unit_price: Number(item.unit_price),
+          total_price: Number(item.total_price),
+          variation_display: item.variation_name,
+          variation_id: item.variation_id,
+        }));
+
+        dispatch(setCheckoutItems(mappedItems));
+        dispatch(
+          setCheckoutSummary({
+            all_addresses: backendCart.all_addresses || [],
+            applied_coupon: backendCart.applied_coupon || null,
+            discount_amount: backendCart.discount_amount || "0.00",
+            shipping_address: backendCart.shipping_address || null,
+            shipping_cost: backendCart.shipping_cost || "0.00",
+            shipping_methods: backendCart.shipping_methods || [],
+            subtotal: backendCart.subtotal || "0.00",
+            total: backendCart.total || "0.00",
+          }),
+        );
+      }
+      setBuyNowLoading(false);
+      router.push("/cart/checkout");
+    } catch (err: any) {
+      console.error("Error fetching checkout summary in buy now:", err);
+      const errMsg =
+        err?.response?.data?.details ||
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Something went wrong fetching order summary. Please try again.";
+      toast.error(typeof errMsg === "string" ? errMsg : "Something went wrong fetching order summary.");
+      setBuyNowLoading(false);
+    }
+  };
+
+  const handleAddressSaved = async (savedAddr: any) => {
+    // Handle both flat {id, ...} and wrapped {data: {id, ...}} shapes
+    const addr = savedAddr?.id ? savedAddr : savedAddr?.data?.id ? savedAddr.data : savedAddr;
+    const newId = addr?.id ? String(addr.id) : null;
+    if (newId) {
+      dispatch(buyerActions.setSelectedAddress(newId));
+      setBuyNowLoading(true);
+      await fetchSummaryAndNavigate(newId);
+    }
   };
 
   const fetchBackendCart = async () => {
@@ -436,7 +570,7 @@ export default function ItemAddToCart({
               onClick={handleBuyNow}
               disabled={!selectedVariationId || loading || buyNowLoading}
             >
-              Buy now
+              {buyNowLoading ? <LoadingSpinner color="border-ffffff" /> : "Buy now"}
             </Button>
           </div>
         </div>
@@ -461,6 +595,15 @@ export default function ItemAddToCart({
             checked: true,
           },
         ]}
+      />
+      <AddressModal
+        isOpen={addressModalOpen}
+        isEdit={false}
+        onClose={() => {
+          setAddressModalOpen(false);
+          setBuyNowLoading(false);
+        }}
+        onSave={handleAddressSaved}
       />
     </>
   );

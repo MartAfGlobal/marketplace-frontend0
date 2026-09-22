@@ -254,9 +254,10 @@ export default function VerificationEmailSent({ userType }: RegProps) {
       {/* Resend Button */}
       <div className="w-full max-w-[360px] mb-6">
         <Button
+        variant="secondary"
           onClick={handleResendOtp}
           disabled={secondsLeft > 0 || resending || verifying}
-          className="text-ff715b bg-transparent border border-ff715b hover:bg-ff715b/5 disabled:opacity-50 text-sm font-MontserratSemiBold"
+          className=""
         >
           {resending ? (
             <LoadingSpinner color="border-ff715b" />

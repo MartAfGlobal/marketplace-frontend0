@@ -46,7 +46,7 @@ export default function FinanceSecions() {
   if (loading) return <DashboardTableSkeleton />;
 
   return (
-    <div className="max-w-[1600px] mx-auto">
+    <div className="w-full max-w-[1600px] min-w-0 mx-auto ">
       {/* Header Area */}
       <SellerMobileHeader 
         title="Finance"
@@ -77,8 +77,8 @@ export default function FinanceSecions() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 min-h-[70vh]">
-          <div className="bg-white rounded-2xl p-6 transition-all duration-300">
+        <div className="flex-1 min-w-0">
+          <div className="w-full min-w-0 max-w-full overflow-x-hidden h-fit bg-white rounded-2xl p-4 sm:p-6 transition-all duration-300">
             {sections.find((s) => s.id === activeId)?.content}
           </div>
         </div>

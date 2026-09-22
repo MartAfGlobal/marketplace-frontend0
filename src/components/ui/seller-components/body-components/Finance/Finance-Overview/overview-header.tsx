@@ -80,20 +80,20 @@ export default function OverViewHeader() {
       />
 
       {/* Top Section: Balance & Main Actions */}
-      <div className="flex flex-col md:flex-row justify-between h-24 items-center gap-6 border-b border-b-000000/4 mb-8 pb-6">
+      <div className="flex flex-col md:flex-row justify-between min-h-24 h-auto md:h-24 items-start md:items-center gap-6 border-b border-b-000000/4 mb-8 pb-6">
         <div className="flex items-end gap-3">
           <div className="pb-1">
             <Image src={BabyIcon} alt="balance" width={32} height={26} />
           </div>
           <div>
             <p className="text-sm font-MontserratNormal mb-3">Balance</p>
-            <h2 className={`text-c32 font-MontserratNormal ${loading ? "animate-pulse opacity-50" : ""}`}>
+            <h2 className={`text-2xl sm:text-c32 font-MontserratNormal ${loading ? "animate-pulse opacity-50" : ""}`}>
               {formatCurrency(financeBalance?.balance)}
             </h2>
           </div>
         </div>
 
-        <div className="flex gap-4 w-full max-w-86.25">
+        <div className="flex gap-4 w-full md:max-w-86.25">
           <Button onClick={() => setIsWithdrawModalOpen(true)}>
             Withdraw Funds
           </Button>
@@ -111,7 +111,7 @@ export default function OverViewHeader() {
           />
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
           {moneyFlow.map((item) => (
             <div
               key={item.label}
@@ -129,7 +129,7 @@ export default function OverViewHeader() {
                 <span className="text-sm font-MontserratNormal mb-2 text-000000/68 uppercase">
                   {item.label}
                 </span>
-                <p className={`text-c32 font-MontserratNormal ${loading ? "animate-pulse opacity-50" : ""}`}>
+                <p className={`text-xl sm:text-2xl md:text-c32 font-MontserratNormal ${loading ? "animate-pulse opacity-50" : ""}`}>
                   {item.amount}
                 </p>
               </div>

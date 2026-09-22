@@ -104,12 +104,12 @@ export default function IncomeAndExpenseChart() {
   return (
     <div className="w-full mt-8">
       <div className="w-full space-y-8">
-        <div className="flex justify-between items-end">
+        <div className="flex justify-between items-end flex-wrap gap-4">
           <div>
             <h3 className="text-c18 font-MontserratNormal mb-2">
               Income/expense
             </h3>
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div 
                   className="w-3 h-3 rounded-[2px]" 
@@ -130,7 +130,7 @@ export default function IncomeAndExpenseChart() {
                 />
                 <span className="text-[10px] font-MontserratMedium text-[#666666]">Expense</span>
               </div>
-            </div>
+            </div> */}
           </div>
           <FilterDropdown
             options={filterOptions}
@@ -159,7 +159,7 @@ export default function IncomeAndExpenseChart() {
             <ResponsiveContainer width="100%" height={360}>
               <AreaChart
                 data={chartData}
-                margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
               >
                 <defs>
                   <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">

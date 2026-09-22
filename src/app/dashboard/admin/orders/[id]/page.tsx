@@ -20,6 +20,7 @@ import OrderProgressBar, {
 } from "@/components/admin-components/orders/OrderProgressBar";
 import { getHubStatusIndex } from "@/components/ui/Modals/admin/UpdateOrderStatusModal";
 import OrderItemsAndSummary from "@/components/admin-components/orders/OrderItemsAndSummary";
+import OrderDocumentsCard from "@/components/admin-components/orders/OrderDocumentsCard";
 import OrderPartyDetails from "@/components/admin-components/orders/OrderPartyDetails";
 import OrderSummaryCards from "@/components/admin-components/orders/OrderSummaryCards";
 import UpdateStatusSection from "@/components/admin-components/orders/UpdateStatusSection";
@@ -133,6 +134,7 @@ export default function AdminOrderDetailsPage() {
     null,
   );
   const [selectedDisputeData, setSelectedDisputeData] = useState<any>(null);
+  const [loadedDisputes, setLoadedDisputes] = useState<any[]>([]);
   const disputeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -164,6 +166,7 @@ export default function AdminOrderDetailsPage() {
     fetchOrderTracking,
     searchAdminOrder,
     fetchAdminDisputeDetail,
+    fetchAdminDisputesList,
     updateAdminOrderStatus,
     confirmTracking,
     receiveAtHub,
@@ -252,7 +255,10 @@ export default function AdminOrderDetailsPage() {
     };
 
     // Check if idToFetch is a standard 36-character UUID
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idToFetch.trim());
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        idToFetch.trim(),
+      );
 
     // If identifier is NOT a UUID (e.g. ORD-3493353, SELLER-TRK-00123, etc.), use the search endpoint
     if (!isUuid) {
@@ -287,6 +293,90 @@ export default function AdminOrderDetailsPage() {
       setDisputeModalOpen(true);
     }
   }, [order, searchParams]);
+
+  // Fetch full details of any dispute(s) linked to this order so that all buyer dispute evidence files are available in documents
+  useEffect(() => {
+    if (!order || !token) return;
+
+    const rawDisputes: any[] =
+      order?.disputes ??
+      order?.dispute_list ??
+      order?.order_disputes ??
+      (order?.dispute ? [order.dispute] : []);
+
+    if (Array.isArray(rawDisputes) && rawDisputes.length > 0) {
+      rawDisputes.forEach((d: any) => {
+        const dId = d?.id || d?.uuid || d?.dispute_id;
+        if (dId && (!d.evidence || d.evidence.length === 0)) {
+          fetchAdminDisputeDetail(String(dId), (fullDispute: any) => {
+            if (fullDispute) {
+              setLoadedDisputes((prev) => {
+                const exists = prev.some(
+                  (p) =>
+                    (p?.id || p?.uuid) ===
+                    (fullDispute?.id || fullDispute?.uuid),
+                );
+                return exists
+                  ? prev.map((p) =>
+                      (p?.id || p?.uuid) ===
+                      (fullDispute?.id || fullDispute?.uuid)
+                        ? fullDispute
+                        : p,
+                    )
+                  : [...prev, fullDispute];
+              });
+            }
+          });
+        } else if (d) {
+          setLoadedDisputes((prev) => {
+            const exists = prev.some(
+              (p) => (p?.id || p?.uuid) === (d?.id || d?.uuid),
+            );
+            return exists ? prev : [...prev, d];
+          });
+        }
+      });
+    } else if (
+      order?.has_dispute ||
+      (order?.status && order.status.toUpperCase().includes("DISPUTE")) ||
+      order?.status === "RETURN_REQUESTED"
+    ) {
+      const searchRef =
+        order?.order_number || order?.order_id || order?.payment_no || rawId;
+      if (searchRef) {
+        fetchAdminDisputesList({ search: String(searchRef) }, (res: any) => {
+          const results =
+            res?.results ??
+            res?.data?.results ??
+            res?.data ??
+            (Array.isArray(res) ? res : []);
+          if (Array.isArray(results) && results.length > 0) {
+            results.forEach((disp: any) => {
+              const dId = disp?.id || disp?.uuid || disp?.dispute_id;
+              if (dId) {
+                fetchAdminDisputeDetail(String(dId), (full: any) => {
+                  if (full) {
+                    setLoadedDisputes((prev) => {
+                      const exists = prev.some(
+                        (p) => (p?.id || p?.uuid) === (full?.id || full?.uuid),
+                      );
+                      return exists
+                        ? prev.map((p) =>
+                            (p?.id || p?.uuid) === (full?.id || full?.uuid)
+                              ? full
+                              : p,
+                          )
+                        : [...prev, full];
+                    });
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+    }
+  }, [order, token]);
 
   /* ── Handlers ── */
   const handleTrackOrder = () => {
@@ -1039,7 +1129,9 @@ export default function AdminOrderDetailsPage() {
             )}
             {(order.status === "RETURN_REQUESTED" ||
               order.has_dispute ||
-              getOrderDisplayStatus(order).toLowerCase().includes("dispute")) && (
+              getOrderDisplayStatus(order)
+                .toLowerCase()
+                .includes("dispute")) && (
               <div className="relative" ref={disputeDropdownRef}>
                 <Button
                   onClick={() => setDisputeModalOpen((prev) => !prev)}
@@ -1080,7 +1172,11 @@ export default function AdminOrderDetailsPage() {
                     );
                   })()}
                   onView={(dispute) => {
-                    console.log("View dispute clicked for UUID:", dispute.id, dispute);
+                    console.log(
+                      "View dispute clicked for UUID:",
+                      dispute.id,
+                      dispute,
+                    );
                     setDisputeModalOpen(false);
                     setSelectedDisputeId(dispute.id);
                     setSelectedDisputeData(dispute);
@@ -1212,17 +1308,34 @@ export default function AdminOrderDetailsPage() {
               order?.has_dispute === true ||
               (order?.status ?? "").toUpperCase() === "RETURN_REQUESTED" ||
               (order?.status ?? "").toUpperCase() === "RETURN_ACCEPTED" ||
-              ((order?.status ?? "").toUpperCase() === "CLOSED" && (order?.has_dispute === true || Boolean(order?.dispute || (order?.disputes && order.disputes.length > 0)))) ||
+              ((order?.status ?? "").toUpperCase() === "CLOSED" &&
+                (order?.has_dispute === true ||
+                  Boolean(
+                    order?.dispute ||
+                    (order?.disputes && order.disputes.length > 0),
+                  ))) ||
               (order?.dispute_status ?? "").toUpperCase() === "CLOSED"
             }
             adminStatus={order?.admin_status}
             statusBeforeCancellation={order?.admin_status_before_cancellation}
-            disputeStatus={order?.dispute_status || order?.disputes?.[0]?.status || order?.dispute?.status || order?.status}
+            disputeStatus={
+              order?.dispute_status ||
+              order?.disputes?.[0]?.status ||
+              order?.dispute?.status ||
+              order?.status
+            }
           />
-
-          {/* ── Update Status ── */}
+          <OrderItemsAndSummary
+            order={order}
+            orderItems={orderItems}
+            totalItemsCount={totalItemsCount}
+            discountAmount={discountAmount}
+            subtotalAmount={subtotalAmount}
+            shippingFeeAmount={shippingFeeAmount}
+            grandTotalAmount={grandTotalAmount}
+          />
         </div>
-        <div className="w-[344px]">
+        <div className="w-[344px] space-y-4">
           <OrderSummaryCards
             subtotal={order.subtotal}
             discout="0"
@@ -1250,20 +1363,21 @@ export default function AdminOrderDetailsPage() {
             onTrackOrder={handleTrackOrder}
             onCancelOrder={() => setCancelModalOpen(true)}
           />
+          <div className="w-full flex justify-center">
+            <OrderDocumentsCard
+              order={order}
+              depatureEvidence={order?.departure_evidence}
+              deliveryEvidence={order?.delivery_evidence}
+              disputes={
+                loadedDisputes.length > 0 ? loadedDisputes : order?.disputes
+              }
+              className="w-full max-w-[1104px]"
+            />
+          </div>
         </div>
       </div>
       {/* ── Order Items & Summary ── */}
-      <OrderItemsAndSummary
-        depatureEvidence={order?.departure_evidence}
-        deliveryEvidence={order?.delivery_evidence}
-        order={order}
-        orderItems={orderItems}
-        totalItemsCount={totalItemsCount}
-        discountAmount={discountAmount}
-        subtotalAmount={subtotalAmount}
-        shippingFeeAmount={shippingFeeAmount}
-        grandTotalAmount={grandTotalAmount}
-      />
+      {/* ── Order Documents Section (Seller, Admin & Buyer Dispute) ── */}
       {/* ── Modals ── */}
       <AnimatePresence>
         {confirmTrackingOpen && (
@@ -1413,7 +1527,6 @@ export default function AdminOrderDetailsPage() {
         onConfirm={handleConfirmDelivery}
         loading={confirmDepartureLoading}
       />
-
       {/* ── Dispute Details Side Modal ── */}
       <DisputeDetailSideModal
         isOpen={disputeDetailSideModalOpen}
