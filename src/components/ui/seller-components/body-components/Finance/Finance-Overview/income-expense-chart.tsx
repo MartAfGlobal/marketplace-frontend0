@@ -35,7 +35,7 @@ interface ChartPoint {
 
 export default function IncomeAndExpenseChart() {
   const { wallet_balance: financeBalance, wallet_overview: overviewData } = useAppSelector((state) => state.finance);
-  const token = useAppSelector((state) => state.token?.token);
+ const token = useAppSelector((state) => state.token?.token);
   const { fetchSalesChart } = useFetchProducts();
 
   const [range, setRange] = useState<RangeType>("weekly");
