@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useHttp } from "@/hooks/use-http";
+import { Input } from "./Input";
 
 
 interface City {
@@ -101,12 +102,12 @@ export function CountryDropdown({ country, onChange }: DropdownProps) {
             exit={{ opacity: 0, y: -10 }}
             className="absolute z-50 bg-white border border-efefef rounded-c8 mt-1 max-h-60 custom-scroll overflow-y-auto w-full shadow-lg"
           >
-            <input
+            <Input
               type="text"
               placeholder="Type 3+ letters"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full p-3 border-b text-c12 outline-none"
+              className=""
             />
 
             {countries.map((c) => (

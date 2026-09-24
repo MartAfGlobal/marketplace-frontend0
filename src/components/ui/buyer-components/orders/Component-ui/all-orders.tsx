@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 
@@ -73,15 +73,21 @@ export default function Orders({ searchTerm }: OrdersProps) {
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
   const { loading: comfirming, sendHttpRequest: ComfirmReq } = useHttp();
   const { sendHttpRequest: addToCartReq } = useHttp();
+  const addingOrderIds = useRef(new Set<string>());
 
   const ordersWithoutDisputes = orders.filter((order: OrderItem) => {
     const orderItems = order.order_items || (order as any).items || [];
-    const orderNumber = String((order as any).order_no || (order as any).order_id || "");
-    const hasDispute = disputes.some((dispute) =>
-      String(dispute.order_number || "") === orderNumber ||
-      orderItems.some((item: any) =>
-        String(item.id || item.order_item_id || "") === String(dispute.order_item_id),
-      ),
+    const orderNumber = String(
+      (order as any).order_no || (order as any).order_id || "",
+    );
+    const hasDispute = disputes.some(
+      (dispute) =>
+        String(dispute.order_number || "") === orderNumber ||
+        orderItems.some(
+          (item: any) =>
+            String(item.id || item.order_item_id || "") ===
+            String(dispute.order_item_id),
+        ),
     );
 
     return !hasDispute;
@@ -185,14 +191,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
     }
   };
 
-  // const handleClick = (id: string) => {
-  //   if (isMobile) {
-  //     router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`);
-  //   } else {
-  //     setSelectedId(id);
-  //     setOpen(true);
-  //   }
-  // };
+  const handleClick = (id: string) => {
+    if (isMobile) {
+      router.push(`/dashboard/buyer/orders/confirm-delivery/${id}`);
+    } else {
+      setSelectedId(id);
+      setOpen(true);
+    }
+  };
 
   // const handleAddToCart = (slug: string, varId?: string) => {
   //   if (!slug) {
@@ -217,7 +223,15 @@ export default function Orders({ searchTerm }: OrdersProps) {
   // };
 
   const handleAddOrderItemToCart = async (item: any) => {
-    await addOrderItemToCart(addToCartReq, token, item, dispatch);
+    const orderId = String(item.id || item.order_id || "");
+    if (addingOrderIds.current.has(orderId)) return;
+
+    addingOrderIds.current.add(orderId);
+    try {
+      await addOrderItemToCart(addToCartReq, token, item, dispatch);
+    } finally {
+      addingOrderIds.current.delete(orderId);
+    }
   };
 
   const handleReview = (id: string) => {
@@ -342,25 +356,31 @@ export default function Orders({ searchTerm }: OrdersProps) {
                     <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
                       {(item.buyer_status?.toLowerCase() === "shipped" ||
                         item.buyer_status?.toLowerCase() ===
-                          "shipped_to_buyer") && (
+                          "shipped_to_buyer" ||
+                        item.buyer_status?.toLowerCase() ===
+                          "out_for_delivery") && (
                         <>
-                          <div className="w-full"></div>
-                          <Button onClick={() => handleTrackOrder(item.id)}>
+                          <Button onClick={() => handleClick(item.id)}>
+                            Confirm delivery
+                          </Button>
+                          <Button variant="secondary" onClick={() => handleTrackOrder(item.id)}>
                             Track order
                           </Button>
                         </>
                       )}
-                       {(item.buyer_status === "Completed" || item.buyer_status === "delivered" || item.buyer_status === "Cancelled" ) && (
-                            <>
-                              <div></div>
-                              <Button
-                                className=""
-                                onClick={() => handleAddOrderItemToCart(item)}
-                              >
-                                Add to cart
-                              </Button>
-                            </>
-                          )}
+                      {(item.buyer_status === "Completed" ||
+                        item.buyer_status === "delivered" ||
+                        item.buyer_status === "Cancelled") && (
+                        <>
+                          <div></div>
+                          <Button
+                            className=""
+                            onClick={() => handleAddOrderItemToCart(item)}
+                          >
+                            Add to cart
+                          </Button>
+                        </>
+                      )}
                       {item.buyer_status === "Delivered" && (
                         <>
                           <Button
@@ -403,17 +423,18 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
-                      {item.buyer_status === "Processing" && item.can_cancel && (
-                        <Button
-                          onClick={() => {
-                            setSelectedOrderId(item.id);
-                            setOpenCancelModal(true);
-                          }}
-                          variant="primary"
-                        >
-                          Cancel order
-                        </Button>
-                      )}
+                      {item.buyer_status === "Processing" &&
+                        item.can_cancel && (
+                          <Button
+                            onClick={() => {
+                              setSelectedOrderId(item.id);
+                              setOpenCancelModal(true);
+                            }}
+                            variant="primary"
+                          >
+                            Cancel order
+                          </Button>
+                        )}
                       {item.buyer_status === "AWAITING_PAYMENT" && (
                         <>
                           <Button
@@ -694,9 +715,15 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         <div className="hidden w-full gap-4 pl-4 md:flex md:flex-col md:max-w-70 space-y-4">
                           {(item.buyer_status?.toLowerCase() === "shipped" ||
                             item.buyer_status?.toLowerCase() ===
-                              "shipped_to_buyer") && (
+                              "shipped_to_buyer" ||
+                            item.buyer_status?.toLowerCase() ===
+                              "out_for_delivery") && (
                             <>
-                              <div className="w-full"></div>
+                              <Button
+                                onClick={() => handleClick(item.id)}
+                              >
+                                Confirm delivery
+                              </Button>
                               <Button
                                 variant="secondary"
                                 key={item.id}
@@ -706,7 +733,6 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               </Button>
                             </>
                           )}
-                        
 
                           {item.buyer_status === "Delivered" && (
                             <>
@@ -726,7 +752,9 @@ export default function Orders({ searchTerm }: OrdersProps) {
                             </>
                           )}
 
-                          {(item.buyer_status === "Completed" || item.buyer_status === "delivered" || item.buyer_status === "Cancelled" ) && (
+                          {(item.buyer_status === "Completed" ||
+                            item.buyer_status === "delivered" ||
+                            item.buyer_status === "Cancelled") && (
                             <>
                               <div></div>
                               <Button
@@ -769,19 +797,18 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               </>
                             )}
 
-                          {item.buyer_status === "Processing" && item.can_cancel && (
-                            <Button
-                              onClick={() => {
-                                setSelectedOrderId(item.id);
-                                setOpenCancelModal(true);
-                              }}
-                              variant="primary"
-                            >
-                              Cancel order
-                            </Button>
-                          )}
-
-                     
+                          {item.buyer_status === "Processing" &&
+                            item.can_cancel && (
+                              <Button
+                                onClick={() => {
+                                  setSelectedOrderId(item.id);
+                                  setOpenCancelModal(true);
+                                }}
+                                variant="primary"
+                              >
+                                Cancel order
+                              </Button>
+                            )}
 
                           {item.buyer_status === "AWAITING_PAYMENT" && (
                             <>

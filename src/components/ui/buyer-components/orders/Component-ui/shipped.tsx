@@ -251,7 +251,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                 onClick={() => {
                                   handleClick(item.id);
                                 }}
-                              ></Button>
+                              >Confirm delivery</Button>
                               <Button
                                 variant="secondary"
                                 key={item.id}
@@ -423,7 +423,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                   onClick={() => {
                                     handleClick(item.id);
                                   }}
-                                ></Button>
+                                >Confirm delivery</Button>
                               </div>
                               <Button
                                 variant="secondary"
@@ -449,7 +449,7 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                             onClick={() => {
                               handleClick(item.id);
                             }}
-                          ></Button>
+                          >Confirm delivery</Button>
 
                           <Button
                             variant="secondary"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, KeyboardEvent, ClipboardEvent } from "react";
+import React, { useState, useEffect, useRef, useCallback, KeyboardEvent, ClipboardEvent } from "react";
 import Image from "next/image";
 import { X, CheckCircle2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
@@ -236,9 +236,80 @@ export default function WithdrawModals({
     });
   };
 
-  // Step 2: OTP input handlers
+  // Step 2: OTP input handlers & clipboard paste suggestion
+  const [clipboardOtp, setClipboardOtp] = useState<string | null>(null);
+  const lastCheckedClip = useRef<string>("");
+
+  const checkClipboard = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const numeric = text.replace(/\D/g, "").slice(0, OTP_LENGTH);
+      if (numeric.length === OTP_LENGTH && numeric !== lastCheckedClip.current) {
+        lastCheckedClip.current = numeric;
+        setClipboardOtp(numeric);
+      } else if (numeric.length !== OTP_LENGTH) {
+        setClipboardOtp(null);
+      }
+    } catch {
+      // Silent fail if permission not granted
+    }
+  }, []);
+
+  useEffect(() => {
+    if (step === 2) {
+      checkClipboard();
+      window.addEventListener("focus", checkClipboard);
+      return () => window.removeEventListener("focus", checkClipboard);
+    }
+  }, [step, checkClipboard]);
+
+  const applyClipboardOtp = () => {
+    if (!clipboardOtp) return;
+    const next = Array(OTP_LENGTH).fill("");
+    clipboardOtp.split("").forEach((ch, i) => { next[i] = ch; });
+    setDigits(next);
+    setClipboardOtp(null);
+    lastCheckedClip.current = "";
+    const focusIndex = Math.min(clipboardOtp.length, OTP_LENGTH - 1);
+    inputRefs.current[focusIndex]?.focus();
+  };
+
+  const handleDirectPaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const numeric = text.replace(/\D/g, "").slice(0, OTP_LENGTH);
+      if (numeric.length > 0) {
+        const next = Array(OTP_LENGTH).fill("");
+        numeric.split("").forEach((ch, i) => { next[i] = ch; });
+        setDigits(next);
+        setClipboardOtp(null);
+        lastCheckedClip.current = "";
+        const focusIndex = Math.min(numeric.length, OTP_LENGTH - 1);
+        inputRefs.current[focusIndex]?.focus();
+        toast.success("Code pasted from clipboard");
+      } else {
+        toast.error("No code found in clipboard");
+      }
+    } catch {
+      toast.error("Clipboard access denied. Please paste into the box.");
+    }
+  };
+
   const handleOtpChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
+    const cleaned = value.replace(/\D/g, "");
+    if (cleaned.length >= OTP_LENGTH || (cleaned.length > 1 && !digits[index])) {
+      const next = [...digits];
+      const pasted = (cleaned.length > OTP_LENGTH ? cleaned.slice(-OTP_LENGTH) : cleaned).slice(0, OTP_LENGTH);
+      pasted.split("").forEach((ch, i) => {
+        next[i] = ch;
+      });
+      setDigits(next);
+      const focusIndex = Math.min(pasted.length, OTP_LENGTH - 1);
+      inputRefs.current[focusIndex]?.focus();
+      return;
+    }
+
+    const digit = cleaned.slice(-1);
     const next = [...digits];
     next[index] = digit;
     setDigits(next);
@@ -624,32 +695,78 @@ export default function WithdrawModals({
 
             {/* Form — identical layout to auth OtpVerification */}
             <form onSubmit={handleConfirm} className="flex flex-col items-center gap-c32">
-              {/* OTP digit boxes — identical to auth: gap-3, w-12 h-14 */}
-              <div className="flex gap-3 justify-center">
-                {digits.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => { inputRefs.current[i] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                    onPaste={handleOtpPaste}
-                    aria-label={`OTP digit ${i + 1}`}
-                    className={`
-                      w-12 h-14 text-center text-c18 font-MontserratSemiBold rounded-lg border-1
-                      outline-none transition-all duration-200
-                      ${digit
-                        ? "border-ff715b  text-161616"
-                        : "border-efefef bg-white text-161616"
-                      }
-                      focus:border-ff715b focus:ring-1 focus:ring-ff715b/20
-                      caret-ff715b
-                    `}
-                  />
-                ))}
+              {/* Clipboard paste suggestion banner */}
+              {clipboardOtp && (
+                <div className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-ff715b/10 border border-ff715b/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <svg className="w-4 h-4 text-ff715b shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <span className="flex-1 text-c12 font-MontserratMedium text-161616">
+                    OTP code copied — paste it?
+                  </span>
+                  <button
+                    type="button"
+                    onClick={applyClipboardOtp}
+                    className="text-c12 font-MontserratSemiBold text-ff715b hover:underline shrink-0"
+                  >
+                    Paste OTP
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setClipboardOtp(null); lastCheckedClip.current = ""; }}
+                    aria-label="Dismiss"
+                    className="text-161616/40 hover:text-161616 transition-colors ml-1 shrink-0"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+
+              {/* OTP digit boxes */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="flex gap-3 justify-center">
+                  {digits.map((digit, i) => (
+                    <input
+                      key={i}
+                      ref={(el) => { inputRefs.current[i] = el; }}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete={i === 0 ? "one-time-code" : "off"}
+                      maxLength={OTP_LENGTH}
+                      value={digit}
+                      onFocus={() => {
+                        checkClipboard();
+                      }}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      onPaste={handleOtpPaste}
+                      aria-label={`OTP digit ${i + 1}`}
+                      className={`
+                        w-12 h-14 text-center text-c18 font-MontserratSemiBold rounded-lg border-1
+                        outline-none transition-all duration-200
+                        ${digit
+                          ? "border-ff715b  text-161616"
+                          : "border-efefef bg-white text-161616"
+                        }
+                        focus:border-ff715b focus:ring-1 focus:ring-ff715b/20
+                        caret-ff715b
+                      `}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleDirectPaste}
+                  className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium text-ff715b hover:text-ff715b/80 transition-colors py-1 px-2.5 rounded-full hover:bg-ff715b/5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Paste code from clipboard
+                </button>
               </div>
 
               {/* Submit button — full width, matches auth */}

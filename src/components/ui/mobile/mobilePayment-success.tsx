@@ -2,20 +2,27 @@
 
 import PaymentSuccess from "@/components/ui/checkouts/success";
 import { Button } from "@/components/ui/Button/Button";
-
+import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
 import { motion } from "framer-motion";
-
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
 
 export default function MobilePaymentSuccessfulPage() {
   const router = useRouter();
+  const [cancelOrderOpen, setCancelOrderOpen] = useState(false);
+
+  const token = useSelector((state: RootState) => state.token.token);
+  const isLoggedIn = Boolean(token);
 
   const orderDatas = useSelector(
     (state: RootState) => state.orderSlice.SuccessOrderData
+  );
+
+  const currentOrderId = String(
+    (orderDatas?.order as any)?.id || orderDatas?.order?.order_id || ""
   );
 
   return (
@@ -23,14 +30,30 @@ export default function MobilePaymentSuccessfulPage() {
       <div>
         <PaymentSuccess />
       </div>
-      <div className="flex gap-1 w-full mt-c32 text-c12 font-MontserratSemiBold">
-        <Button
-          onClick={() => router.push("/")}
-          className="bg-transparent border border-ff715b text-ff715b"
-        >
-          Go home
-        </Button>
-        <Button>Check my order</Button>
+      <div className="flex flex-col gap-2 w-full mt-c32 text-c12 font-MontserratSemiBold">
+        <div className="flex gap-2 w-full">
+          <Button
+            onClick={() => router.push("/")}
+            className="bg-transparent border border-ff715b text-ff715b flex-1"
+          >
+            Go home
+          </Button>
+          <Button
+            onClick={() => router.push("/dashboard/buyer/orders")}
+            className="flex-1"
+          >
+            Check my order
+          </Button>
+        </div>
+        {isLoggedIn && (
+          <Button
+            variant="secondary"
+            onClick={() => setCancelOrderOpen(true)}
+            className="w-full text-red-500 hover:text-red-600"
+          >
+            Cancel order
+          </Button>
+        )}
       </div>
       <div className="relative md: md:h-full ">
         {/* Cart Content */}
@@ -104,6 +127,13 @@ export default function MobilePaymentSuccessfulPage() {
           </div>
         </div>
       </div>
+
+      <CancelOrderModal
+        isDispute={false}
+        isOpen={cancelOrderOpen}
+        orderId={currentOrderId}
+        onClose={() => setCancelOrderOpen(false)}
+      />
     </div>
   );
 }

@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 
 export interface AddProductLayoutProps {
   children: React.ReactNode;
-  stage: 1 | 2 | 3|4|5;
+  stage: 1 | 2 | 3 | 4 | 5;
   title: string;
+  headerTitle?: string;
 }
 
 import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
@@ -15,15 +16,24 @@ import { SellerMobileHeader } from "@/components/ui/seller-components/header-com
 export default function AddProductLayout({
   children,
   stage,
-  title
+  title,
+  headerTitle,
 }: AddProductLayoutProps) {
   const router = useRouter();
+
+  const resolvedHeaderTitle =
+    headerTitle ??
+    (stage === 5
+      ? "Add New Product to Draft"
+      : stage === 4
+      ? "Update Product"
+      : "Add New Product");
 
   return (
     <main className="w-full pb-c56 py-6 lg:py-0">
       {/* Header */}
       <SellerMobileHeader 
-        title={stage !== 4 ? "Add New Product" : "Update Product"} 
+        title={resolvedHeaderTitle} 
       />
 
       {/* Body */}

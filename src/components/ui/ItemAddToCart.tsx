@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "./Button/Button";
 
 import { useSelector, useDispatch } from "react-redux";
@@ -72,6 +72,8 @@ export default function ItemAddToCart({
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [guestCheckoutOpen, setGuestCheckoutOpen] = useState(false);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const addToCartInFlight = useRef(false);
+  const [addingToCart, setAddingToCart] = useState(false);
   const token = useSelector((state: RootState) => state.token.token);
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const selectedAddressId = useSelector(
@@ -106,6 +108,8 @@ export default function ItemAddToCart({
   };
 
   const handleAddToCart = async () => {
+    if (addToCartInFlight.current) return;
+
     if (!selectedVariationId) {
       if (onIncompleteVariation) {
         onIncompleteVariation(); // scroll & highlight missing attribute
@@ -114,6 +118,9 @@ export default function ItemAddToCart({
       }
       return;
     }
+
+    addToCartInFlight.current = true;
+    setAddingToCart(true);
     const newQty = (existingCartItem?.quantity || 0) + 1;
     setLocalQty(newQty);
 
@@ -136,10 +143,14 @@ export default function ItemAddToCart({
       toast.success(
         existingCartItem ? "Quantity updated" : "Item added to cart"
       );
+      addToCartInFlight.current = false;
+      setAddingToCart(false);
       return;
     }
 
     // 🔹 Logged-in user
+    // Do not let an old guest snapshot be bulk-synced after this backend add.
+    localStorage.removeItem("cart");
     try {
       await sendHttpRequest({
         requestConfig: {
@@ -164,6 +175,9 @@ export default function ItemAddToCart({
       );
     } catch {
       toast.error("Network error — updated locally");
+    } finally {
+      addToCartInFlight.current = false;
+      setAddingToCart(false);
     }
   };
 
@@ -489,8 +503,8 @@ export default function ItemAddToCart({
               productId={productId}
             />
           ) : (
-            <Button onClick={handleAddToCart} disabled={loading}>
-              {loading ? <LoadingSpinner /> : "Add to cart"}
+            <Button onClick={handleAddToCart} disabled={loading || addingToCart}>
+              {loading || addingToCart ? <LoadingSpinner /> : "Add to cart"}
             </Button>
           )}
 
@@ -534,9 +548,9 @@ export default function ItemAddToCart({
                 className="w-full"
                 variant="secondary"
                 onClick={handleAddToCart}
-                disabled={loading}
+                disabled={loading || addingToCart}
               >
-                {loading ? <LoadingSpinner /> : "Add to cart"}
+                {loading || addingToCart ? <LoadingSpinner /> : "Add to cart"}
               </Button>
             )}
 
@@ -560,9 +574,9 @@ export default function ItemAddToCart({
                 className="w-full"
                 variant="secondary"
                 onClick={handleAddToCart}
-                disabled={loading}
+                disabled={loading || addingToCart}
               >
-                {loading ? <LoadingSpinner color="border-ff715b" /> : "Add to cart"}
+                {loading || addingToCart ? <LoadingSpinner color="border-ff715b" /> : "Add to cart"}
               </Button>
             )}
 

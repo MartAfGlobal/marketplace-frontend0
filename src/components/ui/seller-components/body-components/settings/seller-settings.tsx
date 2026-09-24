@@ -20,6 +20,7 @@ import PasswordSection from "./sections/password-section";
 import PrivacySection from "./sections/privacy-section";
 import LegalSection from "./sections/legal-section";
 import DeleteAccountSection from "./sections/delete-account-section";
+import SellerProfileImageModal from "@/components/ui/Modals/SellerProfileImageModal";
 
 type Tab =
   | "Profile"
@@ -56,6 +57,7 @@ export default function SellerSettings() {
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const seller = useSelector((state: RootState) => state.seller.data);
   const profile = seller?.profile;
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -221,6 +223,14 @@ export default function SellerSettings() {
           <span className="text-xl font-MontserratSemiBold">Settings</span>
         </button>
         
+        <SellerProfileImageModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          currentProfile={profile?.company_logo_url || null}
+          onUpload={(file) => console.log("Uploaded file:", file)}
+          onRemove={() => console.log("Removed profile image")}
+        />
+
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#f5f5f5]">
           {/* Profile Image with Camera Icon */}
           <div className="relative mb-8  w-26 h-26">
@@ -237,7 +247,10 @@ export default function SellerSettings() {
                 </div>
               )}
             </div>
-            <button className="absolute bottom-0 -right-1.5 w-c48-15 h-c48-15 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-100">
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              className="absolute bottom-0 -right-1.5 w-c48-15 h-c48-15 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-100"
+            >
                <Camera size={19.63} className="text-[#ff715b]" />
             </button>
           </div>

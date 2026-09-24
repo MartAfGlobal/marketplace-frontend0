@@ -26,6 +26,8 @@ import {
   CountryDropdown,
   StateDropdown,
 } from "@/components/ui/forms/CountryStateDropdown";
+import { Input } from "@/components/ui/forms/Input";
+import { toast } from "sonner";
 
 function useClickOutside<T extends HTMLElement>(onOutside: () => void) {
   const ref = useRef<T | null>(null);
@@ -155,10 +157,12 @@ export default function AddNewAddreess() {
         url: "/checkout/summary/guest/",
         method: "POST",
         body: { ...formData, items },
-        successMessage: "Redirecting to summary page...",
+        
+        
       },
       successRes: (res) => {
         const data = res.data;
+       
         console.log("respons data:", data);
         dispatch(
           setCheckoutSummary({
@@ -176,6 +180,7 @@ export default function AddNewAddreess() {
             },
           }),
         );
+         toast.success("Redirecting to summary page...")
 
         router.push("/cart/checkout");
       },
@@ -232,7 +237,7 @@ export default function AddNewAddreess() {
       return;
     }
 
-    // normal inputs
+    // normal Inputs
     if (["line1", "line2", "postal_code"].includes(field)) {
       setFormData((prev) => ({
         ...prev,
@@ -330,9 +335,9 @@ export default function AddNewAddreess() {
                 <Label className="text-sm font-MontserratSemiBold">
                   First Name
                 </Label>
-                <input
+                <Input
                   type="text"
-                  className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                  className=""
                   value={formData.guest_first_name}
                   onChange={(e) =>
                     handleChange("guest_first_name", e.target.value.replace(/[^a-zA-Z]/g, ""))
@@ -343,9 +348,9 @@ export default function AddNewAddreess() {
                 <Label className="text-sm font-MontserratSemiBold">
                   Last Name
                 </Label>
-                <input
+                <Input
                   type="text"
-                  className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                  className=""
                   value={formData.guest_last_name}
                   onChange={(e) => handleChange("guest_last_name", e.target.value.replace(/[^a-zA-Z]/g, ""))}
                 />
@@ -361,9 +366,9 @@ export default function AddNewAddreess() {
                 <Label className="text-sm font-MontserratSemiBold">
                   email address
                 </Label>
-                <input
+                <Input
                   type="email"
-                  className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                  className=""
                   value={formData.guest_email}
                   onChange={(e) => handleChange("guest_email", e.target.value)}
                 />
@@ -375,7 +380,7 @@ export default function AddNewAddreess() {
                 </Label>
               
                 <div
-                  className="flex items-center p-4 mt-2 rounded-lg h-10"
+                  className="flex items-center p-4 mt-2 rounded-lg h-12 focus:border-ff715b focus:ring-1"
                   style={{ border: `1px solid ${phoneTouched && phoneError ? "#CA0202" : "#d1d5db"}` }}
                 >
                   <Image
@@ -385,9 +390,9 @@ export default function AddNewAddreess() {
                     height={16}
                     className="mr-2"
                   />
-                  <input
+                  <Input
                     type="tel"
-                    className="w-full outline-none"
+                    className="w-full outline-none border-0 focus:border-0 focus:ring-0"
                     value={formData.guest_phone}
                     onChange={(e) => {
                       const sanitized = e.target.value.replace(/[^0-9+]/g, "");
@@ -411,9 +416,9 @@ export default function AddNewAddreess() {
                 <Label className="text-sm font-MontserratSemiBold">
                   Street, house, apartment, unit (address line 1 required)
                 </Label>
-                <input
+                <Input
                   type="text"
-                  className={`w-full p-4 mt-2 border border-gray-300 rounded-lg h-10 ${
+                  className={` ${
                     streetError ? "border-red-500" : "border-efefef"
                   }`}
                   value={formData.guest_shipping_address.line1}
@@ -424,9 +429,9 @@ export default function AddNewAddreess() {
                 <Label className="text-sm font-MontserratSemiBold">
                   Street, house, apartment, unit (address line 2 optional)
                 </Label>
-                <input
+                <Input
                   type="text"
-                  className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                  className=""
                   value={formData.guest_shipping_address.line2}
                   onChange={(e) => handleChange("line2", e.target.value)}
                 />
@@ -450,9 +455,9 @@ export default function AddNewAddreess() {
                 <Label className="text-sm font-MontserratSemiBold">
                   Postal code
                 </Label>
-                <input
+                <Input
                   type="text"
-                  className="w-full p-4 mt-2 border border-gray-300 rounded-lg h-10"
+                  className=""
                   value={formData.guest_shipping_address.postal_code}
                   onChange={(e) =>
                     handleChange("postal_code", e.target.value.replace(/[^0-9]/g, ""))

@@ -127,6 +127,8 @@ const productDetails = useSelector(
   const addItemToCartBackend = async () => {
     if (!token || !productId) return;
 
+    // The logged-in cart is backend-owned; discard any stale guest snapshot.
+    localStorage.removeItem("cart");
     return sendHttpRequest({
       requestConfig: {
         url: `/cart/add`,

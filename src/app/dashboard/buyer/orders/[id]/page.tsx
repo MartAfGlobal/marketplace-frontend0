@@ -22,6 +22,7 @@ import AdressSkeleton from "@/components/reloadSpinner/addressSkeleton";
 import { setShippingAddress } from "@/store/orders/order-slice";
 import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 import { useFetchOrders } from "@/helpers/fetchOrders";
+import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -42,9 +43,9 @@ export default function OrderDetailsPage() {
   const [cancelOrderOpen, setCancelOrderOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [buyAgainLoading, setBuyAgainLoading] = useState(false);
 
-
-    const { fetchOrders } = useFetchOrders();
+  const { fetchOrders } = useFetchOrders();
 
   const { loading: repaying, sendHttpRequest: repayReq } = useHttp();
   const { loading: confirming, sendHttpRequest: confirmReq } = useHttp();
@@ -173,6 +174,21 @@ export default function OrderDetailsPage() {
   // Order Items
   const orderItems = order?.items || order?.order_items || [];
 
+  const handleBuyAgain = async () => {
+    if (!token || orderItems.length === 0 || buyAgainLoading) return;
+
+    setBuyAgainLoading(true);
+    const added = await addOrderItemToCart(
+      async (request) => fetchOrderReq(request),
+      token,
+      { items: orderItems },
+      dispatch,
+    );
+
+    if (added) router.push("/cart");
+    setBuyAgainLoading(false);
+  };
+
   const getDisputeForItem = (itemId: string) =>
     disputes.find(
       (dispute) => String(dispute.order_item_id) === String(itemId),
@@ -206,12 +222,12 @@ export default function OrderDetailsPage() {
   );
 
   // Status handling — buyer_status is the source of truth for the buyer-facing view
-  const status = (
-    order?.buyer_status ||
-    order?.status ||
-    order?.seller_order_status ||
-    "PENDING"
-  ).toUpperCase();
+  const status = String(order?.buyer_status ?? "").toUpperCase();
+  const isShippedStatus = [
+    "SHIPPED",
+    "SHIPPED_TO_BUYER",
+    "OUT_FOR_DELIVERY",
+  ].includes(status);
 
   const handleCopy = () => {
     if (!orderNumber) return;
@@ -273,7 +289,7 @@ export default function OrderDetailsPage() {
         successMessage: "Delivery confirmed successfully!",
       },
       successRes: () => {
-        fetchOrders()
+        fetchOrders();
         setOpenConfirmModal(false);
         router.refresh();
       },
@@ -385,15 +401,19 @@ export default function OrderDetailsPage() {
                     : "text-161616"
               }`}
             >
-              {status === "RECEIVED_AT_HUB" 
+              {status === "RECEIVED_AT_HUB"
                 ? "To ship"
-                : status === "SHIPPED" 
+                : isShippedStatus
                   ? "Order on its way"
                   : status === "DELIVERED"
                     ? "Order has been delivered"
                     : status === "AWAITING_PAYMENT"
                       ? "Awaiting payment"
-                      : status === "PENDING" || status === "ACCEPTED" || status === "IN_TRANSIT_TO_HUB" || status === "PROCESSING" || status === "PROCESSED"
+                      : status === "PENDING" ||
+                          status === "ACCEPTED" ||
+                          status === "IN_TRANSIT_TO_HUB" ||
+                          status === "PROCESSING" ||
+                          status === "PROCESSED"
                         ? "Order is being processed"
                         : status === "CANCELLED"
                           ? "Cancelled"
@@ -432,7 +452,10 @@ export default function OrderDetailsPage() {
                         </span>
                       </p>
                       {trackingId && (
-                        <button onClick={handleCopyTracking} title="Copy tracking ID">
+                        <button
+                          onClick={handleCopyTracking}
+                          title="Copy tracking ID"
+                        >
                           <Image src={Copy} alt="copy" width={14} height={14} />
                         </button>
                       )}
@@ -447,7 +470,7 @@ export default function OrderDetailsPage() {
 
                 {/* Desktop Action Buttons */}
                 <div className="hidden md:flex flex-col gap-c32 w-full max-w-84">
-                  {status === "SHIPPED" && (
+                  {isShippedStatus && (
                     <>
                       <Button onClick={() => handleConfirmDelivery(order.id)}>
                         Confirm delivery
@@ -458,7 +481,7 @@ export default function OrderDetailsPage() {
                     </>
                   )}
 
-                  {status === "RECEIVED_AT_HUB"  && (
+                  {status === "RECEIVED_AT_HUB" && (
                     <Button onClick={handleTrackOrder} variant="secondary">
                       Track order
                     </Button>
@@ -475,12 +498,17 @@ export default function OrderDetailsPage() {
 
                   {status === "DELIVERED" && (
                     <>
-                      <Button onClick={() => router.push("/cart")}>
-                        Buy again
+                      <Button
+                        disabled={buyAgainLoading}
+                        onClick={handleBuyAgain}
+                      >
+                        {buyAgainLoading ? <LoadingSpinner /> : "Buy again"}
                       </Button>
                       <Button
                         onClick={() =>
-                          router.push(`/dashboard/buyer/orders/leave-review/${id}`)
+                          router.push(
+                            `/dashboard/buyer/orders/leave-review/${id}`,
+                          )
                         }
                         variant="secondary"
                       >
@@ -501,10 +529,11 @@ export default function OrderDetailsPage() {
 
                   {status === "CANCELLED" && (
                     <Button
-                      onClick={() => router.push("/cart")}
+                      disabled={buyAgainLoading}
+                      onClick={handleBuyAgain}
                       variant="primary"
                     >
-                      Buy again
+                      {buyAgainLoading ? <LoadingSpinner /> : "Buy again"}
                     </Button>
                   )}
                 </div>
@@ -625,8 +654,9 @@ export default function OrderDetailsPage() {
 
                         const itemPrice = Number(
                           item.total_price ??
-                            Number(item.price_at_purchase || item.unit_price || 0) *
-                              Number(item.quantity || 1),
+                            Number(
+                              item.price_at_purchase || item.unit_price || 0,
+                            ) * Number(item.quantity || 1),
                         );
 
                         const dispute = getDisputeForItem(String(item.id));
@@ -691,14 +721,14 @@ export default function OrderDetailsPage() {
                               </p>
                             ) : status === "DELIVERED" &&
                               item.status !== "PENDING" ? (
-                                <Button
-                                  onClick={() => handleReturnAndRefund(item.id)}
-                                  variant="secondary"
-                                  className="w-36 md:w-47.5 shrink-0 whitespace-nowrap"
-                                >
-                                  Raise Dispute
-                                </Button>
-                              ) : null}
+                              <Button
+                                onClick={() => handleReturnAndRefund(item.id)}
+                                variant="secondary"
+                                className="w-36 md:w-47.5 shrink-0 whitespace-nowrap"
+                              >
+                                Raise Dispute
+                              </Button>
+                            ) : null}
                           </motion.div>
                         );
                       })}
@@ -763,16 +793,16 @@ export default function OrderDetailsPage() {
         {/* Mobile Fixed Bottom Action Bar */}
         <div className="w-full h-20 bg-ffffff circle-shadow px-6 fixed left-0 bottom-0 md:hidden z-50 flex items-center gap-4">
           <div className="flex gap-4 items-center justify-center w-full text-c12 font-MontserratSemiBold">
-            {status === "SHIPPED" && (
+            {isShippedStatus && (
               <>
-                <Button onClick={handleTrackOrder} variant="secondary">
-                  Track order
-                </Button>
                 <Button
                   onClick={() => handleConfirmDelivery(order.id)}
                   variant="primary"
                 >
                   Confirm delivery
+                </Button>
+                <Button onClick={handleTrackOrder} variant="secondary">
+                  Track order
                 </Button>
               </>
             )}
@@ -783,7 +813,7 @@ export default function OrderDetailsPage() {
               </Button>
             )}
 
-            {status === "PENDING"  && (
+            {status === "PENDING" && (
               <Button
                 onClick={() => handleCancelOrder(order.id)}
                 variant="primary"
@@ -794,8 +824,8 @@ export default function OrderDetailsPage() {
 
             {status === "DELIVERED" && (
               <>
-                <Button onClick={() => router.push("/cart")}>
-                  Buy again
+                <Button disabled={buyAgainLoading} onClick={handleBuyAgain}>
+                  {buyAgainLoading ? <LoadingSpinner /> : "Buy again"}
                 </Button>
                 <Button
                   onClick={() =>
@@ -810,17 +840,18 @@ export default function OrderDetailsPage() {
 
             {(status === "AWAITING_PAYMENT" ||
               status === "AWAITING CONFIRMATION") && (
-              <Button
-                disabled={repaying}
-                onClick={() => handleRepay(order.id)}
-              >
+              <Button disabled={repaying} onClick={() => handleRepay(order.id)}>
                 {repaying ? <LoadingSpinner /> : "Confirm & pay"}
               </Button>
             )}
 
             {status === "CANCELLED" && (
-              <Button onClick={() => router.push("/cart")} variant="primary">
-                Buy again
+              <Button
+                disabled={buyAgainLoading}
+                onClick={handleBuyAgain}
+                variant="primary"
+              >
+                {buyAgainLoading ? <LoadingSpinner /> : "Buy again"}
               </Button>
             )}
           </div>
@@ -829,7 +860,7 @@ export default function OrderDetailsPage() {
 
       {/* Modals */}
       <ConfirmModal
-      yesText="Yes"
+        yesText="Yes"
         isOpen={openConfirmModal}
         onClose={() => setOpenConfirmModal(false)}
         title="Did you receive this package?"

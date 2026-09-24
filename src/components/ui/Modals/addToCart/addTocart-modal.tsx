@@ -120,7 +120,7 @@ export default function AddCartModal({
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative bg-white shadow-xl flex flex-col w-full max-w-md md:max-w-4xl rounded-t-2xl md:rounded-xl overflow-hidden h-fit max-h-[90vh]"
+                className="relative bg-white shadow-xl flex flex-col w-full md:max-w-4xl rounded-t-2xl md:rounded-xl overflow-hidden h-fit max-h-[90vh]"
               >
                 {/* Fixed header */}
                 <div className="flex items-center justify-between w-full px-6 md:px-8 pt-6 md:pt-8 pb-4 flex-shrink-0">

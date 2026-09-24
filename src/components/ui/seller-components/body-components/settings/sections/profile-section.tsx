@@ -97,7 +97,7 @@ export default function ProfileSection() {
       </div>
 
       {/* Business Profile Title */}
-      <h2 className="text-c18 font-MontserratNormal text-000000 mb-6 lg:block hidden">
+      <h2 className="text-c18 font-MontserratNormal text-000000 mb-6">
         Business profile
       </h2>
 

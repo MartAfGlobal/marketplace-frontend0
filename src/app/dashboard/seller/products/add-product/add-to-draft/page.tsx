@@ -39,7 +39,7 @@ export default function AddToDraftPage() {
   //   const searchParams = useSearchParams();
   const [specificationsText, setSpecificationsText] = useState("");
   const [category, setCategory] = useState<Category | undefined>();
-  const [basePrice, setBasePrice] = useState<number | undefined>();
+  const [basePrice, setBasePrice] = useState<number | string | undefined>();
   const [subCategory, setSubCategory] = useState<SubCategory | undefined>();
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
@@ -285,9 +285,9 @@ export default function AddToDraftPage() {
   };
 
   return (
-    <AddProductLayout stage={5} title="Upload Image">
+    <AddProductLayout stage={5} title="Add New Product to Draft" headerTitle="Add New Product to Draft">
       <form>
-        <p className="text-c12 font-MontserratNormal mt-3">
+        <p className="text-c12 font-MontserratNormal lg:mt-3 mt-2">
           Images need to be between 500x500 and 1080x1080. White backgrounds are
           advised.
         </p>
@@ -295,11 +295,11 @@ export default function AddToDraftPage() {
         <fieldset
           disabled={loading || updating || fetchingDraftDetails || savingDraft}
         >
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-8 flex items-center gap-4 w-full flex-wrap">
             {images.map((img, i) => (
               <div
                 key={i}
-                className="relative h-24 w-24 rounded-c8 border border-ff715b overflow-hidden"
+                className="relative lg:h-24 lg:w-24 h-20 w-20 rounded-c8 border border-ff715b overflow-hidden"
               >
                 {img ? (
                   <>
@@ -344,13 +344,13 @@ export default function AddToDraftPage() {
             ))}
           </div>
 
-          <div className="mt-c48 space-y-6">
+          <div className="lg:mt-c48 mt-8 space-y-6">
             <h1 className="font-MontserratSemiBold text-c18">
               General product information
             </h1>
 
-            <div className="flex items-center gap-8 justify-center">
-              <div className="w-full">
+            <div className="md:flex-row flex flex-col items-center md:gap-8 justify-center">
+              <div className="w-full mb-6 md:mb-0">
                 <Label>Name of Product</Label>
                 <Input
                   className=""
@@ -366,9 +366,10 @@ export default function AddToDraftPage() {
                 <Input
                   className=""
                   placeholder="Product base price"
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   value={basePrice ?? ""}
-                  onChange={(e) => setBasePrice(Number(e.target.value))}
+                  onChange={(e) => setBasePrice(e.target.value.replace(/[^0-9.]/g, ''))}
                 />
               </div>
             </div>
@@ -405,9 +406,9 @@ export default function AddToDraftPage() {
           {variants.map((variant) => (
             <div key={variant.id} className="mb-10">
               {/* Images */}
-              <div className="flex gap-4 mt-4">
+              <div className="flex flex-wrap gap-4 mt-8 lg:mt-4">
                 {variant.images.filter(Boolean).length < 4 && (
-                  <label className="relative h-24 w-24 rounded-c8 border flex flex-col items-center justify-center cursor-pointer overflow-hidden">
+                  <label className="relative lg:h-24 lg:w-24 h-20 w-20 rounded-c8 border flex flex-col items-center justify-center cursor-pointer overflow-hidden">
                     <input
                       type="file"
                       className="absolute inset-0 opacity-0 cursor-pointer"
@@ -437,7 +438,7 @@ export default function AddToDraftPage() {
                 {variant.images.filter(Boolean).map((img, idx) => (
                   <div
                     key={idx}
-                    className="relative h-24 w-24 overflow-hidden rounded-c8 border"
+                    className="relative lg:h-24 lg:w-24 h-20 w-20 overflow-hidden rounded-c8 border"
                   >
                     <Image
                       src={URL.createObjectURL(img!)}
@@ -458,7 +459,7 @@ export default function AddToDraftPage() {
               </div>
 
               {/* Variant name and delete */}
-              <div className="mt-8 flex items-center justify-center gap-8">
+              <div className="mt-8 flex items-center justify-center gap-4 lg:gap-8">
                 <Input
                   disabled
                   className="w-full"
@@ -466,7 +467,7 @@ export default function AddToDraftPage() {
                   value={variant.name}
                   readOnly
                 />
-                <div className="w-full max-w-198 border h-0.25 border-000000/18" />
+                <div className="w-full hidden lg:block max-w-198 border h-0.25 border-000000/18" />
                 <button
                   type="button"
                   onClick={() => handleDeleteVariant(variant.id)}
@@ -477,7 +478,7 @@ export default function AddToDraftPage() {
               </div>
 
               {/* Attributes, price, stock */}
-              <div className="flex w-full gap-6 mt-6">
+              <div className="flex w-full gap-6 mt-6 lg:flex-row flex-col">
                 <div className="w-full">
                   {attributes?.length ? (
                     <AttributesSection
@@ -491,39 +492,43 @@ export default function AddToDraftPage() {
                     <p>No attributes to display</p>
                   )}
                 </div>
-                <div>
-                  <Label>Price</Label>
-                  <Input
-                    type="number"
-                    className=""
-                    value={variant.price ?? ""}
-                    onChange={(e) =>
-                      setVariants((prev) =>
-                        prev.map((v) =>
-                          v.id === variant.id
-                            ? { ...v, price: Number(e.target.value) }
-                            : v,
-                        ),
-                      )
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Quantity</Label>
-                  <Input
-                    type="number"
-                    className=""
-                    value={variant.stock ?? ""}
-                    onChange={(e) =>
-                      setVariants((prev) =>
-                        prev.map((v) =>
-                          v.id === variant.id
-                            ? { ...v, stock: Number(e.target.value) }
-                            : v,
-                        ),
-                      )
-                    }
-                  />
+                <div className="flex gap-4 sm:gap-6 w-full lg:w-auto">
+                  <div className="w-full lg:w-36">
+                    <Label>Price</Label>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      className=""
+                      value={variant.price ?? ""}
+                      onChange={(e) =>
+                        setVariants((prev) =>
+                          prev.map((v) =>
+                            v.id === variant.id
+                              ? { ...v, price: e.target.value.replace(/[^0-9.]/g, '') }
+                              : v,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="w-full lg:w-36">
+                    <Label>Quantity</Label>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      className=""
+                      value={variant.stock ?? ""}
+                      onChange={(e) =>
+                        setVariants((prev) =>
+                          prev.map((v) =>
+                            v.id === variant.id
+                              ? { ...v, stock: e.target.value.replace(/[^0-9.]/g, '') }
+                              : v,
+                          ),
+                        )
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -531,7 +536,7 @@ export default function AddToDraftPage() {
 
           <Button
             type="button"
-            className="max-w-32.5 mt-8"
+            className="w-full sm:max-w-32.5 mt-8"
             onClick={handleAddVariant}
           >
             Add variant
@@ -550,11 +555,11 @@ export default function AddToDraftPage() {
           <Button
             type="button"
             disabled={
-              loading || updating || fetchingDraftDetails || savingDraft
+              loading || updating || fetchingDraftDetails || savingDraft || !isSaveEnabled
             }
             onClick={handleSaveDraft}
             variant="primary"
-            className="max-w-32.5"
+            className="w-full sm:max-w-32.5"
           >
             {savingDraft ? <LoadingSpinner /> : "Save in draft"}
           </Button>

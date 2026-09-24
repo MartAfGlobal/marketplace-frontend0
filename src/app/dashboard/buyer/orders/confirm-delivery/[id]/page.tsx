@@ -11,19 +11,22 @@ import Visa from "@/assets/mobile/cards/visa.png";
 
 import Security from "@/assets/icons/ShieldCheck.png";
 
-
 import NavBack from "@/assets/icons/navBacksmall.png";
 
 import ResponseModal from "@/components/ui/mobile/modal/ResponseModal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useParams } from "next/navigation";
+import { useHttp } from "@/hooks/use-http";
+import { Button } from "@/components/ui/Button/Button";
 
 export default function OrderOnTheWayPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"yes" | "no">("no");
   const [copied, setCopied] = useState(false);
   const router = useRouter();
+  const token = useSelector((state: RootState) => state.token.token);
+  const { loading: confirming, sendHttpRequest: confirmReq } = useHttp();
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
 
@@ -31,26 +34,38 @@ export default function OrderOnTheWayPage() {
   const { orders } = useSelector((state: any) => state.orders);
 
   const order = orders?.find((o: any) => o.id === id);
-  const orderId = order?.id;
+  const orderId = order?.order_id || id;
 
-  const isoDate = order.created_at;
+  const isoDate = order?.created_at;
   const formattedDate = new Date(isoDate).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 
-  const buyerAddresses = useSelector(
-    (state: RootState) => state.buyer.BuyerAddresses
-  );
-  const selectedAddress = buyerAddresses.find(
-    (item: any) => item.id === order.shipping_address
-  );
-
- 
+  const selectedAddress = order?.shipping_address;
 
   const orderItems = order?.items || order?.order_items || [];
+  console.log("items to comfirm", orderItems, "cheching entire order", order);
 
+  const handleConfirmDelivery = () => {
+    if (!token || !order.id || confirming) return;
+
+    confirmReq({
+      requestConfig: {
+        url: `/orders/buyer/${order.id}/confirm-delivery/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        successMessage: "Delivery confirmed successfully!",
+      },
+      successRes: () => {
+        setModalType("yes");
+        setIsModalOpen(true);
+      },
+    });
+  };
 
   const handleCopy = () => {
     navigator.clipboard
@@ -63,7 +78,6 @@ export default function OrderOnTheWayPage() {
         console.error("Failed to copy: ", err);
       });
   };
-
 
   return (
     <div className="px-6">
@@ -127,9 +141,13 @@ export default function OrderOnTheWayPage() {
                 </p>
               </div>
               <div className="font-MontserratNormal text-c12 space-y-1 pt-3 pb-4  border-b border-black/5">
-                <p>{selectedAddress?.first_name}  {selectedAddress?.last_name}</p>
+                <p>
+                  {selectedAddress?.first_name} {selectedAddress?.last_name}
+                </p>
                 <p>{selectedAddress?.phone} </p>
                 <p>{selectedAddress?.address}</p>
+                <p>{selectedAddress?.city}</p>
+                <p>{selectedAddress?.country}</p>
               </div>
             </div>
           </motion.div>
@@ -140,7 +158,7 @@ export default function OrderOnTheWayPage() {
             transition={{ duration: 0.8 }}
             className="w-full  mt-4"
           >
-            <div>
+            {/* <div>
               <div className="flex gap-2 ">
                 <p className="text-sm font-MontserratSemiBold">
                   Payment method
@@ -161,7 +179,7 @@ export default function OrderOnTheWayPage() {
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
           </motion.div>
 
           <motion.div
@@ -182,7 +200,7 @@ export default function OrderOnTheWayPage() {
             <div>
               <p>Package details</p>
             </div>
-            {orderItems.map((item:any) => (
+            {orderItems.map((item: any) => (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, y: -10 }}
@@ -193,25 +211,29 @@ export default function OrderOnTheWayPage() {
                 <div className="w-full md:justify-between flex-col pb-5 border-b border-000000/5 flex md:flex-row">
                   <div className="flex gap-4 items-start">
                     <Image
-                      src={item.product.image}
-                      alt={item.product.name}
+                      src={item.product_image || "/placeholder.png"}
+                      alt={item.product_name || "Product image"}
                       width={64}
                       height={64}
                       className="md:hidden"
                     />
                     <div className="w-full max-w-143.75">
                       <p className="font-MontserratSemiBold text-base leading-c24 pb-1 text-000000">
-                        {item.product.name}
-                     
+                        {item.product_name}
                       </p>
 
-                      <div className="w-24.5 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
+                      <div className="w-fit p-2 px-4 h-c32 justify-center rounded-c12 bg-black/3 flex items-center">
                         <span className="text-black opacity-32 font-MontserratSemiBold text-c12 leading-16">
-                          {item.fulfilled_quantity ?? item.quantity}PC, {item.variant?.color}
+                          {item.fulfilled_quantity ?? item.fulfilled_quantity}
+                          PC, {item.variation_name}
                         </span>
                       </div>
                       <p className="font-MontserratSemiBold text-c16 pt-3 leading-6.5">
-                        ₦{(item.price_at_purchase * (item.fulfilled_quantity ?? item.quantity ?? 0)).toLocaleString()}
+                        ₦
+                        {(
+                          item.price_at_purchase *
+                          (item.fulfilled_quantity ?? item.quantity ?? 0)
+                        ).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -236,7 +258,9 @@ export default function OrderOnTheWayPage() {
           <div className=" space-y-2 text-sm font-MontserratNormal">
             <div className="pb-3 border-b border-000000/5">
               <p className="">Total</p>
-              <p className="text-c20 font-MontserratSemiBold">₦{order.total_price}</p>
+              <p className="text-c20 font-MontserratSemiBold">
+                ₦{order.total_price}
+              </p>
             </div>
             <div className="flex justify-between">
               <p className="">Total items:</p>
@@ -265,12 +289,10 @@ export default function OrderOnTheWayPage() {
           <p className="font-MontserratNormal text-c18 text-161616 mb-c32">
             More to love
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
-         
-          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5"></div>
         </div>
       </div>
-      <div className="w-full h-46 bg-ffffff circle-shadow px-6 pt-6 fixed left-0 bottom-0 md:hidden z-50 gap-4">
+      <div className="w-full h-46 bg-ffffff circle-shadow px-6 pt-6 fixed left-0 bottom-0 md:hidden z-40 gap-4">
         <div className="text-center w-full pb-c32 space-y-1">
           <p className="text-sm font-MontserratSemiBold">
             Did you receive this package?
@@ -280,27 +302,31 @@ export default function OrderOnTheWayPage() {
           </p>
         </div>
         <div className="flex gap-4 items-center justify-center w-full text-c12 font-MontserratSemiBold">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => {
               setModalType("no");
               setIsModalOpen(true);
             }}
-            className="border border-ff715b rounded-lg h-c48 flex items-center justify-center w-full text-ff715b"
+            className=""
           >
             No
-          </button>
-          <button
+          </Button>
+          <Button
+            disabled={confirming}
+            loading={confirming}
+            color="white"
             onClick={() => {
-              setModalType("yes");
-              setIsModalOpen(true);
+              handleConfirmDelivery();
             }}
-            className=" rounded-lg h-c48 flex items-center justify-center w-full bg-ff715b text-white"
+            className=""
           >
             Yes
-          </button>
+          </Button>
         </div>
       </div>
       <ResponseModal
+        id={order.id}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         type={modalType}

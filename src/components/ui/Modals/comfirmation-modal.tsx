@@ -42,7 +42,7 @@ export default function ConfirmModal({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.25 }}
-              className={`relative bg-white shadow-xl flex flex-col items-center gap-2 w-full max-w-101.5 h-fit rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-120 overflow-y-auto ${className}`}
+              className={`relative bg-white shadow-xl flex flex-col items-center gap-2 w-full md:max-w-101.5 h-fit rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-120 overflow-y-auto ${className}`}
             >
               <div className="flex">
                 <button

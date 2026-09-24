@@ -291,9 +291,7 @@ export default function OrderOnTheWayPage() {
           </button>
           <button
             onClick={() =>
-              router.push(
-                "/dashboard/buyer/mobile/order-on-its-way/confirm-delivery"
-              )
+              router.push(`/dashboard/buyer/orders/confirm-delivery/${orderId}`)
             }
             className=" rounded-lg h-c48 flex items-center justify-center w-full bg-ff715b text-white"
           >

@@ -57,7 +57,7 @@ export const addOrderItemToCart = async (
     item.variation_id ||
     item.variant_id ||
     null;
-  const quantity = Number(item.quantity ?? item.fulfilled_quantity ?? 1);
+  const quantity = Number(item.fulfilled_quantity ?? item.quantity ?? 1);
 
   if (!variationId || !token) return false;
 

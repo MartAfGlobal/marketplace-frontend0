@@ -78,8 +78,12 @@ export default function OrdersPage() {
 
           {activeTab === "Shipped" && <Shipped searchTerm={searchTerm} />}
 
-          {activeTab === "Delivered" && <Proccessed searchTerm={searchTerm} />}
-          {activeTab === "Completed" && <Proccessed searchTerm={searchTerm} />}
+          {activeTab === "Delivered" && (
+            <Proccessed searchTerm={searchTerm} category="delivered" />
+          )}
+          {activeTab === "Completed" && (
+            <Proccessed searchTerm={searchTerm} category="completed" />
+          )}
           {activeTab === "In Dispute" && <Disputes searchTerm={searchTerm} />}
         </div>
       </div>

@@ -33,7 +33,7 @@ export default function AddProductMethodModal({
           >
             <div className="fixed inset-0 flex items-end md:items-center justify-center md:p-4 px-4 z-[9999]">
               <motion.div
-                className={`relative bg-white shadow-xl w-full max-w-140 h-96.25 rounded-t-2xl md:rounded-xl pt-c64 pb-c56 px-8 `}
+                className={`relative bg-white shadow-xl w-full md:max-w-140 h-96.25 rounded-t-2xl md:rounded-xl pt-c64 pb-c56 px-8 `}
                 initial={{ scale: 0.9, opacity: 0, y: 30 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 30 }}

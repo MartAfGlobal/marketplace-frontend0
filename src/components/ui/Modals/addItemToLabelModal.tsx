@@ -168,7 +168,7 @@ export default function AddItemtoLabelModal({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ duration: 0.35, ease: "easeInOut" }}
-            className=" bg-white shadow-xl flex flex-col items-center gap-8 w-full max-w-101.5 rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-120 overflow-y-auto"
+            className=" bg-white shadow-xl flex flex-col items-center gap-8 w-full md:max-w-101.5 rounded-t-2xl md:rounded-xl p-6 md:p-8 max-h-120 overflow-y-auto"
                 
             onClick={(e) => e.stopPropagation()}
           >

@@ -17,7 +17,7 @@ import { useState } from "react";
 import ProductCard from "@/components/ui/cards/ProductCard";
 import { useRouter } from "next/navigation";
 import { OrderDetailsPageProps } from "@/types/global";
-import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
+import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
 import PaymentSuccess from "./success";
 import { RootState } from "@/store";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,17 +26,22 @@ import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 
 export default function PaymentSuccessful() {
   const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [cancelOrderOpen, setCancelOrderOpen] = useState(false);
 
   const cartItems = useSelector((state: RootState) => state.cart.items);
+  const token = useSelector((state: RootState) => state.token.token);
+  const isLoggedIn = Boolean(token);
   const dispatch = useDispatch();
 
   const router = useRouter();
-  const orderId = "304657846532";
   const [visible, setVisible] = useState(10);
 
   const orderDatas = useSelector(
     (state: RootState) => state.orderSlice.SuccessOrderData
+  );
+
+  const currentOrderId = String(
+    (orderDatas?.order as any)?.id || orderDatas?.order?.order_id || ""
   );
 
   const handleTrackOrder = () => {
@@ -116,8 +121,9 @@ export default function PaymentSuccessful() {
   ];
 
   const handleCopy = () => {
+    if (!currentOrderId) return;
     navigator.clipboard
-      .writeText(orderId)
+      .writeText(currentOrderId)
       .then(() => {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500); // Hide after 1.5s
@@ -132,15 +138,15 @@ export default function PaymentSuccessful() {
       <div className="w-full">
         <div className="w-full px-15">
           <div className="pt-c32 pb-c64 w-full  flex justify-center ">
-            <div className="w-205 px-8 pt-c32 rounded-2xl border border-000000/10">
+            <div className="w-205 p-8  rounded-2xl border border-000000/10">
               <PaymentSuccess />
               <div className="flex justify-between space-y-c32">
                 <div className="w-full max-w-57">
                   <div className="flex gap-2 mt-2">
                     <p className="text-sm mb-3 font-MontserratSemiBold">
-                      Order ID: {orderDatas?.order.order_id}
+                      Order ID: {currentOrderId}
                     </p>
-                    <button onClick={handleCopy}>
+                    <button onClick={handleCopy} aria-label="Copy order id">
                       <Image src={Copy} alt="copy" width={16} height={16} />
                     </button>
                     {copied && (
@@ -165,12 +171,16 @@ export default function PaymentSuccessful() {
                     <p>Delivery date: June 15, 2025 - July 25, 2025</p>
                   </div>
                 </div>
-                <div className=" flex flex-col gap-c32 w-full max-w-84">
-                  <Button onClick={() => setOpen(true)}>Edit Address</Button>
-                  <Button variant="secondary" onClick={handleTrackOrder}>
-                    Cancel order
-                  </Button>
-                </div>
+                {isLoggedIn && (
+                  <div className="flex flex-col gap-c32 w-full max-w-84">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setCancelOrderOpen(true)}
+                    >
+                      Cancel order
+                    </Button>
+                  </div>
+                )}
               </div>
               <div className="flex justify-between">
                 <div className="w-full max-w-57">
@@ -280,7 +290,7 @@ export default function PaymentSuccessful() {
                       Total
                     </p>
                     <p className="font-MontserratSemiBold text-c32 ">
-                      {orderDatas?.order.total}
+                       ₦{orderDatas?.order.total}
                     </p>
                   </div>
                   <div className="font-MontserratNormal text-sm text-000000 space-y-2">
@@ -306,7 +316,7 @@ export default function PaymentSuccessful() {
                     </div>
                     <div className="flex justify-between">
                       <p>Order total</p>
-                      <p>{orderDatas?.order.total}</p>
+                      <p> ₦{orderDatas?.order.total}</p>
                     </div>
                   </div>
                 </div>
@@ -316,15 +326,11 @@ export default function PaymentSuccessful() {
       
         </div>
       </div>
-      <ConfirmModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        title="Did you receive this package?"
-        description="Confirming helps us complete your order and improve service."
-        onNo={() => setOpen(false)}
-        onYes={() => {
-          open;
-        }}
+      <CancelOrderModal
+        isDispute={false}
+        isOpen={cancelOrderOpen}
+        orderId={currentOrderId}
+        onClose={() => setCancelOrderOpen(false)}
       />
     </>
   );

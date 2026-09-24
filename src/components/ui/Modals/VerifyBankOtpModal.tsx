@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHttp } from "@/hooks/use-http";
 import { useSelector } from "react-redux";
@@ -57,6 +57,63 @@ const VerifyBankOtpModal = ({
   const token = useSelector((state: RootState) => state.token.token);
   const { sendHttpRequest } = useHttp();
 
+  // Clipboard paste suggestion
+  const [clipboardOtp, setClipboardOtp] = useState<string | null>(null);
+  const lastCheckedClip = useRef<string>("");
+
+  const checkClipboard = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const numeric = text.replace(/\D/g, "").slice(0, 6);
+      if (numeric.length === 6 && numeric !== lastCheckedClip.current) {
+        lastCheckedClip.current = numeric;
+        setClipboardOtp(numeric);
+      } else if (numeric.length !== 6) {
+        setClipboardOtp(null);
+      }
+    } catch {
+      // Silent fail if permission not granted
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      checkClipboard();
+      window.addEventListener("focus", checkClipboard);
+      return () => window.removeEventListener("focus", checkClipboard);
+    }
+  }, [isOpen, checkClipboard]);
+
+  const applyClipboardOtp = () => {
+    if (!clipboardOtp) return;
+    const nextOtp = Array(6).fill("");
+    clipboardOtp.split("").forEach((ch, i) => { nextOtp[i] = ch; });
+    setOtp(nextOtp);
+    setClipboardOtp(null);
+    lastCheckedClip.current = "";
+    document.getElementById(`bank-otp-${Math.min(clipboardOtp.length - 1, 5)}`)?.focus();
+  };
+
+  const handleDirectPaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const numeric = text.replace(/\D/g, "").slice(0, 6);
+      if (numeric.length > 0) {
+        const nextOtp = Array(6).fill("");
+        numeric.split("").forEach((ch, i) => { nextOtp[i] = ch; });
+        setOtp(nextOtp);
+        setClipboardOtp(null);
+        lastCheckedClip.current = "";
+        document.getElementById(`bank-otp-${Math.min(numeric.length - 1, 5)}`)?.focus();
+        toast.success("Code pasted from clipboard");
+      } else {
+        toast.error("No code found in clipboard");
+      }
+    } catch {
+      toast.error("Clipboard access denied. Please paste into the box.");
+    }
+  };
+
   useEffect(() => {
     let interval: any;
     if (isOpen && timer > 0) {
@@ -70,15 +127,26 @@ const VerifyBankOtpModal = ({
   }, [isOpen, timer]);
 
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) value = value.slice(-1);
-    if (!/^\d*$/.test(value)) return;
+    const cleaned = value.replace(/\D/g, "");
+    if (cleaned.length >= 6 || (cleaned.length > 1 && !otp[index])) {
+      const nextOtp = [...otp];
+      const pasted = (cleaned.length > 6 ? cleaned.slice(-6) : cleaned).slice(0, 6);
+      pasted.split("").forEach((ch, i) => {
+        nextOtp[i] = ch;
+      });
+      setOtp(nextOtp);
+      const focusIndex = Math.min(pasted.length - 1, 5);
+      document.getElementById(`bank-otp-${focusIndex}`)?.focus();
+      return;
+    }
 
+    const digit = cleaned.slice(-1);
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = digit;
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (digit && index < 5) {
       const nextInput = document.getElementById(`bank-otp-${index + 1}`);
       nextInput?.focus();
     }
@@ -227,20 +295,67 @@ const VerifyBankOtpModal = ({
                       </p>
                     </div>
 
-                    <div className="flex justify-center mb-10 gap-3 w-full">
-                      {otp.map((digit, idx) => (
-                        <Input
-                          key={idx}
-                          id={`bank-otp-${idx}`}
-                          type="text"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleOtpChange(idx, e.target.value)}
-                          onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                          onPaste={handleOtpPaste}
-                          className="w-full  h-13.5 md:h-12 text-center text-xl font-MontserratBold px-0"
-                        />
-                      ))}
+                    {/* Clipboard paste suggestion banner */}
+                    {clipboardOtp && (
+                      <div className="flex items-center gap-2 w-full px-3 py-2 mb-4 rounded-lg bg-ff715b/10 border border-ff715b/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <svg className="w-4 h-4 text-ff715b shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span className="flex-1 text-c12 font-MontserratMedium text-161616">
+                          OTP code copied — paste it?
+                        </span>
+                        <button
+                          type="button"
+                          onClick={applyClipboardOtp}
+                          className="text-c12 font-MontserratSemiBold text-ff715b hover:underline shrink-0"
+                        >
+                          Paste OTP
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setClipboardOtp(null); lastCheckedClip.current = ""; }}
+                          aria-label="Dismiss"
+                          className="text-161616/40 hover:text-161616 transition-colors ml-1 shrink-0"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col items-center gap-2 mb-10 w-full">
+                      <div className="flex justify-center gap-3 w-full">
+                        {otp.map((digit, idx) => (
+                          <Input
+                            key={idx}
+                            id={`bank-otp-${idx}`}
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete={idx === 0 ? "one-time-code" : "off"}
+                            maxLength={6}
+                            value={digit}
+                            onFocus={() => {
+                              checkClipboard();
+                            }}
+                            onChange={(e) => handleOtpChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                            onPaste={handleOtpPaste}
+                            className="w-full h-13.5 md:h-12 text-center text-xl font-MontserratBold px-0"
+                          />
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleDirectPaste}
+                        className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium text-ff715b hover:text-ff715b/80 transition-colors py-1 px-2.5 rounded-full hover:bg-ff715b/5"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Paste code from clipboard
+                      </button>
                     </div>
 
                     <div className="flex flex-col gap-4 w-full">

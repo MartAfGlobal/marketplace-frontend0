@@ -6,12 +6,15 @@ import CloseModal from "@/assets/headerIcon/closeModal.png";
 import Sad from "@/assets/mobile/sad.png";
 import Happy from "@/assets/mobile/happy.png";
 import { useRouter } from "next/navigation";
+import { Button } from "../../Button/Button";
 
 export default function ResponseModal({
   isOpen,
+  id,
   onClose,
   type,
 }: {
+  id: string
   isOpen: boolean;
   onClose: () => void;
   type: "yes" | "no";
@@ -24,11 +27,11 @@ export default function ResponseModal({
       ? "We’re sorry! Please contact support for help."
       : "Thanks for confirming your delivery!";
 
-  const primaryButtonLabel = type === "no" ? "Live Chat" : "Rate Product";
+  const primaryButtonLabel = type === "no" ? "Live Chat" : "Leave a review";
   const primaryButtonAction =
     type === "no"
       ? () => alert("Starting live chat...")
-      :   () => router.push("/dashboard/buyer/mobile/order-on-its-way/rate-product");
+      :   () => router.push(`/dashboard/buyer/orders/leave-review/${id}`);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -73,18 +76,19 @@ export default function ResponseModal({
 
         {/* Buttons */}
         <div className="flex flex-col gap-6 text-c12 font-MontserratSemiBold">
-          <button
-            className="border border-ff715b text-ff715b h-c48 flex items-center justify-center rounded-lg "
+          <Button
+          variant="secondary"
+            className=" "
             onClick={primaryButtonAction}
           >
             {primaryButtonLabel}
-          </button>
-          <button
-            className="h-c48 flex items-center justify-center rounded-lg bg-ff715b text-white"
+          </Button>
+          <Button
+            className=""
             onClick={() => alert("Continuing shopping...")}
           >
             Continue Shopping
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -23,9 +23,10 @@ import {
 } from "@/utils/buyerOrderDisplay";
 interface OrdersProps {
   searchTerm: string;
+  category: "delivered" | "completed";
 }
 
-export default function ProccessedDetais({ searchTerm }: OrdersProps) {
+export default function ProccessedDetais({ searchTerm, category }: OrdersProps) {
   const dispatch = useDispatch();
   const { sendHttpRequest: addToCartReq } = useHttp();
   const [copied, setCopied] = useState(false);
@@ -66,14 +67,17 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
 
   const { orders, loading } = useSelector((state: any) => state.orders);
 
-  const delivered = orders.filter((order: OrderItem) => {
+  const processedOrders = orders.filter((order: OrderItem) => {
     const status = (order.buyer_status || order.status || "").toLowerCase();
 
-    return ["delivered", "cancelled", "confirmed", "completed"].includes(
-      status,
-    );
+    const statuses =
+      category === "delivered"
+        ? ["delivered", "confirmed"]
+        : ["completed", "cancelled"];
+
+    return statuses.includes(status);
   });
-  const filteredOrders = delivered.filter((order: OrderItem) => {
+  const filteredOrders = processedOrders.filter((order: OrderItem) => {
     if (!searchTerm) return true;
 
     const term = searchTerm.toLowerCase();
@@ -109,7 +113,7 @@ export default function ProccessedDetais({ searchTerm }: OrdersProps) {
       <div className="w-full">
         <div className="w-full space-y-c24 mt-c32">
           <AnimatePresence mode="wait">
-            {delivered.length === 0 ? (
+            {processedOrders.length === 0 ? (
               <motion.div
                 key="empty-orders"
                 initial={{ scale: 0.8, opacity: 0 }}
