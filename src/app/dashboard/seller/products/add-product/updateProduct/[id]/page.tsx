@@ -559,8 +559,9 @@ export default function UpdateProductPage() {
         isAuth: true,
         userType: "seller",
       },
-      successRes: () => {
+      successRes: (res:any) => {
         setShowLiveSuccess(true);
+        console.log("checking the response", res)
       },
     });
   };
@@ -938,7 +939,7 @@ export default function UpdateProductPage() {
               type="button"
               disabled={loading || updating || fetchingDraftDetails}
               onClick={handleUpdateLiveProduct}
-              className="max-w-32.5"
+              className="max-w-fit"
             >
               {updating ? <LoadingSpinner color="border-white" /> : "Update Product"}
             </Button>
@@ -967,7 +968,7 @@ export default function UpdateProductPage() {
               }
               type="button"
               onClick={handleNext}
-              className="max-w-32.5"
+              className="max-w-fit"
             >
               {updating || fetchingNextDraftDetails ? <LoadingSpinner color="border-white" /> : "Next"}
             </Button>

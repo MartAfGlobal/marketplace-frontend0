@@ -11,6 +11,7 @@ import { Textarea } from "../../forms/auth/text-area";
 
 interface ApproveProductModalProps {
   isOpen: boolean;
+ isAprovalStatus: string;
   onClose: () => void;
   onConfirm: (notes: string) => void;
   loading?: boolean;
@@ -23,6 +24,7 @@ export default function ApproveProductModal({
   isOpen,
   onClose,
   onConfirm,
+  isAprovalStatus,
   loading,
   isFlagged = false,
   isRejected = false,

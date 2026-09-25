@@ -70,7 +70,7 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
           <div className="mt-3 text-sm font-MontserratNormal text-000000 leading-relaxed">
             <div
               dangerouslySetInnerHTML={{
-                __html: productDetails?.specifications_html || productDetails?.draft_data?.specifications_text || "No specifications provided.",
+                __html: productDetails?.specifications_text || productDetails?.draft_data?.specifications_text || "No specifications provided.",
               }}
             />
           </div>

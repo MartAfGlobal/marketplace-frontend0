@@ -2,18 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { ChevronLeft, Download, MoreVertical, CheckCircle2, EyeOff, Eye, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button/Button";
-import Image from "next/image";
-import ProductImage from "@/assets/admin/productMainImage.svg";
+import ImageWithSkeleton from "@/components/ui/ImageWithSkeleton";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { toast } from "sonner";
 import { sub } from "framer-motion/client";
+import { clearAdminCategoryDetail } from "@/store/admin/categories/adminCategoryDetailSlice";
 
 
 export default function AdminCategoryDetailsPage() {
@@ -22,6 +22,7 @@ export default function AdminCategoryDetailsPage() {
   const categoryId = params.id as string;
 
   const token = useSelector((state: RootState) => state.token?.token);
+  const dispatch = useDispatch();
   const category = useSelector(
     (state: RootState) => state.adminCategoryDetail?.category
   );
@@ -48,11 +49,12 @@ export default function AdminCategoryDetailsPage() {
 
   useEffect(() => {
     if (token && categoryId) {
+      dispatch(clearAdminCategoryDetail());
       fetchAdminCategoryById(categoryId);
     }
-  }, [token, categoryId]);
+  }, [token, categoryId, dispatch]);
 
-  // Derived values from API category or fallback
+  // Derived values from the API category
   const isSubcategory =
     categoryId?.startsWith("SUB") ||
     Boolean(category?.parent || category?.parent_id || category?.parent_name || category?.parent_category);
@@ -60,24 +62,21 @@ export default function AdminCategoryDetailsPage() {
   const name = category?.name || category?.title || (isSubcategory ? "Subcategory Details" : "Category Details");
   const description = category?.description || category?.category_description || category?.desc || "No description provided.";
   
-  const productsCount = category?.products_count ?? category?.productsCount ?? category?.product_count ?? category?.total_products ?? (Array.isArray(category?.products) ? category.products.length : 24);
+  const productsCount = category?.products_count ?? category?.productsCount ?? category?.product_count ?? category?.total_products ?? (Array.isArray(category?.products) ? category.products.length : null);
 
   const [isActiveState, setIsActiveState] = useState<boolean | null>(null);
 
-  const isActive = isActiveState !== null 
-    ? isActiveState 
-    : category?.is_active !== undefined 
-      ? category.is_active 
-      : category?.status 
-        ? category.status.toLowerCase() === "active" 
-        : true;
+  const apiIsActive = typeof category?.is_active === "boolean"
+    ? category.is_active
+    : category?.status
+      ? category.status.toLowerCase() === "active"
+      : null;
+  const isActive = isActiveState ?? apiIsActive;
 
-  const parentName = typeof category?.parent === "object" 
-    ? (category?.parent?.name || category?.parent?.title || "Fashion") 
-    : (category?.parent_name || category?.parent_category || "Fashion");
+  const parentName = category?.full_path?.split(">")?.[0]?.trim() || category?.parent_name || "—";
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "12/12/2025";
+    if (!dateString) return "N/A";
     try {
       const date = new Date(dateString);
       return isNaN(date.getTime()) ? dateString : date.toLocaleDateString();
@@ -92,7 +91,7 @@ export default function AdminCategoryDetailsPage() {
   const imageUrl = category?.image || category?.category_image || category?.cover_image || category?.icon;
 
   // Normalize attributes
-  const getAttributes = () => {
+  const getAttributes = (): { name: string; value: string }[] => {
     // 1. Check attribute_values_summary from backend
     if (Array.isArray(category?.attribute_values_summary) && category.attribute_values_summary.length > 0) {
       return category.attribute_values_summary.map((item: any) => {
@@ -158,10 +157,10 @@ export default function AdminCategoryDetailsPage() {
     return [];
   })();
 
-  const subcategoriesList = Array.isArray(rawSubList)
-    ? rawSubList.map((sub: any, i: number) => ({
-        id: sub.id || sub.uuid || `SUB-${i}`,
-        name: sub.name || sub.title || "Subcategory",
+    const subcategoriesList = Array.isArray(rawSubList)
+      ? rawSubList.filter((sub: any) => sub?.id || sub?.uuid || sub?.slug).map((sub: any) => ({
+          id: sub.id || sub.uuid || sub.slug,
+          name: sub.name || sub.title || "—",
         attributes: sub.attributes_summary?.trim()
           ? sub.attributes_summary.trim()
           : sub.attribute_summary?.trim()
@@ -173,14 +172,15 @@ export default function AdminCategoryDetailsPage() {
           : sub.attribute_count !== undefined && sub.attribute_count !== null && Number(sub.attribute_count) > 0
           ? `${sub.attribute_count} attribute${Number(sub.attribute_count) > 1 ? "s" : ""}`
           : "None",
-        productsCount: sub.products_count ?? sub.productsCount ?? sub.product_count ?? 12,
-        status: sub.is_active !== undefined ? (sub.is_active ? "Active" : "Hidden") : (sub.status || "Active"),
+        productsCount: sub.products_count ?? sub.productsCount ?? sub.product_count ?? null,
+        status: sub.is_active !== undefined ? (sub.is_active ? "Active" : "Hidden") : (sub.status || "Unknown"),
         date: formatDate(sub.created_at || sub.date_created || sub.date),
-        image: sub.image || sub.icon || sub.category_image || "N/A"
+        image: sub.image || sub.icon || sub.category_image || null
       }))
     : [];
 
   const handleToggleCategoryHide = () => {
+    if (isActive === null) return;
     const newIsActive = !isActive;
     setIsActiveState(newIsActive);
     updateAdminCategory(
@@ -208,6 +208,7 @@ export default function AdminCategoryDetailsPage() {
   };
 
   const handleToggleSubcategoryHide = (subId: string, currentStatus: string, subName: string) => {
+    if (currentStatus === "Unknown") return;
     const newIsActive = currentStatus !== "Active";
     updateAdminCategory(
       subId,
@@ -312,26 +313,17 @@ export default function AdminCategoryDetailsPage() {
           <div className={`flex flex-col lg:flex-row gap-8 ${isSubcategory ? "mb-c48" : "mb-6"}`}>
             <div className="w-full lg:w-[50%] flex flex-col gap-8">
               <div className="w-full h-90 max-w-128 overflow-hidden relative rounded-xl border border-gray-100">
-                {imageUrl && typeof imageUrl === "string" ? (
-                  <img
-                    src={imageUrl}
-                    alt={name}
-                    className="object-cover w-full h-90"
-                  />
-                ) : (
-                  <Image
-                    src={ProductImage}
-                    alt="category image"
-                    width={512}
-                    height={360}
-                    className="object-cover h-90 w-full"
-                  />
-                )}
+                <ImageWithSkeleton
+                  src={typeof imageUrl === "string" ? imageUrl : null}
+                  alt={name}
+                  className="object-cover"
+                  isLoading={loading}
+                />
               </div>
               <div className="border h-19 border-000000/12 rounded-xl p-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-MontserratSemiBold leading-5 pb-4">
-                    Products Count <span className="text-000000/44">({productsCount})</span>
+                    Products Count <span className="text-000000/44">({productsCount ?? "—"})</span>
                   </p>
                   <p className="text-c12 font-MontserratNormal">
                     View all products in the category
@@ -356,22 +348,23 @@ export default function AdminCategoryDetailsPage() {
                   </span>
                   <span
                     className={`px-4 py-1.5 w-20 h-8 flex items-center justify-center rounded-c16 text-xs font-MontserratSemiBold ${
-                      isActive ? "bg-2d7565/12 text-2d7565" : "bg-ca0202/12 text-ca0202"
+                      isActive === null ? "bg-gray-100 text-gray-500" : isActive ? "bg-2d7565/12 text-2d7565" : "bg-ca0202/12 text-ca0202"
                     }`}
                   >
-                    {isActive ? "Active" : "Hidden"}
+                    {isActive === null ? "Unknown" : isActive ? "Active" : "Hidden"}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-MontserratSemiBold text-base">Hide</span>
                   <button
                     onClick={handleToggleCategoryHide}
+                    disabled={isActive === null}
                     className={`w-11.5 h-6 rounded-[64px] flex items-center p-0.5 transition-colors cursor-pointer ${
-                      !isActive ? "bg-gray-300" : "bg-gray-100"
+                      isActive === null ? "bg-gray-200 cursor-not-allowed" : !isActive ? "bg-gray-300" : "bg-gray-100"
                     }`}
                   >
                     <motion.div
-                      animate={{ x: !isActive ? 24 : 0 }}
+                      animate={{ x: isActive === false ? 24 : 0 }}
                       className="w-5 h-5 bg-white rounded-full shadow-[0px_3px_8px_0px_#6A0DAD14]"
                     />
                   </button>
@@ -472,11 +465,11 @@ export default function AdminCategoryDetailsPage() {
                               className="flex items-center gap-3 hover:text-[#947fff] transition-colors"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                                <img
-                                  src={sub.image}
+                              <div className="relative w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                <ImageWithSkeleton
+                                  src={typeof sub.image === "string" ? sub.image : null}
                                   alt={sub.name}
-                                  className="w-full h-full object-cover"
+                                  className="object-cover"
                                 />
                               </div>
                               <span className="block truncate hover:underline" title={sub.name}>
@@ -490,7 +483,7 @@ export default function AdminCategoryDetailsPage() {
                             </span>
                           </td>
                           <td className="py-3 px-4 text-gray-700">
-                            {sub.productsCount}
+                            {sub.productsCount ?? "—"}
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-1.5">
@@ -498,10 +491,12 @@ export default function AdminCategoryDetailsPage() {
                                 <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-green-200 text-green-600 bg-green-50 text-[10px] font-MontserratMedium w-fit">
                                   <CheckCircle2 className="w-3 h-3" /> Active
                                 </div>
-                              ) : (
+                              ) : sub.status === "Hidden" ? (
                                 <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-gray-600 bg-gray-50 text-[10px] font-MontserratMedium w-fit">
                                   <EyeOff className="w-3 h-3" /> Hidden
                                 </div>
+                              ) : (
+                                <span className="text-gray-400">Unknown</span>
                               )}
                             </div>
                           </td>
@@ -532,13 +527,16 @@ export default function AdminCategoryDetailsPage() {
                                     <Eye className="w-3.5 h-3.5" /> View Details
                                   </Link>
                                   <button
+                                    disabled={sub.status === "Unknown"}
                                     onClick={() => {
                                       setActiveRowId(null);
                                       handleToggleSubcategoryHide(sub.id, sub.status, sub.name);
                                     }}
-                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer flex items-center gap-2"
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2"
                                   >
-                                    {sub.status === "Active" ? (
+                                    {sub.status === "Unknown" ? (
+                                      <>Status unavailable</>
+                                    ) : sub.status === "Active" ? (
                                       <>
                                         <EyeOff className="w-3.5 h-3.5" /> Hide
                                       </>

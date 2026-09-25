@@ -135,7 +135,7 @@ export default function AddProductStep1Page() {
       },
       successRes: (responseData: any) => {
         const draftId = responseData.data.id;
-        console.log("final submission", draftId);
+        console.log("final submission", draftId, responseData);
         sendHttpRequest({
           requestConfig: {
             url: `/products/manufacturer/drafts/${draftId}/publish/`,

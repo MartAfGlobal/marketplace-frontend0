@@ -40,11 +40,16 @@ export default function CategoryPage() {
 
   const isLoading = pendingRequests > 0;
 
+  // ✅ Reset loading state whenever slug changes so skeleton shows on navigation
+  useEffect(() => {
+    if (!categorySlug) return;
+    setPendingRequests(2);
+    setError("");
+  }, [categorySlug]);
+
   // Fetch category products
   useEffect(() => {
     if (!categorySlug) return;
-
-    setError("");
 
     const handleCategoryProducts = async (res: any) => {
       try {
@@ -71,8 +76,6 @@ export default function CategoryPage() {
   // Fetch top deals
   useEffect(() => {
     if (!categorySlug) return;
-
-    setError("");
 
     const handleTopDeals = async (res: any) => {
       try {

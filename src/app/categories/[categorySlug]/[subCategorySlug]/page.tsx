@@ -55,6 +55,14 @@ export default function SubCategoryPage() {
 
   const isLoading = pendingRequests > 0;
 
+  // ✅ Reset loading state whenever slugs change so skeleton shows on every navigation
+  useEffect(() => {
+    if (!categorySlug || !subCategorySlug) return;
+    setPendingRequests(4);
+    setError("");
+    setSubCategoryDetails(null);
+  }, [categorySlug, subCategorySlug]);
+
   /* ---------------- FETCH SUBCATEGORY DETAILS (FOR IMAGE & INFO) ---------------- */
   useEffect(() => {
     if (!categorySlug || !subCategorySlug) return;

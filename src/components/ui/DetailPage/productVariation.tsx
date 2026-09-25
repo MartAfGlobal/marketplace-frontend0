@@ -28,6 +28,7 @@ import { setsubCategoryProducts } from "@/store/user-data/products/subCategoryPr
 import ProductSection from "../landindPage/ShoppingItems/shoppingItemComponent/ProductSection";
 import ProductDetailCategory from "../mobile/product-detail.categories";
 import { setSelectedVariation as setSelectedVariationAction } from "@/store/slices/variationSelectorSlice";
+import ImageWithSkeleton from "@/components/ui/ImageWithSkeleton";
 
 
 
@@ -305,22 +306,21 @@ const dispatch = useDispatch() as AppDispatch;
     );
   };
 
-  const fallbackProductImage =
+  const productImageSource =
     (productDetails as any)?.thumbnail ||
     (productDetails as any)?.image ||
     (productDetails as any)?.cover_image ||
     productDetails?.main_image ||
     (Array.isArray(productDetails?.images) && productDetails.images.length > 0
       ? getImageUrl(productDetails.images[0])
-      : "") ||
-    "/placeholder.png";
+      : "");
 
   const selectedImage = images.find(
     (img: any) =>
       (typeof img === "object" ? img?.id === selectedImageId : img === selectedImageId)
   );
 
-  const mainImageSrc = getImageUrl(selectedImage) || fallbackProductImage;
+  const mainImageSrc = getImageUrl(selectedImage) || productImageSource;
 
   return (
     <div
@@ -337,20 +337,23 @@ const dispatch = useDispatch() as AppDispatch;
               isModal ? "h-fit  overflow-visible " : "h-fit"
             }`}
           >
-            <div className="relative w-full  overflow-hidden bg-ffffff flex items-center justify-center">
-              <Image
-                src={mainImageSrc}
+            <div className={`relative w-full overflow-hidden bg-ffffff flex items-center justify-center md:max-w-full lg:max-w-[320px] xl:max-w-92.25 ${isModal ? "h-70" : "h-92.25"}`}>
+              <ImageWithSkeleton
+                src={mainImageSrc || null}
                 alt={productDetails?.name || "Product image"}
-                height={410}
-                width={397}
-                priority={true}
-                className={`w-full object-cover md:max-w-full lg:max-w-[320px] xl:max-w-92.25  ${
-                  isModal ? "h-70" : "h-92.25"
-                }`}
+                sizes="(max-width: 768px) 100vw, 397px"
+                className="object-cover"
               />
             </div>
 
-            {images.length > 0 && (
+            {/* ✅ Indicator dots: skeleton while loading, real dots once loaded */}
+            {!productDetails ? (
+              <div className="flex gap-2 mt-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-1 w-c40 rounded-full bg-gray-200 animate-pulse" />
+                ))}
+              </div>
+            ) : images.length > 0 && (
               <div className="flex gap-2 mt-4">
                 {images.map((img: any, i: number) => {
                   const imgId = typeof img === "object" ? img?.id : img;
@@ -372,11 +375,18 @@ const dispatch = useDispatch() as AppDispatch;
               </div>
             )}
 
-            {images.length > 1 && (
+            {/* ✅ Thumbnails: skeleton while loading, real thumbnails once loaded */}
+            {!productDetails ? (
+              <div className="flex gap-4 mt-6 mb-4 w-full">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="w-c66-81 h-17 flex-shrink-0 rounded-c12 bg-gray-200 animate-pulse" />
+                ))}
+              </div>
+            ) : images.length > 1 && (
               <div className="flex gap-4 mt-6 mb-4 h-19  w-full overflow-x-auto  hcustom-scroll">
                 {images.map((thumb: any, index: number) => {
                   const thumbId = typeof thumb === "object" ? thumb?.id : thumb;
-                  const thumbSrc = getThumbUrl(thumb) || "/placeholder.png";
+                  const thumbSrc = getThumbUrl(thumb);
                   return (
                     <button
                       key={thumbId || index}
@@ -384,17 +394,16 @@ const dispatch = useDispatch() as AppDispatch;
                         setSelectedImageId(thumbId);
                         setActiveSlide(index);
                       }}
-                      className={`w-c66-81 h-17 flex-shrink-0 border-2 rounded-c12 overflow-hidden ${
+                      className={`relative w-c66-81 h-17 flex-shrink-0 border-2 rounded-c12 overflow-hidden ${
                         activeSlide === index
                           ? "my-gradient-border"
                           : "border-transparent"
                       } transition-all duration-200`}
                     >
-                      <Image
+                      <ImageWithSkeleton
                         src={thumbSrc}
                         alt={thumb?.alt_text || "Thumbnail"}
-                        width={64}
-                        height={64}
+                        sizes="64px"
                         className="object-cover w-full h-full"
                       />
                     </button>

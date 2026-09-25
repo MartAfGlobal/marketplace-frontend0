@@ -2,20 +2,14 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
-import ProductImage from "@/assets/admin/productMainImage.svg";
+import ImageWithSkeleton from "@/components/ui/ImageWithSkeleton";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { AdminProductDetail } from "@/types/global";
-
-// Using a placeholder for images since it's UI only
-const placeholderImage =
-  "https://via.placeholder.com/400x400/111111/FFFFFF?text=Product+Image";
-const thumbnailImage =
-  "https://via.placeholder.com/60x60/111111/FFFFFF?text=Thumb";
+import { clearAdminProductDetail } from "@/store/admin/products/adminProductDetailSlice";
 
 export default function ProductDetailsPage({
   params,
@@ -23,6 +17,7 @@ export default function ProductDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const dispatch = useDispatch();
   const unwrappedParams = React.use(params);
   const [activeImage, setActiveImage] = useState(0);
   const [variantIndex, setVariantIndex] = useState(0);
@@ -38,6 +33,10 @@ export default function ProductDetailsPage({
 
   useEffect(() => {
     if (token) {
+      // ✅ Clear stale product immediately so old images never flash
+      dispatch(clearAdminProductDetail());
+      setActiveImage(0);
+      setVariantIndex(0);
       fetchAdminSellersProductDetails(productId);
     }
   }, [token, productId]);
@@ -76,16 +75,14 @@ export default function ProductDetailsPage({
     return list;
   };
 
-  // ── Real images (fallback to 6 placeholders if not loaded yet) ──────────────
-  const galleryUrls: string[] = [];
-  if (product?.main_image) galleryUrls.push(product.main_image);
-  product?.images?.forEach((img: any) => {
+  // Product images come only from the API response.
+  const galleryUrls: string[] = []; product?.images?.forEach((img: any) => {
     const url = typeof img === "string" ? img : img.medium || img.large || img.thumbnail || img.url || img.image || "";
     if (url && !galleryUrls.includes(url)) galleryUrls.push(url);
   });
-  const images = galleryUrls.length > 0 ? galleryUrls : Array(6).fill(thumbnailImage);
+  const images = galleryUrls;
 
-  // ── Real variants (fallback to mock while loading) ───────────────────────────
+  // Product variants come only from the API response.
   const variants = product?.variations?.length
     ? product.variations.map((v: any) => {
         const attrList = getVariantAttributes(v);
@@ -99,144 +96,69 @@ export default function ProductDetailsPage({
           (typeof v.image_url === "string" ? v.image_url : v.image_url?.medium || v.image_url?.url || v.image_url?.thumbnail) ||
           v.thumbnail ||
           (Array.isArray(v.images) && v.images.length > 0 ? (typeof v.images[0] === "string" ? v.images[0] : v.images[0]?.medium || v.images[0]?.url || v.images[0]?.thumbnail || v.images[0]?.image) : null) ||
-          (galleryUrls.length > 0 ? galleryUrls[0] : null);
+          null;
 
         return {
           id: v.id,
           sku: v.sku || "—",
-          name: v.name || v.title || "Variation",
-          quantity: v.stock ?? v.inventory ?? v.quantity ?? 0,
+          name: v.name || v.title || "—",
+          quantity: v.stock ?? v.inventory ?? v.quantity ?? null,
           color: colorVal,
           size: sizeVal,
           material: materialVal,
           attributesList: attrList,
-          image: imgUrl || (galleryUrls.length > 0 ? galleryUrls[0] : null),
+          image: imgUrl || null,
         };
       })
-    : [
-        {
-          id: 1,
-          sku: "123PKU6785",
-          name: "Variation Name",
-          color: "Black",
-          size: "XS",
-          quantity: 20,
-          material: "Silk",
-          attributesList: [
-            { name: "Colour", value: "Black" },
-            { name: "Size", value: "XS" },
-            { name: "Material", value: "Silk" },
-          ],
-          image: null,
-        },
-        {
-          id: 2,
-          sku: "123PKU6786",
-          name: "Variation Name",
-          color: "Red",
-          size: "S",
-          quantity: 15,
-          material: "Cotton",
-          attributesList: [
-            { name: "Colour", value: "Red" },
-            { name: "Size", value: "S" },
-            { name: "Material", value: "Cotton" },
-          ],
-          image: null,
-        },
-        {
-          id: 3,
-          sku: "123PKU6787",
-          name: "Variation Name",
-          color: "Blue",
-          size: "M",
-          quantity: 10,
-          material: "Linen",
-          attributesList: [
-            { name: "Colour", value: "Blue" },
-            { name: "Size", value: "M" },
-            { name: "Material", value: "Linen" },
-          ],
-          image: null,
-        },
-        {
-          id: 4,
-          sku: "123PKU6787",
-          name: "Variation Name",
-          color: "Blue",
-          size: "M",
-          quantity: 10,
-          material: "Linen",
-          attributesList: [
-            { name: "Colour", value: "Blue" },
-            { name: "Size", value: "M" },
-            { name: "Material", value: "Linen" },
-          ],
-          image: null,
-        },
-        {
-          id: 5,
-          sku: "123PKU6787",
-          name: "Variation Name",
-          color: "Blue",
-          size: "M",
-          quantity: 10,
-          material: "Linen",
-          attributesList: [
-            { name: "Colour", value: "Blue" },
-            { name: "Size", value: "M" },
-            { name: "Material", value: "Linen" },
-          ],
-          image: null,
-        },
-      ];
+    : [];
 
   // ── Real price range variations ──────────────────────────────────────────────
   const currency = product?.price_range?.currency ?? "₦";
   const priceVariations = product?.variation_options && Object.keys(product.variation_options).length > 0
     ? Object.entries(product.variation_options).flatMap(([attrName, opt]: [string, any]) =>
-        (opt.values ?? []).map((val: any) => ({
-          name: `${val.value || val.name || "Option"}`,
-          price: `${currency}${Number(val.min_price || val.price || product.base_price || 0).toLocaleString()}`,
-        }))
+        (opt.values ?? []).map((val: any) => {
+          const price = val.min_price ?? val.price ?? product.base_price;
+          return {
+            name: String(val.value ?? val.name ?? "—"),
+            price: price == null ? "—" : `${currency}${Number(price).toLocaleString()}`,
+          };
+        })
       )
-    : [
-        { name: "Variation Name", price: "₦18,000" },
-        { name: "Variation Name", price: "₦18,000" },
-        { name: "Variation Name", price: "₦18,000" },
-      ];
+    : [];
 
   // ── Status badge ─────────────────────────────────────────────────────────────
-  const approvalStatus = (product?.is_approved ?? "pending").toLowerCase();
+  const approvalStatus = product?.is_approved?.toLowerCase() ?? "unknown";
   const statusClass =
     approvalStatus === "approved"
       ? "bg-green-100 text-green-700"
       : approvalStatus === "rejected"
       ? "bg-red-100 text-red-600"
-      : "bg-ffaco6/12 text-ffaco6";
+      : (approvalStatus === "pending" || approvalStatus === "pending_update")
+      ? "bg-ffaco6/12 text-ffaco6"
+      : "bg-gray-100 text-gray-600";
   const statusLabel =
     approvalStatus === "approved" ? "Approved"
     : approvalStatus === "rejected" ? "Rejected"
-    : "Pending";
+    : approvalStatus === "pending" ? "Pending"
+    :approvalStatus ==="pending_update"? "Pending update" : "Unknown";
 
   // ── Other real values ────────────────────────────────────────────────────────
   const basePrice = product?.base_price !== undefined && product?.base_price !== null
     ? `${currency}${Number(product.base_price).toLocaleString()}`
-    : "₦20,000";
-  const stock = product?.inventory ?? 200;
-  const productName = product?.name ?? "Product Name";
+    : "—";
+  const stock = product?.inventory ?? "—";
+  const productName = product?.name ?? "—";
   const sellerRaw =
     product?.manufacturer_name ||
     (product as any)?.seller_name ||
     (product as any)?.company_name ||
-    (product as any)?.seller ||
-    "KYZ co. Ltd";
+    (product as any)?.seller;
   const sellerName =
     typeof sellerRaw === "string"
       ? sellerRaw
       : typeof sellerRaw === "object"
-      ? sellerRaw?.name || sellerRaw?.company_name || sellerRaw?.shop_name || sellerRaw?.email || "KYZ co. Ltd"
-      : "KYZ co. Ltd";
+      ? sellerRaw?.name || sellerRaw?.company_name || sellerRaw?.shop_name || sellerRaw?.email || "—"
+      : "—";
   const sellerLogo =
     (product as any)?.manufacturer_logo ||
     (product as any)?.seller_logo ||
@@ -244,32 +166,137 @@ export default function ProductDetailsPage({
     null;
   const createdAt = product?.created_at
     ? new Date(product.created_at).toLocaleDateString("en-GB")
-    : "12/12/2025";
+    : "—";
   const categoryName =
     product?.category?.name ||
     (typeof product?.category === "string" ? product.category : "") ||
     (product as any)?.category_name ||
-    "Fashion";
+    "—";
   const subcategoryName =
     product?.category?.subcategory?.name ||
     (typeof product?.category?.subcategory === "string" ? product.category.subcategory : "") ||
     (typeof (product as any)?.subcategory === "object" ? (product as any)?.subcategory?.name : "") ||
     (typeof (product as any)?.subcategory === "string" ? (product as any)?.subcategory : "") ||
     (product as any)?.subcategory_name ||
-    "Adult Wears";
+    "—";
 
   const salesPercentage =
     product?.sales_percentage !== undefined && product.sales_percentage !== null && product.sales_percentage > 0
       ? `${product.sales_percentage}%`
-      : "20%";
+      : "—";
 
   const discountFromDate = (product as any)?.discount_start_date
     ? new Date((product as any).discount_start_date).toLocaleDateString("en-GB")
-    : "10-06-2025";
+    : "—";
 
   const discountToDate = (product as any)?.discount_end_date
     ? new Date((product as any).discount_end_date).toLocaleDateString("en-GB")
-    : "10-07-2025";
+    : "—";
+
+  // ✅ Show skeleton while product is being fetched (null = cleared)
+  if (!product || loading) {
+    return (
+      <div className="w-full">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="h-6 w-6 bg-gray-200 animate-pulse rounded" />
+            <div className="h-5 w-36 bg-gray-200 animate-pulse rounded" />
+          </div>
+          <div className="w-10 h-10 bg-gray-200 animate-pulse rounded-lg" />
+        </div>
+
+        <div className="flex flex-col xl:flex-row gap-12 min-h-[966.81px] h-auto bg-ffffff rounded-c16 p-6 min-w-0">
+          {/* Left Side skeleton */}
+          <div className="w-full max-w-120 min-w-0">
+            {/* Main image skeleton */}
+            <div className="rounded-c16 w-full h-90 bg-gray-200 animate-pulse mb-6" />
+            {/* Progress bar skeleton */}
+            <div className="flex gap-4 mb-8">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-1 flex-1 bg-gray-200 animate-pulse rounded-full" />
+              ))}
+            </div>
+            {/* Thumbnails skeleton */}
+            <div className="flex gap-3 pb-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-[66.81px] h-[66.81px] rounded-lg bg-gray-200 animate-pulse" />
+              ))}
+            </div>
+            {/* Price/Stock skeleton */}
+            <div className="mt-c32 space-y-6">
+              <div className="h-5 w-32 bg-gray-200 animate-pulse rounded" />
+              <div className="flex gap-20">
+                <div className="space-y-3">
+                  <div className="h-4 w-12 bg-gray-200 animate-pulse rounded" />
+                  <div className="h-4 w-20 bg-gray-200 animate-pulse rounded" />
+                </div>
+                <div className="space-y-3 flex-1">
+                  <div className="h-4 w-24 bg-gray-200 animate-pulse rounded" />
+                  <div className="flex gap-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="h-4 w-16 bg-gray-200 animate-pulse rounded" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side skeleton */}
+          <div className="w-full max-w-132 flex flex-col min-w-0">
+            <div className="flex justify-between mb-6">
+              <div className="h-5 w-48 bg-gray-200 animate-pulse rounded" />
+              <div className="h-8 w-20 bg-gray-200 animate-pulse rounded-c16" />
+            </div>
+            <div className="flex justify-between mb-6">
+              <div className="h-4 w-32 bg-gray-200 animate-pulse rounded" />
+              <div className="h-4 w-24 bg-gray-200 animate-pulse rounded" />
+            </div>
+            <div className="mb-6 space-y-3">
+              <div className="h-5 w-40 bg-gray-200 animate-pulse rounded" />
+              <div className="h-3 w-full bg-gray-200 animate-pulse rounded" />
+              <div className="h-3 w-4/5 bg-gray-200 animate-pulse rounded" />
+              <div className="h-3 w-3/5 bg-gray-200 animate-pulse rounded" />
+            </div>
+            <div className="mb-6 space-y-3">
+              <div className="h-5 w-44 bg-gray-200 animate-pulse rounded" />
+              <div className="h-3 w-full bg-gray-200 animate-pulse rounded" />
+              <div className="h-3 w-2/3 bg-gray-200 animate-pulse rounded" />
+            </div>
+            <div className="w-full flex max-w-132 border border-000000/12 rounded-c8 mb-c32">
+              <div className="w-full max-w-66 px-4 py-3 space-y-3 border-r-2 border-r-000000/12">
+                <div className="h-5 w-20 bg-gray-200 animate-pulse rounded" />
+                <div className="h-3 w-28 bg-gray-200 animate-pulse rounded" />
+              </div>
+              <div className="w-full max-w-66 px-4 py-3 space-y-3">
+                <div className="h-5 w-24 bg-gray-200 animate-pulse rounded" />
+                <div className="h-3 w-28 bg-gray-200 animate-pulse rounded" />
+              </div>
+            </div>
+            {/* Variants skeleton */}
+            <div className="mb-8 w-full">
+              <div className="flex justify-between mb-6">
+                <div className="h-5 w-28 bg-gray-200 animate-pulse rounded" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="flex gap-3 border border-gray-200 rounded-xl p-3">
+                    <div className="w-20 h-20 bg-gray-200 animate-pulse rounded-c8 flex-shrink-0" />
+                    <div className="flex flex-col gap-2 flex-1">
+                      <div className="h-3 w-24 bg-gray-200 animate-pulse rounded" />
+                      <div className="h-3 w-20 bg-gray-200 animate-pulse rounded" />
+                      <div className="h-3 w-16 bg-gray-200 animate-pulse rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -295,17 +322,12 @@ export default function ProductDetailsPage({
         <div className="w-full max-w-120 min-w-0">
           {/* Main Image */}
           <div className="rounded-c16 overflow-hidden w-full h-90 relative mb-6">
-            {galleryUrls.length > 0 ? (
-              <Image
-                src={galleryUrls[activeImage] ?? galleryUrls[0]}
-                alt="Main Product"
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <Image src={ProductImage} alt="Main Product" fill />
-            )}
+            <ImageWithSkeleton
+              src={galleryUrls[activeImage] ?? galleryUrls[0] ?? null}
+              alt={productName}
+              className="object-cover"
+              isLoading={loading}
+            />
           </div>
 
           {/* Progress / Image indicator bar */}
@@ -328,26 +350,14 @@ export default function ProductDetailsPage({
               <button
                 key={idx}
                 onClick={() => setActiveImage(idx)}
-                className={`flex-shrink-0 w-[66.81px] h-[66.81px] rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? "border-[#ff715b]" : "border-transparent"}`}
+                className={`relative flex-shrink-0 w-[66.81px] h-[66.81px] rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? "border-[#ff715b]" : "border-transparent"}`}
               >
-                {galleryUrls.length > 0 ? (
-                  <Image
-                    src={img}
-                    alt={`Thumb ${idx}`}
-                    width={66.81}
-                    height={66.81}
-                    className="w-full h-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <Image
-                    src={ProductImage}
-                    alt={`Thumb ${idx}`}
-                    width={66.81}
-                    height={66.81}
-                    className="w-full h-full object-cover"
-                  />
-                )}
+                <ImageWithSkeleton
+                  src={img}
+                  alt={`Thumbnail ${idx + 1}`}
+                  sizes="67px"
+                  className="object-cover"
+                />
               </button>
             ))}
           </div>
@@ -393,7 +403,7 @@ export default function ProductDetailsPage({
               <div className="">
                 <p className="text-sm font-MontserratSemiBold">Discount Type</p>
                 <p className="text-xs font-MontserratNormal text-161616 mt-4">
-                  Percentage (%)
+                  {(product as any)?.discount_type || "—"}
                 </p>
               </div>
             </div>
@@ -428,7 +438,7 @@ export default function ProductDetailsPage({
               <h2 className="text-base font-MontserratSemiBold ">
                 {productName}
               </h2>
-              <p className={`h-c32 w-21.25 rounded-c16 text-xs font-MontserratSemiBold flex items-center justify-center ${statusClass}`}>
+              <p className={` w-fit px-3 py-2 rounded-c16 text-xs font-MontserratSemiBold flex items-center justify-center ${statusClass}`}>
                 {statusLabel}
               </p>
             </div>
@@ -437,11 +447,9 @@ export default function ProductDetailsPage({
                 <span className="w-14.5 text-base font-MontserratSemiBold">Seller:</span>
                 <div className="flex items-center gap-1.5">
                   {sellerLogo ? (
-                    <img
-                      src={sellerLogo}
-                      alt={sellerName}
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden">
+                      <ImageWithSkeleton src={sellerLogo} alt={sellerName} className="object-cover" />
+                    </div>
                   ) : (
                     <div className="w-6 h-6 bg-[#ffac06] rounded-full flex items-center justify-center text-center text-[10px] font-MontserratSemiBold text-white">
                       {sellerName.charAt(0).toUpperCase()}
@@ -551,15 +559,13 @@ export default function ProductDetailsPage({
                     <p className="text-xs font-MontserratSemiBold mb-3 leading-4 truncate max-w-[80px]" title={variant.name}>
                       {variant.name}
                     </p>
-                    {variant.image ? (
-                      <img
+                    <div className="relative w-20 h-20 rounded-c8 overflow-hidden">
+                      <ImageWithSkeleton
                         src={variant.image}
                         alt={variant.name}
-                        className="w-20 h-20 rounded-c8 object-cover"
+                        className="object-cover"
                       />
-                    ) : (
-                      <Image src={ProductImage} alt="Variant" width={80} height={80} className="rounded-c8 object-cover" />
-                    )}
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1.5 text-[11px] min-w-0 flex-1">
                     <p className="flex truncate">

@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import ApproveProductModal from "@/components/ui/Modals/admin/ApproveProductModal";
@@ -10,17 +9,11 @@ import RejectProductModal from "@/components/ui/Modals/admin/RejectProductModal"
 import ResultModal from "@/components/ui/forms/resultModal";
 import { toast } from "sonner";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { AdminProductDetail } from "@/types/global";
-
-import ProductImage from "@/assets/admin/productMainImage.svg";
-
-// Using a placeholder for images since it's UI only
-const placeholderImage =
-  "https://via.placeholder.com/400x400/111111/FFFFFF?text=Product+Image";
-const thumbnailImage =
-  "https://via.placeholder.com/60x60/111111/FFFFFF?text=Thumb";
+import ImageWithSkeleton from "@/components/ui/ImageWithSkeleton";
+import { clearAdminProductDetail } from "@/store/admin/products/adminProductDetailSlice";
 
 export default function ProductReviewPage({
   params,
@@ -54,6 +47,7 @@ export default function ProductReviewPage({
 
   const productId = unwrappedParams.id;
   const token = useSelector((state: RootState) => state.token?.token);
+  const dispatch = useDispatch();
   const product = useSelector(
     (state: RootState) =>
       (state as any).adminProductDetail?.product as AdminProductDetail | null
@@ -61,9 +55,10 @@ export default function ProductReviewPage({
 
   useEffect(() => {
     if (token) {
+      dispatch(clearAdminProductDetail());
       fetchAdminSellersProductDetails(productId);
     }
-  }, [token, productId]);
+  }, [token, productId, dispatch]);
 
   const scrollVariants = (direction: "left" | "right") => {
     const newIndex =
@@ -100,16 +95,14 @@ export default function ProductReviewPage({
     return list;
   };
 
-  // ── Real images (fallback to 6 placeholders if not loaded yet) ──────────────
-  const galleryUrls: string[] = [];
-  if (product?.main_image) galleryUrls.push(product.main_image);
-  product?.images?.forEach((img: any) => {
-    const url = typeof img === "string" ? img : img.medium || img.large || img.thumbnail || img.url || img.image || "";
+  // Product images come only from the API response.
+  const galleryUrls: string[] = []; product?.images?.forEach((img: any) => {
+    const url = typeof img === "string" ? img : img.thumbnail  || img.large || "";
     if (url && !galleryUrls.includes(url)) galleryUrls.push(url);
   });
-  const images = galleryUrls.length > 0 ? galleryUrls : Array(6).fill(thumbnailImage);
+  const images = galleryUrls;
 
-  // ── Real variants (fallback to mock while loading) ───────────────────────────
+  // Product variants come only from the API response.
   const variants = product?.variations?.length
     ? product.variations.map((v: any) => {
         const attrList = getVariantAttributes(v);
@@ -128,67 +121,35 @@ export default function ProductReviewPage({
         return {
           id: v.id,
           sku: v.sku || "—",
-          name: v.name || v.title || "Variation",
-          quantity: v.stock ?? v.inventory ?? v.quantity ?? 0,
+          name: v.name || v.title || "—",
+          quantity: v.stock ?? v.inventory ?? v.quantity ?? null,
           color: colorVal,
           size: sizeVal,
           material: materialVal,
           attributesList: attrList,
-          thumb: imgUrl || (galleryUrls.length > 0 ? galleryUrls[0] : null),
+          thumb: imgUrl || null,
         };
       })
-    : [
-        {
-          id: 1,
-          sku: "123PKU6785",
-          name: "Variation Name",
-          color: "Black",
-          size: "XS",
-          quantity: 20,
-          material: "Silk",
-          attributesList: [
-            { name: "Colour", value: "Black" },
-            { name: "Size", value: "XS" },
-            { name: "Material", value: "Silk" },
-          ],
-          thumb: null,
-        },
-        {
-          id: 2,
-          sku: "123PKU6786",
-          name: "Variation Name",
-          color: "Red",
-          size: "S",
-          quantity: 15,
-          material: "Cotton",
-          attributesList: [
-            { name: "Colour", value: "Red" },
-            { name: "Size", value: "S" },
-            { name: "Material", value: "Cotton" },
-          ],
-          thumb: null,
-        },
-      ];
+    : [];
 
   // ── Real price range variations ──────────────────────────────────────────────
-  const currency = product?.price_range?.currency ?? "₦";
+  const currency = product?.price_range?.currency ?? "";
   const priceVariations = product?.variation_options && Object.keys(product.variation_options).length > 0
     ? Object.entries(product.variation_options).flatMap(([attrName, opt]: [string, any]) =>
-        (opt.values ?? []).map((val: any) => ({
-          name: `${val.value || val.name || "Option"}`,
-          price: `${currency}${Number(val.min_price || val.price || product.base_price || 0).toLocaleString()}`,
-        }))
+        (opt.values ?? []).map((val: any) => {
+          const price = val.min_price ?? val.price ?? product.base_price;
+          return {
+            name: String(val.value ?? val.name ?? "—"),
+            price: price == null ? "—" : `${currency}${Number(price).toLocaleString()}`,
+          };
+        })
       )
-    : [
-        { name: "Variation Name", price: "₦18,000" },
-        { name: "Variation Name", price: "₦18,000" },
-        { name: "Variation Name", price: "₦18,000" },
-      ];
+    : [];
 
   // ── Status badge ─────────────────────────────────────────────────────────────
   const isFlagged = Boolean(product?.is_flagged);
   const isRejected = (product?.is_approved ?? "").toLowerCase() === "rejected";
-  const approvalStatus = (product?.is_approved ?? "pending").toLowerCase();
+  const approvalStatus = product?.is_approved?.toLowerCase() ?? "unknown";
   const statusClass =
     isFlagged
       ? "bg-amber-100 text-amber-700"
@@ -196,40 +157,44 @@ export default function ProductReviewPage({
       ? "bg-green-100 text-green-700"
       : approvalStatus === "rejected"
       ? "bg-red-100 text-red-600"
-      : "bg-ffaco6/12 text-ffaco6";
+      : approvalStatus === "pending"
+      ? "bg-ffaco6/12 text-ffaco6"
+      :approvalStatus === "pending_update"?
+      "bg-ffaco6/12 text-ffaco6"
+      : "bg-gray-100 text-gray-600";
   const statusLabel =
     isFlagged ? "Flagged"
     : approvalStatus === "approved" ? "Approved"
     : approvalStatus === "rejected" ? "Rejected"
-    : "Pending";
+    : approvalStatus === "pending" ? "Pending" 
+    :approvalStatus === "pending_update"? "Pending update": "Unknown";
 
   // ── Other real values ────────────────────────────────────────────────────────
   const basePrice = product?.base_price !== undefined && product?.base_price !== null
     ? `${currency}${Number(product.base_price).toLocaleString()}`
-    : "₦20,000";
-  const stock = product?.inventory ?? 200;
-  const productName = product?.name ?? "Product Name";
-  const getPersonName = (person: any, fallback = "Admin Reviewer") => {
-    if (!person) return fallback;
+    : "—";
+  const stock = product?.inventory ?? "—";
+  const productName = product?.name ?? "—";
+  const getPersonName = (person: any) => {
+    if (!person) return "—";
     if (typeof person === "string") return person;
     if (typeof person === "object") {
-      return person.name || person.full_name || person.first_name || person.email || person.username || fallback;
+      return person.name || person.full_name || person.first_name || person.email || person.username || "—";
     }
-    return fallback;
+    return "—";
   };
 
   const sellerRaw =
     product?.manufacturer_name ||
     (product as any)?.seller_name ||
     (product as any)?.company_name ||
-    (product as any)?.seller ||
-    "KYZ co. Ltd";
+    (product as any)?.seller;
   const sellerName =
     typeof sellerRaw === "string"
       ? sellerRaw
       : typeof sellerRaw === "object"
-      ? sellerRaw?.name || sellerRaw?.company_name || sellerRaw?.shop_name || sellerRaw?.email || "KYZ co. Ltd"
-      : "KYZ co. Ltd";
+      ? sellerRaw?.name || sellerRaw?.company_name || sellerRaw?.shop_name || sellerRaw?.email || "—"
+      : "—";
 
   const sellerLogo =
     (product as any)?.manufacturer_logo ||
@@ -238,37 +203,36 @@ export default function ProductReviewPage({
     null;
   const createdAt = product?.created_at
     ? new Date(product.created_at).toLocaleDateString("en-GB")
-    : "12/12/2025";
+    : "—";
   const categoryName =
     product?.category?.name ||
     (typeof product?.category === "string" ? product.category : "") ||
     (product as any)?.category_name ||
-    "Fashion";
+    "—";
   const subcategoryName =
     product?.category?.subcategory?.name ||
     (typeof product?.category?.subcategory === "string" ? product.category.subcategory : "") ||
     (typeof (product as any)?.subcategory === "object" ? (product as any)?.subcategory?.name : "") ||
     (typeof (product as any)?.subcategory === "string" ? (product as any)?.subcategory : "") ||
     (product as any)?.subcategory_name ||
-    "Adult Wears";
+    "—";
 
   const reviewerName = getPersonName(
     (product as any)?.moderation_performed_by || (product as any)?.review_checklist_updated_by,
-    "Admin Reviewer"
   );
 
   const salesPercentage =
     product?.sales_percentage !== undefined && product.sales_percentage !== null && product.sales_percentage > 0
       ? `${product.sales_percentage}%`
-      : "20%";
+      : "—";
 
   const discountFromDate = (product as any)?.discount_start_date
     ? new Date((product as any).discount_start_date).toLocaleDateString("en-GB")
-    : "10-06-2025";
+    : "—";
 
   const discountToDate = (product as any)?.discount_end_date
     ? new Date((product as any).discount_end_date).toLocaleDateString("en-GB")
-    : "10-07-2025";
+    : "—";
 
   // Checklist state
   const checklistSections = [
@@ -444,25 +408,13 @@ export default function ProductReviewPage({
       <div className="bg-ffffff rounded-c16   p-6">
         <div className="flex items-end w-full bg-ffffff rounded-c12 h-43 justify-between shadow-[0px_3px_8px_0px_#6A0DAD14] p-6 mb-12">
           <div className="flex gap-6 items-center">
-            <div className="h-30 fl">
-              {galleryUrls.length > 0 ? (
-                <Image
-                  src={galleryUrls[0]}
-                  alt="Product"
-                  width={120}
-                  height={120}
-                  className="rounded-c8 h-30 w-30 object-cover"
-                  unoptimized
+              <div className="relative h-30 w-30 overflow-hidden rounded-c8">
+                <ImageWithSkeleton
+                  src={galleryUrls[0] ?? null}
+                  alt={productName}
+                  className="object-cover"
+                  isLoading={loading}
                 />
-              ) : (
-                <Image
-                  src={ProductImage}
-                  alt="Product"
-                  width={120}
-                  height={120}
-                  className="rounded-c8 h-30 w-30 object-cover"
-                />
-              )}
             </div>
             <div className="flex flex-col justify-between h-35 text-base font-MontserratSemiBold py-2">
               <h2 className="text-c20 font-MontserratSemiBold ">
@@ -473,11 +425,9 @@ export default function ProductReviewPage({
                 <span>Seller:</span>
                 <div className="flex items-center gap-1.5">
                   {sellerLogo ? (
-                    <img
-                      src={sellerLogo}
-                      alt={sellerName}
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden">
+                      <ImageWithSkeleton src={sellerLogo} alt={sellerName} className="object-cover" />
+                    </div>
                   ) : (
                     <div className="w-6 h-6 bg-[#ffac06] rounded-full flex items-center justify-center text-[10px] text-center font-MontserratSemiBold text-white">
                       {sellerName.charAt(0).toUpperCase()}
@@ -490,7 +440,7 @@ export default function ProductReviewPage({
               </div>
               <div className="flex items-center gap-2">
                 <span>Status:</span>
-                <span className={`w-25 flex items-center justify-center h-8 px-2 py-0.5 rounded-c16 text-[12px] font-MontserratSemiBold ${statusClass}`}>
+                <span className={`w-fit py-2 px-3 flex items-center justify-center h-8  rounded-c16 text-[12px] font-MontserratSemiBold ${statusClass}`}>
                   {statusLabel}
                 </span>
               </div>
@@ -545,7 +495,7 @@ export default function ProductReviewPage({
             </div>
             <p className="font-MontserratSemiBold text-base">
               {reviewerName}{" "}
-              <span className="text-000000/68">(Admin Role)</span>
+              <span className="text-000000/68">{(product as any)?.moderation_performed_by?.role ? `(${(product as any).moderation_performed_by.role})` : ""}</span>
             </p>
           </div>
         </div>
@@ -555,17 +505,12 @@ export default function ProductReviewPage({
           <div className="w-full xl:w-[50%] min-w-0 sticky top-6 h-[calc(100vh-3rem)] overflow-y-auto no-scrollbar pb-6">
             {/* Main Image */}
             <div className="rounded-c16  overflow-hidden w-full h-90 relative mb-6">
-              {galleryUrls.length > 0 ? (
-                <Image
-                  src={galleryUrls[activeImage] ?? galleryUrls[0]}
-                  alt="Main Product"
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              ) : (
-                <Image src={ProductImage} alt="Main Product" fill />
-              )}
+              <ImageWithSkeleton
+                src={galleryUrls[activeImage] ?? galleryUrls[0] ?? null}
+                alt={productName}
+                className="object-cover"
+                isLoading={loading}
+              />
             </div>
 
             {/* Progress / Image indicator bar */}
@@ -588,26 +533,14 @@ export default function ProductReviewPage({
                 <button
                   key={idx}
                   onClick={() => setActiveImage(idx)}
-                  className={`flex-shrink-0 w-[66.81px] h-[66.81px] rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? "border-[#ff715b]" : "border-transparent"}`}
+                  className={`relative flex-shrink-0 w-[66.81px] h-[66.81px] rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? "border-[#ff715b]" : "border-transparent"}`}
                 >
-                  {galleryUrls.length > 0 ? (
-                    <Image
-                      src={img}
-                      alt={`Thumb ${idx}`}
-                      width={66.81}
-                      height={66.81}
-                      className="w-full h-full object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <Image
-                      src={ProductImage}
-                      alt={`Thumb ${idx}`}
-                      width={66.81}
-                      height={66.81}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
+                  <ImageWithSkeleton
+                    src={img}
+                    alt={`Thumbnail ${idx + 1}`}
+                    sizes="67px"
+                    className="object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -711,26 +644,20 @@ export default function ProductReviewPage({
                     >
                       <div className="flex-shrink-0">
                         <p className="text-xs font-MontserratSemiBold mb-3 leading-4 truncate max-w-[80px]">
-                          {variant.name || "Variation Name"}
+                          {variant.name || "—"}
                         </p>
                         {variant.thumb ? (
                           <div className="w-[80px] h-[80px] relative rounded-c8 overflow-hidden">
-                            <Image
+                            <ImageWithSkeleton
                               src={variant.thumb}
                               alt={variant.name || "Variant"}
-                              fill
                               className="object-cover"
-                              unoptimized
                             />
                           </div>
                         ) : (
-                          <Image
-                            src={ProductImage}
-                            alt="Variant"
-                            width={80}
-                            height={80}
-                            className="rounded-c8 object-cover"
-                          />
+                          <div className="relative w-20 h-20 rounded-c8 overflow-hidden">
+                            <ImageWithSkeleton src={null} alt="Variant" />
+                          </div>
                         )}
                       </div>
                       <div className="flex flex-col gap-1.5 text-[11px] min-w-0 flex-1">
@@ -828,7 +755,7 @@ export default function ProductReviewPage({
                     Discount Type
                   </p>
                   <p className="text-xs  font-MontserratNormal text-161616 mt-4">
-                    Percentage (%)
+                    {(product as any)?.discount_type || "—"}
                   </p>
                 </div>
               </div>
@@ -911,21 +838,22 @@ export default function ProductReviewPage({
               <Button
                 onClick={() => setIsApproveModalOpen(true)}
                 disabled={!allItemsChecked || loading}
-                className="bg-ff715b text-white  w-32"
+                className="bg-ff715b text-white  w-fit"
               >
-                Approve
+                {product?.is_approved ==="pending"? "Approve" : "Approve update"}
               </Button>
               <Button
                 onClick={() => setIsRejectModalOpen(true)}
-                className=" w-32 "
-              >
-                Reject
+                className=" w-fit"
+              >{product?.is_approved ==="pending"? "Reject" : "Reject update"}
+                
               </Button>
             </div>
           </div>
         </div>
 
         <ApproveProductModal
+        isAprovalStatus={approvalStatus}
           isOpen={isApproveModalOpen}
           onClose={() => setIsApproveModalOpen(false)}
           onConfirm={handleApprove}
@@ -934,8 +862,13 @@ export default function ProductReviewPage({
           isRejected={isRejected}
         />
         <RejectProductModal
+        isAprovalStatus={approvalStatus}
           isOpen={isRejectModalOpen}
           onClose={() => setIsRejectModalOpen(false)}
+          actionPerformedBy={reviewerName}
+          moderationNotes={(product as any)?.moderation_admin_notes}
+          sellerInstruction={(product as any)?.seller_instruction}
+          sellerNotification={(product as any)?.seller_notification}
           onConfirm={(data) => {
             console.log("Rejected with reason:", data.reason, "and notes:", data.notes);
             setIsRejectModalOpen(false);

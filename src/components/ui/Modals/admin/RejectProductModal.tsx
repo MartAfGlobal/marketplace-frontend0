@@ -12,16 +12,26 @@ import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionS
 
 interface RejectProductModalProps {
   isOpen: boolean;
+  isAprovalStatus:string;
   onClose: () => void;
   onConfirm: (data: { reason: string; notes: string }) => void;
   loading?: boolean;
+  actionPerformedBy?: string;
+  moderationNotes?: string;
+  sellerInstruction?: string;
+  sellerNotification?: string;
 }
 
 export default function RejectProductModal({
+  isAprovalStatus,
   isOpen,
   onClose,
   onConfirm,
   loading,
+  actionPerformedBy = "—",
+  moderationNotes = "—",
+  sellerInstruction = "—",
+  sellerNotification = "—",
 }: RejectProductModalProps) {
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
@@ -88,7 +98,7 @@ export default function RejectProductModal({
                     <Textarea
                       readOnly
                       autoResize={false}
-                      value="Lorem ipsum dolor sit amet consecuur.&#13;&#10;Et id in non arcu eu elit facilisi ut tell."
+                      value={moderationNotes}
                       className="w-full resize-none scrollbar-hide !py-3 px-4 text-c12 font-MontserratMedium text-[#000000]/68 mt-1"
                       style={{ height: '80px' }}
                     />
@@ -98,7 +108,7 @@ export default function RejectProductModal({
                     <Textarea
                       readOnly
                       autoResize={false}
-                      value="Lorem ipsum dolor sit amet consecuur.&#13;&#10;Et id in non arcu eu elit facilisi ut tell."
+                      value={sellerInstruction}
                       className="w-full resize-none scrollbar-hide !py-3 px-4 text-c12 font-MontserratMedium text-[#000000]/68 mt-1"
                       style={{ height: '80px' }}
                     />
@@ -112,7 +122,7 @@ export default function RejectProductModal({
                     <Input
                       type="text"
                       readOnly
-                      value="auto-filled with Admin's name (Role)"
+                      value={actionPerformedBy}
                       className="w-full h-12 px-4 rounded-xl border border-gray-200 text-c12 font-MontserratMedium text-[#000000]/68 bg-white focus:outline-none mt-1"
                     />
                   </div>
@@ -121,7 +131,7 @@ export default function RejectProductModal({
                     <Textarea
                       readOnly
                       autoResize={false}
-                      value="Your product has been rejected because it does not meet our platform requirements."
+                      value={sellerNotification}
                       className="w-full resize-none scrollbar-hide !py-3 px-4 text-c12 font-MontserratMedium text-[#000000]/68 mt-1"
                       style={{ height: '80px' }}
                     />
@@ -132,7 +142,7 @@ export default function RejectProductModal({
                       value={notes}
                       autoResize={false}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="input"
+                      placeholder="Enter optional notes"
                       className="w-full resize-none scrollbar-hide !py-3 px-4 text-c12 font-MontserratMedium text-[#000000]/68 mt-1"
                       style={{ height: '80px' }}
                     />
