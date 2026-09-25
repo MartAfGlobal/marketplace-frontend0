@@ -22,6 +22,35 @@ export type InventoryFullTableProps = {
   };
 };
 
+function getStatusStyle(status: string | undefined): string {
+  switch ((status ?? "").toLowerCase().trim()) {
+    case "completed":
+    case "success":
+    case "paid":
+    case "approved":
+      return "text-[#2D7565] bg-[#2D7565]/20 border border-[#2D7565]/30";
+    case "pending":
+    case "awaiting approval":
+    case "under review":
+    case "submitted":
+      return "text-[#FFAC06] bg-[#FFAC06]/10 border border-[#FFAC06]/30";
+    case "in progress":
+    case "processing":
+    case "fulfilled":
+      return "text-[#0070E9] bg-[#0070E9]/10 border border-[#0070E9]/30";
+    case "failed":
+    case "reversed":
+    case "cancelled":
+    case "rejected":
+      return "text-[#CA0202] bg-[#CA0202]/10 border border-[#CA0202]/30";
+    case "on hold":
+    case "disputed":
+      return "text-[#E8334A] bg-[#E8334A]/10 border border-[#E8334A]/30";
+    default:
+      return "text-gray-600 bg-gray-50 border border-gray-200";
+  }
+}
+
 export default function PayOutTable({
   currentPage,
   rowsPerPage,
@@ -174,7 +203,11 @@ export default function PayOutTable({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[#2D7565] font-MontserratSemiBold text-xs">
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[9px] font-MontserratBold capitalize ${getStatusStyle(
+                      row.status
+                    )}`}
+                  >
                     {row.status}
                   </span>
                   <button
@@ -193,10 +226,20 @@ export default function PayOutTable({
                   <span className="font-MontserratBold text-[#000000] text-sm">{row.amount}</span>
                 </div>
                 <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <span className="text-[#000000] font-MontserratNormal text-c12">Status</span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[9px] font-MontserratBold capitalize ${getStatusStyle(
+                      row.status
+                    )}`}
+                  >
+                    {row.status}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
                   <span className="text-[#000000] font-MontserratNormal text-c12">Withdrawn to</span>
                   <span className="font-MontserratSemiBold text-[#000000] text-xs">{row.withdrawnTo}</span>
                 </div>
-                <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
                   <span className="text-[#000000] font-MontserratNormal text-c12">Description</span>
                   <span
                     className="font-MontserratMedium text-[#666666] text-xs text-right max-w-[200px] truncate"
@@ -246,7 +289,11 @@ export default function PayOutTable({
                   <td className="px-3 pt-3 pb-6 text-left">{row.dateTime}</td>
                   <td className="px-3 pt-3 pb-6 text-left">{row.transactionid}</td>
                   <td className="px-3 pt-3 pb-6 text-left">{row.amount}</td>
-                  <td className="px-3 pt-3 pb-6 text-left text-2d7565">{row.status}</td>
+                  <td className="px-3 pt-3 pb-6 text-left">
+                    <span className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize px-3 py-1 rounded-full w-fit inline-block ${getStatusStyle(row.status)}`}>
+                      {row.status}
+                    </span>
+                  </td>
                   <td className="px-3 pt-3 pb-6 text-left">{row.withdrawnTo}</td>
                   <td className="px-3 pt-3 pb-6">{row.description}</td>
                   <td className="px-3 pt-3 pb-6 text-center relative">

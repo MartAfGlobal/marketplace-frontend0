@@ -35,32 +35,35 @@ export const AcceptOrderModal = ({
   accepting,
 }: AcceptOrderModalProps) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm md:p-4 px-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white rounded-2xl w-full max-w-md shadow-2xl relative overflow-hidden"
+        initial={{ opacity: 0, y: "100%" }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: "100%" }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-white rounded-t-2xl md:rounded-2xl w-full md:max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
       >
         <button
+          type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full z-10 transition-colors"
+          className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full z-20 transition-colors"
         >
           <Image src={XIcon} alt="close" width={20} height={20} />
         </button>
 
-        <div className="p-8 space-y-6">
+        <div className="p-6 md:p-8 space-y-6">
           <div className="text-center space-y-2">
             <h2 className="text-c18 font-MontserratMedium text-000000">
               Accept this order?
             </h2>
-            <p className="text-c12 text-000000/68 font-MontserratNormal px-4">
+            <p className="text-c12 text-000000/68 font-MontserratNormal px-2 md:px-4">
               You agree to fulfil and send this order to the closest MartAf
               warehouse to your location
             </p>
           </div>
 
-          <form onSubmit={onAccept} className="space-y-6 pt-4">
+          <form onSubmit={onAccept} className="space-y-6 pt-2">
             <div className="space-y-4">
               <Dropdown
                 label="Select warehouse location"
@@ -83,14 +86,14 @@ export const AcceptOrderModal = ({
               />
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <Button type="button" onClick={onClose} variant="secondary">
+            <div className="flex gap-4 pt-4 pb-2">
+              <Button type="button" onClick={onClose} variant="secondary" className="flex-1">
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={accepting}
-                className=" disabled:cursor-not-allowed"
+                className="flex-1 disabled:cursor-not-allowed"
               >
                 {accepting ? <LoadingSpinner /> : "Yes, I accept"}
               </Button>

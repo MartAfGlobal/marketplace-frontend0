@@ -43,17 +43,31 @@ function formatAmount(amount: string | number | undefined): string {
 }
 
 function getStatusStyle(status: string | undefined): string {
-  switch ((status ?? "").toLowerCase()) {
+  switch ((status ?? "").toLowerCase().trim()) {
     case "completed":
     case "success":
-      return "text-green-600 ";
+    case "paid":
+    case "approved":
+      return "text-[#2D7565] bg-[#2D7565]/20 border border-[#2D7565]/30";
     case "pending":
-      return " text-orange-600 ";
+    case "awaiting approval":
+    case "under review":
+    case "submitted":
+      return "text-[#FFAC06] bg-[#FFAC06]/10 border border-[#FFAC06]/30";
+    case "in progress":
+    case "processing":
+    case "fulfilled":
+      return "text-[#0070E9] bg-[#0070E9]/10 border border-[#0070E9]/30";
     case "failed":
     case "reversed":
-      return "bg-red-50 text-red-600";
+    case "cancelled":
+    case "rejected":
+      return "text-[#CA0202] bg-[#CA0202]/10 border border-[#CA0202]/30";
+    case "on hold":
+    case "disputed":
+      return "text-[#E8334A] bg-[#E8334A]/10 border border-[#E8334A]/30";
     default:
-      return "bg-gray-50 text-gray-600";
+      return "text-gray-600 bg-gray-50 border border-gray-200";
   }
 }
 
@@ -158,7 +172,7 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`px-2.5 py-1 rounded-full text-[9px] font-MontserratBold border ${getStatusStyle(
+                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-MontserratBold capitalize ${getStatusStyle(
                         row.status as string
                       )}`}
                     >
@@ -270,7 +284,7 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
                   <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
                     <span className="text-[#000000] font-MontserratNormal text-c12">Status</span>
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-MontserratBold border ${getStatusStyle(
+                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-MontserratBold capitalize ${getStatusStyle(
                         row.status as string
                       )}`}
                     >

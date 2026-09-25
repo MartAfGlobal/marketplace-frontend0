@@ -435,7 +435,7 @@ export default function WithdrawModals({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -450,10 +450,11 @@ export default function WithdrawModals({
         {step === 1 && (
           <motion.div
             key="step1"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="relative w-full max-w-[440px] bg-white rounded-[16px] p-8 shadow-2xl"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="relative w-full md:max-w-[440px] bg-white rounded-t-2xl md:rounded-[16px] p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl"
           >
             <div className="text-center mb-6">
               <h2 className="text-lg font-MontserratMedium text-[#161616]">Withdraw money</h2>
@@ -661,10 +662,11 @@ export default function WithdrawModals({
         {step === 2 && (
           <motion.div
             key="step2"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="relative w-full max-w-[440px] bg-white rounded-[16px] p-8 "
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="relative w-full md:max-w-[440px] bg-white rounded-t-2xl md:rounded-[16px] p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl"
           >
             {/* Close button */}
             <button
@@ -725,8 +727,8 @@ export default function WithdrawModals({
               )}
 
               {/* OTP digit boxes */}
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex gap-3 justify-center">
+              <div className="flex flex-col items-center gap-2 w-full">
+                <div className="flex gap-2 sm:gap-3 justify-center w-full">
                   {digits.map((digit, i) => (
                     <input
                       key={i}
@@ -744,7 +746,7 @@ export default function WithdrawModals({
                       onPaste={handleOtpPaste}
                       aria-label={`OTP digit ${i + 1}`}
                       className={`
-                        w-12 h-14 text-center text-c18 font-MontserratSemiBold rounded-lg border-1
+                        w-10 h-12 sm:w-12 sm:h-14 text-center text-base sm:text-c18 font-MontserratSemiBold rounded-lg border-1
                         outline-none transition-all duration-200
                         ${digit
                           ? "border-ff715b  text-161616"
@@ -811,9 +813,11 @@ export default function WithdrawModals({
         {step === 3 && (
           <motion.div
             key="step3"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative w-full max-w-sm bg-white rounded-[24px] p-8 shadow-2xl text-center overflow-hidden"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="relative w-full md:max-w-sm bg-white rounded-t-2xl md:rounded-[24px] p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl text-center overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-32 bg-green-500/10 -z-10" />
 

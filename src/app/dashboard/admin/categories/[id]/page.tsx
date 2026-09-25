@@ -15,16 +15,6 @@ import ResultModal from "@/components/ui/forms/resultModal";
 import { toast } from "sonner";
 import { sub } from "framer-motion/client";
 
-// Mock subcategories fallback for table if none present
-const mockSubcategories = Array.from({ length: 5 }, (_, i) => ({
-  id: `SUB-${i}`,
-  name: "Men's Wear",
-  attributes: "Size • Colour • +1",
-  productsCount: 12,
-  status: i % 2 === 0 ? "Active" : "Hidden",
-  date: "18/9/2016",
-  image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=80",
-}));
 
 export default function AdminCategoryDetailsPage() {
   const params = useParams();
@@ -154,9 +144,22 @@ export default function AdminCategoryDetailsPage() {
   const parsedAttributes = getAttributes();
 
   // Normalize subcategories list
-  const rawSubcategories = category?.subcategories || category?.sub_categories || category?.children;
-  const subcategoriesList = Array.isArray(rawSubcategories) && rawSubcategories.length > 0
-    ? rawSubcategories.map((sub: any, i: number) => ({
+  const rawSubList: any[] = (() => {
+    const s = category as any;
+    const candidates = [
+      s?.subcategories,
+      s?.subcategories?.results,
+      s?.sub_categories,
+      s?.children,
+    ];
+    for (const c of candidates) {
+      if (Array.isArray(c) && c.length >= 0) return c;
+    }
+    return [];
+  })();
+
+  const subcategoriesList = Array.isArray(rawSubList)
+    ? rawSubList.map((sub: any, i: number) => ({
         id: sub.id || sub.uuid || `SUB-${i}`,
         name: sub.name || sub.title || "Subcategory",
         attributes: sub.attributes_summary?.trim()
@@ -173,9 +176,9 @@ export default function AdminCategoryDetailsPage() {
         productsCount: sub.products_count ?? sub.productsCount ?? sub.product_count ?? 12,
         status: sub.is_active !== undefined ? (sub.is_active ? "Active" : "Hidden") : (sub.status || "Active"),
         date: formatDate(sub.created_at || sub.date_created || sub.date),
-        image: sub.image || sub.icon || sub.category_image || "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=80",
+        image: sub.image || sub.icon || sub.category_image || "N/A"
       }))
-    : mockSubcategories;
+    : [];
 
   const handleToggleCategoryHide = () => {
     const newIsActive = !isActive;
@@ -440,7 +443,7 @@ export default function AdminCategoryDetailsPage() {
               <h3 className="font-MontserratSemiBold text-lg text-black mb-6">
                 Subcategory{" "}
                 <span className="text-gray-500 font-MontserratMedium text-base">
-                  ({subcategoriesList.length})
+                  ({Array.isArray(subcategoriesList) ? subcategoriesList.length : 0})
                 </span>
               </h3>
               <div className="overflow-x-auto">
@@ -456,109 +459,117 @@ export default function AdminCategoryDetailsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 text-sm text-gray-700 font-MontserratMedium">
-                    {subcategoriesList.map((sub) => (
-                      <tr
-                        key={sub.id}
-                        onClick={() => router.push(`/dashboard/admin/categories/${sub.id}`)}
-                        className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer"
-                      >
-                        <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">
-                          <Link
-                            href={`/dashboard/admin/categories/${sub.id}`}
-                            className="flex items-center gap-3 hover:text-[#947fff] transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                              <img
-                                src={sub.image}
-                                alt={sub.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <span className="block truncate hover:underline" title={sub.name}>
-                              {sub.name}
+                    {Array.isArray(subcategoriesList) && subcategoriesList.length > 0 ? (
+                      subcategoriesList.map((sub) => (
+                        <tr
+                          key={sub.id}
+                          onClick={() => router.push(`/dashboard/admin/categories/${sub.id}`)}
+                          className="hover:bg-gray-50/50 transition-colors h-14 cursor-pointer"
+                        >
+                          <td className="py-3 px-4 text-[#161616] font-MontserratSemiBold">
+                            <Link
+                              href={`/dashboard/admin/categories/${sub.id}`}
+                              className="flex items-center gap-3 hover:text-[#947fff] transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                <img
+                                  src={sub.image}
+                                  alt={sub.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <span className="block truncate hover:underline" title={sub.name}>
+                                {sub.name}
+                              </span>
+                            </Link>
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">
+                            <span className="block max-w-[10rem] truncate" title={sub.attributes}>
+                              {sub.attributes}
                             </span>
-                          </Link>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          <span className="block max-w-[10rem] truncate" title={sub.attributes}>
-                            {sub.attributes}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">
-                          {sub.productsCount}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            {sub.status === "Active" ? (
-                              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-green-200 text-green-600 bg-green-50 text-[10px] font-MontserratMedium w-fit">
-                                <CheckCircle2 className="w-3 h-3" /> Active
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-gray-600 bg-gray-50 text-[10px] font-MontserratMedium w-fit">
-                                <EyeOff className="w-3 h-3" /> Hidden
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700">{sub.date}</td>
-                        <td className="py-3 px-4 text-center relative" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer ml-auto mr-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveRowId(activeRowId === sub.id ? null : sub.id);
-                            }}
-                          >
-                            <MoreVertical className="w-4 h-4 text-gray-500" />
-                          </button>
-                          <AnimatePresence>
-                            {activeRowId === sub.id && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="absolute right-8 mt-2 w-36 bg-white border border-[#eef0f3] rounded-xl shadow-lg z-50 py-2 flex flex-col items-start font-MontserratMedium text-xs text-[#161616] overflow-hidden"
-                              >
-                                <Link
-                                  href={`/dashboard/admin/categories/${sub.id}`}
-                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer flex items-center gap-2"
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">
+                            {sub.productsCount}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-1.5">
+                              {sub.status === "Active" ? (
+                                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-green-200 text-green-600 bg-green-50 text-[10px] font-MontserratMedium w-fit">
+                                  <CheckCircle2 className="w-3 h-3" /> Active
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-gray-200 text-gray-600 bg-gray-50 text-[10px] font-MontserratMedium w-fit">
+                                  <EyeOff className="w-3 h-3" /> Hidden
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">{sub.date}</td>
+                          <td className="py-3 px-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer ml-auto mr-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveRowId(activeRowId === sub.id ? null : sub.id);
+                              }}
+                            >
+                              <MoreVertical className="w-4 h-4 text-gray-500" />
+                            </button>
+                            <AnimatePresence>
+                              {activeRowId === sub.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                                  transition={{ duration: 0.2, ease: "easeOut" }}
+                                  className="absolute right-8 mt-2 w-36 bg-white border border-[#eef0f3] rounded-xl shadow-lg z-50 py-2 flex flex-col items-start font-MontserratMedium text-xs text-[#161616] overflow-hidden"
                                 >
-                                  <Eye className="w-3.5 h-3.5" /> View Details
-                                </Link>
-                                <button
-                                  onClick={() => {
-                                    setActiveRowId(null);
-                                    handleToggleSubcategoryHide(sub.id, sub.status, sub.name);
-                                  }}
-                                  className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer flex items-center gap-2"
-                                >
-                                  {sub.status === "Active" ? (
-                                    <>
-                                      <EyeOff className="w-3.5 h-3.5" /> Hide
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Eye className="w-3.5 h-3.5" /> Activate
-                                    </>
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setActiveRowId(null);
-                                    handleRequestDelete(sub.id, sub.name, "subcategory");
-                                  }}
-                                  className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 transition-colors cursor-pointer flex items-center gap-2"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                                </button>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                                  <Link
+                                    href={`/dashboard/admin/categories/${sub.id}`}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer flex items-center gap-2"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" /> View Details
+                                  </Link>
+                                  <button
+                                    onClick={() => {
+                                      setActiveRowId(null);
+                                      handleToggleSubcategoryHide(sub.id, sub.status, sub.name);
+                                    }}
+                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors cursor-pointer flex items-center gap-2"
+                                  >
+                                    {sub.status === "Active" ? (
+                                      <>
+                                        <EyeOff className="w-3.5 h-3.5" /> Hide
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Eye className="w-3.5 h-3.5" /> Activate
+                                      </>
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setActiveRowId(null);
+                                      handleRequestDelete(sub.id, sub.name, "subcategory");
+                                    }}
+                                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 transition-colors cursor-pointer flex items-center gap-2"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                                  </button>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-gray-400 font-MontserratNormal">
+                          No subcategories available.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -566,18 +577,20 @@ export default function AdminCategoryDetailsPage() {
           )}
 
           <div className="flex items-center gap-4 justify-end mt-auto">
-            <button
+            < Button
+            variant="secondary"
               onClick={() => router.push(`/dashboard/admin/categories/create?edit=${categoryId}`)}
-              className="h-12 w-40 border border-[#df6b62] text-[#df6b62] rounded-xl font-MontserratSemiBold hover:bg-red-50 transition-colors cursor-pointer"
+              className=" w-40 "
             >
               Edit
-            </button>
-            <button
+            </Button>
+            <Button
+            variant="danger"
               onClick={() => handleRequestDelete(categoryId, name, isSubcategory ? "subcategory" : "category")}
-              className="h-12 w-40 bg-[#cc0b0b] text-white rounded-xl font-MontserratSemiBold hover:bg-[#b00909] transition-colors cursor-pointer"
+              className=" w-40 "
             >
               Delete
-            </button>
+            </Button>
           </div>
         </div>
       )}

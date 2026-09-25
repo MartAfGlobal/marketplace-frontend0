@@ -22,6 +22,35 @@ function formatAmount(amount: string | number | undefined): string {
   return `N${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function getStatusBadgeStyle(status: string | undefined): string {
+  switch ((status ?? "").toLowerCase().trim()) {
+    case "completed":
+    case "success":
+    case "paid":
+    case "approved":
+      return "text-[#2D7565] bg-[#2D7565]/20 border border-[#2D7565]/30";
+    case "pending":
+    case "awaiting approval":
+    case "under review":
+    case "submitted":
+      return "text-[#FFAC06] bg-[#FFAC06]/10 border border-[#FFAC06]/30";
+    case "in progress":
+    case "processing":
+    case "fulfilled":
+      return "text-[#0070E9] bg-[#0070E9]/10 border border-[#0070E9]/30";
+    case "failed":
+    case "reversed":
+    case "cancelled":
+    case "rejected":
+      return "text-[#CA0202] bg-[#CA0202]/10 border border-[#CA0202]/30";
+    case "on hold":
+    case "disputed":
+      return "text-[#E8334A] bg-[#E8334A]/10 border border-[#E8334A]/30";
+    default:
+      return "text-gray-600 bg-gray-50 border border-gray-200";
+  }
+}
+
 export default function TransactionDetailSideModal({
   isOpen,
   onClose,
@@ -123,16 +152,16 @@ Generated from MartAf Global Seller Finance
     <AnimatePresence>
       <div
         key="transaction-detail-modal-backdrop"
-        className="fixed inset-0 bg-black/40 flex items-center justify-end z-[9998] p-4 sm:pr-[29px]"
+        className="fixed inset-0 bg-black/40 flex items-end md:items-center justify-center md:justify-end z-[9998] p-0 md:p-4 md:pr-[29px]"
         onClick={onClose}
       >
         <motion.div
-          initial={{ opacity: 0, x: 160 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 160 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 40 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white flex flex-col w-full max-w-[432px] rounded-[16px]  relative max-h-[92vh] custom-scroll overflow-y-auto p-6 sm:p-8"
+          className="bg-white flex flex-col w-full md:max-w-[432px] rounded-t-2xl md:rounded-[16px] relative max-h-[92vh] custom-scroll overflow-y-auto p-6 sm:p-8 shadow-2xl"
         >
           {/* Header */}
           <div className="flex items-center  ">
@@ -181,7 +210,7 @@ Generated from MartAf Global Seller Finance
               <span className="text-sm font-MontserratSemiBold text-000000">
                 Details
               </span>
-              <span className="px-4 py-2 rounded-c16 flex items-center justify-center h-c32 text-xs font-MontserratSemiBold bg-[#28A745]/12 text-[#2D7565]">
+              <span className={`px-4 py-1.5 rounded-full flex items-center justify-center h-fit text-xs font-MontserratSemiBold capitalize ${getStatusBadgeStyle(transaction.status)}`}>
                 {transaction.status || "Completed"}
               </span>
             </div>
@@ -247,19 +276,19 @@ Generated from MartAf Global Seller Finance
           <div className="border-t border-gray-100 my-8" />
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Button
-            variant="secondary"
+              variant="secondary"
               type="button"
               onClick={handleShareReceipt}
-              className=""
+              className="flex-1"
             >
               Share receipt
             </Button>
             <Button
               type="button"
               onClick={handleDownload}
-              className=""
+              className="flex-1"
             >
               Download
             </Button>

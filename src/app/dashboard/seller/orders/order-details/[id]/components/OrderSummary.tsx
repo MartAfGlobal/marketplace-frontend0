@@ -2,35 +2,48 @@ import Image from "next/image";
 import CopyIcon from "@/assets/icons/Copy.png";
 
 const getStatusColor = (status: string) => {
-  switch (status?.toLowerCase()) {
+  const s = (status || "").toLowerCase().trim();
+  switch (s) {
     case "dispute closed":
     case "closed":
       return "#6A0DAD";
-    case "open":
-    case "fulfilled":
-    case "partially_accepted":
-    case "tracking_submitted":
-    case "tracking submitted":
-    case "shipped":
-    case "in transit":
-      return "#0070E9";
-    case "resolved":
-    case "delivered":
-      return "#2D7565";
-    case "escalated":
-    case "cancelled":
-    case "rejected":
     case "disputed":
     case "dispute raised":
     case "dispute ongoing":
-      return "#CA0202";
+      return "#E8334A";
+    case "unprocessed":
     case "pending":
     case "requested":
-    case "unprocessed":
+    case "awaiting acceptance":
+    case "awaiting_acceptance":
     case "processed":
     case "processing":
     case "accepted":
       return "#FFAC06";
+    case "open":
+    case "partially_accepted":
+    case "partially accepted":
+    case "partial accept":
+    case "tracking_submitted":
+    case "tracking submitted":
+    case "fulfilled":
+    case "in_transit_to_hub":
+      return "#0070E9";
+    case "shipped":
+    case "sent from hub":
+    case "in transit":
+      return "#FF715B";
+    case "resolved":
+    case "delivered":
+    case "received by buyer":
+    case "completed":
+    case "paid":
+      return "#2D7565";
+    case "escalated":
+    case "cancelled":
+    case "rejected":
+    case "failed":
+      return "#CA0202";
     default:
       return "#6B7280";
   }

@@ -14,66 +14,90 @@ import { ChevronRight } from "lucide-react";
 import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
 
 const getStatusClass = (status: string) => {
-  switch (status.toLowerCase()) {
+  const s = (status || "").toLowerCase().trim();
+  switch (s) {
     case "dispute closed":
     case "closed":
       return "text-[#6A0DAD] bg-[#6A0DAD]/10 px-3 py-1 rounded-full w-fit mx-auto";
-    case "fulfilled":
-      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
-    case "unprocessed":
-    case "pending":
-    case "awaiting acceptance":
-      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
-    case "processed":
-    case "processing":
-      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
-    case "partially_accepted":
-      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
-    case "cancelled":
-    case "rejected":
-      return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
-    case "delivered":
-    case "completed":
-      return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
     case "disputed":
     case "dispute raised":
     case "dispute ongoing":
       return "text-[#E8334A] bg-[#E8334A]/10 px-3 py-1 rounded-full w-fit mx-auto";
-    case "shipped":
-    case "in transit":
+    case "unprocessed":
+    case "pending":
+    case "awaiting acceptance":
+    case "awaiting_acceptance":
+      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    case "processed":
+    case "processing":
+    case "accepted":
+      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    case "partially_accepted":
+    case "partially accepted":
+    case "partial accept":
       return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    case "tracking_submitted":
+    case "tracking submitted":
+    case "fulfilled":
+    case "in_transit_to_hub":
+      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    case "shipped":
+    case "sent from hub":
+    case "in transit":
+      return "text-[#FF715B] bg-[#FF715B]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    case "delivered":
+    case "received by buyer":
+    case "completed":
+    case "paid":
+      return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
+    case "cancelled":
+    case "rejected":
+    case "failed":
+      return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
     default:
       return "text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-fit mx-auto";
   }
 };
 
 const getStatusColor = (status: string) => {
-  switch (status.toLowerCase()) {
+  const s = (status || "").toLowerCase().trim();
+  switch (s) {
     case "dispute closed":
     case "closed":
       return "#6A0DAD";
-    case "fulfilled":
-      return "#0070E9";
-    case "unprocessed":
-    case "pending":
-    case "awaiting acceptance":
-    case "processed":
-    case "processing":
-      return "#FFAC06";
-    case "partially_accepted":
-    case "shipped":
-    case "in transit":
-      return "#0070E9";
-    case "cancelled":
-    case "rejected":
-      return "#CA0202";
-    case "delivered":
-    case "completed":
-      return "#2D7565";
     case "disputed":
     case "dispute raised":
     case "dispute ongoing":
       return "#E8334A";
+    case "unprocessed":
+    case "pending":
+    case "awaiting acceptance":
+    case "awaiting_acceptance":
+    case "processed":
+    case "processing":
+    case "accepted":
+      return "#FFAC06";
+    case "partially_accepted":
+    case "partially accepted":
+    case "partial accept":
+    case "tracking_submitted":
+    case "tracking submitted":
+    case "fulfilled":
+    case "in_transit_to_hub":
+      return "#0070E9";
+    case "shipped":
+    case "sent from hub":
+    case "in transit":
+      return "#FF715B";
+    case "delivered":
+    case "received by buyer":
+    case "completed":
+    case "paid":
+      return "#2D7565";
+    case "cancelled":
+    case "rejected":
+    case "failed":
+      return "#CA0202";
     default:
       return "#6B7280";
   }
@@ -249,7 +273,7 @@ export default function AllOrderTable({
             <div key={row.id} className="flex flex-col border-b border-gray-100 pb-6 mb-2">
               <div 
                 className="flex justify-between items-start mb-4 cursor-pointer"
-                onClick={() => handleViewDetails(row.orderId)}
+                onClick={() => handleViewDetails(row.id)}
               >
                 <div className="flex flex-col">
                   <span className="font-MontserratSemiBold text-sm text-[#000000]">{row.orderId}</span>
@@ -285,10 +309,9 @@ export default function AllOrderTable({
                 </div>
                 <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
                   <span className="text-00000 font-MontserratNormal">Status</span>
-                  <span className="font-MontserratSemiBold text-000000 flex items-center gap-2 capitalize">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor(row.status) }}></span>
+                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize ${getStatusClass(row.status)}`}>
                     {row.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : row.status}
-                  </span>
+                  </div>
                 </div>
               </div>
             </div>

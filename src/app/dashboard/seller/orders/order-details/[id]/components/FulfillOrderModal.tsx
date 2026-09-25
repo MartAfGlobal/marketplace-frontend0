@@ -35,21 +35,24 @@ export const FulfillOrderModal = ({
   fulfilling,
 }: FulfillOrderModalProps) => {
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm md:p-4 px-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white rounded-2xl w-full max-w-[426px] shadow-2xl relative overflow-hidden"
+        initial={{ opacity: 0, y: "100%" }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: "100%" }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-white rounded-t-2xl md:rounded-2xl w-full md:max-w-[426px] shadow-2xl relative max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
       >
         <button
+          type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full z-10 transition-colors"
+          className="absolute right-4 top-4 p-2 hover:bg-gray-100 rounded-full z-20 transition-colors"
         >
           <Image src={XIcon} alt="close" width={20} height={20} />
         </button>
 
-        <div className="p-8 space-y-8">
+        <div className="p-6 md:p-8 space-y-6">
           <div className="text-center space-y-1">
             <h2 className="text-c18 font-MontserratMedium text-000000 leading-[26px]">
               Submit tracking details
@@ -60,7 +63,7 @@ export const FulfillOrderModal = ({
             </p>
           </div>
 
-          <form onSubmit={onFulfill} className="space-y-4 ">
+          <form onSubmit={onFulfill} className="space-y-4">
             <div className="space-y-2">
               <Label>Tracking/waybill no.</Label>
               <Input
@@ -81,20 +84,20 @@ export const FulfillOrderModal = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. GIGM courier, pickup at 5pm"
-                className="h-[160px]"
+                className="h-[120px] md:h-[160px]"
               />
             </div>
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex gap-4 pt-4 pb-2">
               <Button
                 type="button"
                 onClick={onClose}
                 variant="secondary"
-                className="w-[142px]"
+                className="flex-1"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={fulfilling} className="w-[204px]">
+              <Button type="submit" disabled={fulfilling} className="flex-1">
                 {fulfilling ? <LoadingSpinner /> : "Submit"}
               </Button>
             </div>

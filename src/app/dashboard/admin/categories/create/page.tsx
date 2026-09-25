@@ -251,11 +251,11 @@ function CreateCategoryPageInner() {
     img.src = objectUrl;
 
     img.onload = () => {
-      if (img.width < 500 || img.width > 1080 || img.height < 500 || img.height > 1080) {
-        toast.error(
-          `Image must be between 500x500 and 1080x1080 pixels. Uploaded image is ${img.width}x${img.height}px.`
-        );
-      }
+      // if (img.width < 500 || img.width > 1080 || img.height < 500 || img.height > 1080) {
+      //   toast.error(
+      //     `Image must be between 500x500 and 1080x1080 pixels. Uploaded image is ${img.width}x${img.height}px.`
+      //   );
+      // }
       setImageFile(file);
       setUploadedFileName(file.name);
       setPreviewUrl(objectUrl);

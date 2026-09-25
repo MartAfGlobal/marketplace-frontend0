@@ -417,6 +417,20 @@ export default function OrderDetailsPage() {
             getMappedStatus={getMappedStatus}
           />
 
+          <div className="lg:hidden">
+            <OrderActions
+              order={order}
+              getMappedStatus={getMappedStatus}
+              onAcceptClick={() => setShowAcceptModal(true)}
+              onRejectClick={handleReject}
+              onFulfillClick={() => setShowFulfillModal(true)}
+              timeLeft={timeLeft}
+              formatTime={formatTime}
+              isDesktop={true}
+              className="!flex w-full"
+            />
+          </div>
+
           <OrderInfoSections order={order} />
 
           <OrderItemsList

@@ -121,27 +121,48 @@ export default function OrderTable({
 
   // ✅ Status color helper
   const getStatusClass = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "fulfilled":
-        return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
+    const s = (status || "").toLowerCase().trim();
+    switch (s) {
+      case "dispute closed":
+      case "closed":
+        return "text-[#6A0DAD] bg-[#6A0DAD]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      case "disputed":
+      case "dispute raised":
+      case "dispute ongoing":
+        return "text-[#E8334A] bg-[#E8334A]/10 px-3 py-1 rounded-full w-fit mx-auto";
       case "unprocessed":
       case "pending":
-      case "processing":
       case "awaiting acceptance":
+      case "awaiting_acceptance":
+        return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      case "processed":
+      case "processing":
+      case "accepted":
         return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
       case "partially_accepted":
+      case "partially accepted":
+      case "partial accept":
         return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      case "tracking_submitted":
+      case "tracking submitted":
+      case "fulfilled":
+      case "in_transit_to_hub":
+        return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      case "shipped":
+      case "sent from hub":
+      case "in transit":
+        return "text-[#FF715B] bg-[#FF715B]/10 px-3 py-1 rounded-full w-fit mx-auto";
+      case "delivered":
+      case "received by buyer":
+      case "completed":
+      case "paid":
+        return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
       case "returned":
       case "refunded":
       case "cancelled":
       case "rejected":
+      case "failed":
         return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      case "delivered":
-      case "paid":
-        return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
-      case "shipped":
-      case "in transit":
-        return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
       default:
         return "text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-fit mx-auto";
     }
