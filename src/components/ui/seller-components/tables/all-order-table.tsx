@@ -12,141 +12,13 @@ import downloadIcon from "@/assets/Seller/colourDownload.svg";
 import Empty from "@/assets/Seller/Empty.svg";
 import { ChevronRight } from "lucide-react";
 import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
-
-const getStatusClass = (status: string) => {
-  const s = (status || "").toLowerCase().trim();
-  switch (s) {
-    case "dispute closed":
-    case "closed":
-      return "text-[#6A0DAD] bg-[#6A0DAD]/10 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    case "disputed":
-    case "dispute raised":
-    case "dispute ongoing":
-      return "text-[#E8334A] bg-[#E8334A]/10 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    case "unprocessed":
-    case "pending":
-    case "awaiting acceptance":
-    case "awaiting_acceptance":
-      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    case "processed":
-    case "processing":
-    case "accepted":
-      return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    case "partially_accepted":
-    case "partially accepted":
-    case "partial accept":
-      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    case "tracking_submitted":
-    case "tracking submitted":
-    case "fulfilled":
-    case "in_transit_to_hub":
-      return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    case "shipped":
-    case "sent from hub":
-    case "in transit":
-      return "text-[#FF715B] bg-[#FF715B]/10 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    case "delivered":
-    case "received by buyer":
-    case "completed":
-    case "paid":
-      return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    case "cancelled":
-    case "rejected":
-    case "failed":
-      return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-    default:
-      return "text-gray-500 bg-gray-100 px-3 py-2 flex items-center justify-center rounded-c16 h-[33px] w-fit mx-auto";
-  }
-};
-const getStatusClassBar = (status: string) => {
-  const s = (status || "").toLowerCase().trim();
-  switch (s) {
-    case "dispute closed":
-    case "closed":
-      return " bg-[#6A0DAD]";
-    case "disputed":
-    case "dispute raised":
-    case "dispute ongoing":
-      return "bg-[#E8334A]";
-    case "unprocessed":
-    case "pending":
-    case "awaiting acceptance":
-    case "awaiting_acceptance":
-      return "bg-[#FFAC06]";
-    case "processed":
-    case "processing":
-    case "accepted":
-      return "bg-[#FFAC06]";
-    case "partially_accepted":
-    case "partially accepted":
-    case "partial accept":
-      return "bg-[#0070E9]";
-    case "tracking_submitted":
-    case "tracking submitted":
-    case "fulfilled":
-    case "in_transit_to_hub":
-      return " bg-[#0070E9]";
-    case "shipped":
-    case "sent from hub":
-    case "in transit":
-      return "bg-[#FF715B]";
-    case "delivered":
-    case "received by buyer":
-    case "completed":
-    case "paid":
-      return "bg-[#2D7565]";
-    case "cancelled":
-    case "rejected":
-    case "failed":
-      return "bg-[#CA0202]";
-    default:
-      return "bg-gray-100 ";
-  }
-};
-
-const getStatusColor = (status: string) => {
-  const s = (status || "").toLowerCase().trim();
-  switch (s) {
-    case "dispute closed":
-    case "closed":
-      return "#6A0DAD";
-    case "disputed":
-    case "dispute raised":
-    case "dispute ongoing":
-      return "#E8334A";
-    case "unprocessed":
-    case "pending":
-    case "awaiting acceptance":
-    case "awaiting_acceptance":
-    case "processed":
-    case "processing":
-    case "accepted":
-      return "#FFAC06";
-    case "partially_accepted":
-    case "partially accepted":
-    case "partial accept":
-    case "tracking_submitted":
-    case "tracking submitted":
-    case "fulfilled":
-    case "in_transit_to_hub":
-      return "#0070E9";
-    case "shipped":
-    case "sent from hub":
-    case "in transit":
-      return "#FF715B";
-    case "delivered":
-    case "received by buyer":
-    case "completed":
-    case "paid":
-      return "#2D7565";
-    case "cancelled":
-    case "rejected":
-    case "failed":
-      return "#CA0202";
-    default:
-      return "#6B7280";
-  }
-};
+import {
+  getSellerDetailedStatus,
+  getSellerTableStatus,
+  getSellerStatusClass as getStatusClass,
+  getSellerStatusClassBar as getStatusClassBar,
+  getSellerStatusColor as getStatusColor,
+} from "@/helpers/sellers/sellerOrderStatusHelper";
 
 export type InventoryFullTableProps = {
   currentPage: number;
@@ -188,7 +60,8 @@ export default function AllOrderTable({
   const ordersFromStore = useSelector((state: any) => state.orders.orders);
 
   const allRows = ordersFromStore.map((order: SellerOrderResult, i: number) => {
-    const displayStatus = getOrderDisplayStatus(order);
+    const realStatus = getSellerDetailedStatus(order);
+    const tableStatus = getSellerTableStatus(order);
     return {
       id: order.id,
       orderId: order.order_id,
@@ -199,13 +72,9 @@ export default function AllOrderTable({
       amount: order.subtotal ? `#${order.subtotal}` : "N/A",
       perc: 0,
       stock: order.items?.reduce((acc, item) => acc + (item.quantity || 0), 0) || 0,
-      status:
-        displayStatus === "Dispute closed"
-          ? "Dispute closed"
-          : displayStatus === "Dispute raised" || displayStatus === "Dispute ongoing"
-          ? "disputed"
-          : (order as any).seller_status?.toLowerCase() ||
-            (order.status?.toLowerCase() === "pending" ? "unprocessed" : order.status),
+      realStatus,
+      tableStatus,
+      status: tableStatus,
       country: order.shipping_address?.country || "N/A",
       accepted_quantity: order.accepted_quantity || 0,
       rejected_quantity: order.rejected_quantity || 0,
@@ -217,10 +86,27 @@ export default function AllOrderTable({
     externalFilter === "all"
       ? allRows
       : allRows.filter((row: any) => {
-          const status = row.status.toLowerCase();
-          const filter = externalFilter.toLowerCase();
-
-          return status === filter;
+          const filter = externalFilter.toLowerCase().trim();
+          if (filter === "all") return true;
+          if (filter === "unprocessed") {
+            return row.tableStatus.toLowerCase() === "unprocessed";
+          }
+          if (filter === "processing" || filter === "processed" || filter === "ongoing") {
+            return row.tableStatus.toLowerCase() === "ongoing";
+          }
+          if (filter === "delivered") {
+            return row.tableStatus.toLowerCase() === "delivered";
+          }
+          if (filter === "cancelled") {
+            return (
+              row.tableStatus.toLowerCase() === "cancelled" ||
+              row.tableStatus.toLowerCase() === "rejected"
+            );
+          }
+          return (
+            row.tableStatus.toLowerCase() === filter ||
+            row.realStatus.toLowerCase() === filter
+          );
         });
 
   // ✅ other filters
@@ -325,8 +211,8 @@ export default function AllOrderTable({
                   <span className="font-MontserratNormal text-[10px] text-000000/50 mt-1">{row.date}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className={`font-MontserratMedium text-[10px]  sm:text-c12 capitalize ${getStatusClass(row.status)}`}>
-                    {row.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : row.status}
+                  <div className={`font-MontserratMedium text-[10px] sm:text-c12 capitalize ${getStatusClass(row.tableStatus)}`}>
+                    {row.tableStatus}
                   </div>
                   <ChevronRight className="w-4 h-4 text-000000/50" />
                 </div>
@@ -337,7 +223,7 @@ export default function AllOrderTable({
                   <span className="text-00000 font-MontserratNormal">Items</span>
                   <div className="flex flex-col items-end">
                     <span className="font-MontserratSemiBold text-000000">{row.items}</span>
-                    {row.status.toLowerCase() === "partially_accepted" && (
+                    {row.realStatus.toLowerCase() === "partially accepted" && (
                       <span className="text-[10px] text-gray-400">
                         (Acc: {row.accepted_quantity}, Rej: {row.rejected_quantity})
                       </span>
@@ -354,9 +240,9 @@ export default function AllOrderTable({
                 </div>
                 <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
                   <span className="text-00000 font-MontserratNormal">Status</span>
-                  <div className={`font-MontserratSemiBold  flex items-center gap-2 text-sm capitalize `}>
-                    <div className={`rounded-full h-2 w-2 ${getStatusClassBar(row.status)}`}></div>
-                    {row.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : row.status}
+                  <div className={`font-MontserratSemiBold flex items-center gap-2 text-sm capitalize`}>
+                    <div className={`rounded-full h-2 w-2 ${getStatusClassBar(row.realStatus)}`}></div>
+                    {row.realStatus}
                   </div>
                 </div>
               </div>
@@ -460,7 +346,7 @@ export default function AllOrderTable({
                 <td className="px-3 max-w-[234px] truncate  " title={row.items}>
                   <div className="flex flex-col">
                     <span>{row.items}</span>
-                    {row.status.toLowerCase() === "partially_accepted" && (
+                    {row.realStatus.toLowerCase() === "partially accepted" && (
                       <span className="text-[10px] text-gray-400">
                         (Acc: {row.accepted_quantity}, Rej: {row.rejected_quantity})
                       </span>
@@ -471,8 +357,8 @@ export default function AllOrderTable({
                 <td className="px-3 max-w-[104px] truncate   hidden md:table-cell" title={row.countrys}>{row.country}</td>
                 <td className="px-3 max-w-[116px]" title={row.amount}>{row.amount}</td>
                 <td className="px-3 ">
-                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize max-w-[124px] truncate ${getStatusClass(row.status)}`} title={row.status}>
-                    {row.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : row.status}
+                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize max-w-[124px] truncate ${getStatusClass(row.tableStatus)}`} title={row.tableStatus}>
+                    {row.tableStatus}
                   </div>
                 </td>
                 <td className="px-3 text-center relative">

@@ -154,10 +154,11 @@ export function getOrderDisplayStatus(order: any): string {
     .toUpperCase()
     .trim();
 
+  const disputeObj = order.dispute || (Array.isArray(order.disputes) && order.disputes.length > 0 ? order.disputes[0] : null);
   const disputeStatus = (
     order.dispute_status ??
-    order.dispute?.status ??
-    order.dispute?.status_display ??
+    disputeObj?.status ??
+    disputeObj?.status_display ??
     ""
   )
     .toString()
@@ -170,7 +171,7 @@ export function getOrderDisplayStatus(order: any): string {
     value === true ||
     value === 1 ||
     value === "1" ||
-    (value !== null && typeof value === "object" && Object.keys(value).length > 0);
+    (value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length > 0 && Boolean(value.id || value.status));
   const hasItemDispute = Array.isArray(items)
     ? items.some(
         (item: any) =>
@@ -178,7 +179,15 @@ export function getOrderDisplayStatus(order: any): string {
       )
     : false;
 
+  const hasDisputeExplicit =
+    order.has_dispute === true ||
+    (Array.isArray(order.disputes) && order.disputes.length > 0) ||
+    hasDisputeFlag(order.dispute) ||
+    hasItemDispute ||
+    Boolean(order.dispute_status && order.dispute_status.toString().trim() !== "");
+
   const hasDispute =
+    hasDisputeExplicit ||
     rawStatus === "RETURN_REQUESTED" ||
     rawStatus === "RETURN_ACCEPTED" ||
     rawStatus === "DISPUTED" ||
@@ -186,33 +195,21 @@ export function getOrderDisplayStatus(order: any): string {
     rawStatus === "DISPUTE_RAISED" ||
     rawStatus === "DISPUTE_ONGOING" ||
     rawStatus === "DISPUTE_CLOSED" ||
-    rawStatus === "CLOSED" ||
-    hasDisputeFlag(order.has_dispute) ||
-    hasDisputeFlag(order.dispute) ||
-    hasItemDispute ||
-    disputeStatusUpper.includes("DISPUT") ||
-    disputeStatusUpper.includes("CLOSED") ||
     adminStatusUpper === "DISPUTE RAISED" ||
     adminStatusUpper === "DISPUTE PENDING" ||
     adminStatusUpper === "DISPUTE ONGOING" ||
     adminStatusUpper === "DISPUTE CLOSED" ||
-    adminStatusUpper.includes("ONGOING") ||
-    adminStatusUpper.includes("DISPUT") ||
-    adminStatusUpper.includes("CLOSED") ||
-    adminStatusUpper === "DISPUTED" ||
-    adminStatusUpper === "DISPUTE";
+    adminStatusUpper === "DISPUTED";
 
   const isDisputeClosed =
-    rawStatus === "CLOSED" ||
-    rawStatus === "DISPUTE_CLOSED" ||
-    disputeStatusUpper === "CLOSED" ||
-    disputeStatusUpper.includes("CLOSED") ||
-    adminStatusUpper === "DISPUTE CLOSED" ||
-    adminStatusUpper === "CLOSED" ||
-    adminStatusUpper.includes("CLOSED");
+    hasDispute &&
+    (rawStatus === "DISPUTE_CLOSED" ||
+      disputeStatusUpper === "CLOSED" ||
+      disputeStatusUpper.includes("CLOSED") ||
+      adminStatusUpper === "DISPUTE CLOSED");
 
   // ── Dispute Closed ────────────────────────────────────────────────────────
-  if (isDisputeClosed && (hasDispute || order.dispute || order.has_dispute || order.dispute_status)) {
+  if (isDisputeClosed) {
     return "Dispute closed";
   }
 
@@ -228,6 +225,16 @@ export function getOrderDisplayStatus(order: any): string {
       return "Dispute ongoing";
     }
     return "Dispute raised";
+  }
+
+  // If order is completed or paid out
+  if (
+    rawStatus === "COMPLETED" ||
+    rawStatus === "PAID" ||
+    adminStatusUpper === "COMPLETED" ||
+    (order.seller_status || "").toString().toUpperCase() === "PAID OUT"
+  ) {
+    return "Completed";
   }
 
   // If backend provided admin_status as Received by Buyer, or order status is DELIVERED

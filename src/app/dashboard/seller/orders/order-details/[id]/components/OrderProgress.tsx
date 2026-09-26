@@ -378,20 +378,44 @@ export const OrderProgress = ({
       }
     } else {
       let normalizedStatus: string;
-      if (sellerStatus === "processing") {
+      const raw = (getMappedStatus(order) || "").toLowerCase().trim();
+      if (sellerStatus === "processing" || raw === "processing") {
         normalizedStatus = "processing";
-      } else if (sellerStatus === "processed") {
+      } else if (
+        sellerStatus === "processed" ||
+        raw === "processed" ||
+        raw === "tracking submitted" ||
+        raw === "tracking_submitted" ||
+        raw === "partially accepted" ||
+        raw === "partially_accepted"
+      ) {
         normalizedStatus = "processed";
+      } else if (
+        raw === "in transit to hub" ||
+        raw === "in_transit_to_hub" ||
+        raw === "fulfilled" ||
+        raw === "received at hub" ||
+        raw === "received_at_hub"
+      ) {
+        normalizedStatus = "received at hub";
+      } else if (
+        raw === "shipped" ||
+        raw === "sent from hub" ||
+        raw === "sent_from_hub" ||
+        raw === "shipped to buyer" ||
+        raw === "shipped_to_buyer" ||
+        raw === "in transit" ||
+        raw === "in_transit"
+      ) {
+        normalizedStatus = "shipped";
+      } else if (raw === "delivered" || raw === "received by buyer" || raw === "received_by_buyer") {
+        normalizedStatus = "delivered";
       } else {
-        const raw = getMappedStatus(order)?.toLowerCase();
-        normalizedStatus =
-          raw === "tracking submitted" || raw === "partially accepted"
-            ? "processed"
-            : raw;
+        normalizedStatus = raw;
       }
 
       const foundIdx = baseSteps.findIndex(
-        (s) => s.label.toLowerCase() === normalizedStatus
+        (s) => s.label.toLowerCase() === normalizedStatus || s.key.toLowerCase() === normalizedStatus
       );
       currentStepIndex = foundIdx >= 0 ? foundIdx : 0;
     }

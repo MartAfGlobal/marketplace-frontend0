@@ -138,12 +138,23 @@ export const OrderActions = ({
 
         {(mappedStatus === "fulfilled" ||
           mappedStatus === "in_transit_to_hub") && (
-          <div className="w-full py-4 bg-000000/12 text-ffffff rounded-c8 flex items-center justify-center font-MontserratSemiBold text-sm">
+          <div className="w-full py-4 bg-[#0070E9]/12 text-[#0070E9] rounded-c8 flex items-center justify-center font-MontserratSemiBold text-sm">
             Order at warehouse
           </div>
         )}
       </div>
     );
+  }
+
+  const hasMobileActions =
+    isUnprocessed ||
+    isProcessingOrAccepted ||
+    isTrackingSubmitted ||
+    mappedStatus === "fulfilled" ||
+    mappedStatus === "in_transit_to_hub";
+
+  if (!hasMobileActions) {
+    return null;
   }
 
   // Mobile In-page Actions Card or Sticky View
@@ -186,7 +197,7 @@ export const OrderActions = ({
         )}
         {(mappedStatus === "fulfilled" ||
           mappedStatus === "in_transit_to_hub") && (
-          <div className="w-full py-3 bg-000000/12 text-ffffff rounded-xl flex items-center justify-center font-MontserratSemiBold text-sm">
+          <div className="w-full py-3 bg-[#0070E9]/12 text-[#0070E9] rounded-xl flex items-center justify-center font-MontserratSemiBold text-sm">
             Order at warehouse
           </div>
         )}

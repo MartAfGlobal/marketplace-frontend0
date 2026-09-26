@@ -10,6 +10,11 @@ import { useRouter } from "next/navigation";
 import EyeIcon from "@/assets/icons/eye.png";
 import downloadIcon from "@/assets/Seller/colourDownload.svg";
 import { useState } from "react";
+import {
+  getSellerDetailedStatus,
+  getSellerTableStatus,
+  getSellerStatusClass as getStatusClass,
+} from "@/helpers/sellers/sellerOrderStatusHelper";
 
 export type InventoryTableProps = {
   currentPage: number;
@@ -61,8 +66,9 @@ export default function OrderTable({
     router.push(`/dashboard/seller/orders/order-details/${orderId}`);
   };
 
-  
   const allRows = ordersFromStore.map((order: any) => {
+    const realStatus = getSellerDetailedStatus(order);
+    const tableStatus = getSellerTableStatus(order);
     return {
       id: order.order_no || order.id,
       orderId: order.id,
@@ -70,8 +76,9 @@ export default function OrderTable({
         ? "Multiple items" 
         : (order.items?.[0]?.product_name || "N/A"),
       date: order.created_at ? new Date(order.created_at).toLocaleDateString() : "N/A",
-      status: (order as any).order_timeline_stage?.toLowerCase() || 
-              (order.status?.toLowerCase() === "pending" ? "unprocessed" : order.status),
+      realStatus,
+      tableStatus,
+      status: tableStatus,
       payment: order.payout_status || "N/A",
       country: order.shipping_address?.country || "N/A",
       accepted_quantity: order.accepted_quantity || 0,
@@ -119,55 +126,6 @@ export default function OrderTable({
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);
 
-  // ✅ Status color helper
-  const getStatusClass = (status: string) => {
-    const s = (status || "").toLowerCase().trim();
-    switch (s) {
-      case "dispute closed":
-      case "closed":
-        return "text-[#6A0DAD] bg-[#6A0DAD]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      case "disputed":
-      case "dispute raised":
-      case "dispute ongoing":
-        return "text-[#E8334A] bg-[#E8334A]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      case "unprocessed":
-      case "pending":
-      case "awaiting acceptance":
-      case "awaiting_acceptance":
-        return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      case "processed":
-      case "processing":
-      case "accepted":
-        return "text-[#FFAC06] bg-[#FFAC06]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      case "partially_accepted":
-      case "partially accepted":
-      case "partial accept":
-        return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      case "tracking_submitted":
-      case "tracking submitted":
-      case "fulfilled":
-      case "in_transit_to_hub":
-        return "text-[#0070E9] bg-[#0070E9]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      case "shipped":
-      case "sent from hub":
-      case "in transit":
-        return "text-[#FF715B] bg-[#FF715B]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      case "delivered":
-      case "received by buyer":
-      case "completed":
-      case "paid":
-        return "text-[#2D7565] bg-[#2D7565]/20 px-3 py-1 rounded-full w-fit mx-auto";
-      case "returned":
-      case "refunded":
-      case "cancelled":
-      case "rejected":
-      case "failed":
-        return "text-[#CA0202] bg-[#CA0202]/10 px-3 py-1 rounded-full w-fit mx-auto";
-      default:
-        return "text-gray-500 bg-gray-100 px-3 py-1 rounded-full w-fit mx-auto";
-    }
-  };
-
   return (
     <div className="mt-c32 w-full  text-wrap">
       <table className="w-full border-collapse">
@@ -196,7 +154,7 @@ export default function OrderTable({
                   <div className="w-full h-full  flex items-center gap-2">
                     <div className="flex flex-col">
                       <span>{order.product}</span>
-                      {order.status.toLowerCase() === "partially_accepted" && (
+                      {order.realStatus.toLowerCase() === "partially accepted" && (
                         <span className="text-[10px] text-gray-400">
                           (Acc: {order.accepted_quantity}, Rej: {order.rejected_quantity})
                         </span>
@@ -213,8 +171,8 @@ export default function OrderTable({
                   </div>
                 </td>
                 <td className="px-4">
-                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize ${getStatusClass(order.status)}`}>
-                    {order.status.toLowerCase() === "partially_accepted" ? "Partial Accept" : order.status}
+                  <div className={`font-MontserratSemiBold text-[10px] sm:text-c12 capitalize ${getStatusClass(order.tableStatus)}`}>
+                    {order.tableStatus}
                   </div>
                 </td>
                 <td className="px-4">

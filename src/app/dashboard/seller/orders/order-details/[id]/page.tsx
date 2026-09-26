@@ -23,6 +23,10 @@ import { SellerMobileHeader } from "@/components/ui/seller-components/header-com
 import downloadIcon from "@/assets/Seller/colourDownload.svg";
 import Image from "next/image";
 import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
+import {
+  getSellerDetailedStatus,
+  getSellerStatusBadgeClass,
+} from "@/helpers/sellers/sellerOrderStatusHelper";
 import { useOrderRefresh } from "@/hooks/useOrderRefresh";
 
 export default function OrderDetailsPage() {
@@ -76,19 +80,26 @@ export default function OrderDetailsPage() {
 
   useEffect(() => {
     if (!order) return;
-    const lowerStatus = order.status?.toLowerCase();
+    const detailed = getSellerDetailedStatus(order).toLowerCase();
+    const lowerStatus = (order.status || "").toLowerCase().trim();
     if (
-      (lowerStatus === "pending" || lowerStatus === "unprocessed") &&
+      (detailed === "unprocessed" || lowerStatus === "pending" || lowerStatus === "unprocessed") &&
       order.time_remaining_to_accept
     ) {
       setTimeLeft(order.time_remaining_to_accept);
     } else if (
-      (lowerStatus === "accepted" ||
+      (detailed === "processing" ||
+        detailed === "processed" ||
+        detailed === "partially accepted" ||
+        lowerStatus === "accepted" ||
         lowerStatus === "processed" ||
         lowerStatus === "partially_accepted") &&
+      detailed !== "tracking submitted" &&
       order.time_remaining_to_fulfill
     ) {
       setTimeLeft(order.time_remaining_to_fulfill);
+    } else {
+      setTimeLeft(0);
     }
   }, [order]);
 
@@ -293,82 +304,37 @@ export default function OrderDetailsPage() {
   }
 
   const getStatusBadgeClass = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "dispute closed":
-      case "closed":
-        return "bg-[#6A0DAD1A] text-[#6A0DAD]";
-      case "disputed":
-      case "dispute raised":
-      case "dispute ongoing":
-        return "bg-[#E8334A1A] text-[#E8334A]";
-      case "unprocessed":
-      case "pending":
-        return "bg-[#FFAC061A] text-[#FFAC06]";
-      case "processed":
-      case "processing":
-      case "accepted":
-        return "bg-[#FFAC061A] text-[#FFAC06]";
-      case "tracking_submitted":
-      case "tracking submitted":
-        return "bg-[#0070E9] text-[#0070E9]";
-      case "fulfilled":
-        return "bg-[#0070E9] text-[#0070E9]";
-      case "shipped":
-        return "bg-[#FF715B1A] text-[#FF715B]";
-      case "delivered":
-        return "bg-[#2D75651A] text-[#2D7565]";
-      case "partially_accepted":
-      case "partially accepted":
-        return "bg-[#0070E9] text-[#0070E9]";
-      case "rejected":
-      case "cancelled":
-        return "bg-[#CA02021A] text-[#CA0202]";
-      default:
-        return "bg-gray-100 text-gray-500";
-    }
+    return getSellerStatusBadgeClass(status);
   };
 
   const getMappedStatus = (ord: any) => {
-    const displayStatus = getOrderDisplayStatus(ord);
-    if (
-      displayStatus === "Dispute closed" ||
-      displayStatus === "Dispute raised" ||
-      displayStatus === "Dispute ongoing"
-    ) {
-      return displayStatus.toLowerCase();
-    }
-
-    const stage = ord?.seller_status?.toLowerCase();
-    if (stage) {
-      if (stage === "pending") return "unprocessed";
-      if (stage === "accepted" || stage === "processed") {
-        // Use seller_status to distinguish Processing vs Processed
-        const sellerStatus = ord?.seller_status?.toLowerCase();
-        if (sellerStatus === "processing") return "processing";
-        return "processed";
-      }
-      if (stage === "partially_accepted") return "partially accepted";
-      if (stage === "tracking_submitted") return "tracking submitted";
-      if (stage === "in_transit_to_hub" || stage === "fulfilled")
-        return "fulfilled";
-      return stage;
-    }
-    const status = ord?.status;
-    if (!status) return "unprocessed";
-    const lowerStatus = status.toLowerCase();
-    if (lowerStatus === "pending") return "unprocessed";
-    if (lowerStatus === "accepted" || lowerStatus === "processed") {
-      // Use seller_status to distinguish Processing vs Processed
-      const sellerStatus = ord?.seller_status?.toLowerCase();
-      if (sellerStatus === "processing") return "processing";
-      return "processed";
-    }
-    if (lowerStatus === "partially_accepted") return "partially accepted";
-    if (lowerStatus === "tracking_submitted") return "tracking submitted";
-    if (lowerStatus === "in_transit_to_hub" || lowerStatus === "fulfilled")
-      return "fulfilled";
-    return lowerStatus;
+    return getSellerDetailedStatus(ord);
   };
+
+  const detailedStatus = getMappedStatus(order);
+  const rawStatus = (order?.status || "").toLowerCase().trim();
+  const timelineStage = (order?.order_timeline_stage || "").toLowerCase().trim();
+  const isTrackingSubmitted =
+    String(order?.status ?? "").trim().toUpperCase() === "TRACKING_SUBMITTED" ||
+    detailedStatus.toLowerCase() === "tracking submitted";
+
+  const isUnprocessed =
+    detailedStatus.toLowerCase() === "unprocessed" ||
+    rawStatus === "pending" ||
+    rawStatus === "unprocessed" ||
+    timelineStage === "pending";
+
+  const isProcessingOrAccepted =
+    (detailedStatus.toLowerCase() === "processing" ||
+      detailedStatus.toLowerCase() === "processed" ||
+      detailedStatus.toLowerCase() === "partially accepted" ||
+      rawStatus === "accepted" ||
+      rawStatus === "processed" ||
+      rawStatus === "processing" ||
+      rawStatus === "partially_accepted") &&
+    !isTrackingSubmitted;
+
+  const showCountdown = isUnprocessed || isProcessingOrAccepted;
 
   return (
     <div className="w-full lg:rounded-c16 mx-auto lg:p-8 lg:space-y-8 lg:bg-white min-h-screen  lg:py-4 space-y-6">
@@ -397,20 +363,21 @@ export default function OrderDetailsPage() {
       >
         {/* Mobile Layout (lg:hidden) */}
         <div className="lg:hidden flex flex-col gap-6">
-          {/* Time Left */}
-          <div className="w-full flex justify-between items-center mb-2">
-            <p className="font-MontserratSemiBold text-sm text-[#161616]">
-              {getMappedStatus(order) === "unprocessed" ||
-              (order?.status ?? "").toLowerCase() === "pending"
-                ? "Time left for accepting order:"
-                : "Time left to fulfill order:"}
-            </p>
-            <span
-              className={`font-MontserratSemiBold text-sm px-3 py-1 rounded-md ${timeLeft > 0 ? "bg-[#2D75651A] text-2d7565" : "bg-red-50 text-ca0202"}`}
-            >
-              {formatTime(timeLeft)}
-            </span>
-          </div>
+          {/* Time Left - Only show when order is awaiting acceptance or awaiting fulfillment/tracking */}
+          {showCountdown && (
+            <div className="w-full flex justify-between items-center mb-2">
+              <p className="font-MontserratSemiBold text-sm text-[#161616]">
+                {isUnprocessed
+                  ? "Time left for accepting order:"
+                  : "Time left to fulfill order:"}
+              </p>
+              <span
+                className={`font-MontserratSemiBold text-sm px-3 py-1 rounded-md ${timeLeft > 0 ? "bg-[#2D75651A] text-2d7565" : "bg-red-50 text-ca0202"}`}
+              >
+                {formatTime(timeLeft)}
+              </span>
+            </div>
+          )}
 
           <OrderProgress order={order} getMappedStatus={getMappedStatus} />
 
