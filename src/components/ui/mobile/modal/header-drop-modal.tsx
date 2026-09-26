@@ -313,7 +313,7 @@ export default function DropdownModal({
                               <span className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full justify-center flex items-center overflow-hidden">
                                   <Image
-                                    src={cat.image || Car}
+                                    src={cat.image_url?.thumbnail || Car}
                                     alt={cat.name}
                                     width={32}
                                     height={32}

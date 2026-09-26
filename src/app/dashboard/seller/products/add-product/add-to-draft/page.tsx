@@ -73,7 +73,9 @@ export default function AddToDraftPage() {
   const isNextEnabled =
     productName && category && subCategory && hasImage && description;
 
-  const isSaveEnabled = !!productName;
+  const isSaveEnabled =
+    productName.trim().length > 0 &&
+    (basePrice === undefined || basePrice === "" || Number(basePrice) > 0);
 
   const handleImageChange = (file: File, index: number) => {
     const newImages = [...images];

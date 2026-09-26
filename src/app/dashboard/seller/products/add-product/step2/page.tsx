@@ -60,7 +60,7 @@ export default function AddProductStep1Page() {
       name: "",
       attributesValues: {},
       price: undefined,
-      stock: 0,
+      stock: undefined,
       images: [null, null, null, null],
     },
   ]);
@@ -110,14 +110,21 @@ export default function AddProductStep1Page() {
   };
 
   const handleAddVariant = () => {
+    const initialValues: Record<string, string> = {};
+    if (step1Data?.step1.attributes?.length) {
+      step1Data.step1.attributes.forEach((attr) => {
+        initialValues[attr.attribute_slug] = "";
+      });
+    }
+
     setVariants((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
         name: "",
-        attributesValues: {},
+        attributesValues: initialValues,
         price: undefined,
-        stock: 0,
+        stock: undefined,
         images: [null, null, null, null],
       },
     ]);
@@ -138,10 +145,32 @@ export default function AddProductStep1Page() {
     );
   };
 
-  const isVariantValid = (v: VariantForm) =>
-    Object.values(v.attributesValues).every(
-      (val) => val && val.trim() !== "",
-    ) && v.images.some((img) => img !== null);
+  const isVariantValid = (v: VariantForm) => {
+    const hasImage = v.images.some((img) => img !== null);
+
+    const requiredAttributes = step1Data.step1.attributes || [];
+    const areAttributesFilled =
+      requiredAttributes.length > 0
+        ? requiredAttributes.every((attr) => {
+            const val = v.attributesValues[attr.attribute_slug];
+            return val && val.trim() !== "";
+          })
+        : true;
+
+    const hasPrice =
+      v.price !== undefined &&
+      v.price !== "" &&
+      !isNaN(Number(v.price)) &&
+      Number(v.price) > 0;
+
+    const hasStock =
+      v.stock !== undefined &&
+      v.stock !== "" &&
+      !isNaN(Number(v.stock)) &&
+      Number(v.stock) > 0;
+
+    return hasImage && areAttributesFilled && hasPrice && hasStock;
+  };
 
   const areAllVariantsValid =
     variants.length > 0 && variants.every(isVariantValid);
@@ -385,6 +414,7 @@ export default function AddProductStep1Page() {
                 <Input
                   type="text"
                   inputMode="decimal"
+                  placeholder="Variant price"
                   className=""
                   value={variant.price ?? ""}
                   onChange={(e) =>
@@ -397,12 +427,18 @@ export default function AddProductStep1Page() {
                     )
                   }
                 />
+                {variant.price !== undefined && variant.price !== "" && Number(variant.price) <= 0 && (
+                  <p className="text-xs text-red-500 mt-1 font-MontserratNormal">
+                    Price must be greater than zero
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Quantity</Label>
                 <Input
                   type="text"
                   inputMode="numeric"
+                  placeholder="Variant quantity"
                   className=""
                   value={variant.stock ?? ""}
                   onChange={(e) =>
@@ -415,6 +451,11 @@ export default function AddProductStep1Page() {
                     )
                   }
                 />
+                {variant.stock !== undefined && variant.stock !== "" && Number(variant.stock) <= 0 && (
+                  <p className="text-xs text-red-500 mt-1 font-MontserratNormal">
+                    Quantity must be greater than zero
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -434,7 +475,7 @@ export default function AddProductStep1Page() {
             disabled={savingDraft}
             onClick={handleSaveDraft}
             variant="secondary"
-            className="max-w-32.5"
+            className="max-w-32.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {savingDraft ? (
               <LoadingSpinner color="border-ff715b" />
@@ -446,7 +487,7 @@ export default function AddProductStep1Page() {
             disabled={!areAllVariantsValid || nexting}
             type="button"
             onClick={handleNext}
-            className="max-w-32.5"
+            className="max-w-32.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {nexting ? <LoadingSpinner /> : "Next"}
           </Button>

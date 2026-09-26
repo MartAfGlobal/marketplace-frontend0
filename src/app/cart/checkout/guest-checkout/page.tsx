@@ -65,7 +65,7 @@ export default function AddNewAddreess() {
   );
 
   useEffect(() => {
-    console.log("Selected Items in Guest:", selectedItems);
+
   }, [selectedItems]);
   const [formData, setFormData] = useState<GuestCheckoutAddress>({
     shipping_location_id: currentAddress?.shipping_location_id || "",

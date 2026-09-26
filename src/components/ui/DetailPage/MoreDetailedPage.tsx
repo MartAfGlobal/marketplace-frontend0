@@ -101,14 +101,7 @@ export default function MoreDetailedPage({ProductDetail}:ProductProps) {
               "New range of formal shirts are designed keeping you in mind. With fits and styling that will make you stand apart."}
           </p>
 
-          <div className="w-full flex items-center justify-center py-8">
-            <Image
-              src={ShoeSketch}
-              alt="product sketch"
-              width={382}
-              height={495}
-            />
-          </div>
+          
         </div>
       </section>
 

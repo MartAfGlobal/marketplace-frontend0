@@ -174,7 +174,7 @@ export default function MobileCategory() {
                     <div className="flex flex-col  items-center">
                       <div className=" w-[78.75px] h-[78.75px] rounded-full bg-e9eafd flex justify-center items-center">
                         <Image
-                          src={cat.image || Electricity}
+                          src={cat.image_url?.thumbnail || Electricity}
                           alt={cat.name}
                           width={56.25}
                           height={56.25}
@@ -207,7 +207,7 @@ export default function MobileCategory() {
                     whileHover={{ scale: 1.05 }}
                   >
                     <Image
-                      src={cat.image || Electricity}
+                      src={cat.image_url?.thumbnail || Electricity}
                       alt={cat.name}
                       fill
                       className="object-cover"

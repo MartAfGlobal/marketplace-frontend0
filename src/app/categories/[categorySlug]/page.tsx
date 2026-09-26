@@ -37,6 +37,10 @@ export default function CategoryPage() {
   const category = categoryProducts.find(
     (p) => p.category?.slug === categorySlug
   )?.category;
+  const categoryImageUrl = category?.image?.thumbnail?? "";
+
+  
+  console.log ("let us see the category", category)
 
   const isLoading = pendingRequests > 0;
 
@@ -52,8 +56,10 @@ export default function CategoryPage() {
     if (!categorySlug) return;
 
     const handleCategoryProducts = async (res: any) => {
+      console.log ("lestsss", res)
       try {
         const products = res?.data?.results ?? [];
+        
         dispatch(setCategoryProducts(products));
       } catch (err) {
         console.error(err);
@@ -121,7 +127,7 @@ export default function CategoryPage() {
       <div
         className="md:h-70 h-22  flex items-center justify-center text-white text-3xl font-bold  md:rounded-c30 bg-center bg-cover relative"
         style={{
-          backgroundImage: `url(${category?.image || ""})`,
+          backgroundImage: categoryImageUrl ? `url("${categoryImageUrl}")` : "none",
         }}
       >
         <div className="absolute inset-0 bg-black/40 md:rounded-c30" />

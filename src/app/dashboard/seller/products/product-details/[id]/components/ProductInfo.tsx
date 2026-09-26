@@ -107,18 +107,18 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
           <p className="text-c24 font-MontserratSemiBold">N{productDetails?.base_price?.toLocaleString()}</p>
         </div>
 
-        <div className="mt-6 flex gap-8">
-          <div className="space-y-2">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4 min-w-0">
+          <div className="min-w-0 space-y-2">
             <h1 className="text-[12px] font-MontserratNormal text-000000">Category</h1>
-            <p className="text-base font-MontserratMedium">{productDetails?.category?.name || "N/A"}</p>
+            <p className="text-base font-MontserratMedium break-words">{productDetails?.category?.name || "N/A"}</p>
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <h1 className="text-[12px] font-MontserratNormal text-000000">Subcategory</h1>
-            <p className="text-base font-MontserratMedium">{productDetails?.category?.subcategory?.name || "N/A"}</p>
+            <p className="text-base font-MontserratMedium break-words">{productDetails?.category?.subcategory?.name || "N/A"}</p>
           </div>
-          <div className="space-y-2">
+          <div className="min-w-0 space-y-2">
             <h1 className="text-[12px] font-MontserratNormal text-000000">Stock Code</h1>
-            <p className="text-base font-MontserratMedium">{productDetails?.stockcode || "N/A"}</p>
+            <p className="text-base font-MontserratMedium break-words">{productDetails?.stockcode || "N/A"}</p>
           </div>
         </div>
 

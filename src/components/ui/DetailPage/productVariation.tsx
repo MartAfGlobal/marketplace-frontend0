@@ -78,12 +78,26 @@ export default function ProductVariation({
   );
 const variationSectionRef = useRef<HTMLDivElement | null>(null);
 
+console.log("available variation", productDetails)
+
   const detailsContainerRef = useRef<HTMLDivElement | null>(null);
   const attributePanelRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedVariation, setSelectedVariation] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const images = productDetails?.images || [];
+  const productImages = productDetails?.images || [];
+  const variationImages = selectedVariation?.images?.length
+    ? selectedVariation.images
+    : selectedVariation?.main_image_url
+    ? [selectedVariation.main_image_url]
+    : [];
+  const images = variationImages.length > 0 ? variationImages : productImages;
+  const firstImage = images[0];
+  const firstImageId = firstImage
+    ? typeof firstImage === "object"
+      ? firstImage.id || firstImage.url || firstImage.large || firstImage.medium || firstImage.thumbnail || null
+      : firstImage
+    : null;
 
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
@@ -198,11 +212,9 @@ const dispatch = useDispatch() as AppDispatch;
 
   /* ---------------- DEFAULT IMAGE ---------------- */
   useEffect(() => {
-    if (images.length) {
-      setSelectedImageId(images[0].id);
-      setActiveSlide(0);
-    }
-  }, [images]);
+    setSelectedImageId(firstImageId);
+    setActiveSlide(0);
+  }, [firstImageId]);
 
   useEffect(() => {
     if (openAttribute) scrollToPanel();
@@ -246,7 +258,7 @@ const dispatch = useDispatch() as AppDispatch;
 
   /* ---------------- AVAILABLE VALUES ---------------- */
   const getAvailableValues = (attributeName: string) => {
-    if (!productDetails?.variations) return [];
+    if (!productDetails?.variations?.length) return [];
 
     return productDetails.variations
       .filter((v) =>
@@ -257,6 +269,39 @@ const dispatch = useDispatch() as AppDispatch;
       )
       .map((v) => v.attribute_summary[attributeName])
       .filter((v, i, a) => a.indexOf(v) === i);
+  };
+
+  const handleSelectAttribute = (attributeName: string, value: string) => {
+    const variations = productDetails?.variations ?? [];
+
+    if (variations.length === 0) {
+      setSelectedAttributes((previous) => ({ ...previous, [attributeName]: value }));
+      return;
+    }
+
+    setSelectedAttributes((previous) => {
+      let compatibleVariations = variations.filter(
+        (variation) => variation.attribute_summary?.[attributeName] === value
+      );
+      const nextAttributes: Record<string, string> = {
+        [attributeName]: value,
+      };
+
+      Object.entries(previous).forEach(([attribute, selectedValue]) => {
+        if (attribute === attributeName || !selectedValue) return;
+
+        const matchingVariations = compatibleVariations.filter(
+          (variation) => variation.attribute_summary?.[attribute] === selectedValue
+        );
+
+        if (matchingVariations.length > 0) {
+          nextAttributes[attribute] = selectedValue;
+          compatibleVariations = matchingVariations;
+        }
+      });
+
+      return nextAttributes;
+    });
   };
 
   /* ---------------- ADD TO CART HANDLER ---------------- */
@@ -315,12 +360,15 @@ const dispatch = useDispatch() as AppDispatch;
       ? getImageUrl(productDetails.images[0])
       : "");
 
-  const selectedImage = images.find(
-    (img: any) =>
-      (typeof img === "object" ? img?.id === selectedImageId : img === selectedImageId)
-  );
+  const selectedImage = images.find((img: any) => {
+    const imageId = typeof img === "object" ? img?.id || getImageUrl(img) : img;
+    return imageId === selectedImageId;
+  });
 
-  const mainImageSrc = getImageUrl(selectedImage) || productImageSource;
+  const variationMainImage =
+    selectedVariation?.main_image_url ||
+    (selectedVariation?.images?.length ? getImageUrl(selectedVariation.images[0]) : "");
+  const mainImageSrc = getImageUrl(selectedImage) || variationMainImage || productImageSource;
 
   return (
     <div
@@ -356,7 +404,7 @@ const dispatch = useDispatch() as AppDispatch;
             ) : images.length > 0 && (
               <div className="flex gap-2 mt-4">
                 {images.map((img: any, i: number) => {
-                  const imgId = typeof img === "object" ? img?.id : img;
+                  const imgId = typeof img === "object" ? img?.id || getImageUrl(img) : img;
                   return (
                     <button
                       key={imgId || i}
@@ -385,7 +433,7 @@ const dispatch = useDispatch() as AppDispatch;
             ) : images.length > 1 && (
               <div className="flex gap-4 mt-6 mb-4 h-19  w-full overflow-x-auto  hcustom-scroll">
                 {images.map((thumb: any, index: number) => {
-                  const thumbId = typeof thumb === "object" ? thumb?.id : thumb;
+                  const thumbId = typeof thumb === "object" ? thumb?.id || getImageUrl(thumb) : thumb;
                   const thumbSrc = getThumbUrl(thumb);
                   return (
                     <button
@@ -522,12 +570,16 @@ const dispatch = useDispatch() as AppDispatch;
                         name?.toLowerCase().includes("color") ||
                         name?.toLowerCase().includes("colour");
 
-                      const values: string[] =
-                        variation.values && variation.values.length > 0
-                          ? variation.values.map((v: any) =>
-                              typeof v === "string" ? v : v.value
-                            )
-                          : getAvailableValues(name);
+                      const optionValues: string[] =
+                        variation.values?.map((v: any) =>
+                          typeof v === "string" ? v : v.value
+                        ) ?? [];
+                      const compatibleValues = getAvailableValues(name);
+                      const values = optionValues.length > 0
+                        ? productDetails.variations?.length
+                          ? optionValues.filter((value) => compatibleValues.includes(value))
+                          : optionValues
+                        : compatibleValues;
 
                       if (isSize) {
                         return (
@@ -559,12 +611,7 @@ const dispatch = useDispatch() as AppDispatch;
                                   <button
                                     key={val}
                                     type="button"
-                                    onClick={() =>
-                                      setSelectedAttributes((prev) => ({
-                                        ...prev,
-                                        [name]: val,
-                                      }))
-                                    }
+                                    onClick={() => handleSelectAttribute(name, val)}
                                     className={`w-c44 h-c47 border rounded-lg flex items-center justify-center text-sm font-MontserratSemiBold transition-colors ${
                                       isSelected
                                         ? "border-ff715b text-161616 shadow-xs"
@@ -605,12 +652,7 @@ const dispatch = useDispatch() as AppDispatch;
                                   <button
                                     key={val}
                                     type="button"
-                                    onClick={() =>
-                                      setSelectedAttributes((prev) => ({
-                                        ...prev,
-                                        [name]: val,
-                                      }))
-                                    }
+                                    onClick={() => handleSelectAttribute(name, val)}
                                     className={`flex flex-col items-center justify-between w-c48 min-h-c48 px-1 pt-1 transition-all rounded-none cursor-pointer focus:outline-none ${
                                       isSelected
                                         ? "border border-ff715b"
@@ -647,12 +689,7 @@ const dispatch = useDispatch() as AppDispatch;
                                 <button
                                   key={val}
                                   type="button"
-                                  onClick={() =>
-                                    setSelectedAttributes((prev) => ({
-                                      ...prev,
-                                      [name]: val,
-                                    }))
-                                  }
+                                  onClick={() => handleSelectAttribute(name, val)}
                                   className={`h-10 px-3.5 border rounded-lg flex items-center justify-center text-sm font-MontserratMedium transition-colors ${
                                     isSelected
                                       ? "border-ff715b text-161616 bg-ff715b/5 font-MontserratSemiBold"

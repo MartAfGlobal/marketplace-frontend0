@@ -220,7 +220,7 @@ export default function CategoriesGrid({
               return (
                 <CategoryButton
                   key={cat.id}
-                  iconSrc={cat.image || ""}
+                  iconSrc={cat.image_url.thumbnail|| ""}
                   label={normalizedName}
                   isSelected={selectedCategory?.id === cat.id}
                   onClick={() => handleCategoryClick(cat)}

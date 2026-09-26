@@ -77,12 +77,42 @@ export default function UpdateProductPage() {
     Record<string, string>
   >({});
 
+  const hasValidName = productName.trim().length > 0;
+  const hasValidPrice =
+    basePrice !== undefined &&
+    basePrice !== "" &&
+    !isNaN(Number(basePrice)) &&
+    Number(basePrice) > 0;
+  const hasValidDescription =
+    description.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim().length > 0;
+  const hasValidSpecifications =
+    specificationsText.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim().length > 0;
+
+  const areVariantsValid =
+    variants.length > 0 &&
+    variants.every((v) => {
+      const vPrice = v.price ?? basePrice;
+      const vStock = v.stock;
+      const hasVPrice = vPrice !== undefined && vPrice !== "" && Number(vPrice) > 0;
+      const hasVStock = vStock !== undefined && vStock !== "" && Number(vStock) > 0;
+      return hasVPrice && hasVStock;
+    });
+
   const hasImage = images.some((img) => img !== null);
 
   const isNextEnabled =
-    productName && category && subCategory && hasImage && description;
+    hasValidName &&
+    Boolean(category?.id) &&
+    Boolean(subCategory?.id) &&
+    hasImage &&
+    hasValidDescription &&
+    hasValidPrice &&
+    hasValidSpecifications &&
+    areVariantsValid;
 
-  const isSaveEnabled = !!productName;
+  const isSaveEnabled =
+    hasValidName &&
+    (basePrice === undefined || basePrice === "" || Number(basePrice) > 0);
 
   const handleImageChange = (file: File, index: number) => {
     const newImages = [...images];
@@ -521,10 +551,27 @@ export default function UpdateProductPage() {
       return false;
     }
 
+    if (basePrice !== undefined && basePrice !== "" && Number(basePrice) <= 0) {
+      setErrorMessage("Base price must be greater than zero.");
+      setShowErrorModal(true);
+      return false;
+    }
+
     const hasAttributesRequired =
       step1Data.step1.attributes && step1Data.step1.attributes.length > 0;
 
     for (const v of variants) {
+      if (v.price !== undefined && v.price !== "" && Number(v.price) <= 0) {
+        setErrorMessage("Variant price must be greater than zero.");
+        setShowErrorModal(true);
+        return false;
+      }
+      if (v.stock !== undefined && v.stock !== "" && Number(v.stock) <= 0) {
+        setErrorMessage("Variant quantity must be greater than zero.");
+        setShowErrorModal(true);
+        return false;
+      }
+
       // API variants are already valid on the server
       if (v.isApiVariant) continue;
 
@@ -937,9 +984,9 @@ export default function UpdateProductPage() {
           <div className="mt-c48 flex justify-end gap-6 items-center">
             <Button
               type="button"
-              disabled={loading || updating || fetchingDraftDetails}
+              disabled={loading || updating || fetchingDraftDetails || !isNextEnabled}
               onClick={handleUpdateLiveProduct}
-              className="max-w-fit"
+              className="max-w-fit disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {updating ? <LoadingSpinner color="border-white" /> : "Update Product"}
             </Button>
@@ -949,11 +996,11 @@ export default function UpdateProductPage() {
             <Button
               type="button"
               disabled={
-                loading || updating || fetchingDraftDetails || savingDraft
+                loading || updating || fetchingDraftDetails || savingDraft || !isSaveEnabled
               }
               onClick={handleSaveDraft}
               variant="secondary"
-              className="max-w-32.5"
+              className="max-w-32.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {savingDraft ? (
                 <LoadingSpinner color="border-ff715b" />
@@ -964,11 +1011,11 @@ export default function UpdateProductPage() {
 
             <Button
               disabled={
-                loading || updating || fetchingDraftDetails || savingDraft || fetchingNextDraftDetails
+                loading || updating || fetchingDraftDetails || savingDraft || fetchingNextDraftDetails || !isNextEnabled
               }
               type="button"
               onClick={handleNext}
-              className="max-w-fit"
+              className="max-w-fit disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {updating || fetchingNextDraftDetails ? <LoadingSpinner color="border-white" /> : "Next"}
             </Button>

@@ -276,12 +276,18 @@ interface AboutHeroProps {
 }
 export interface Category {
   id: string;
-  image: string | null;
+  image:  catImage| null;
   name: string;
+  image_url:catImage
   slug: string;
   parent_name: string;
   subcategory: subcategory;
   children: subcategory[];
+}
+export interface catImage {
+  large: string
+  medium: string
+  thumbnail: string
 }
 
 export interface subcategory {

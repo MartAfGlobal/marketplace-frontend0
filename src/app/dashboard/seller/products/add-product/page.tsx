@@ -54,11 +54,26 @@ export default function AddProductStep1Page() {
   const [showDraftSuccess, setShowDraftSuccess] = useState(false);
 
   const hasAllImages = images.every((img) => img !== null);
+  const hasValidName = productName.trim().length > 0;
+  const hasValidPrice =
+    basePrice !== undefined &&
+    basePrice !== "" &&
+    !isNaN(Number(basePrice)) &&
+    Number(basePrice) > 0;
+  const hasValidDescription =
+    description.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim().length > 0;
 
   const isNextEnabled =
-    productName && category && subCategory && hasAllImages && description && !!basePrice;
+    hasValidName &&
+    Boolean(category?.id) &&
+    Boolean(subCategory?.id) &&
+    hasAllImages &&
+    hasValidDescription &&
+    hasValidPrice;
 
-  const isSaveEnabled = !!productName && !!basePrice;
+  const isSaveEnabled =
+    hasValidName &&
+    (basePrice === undefined || basePrice === "" || Number(basePrice) > 0);
 
   const handleImageChange = (file: File, index: number) => {
     const newImages = [...images];
@@ -369,6 +384,11 @@ export default function AddProductStep1Page() {
                   value={basePrice ?? ""}
                   onChange={(e) => setBasePrice(e.target.value.replace(/[^0-9.]/g, ''))}
                 />
+                {basePrice !== undefined && basePrice !== "" && Number(basePrice) <= 0 && (
+                  <p className="text-xs text-red-500 mt-1 font-MontserratNormal">
+                    Price must be greater than zero
+                  </p>
+                )}
               </div>
             </div>
 
@@ -421,7 +441,7 @@ export default function AddProductStep1Page() {
             disabled={loading || updating || fetchingDraftDetails || savingDraft || !isSaveEnabled}
             onClick={handleSaveDraft}
             variant="secondary"
-            className="max-w-32.5"
+            className="max-w-32.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {savingDraft ? (
               <LoadingSpinner color="border-ff715b" />
@@ -434,7 +454,7 @@ export default function AddProductStep1Page() {
             disabled={loading || updating || fetchingDraftDetails || savingDraft || !isNextEnabled}
             type="button"
             onClick={handleNext}
-            className="max-w-32.5"
+            className="max-w-32.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updating || fetchingDraftDetails ? <LoadingSpinner /> : "Next"}
           </Button>

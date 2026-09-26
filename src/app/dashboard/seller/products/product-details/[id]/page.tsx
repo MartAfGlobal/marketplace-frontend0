@@ -203,14 +203,34 @@ export default function SellerProductDetailsPage() {
     if (!productDetails) return false;
     const pd = productDetails as any;
     const dd = productDetails.draft_data as any;
+    const hasReadableContent = (value: unknown): boolean => {
+      if (typeof value === "string") {
+        return value.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim().length > 0;
+      }
+      if (typeof value === "number") return Number.isFinite(value);
+      if (Array.isArray(value)) return value.some(hasReadableContent);
+      if (value && typeof value === "object") {
+        return Object.entries(value).some(
+          ([key, item]) => !["id", "uuid", "display_order"].includes(key.toLowerCase()) && hasReadableContent(item)
+        );
+      }
+      return false;
+    };
 
-    // Core fields
-    const hasName = Boolean(pd.name || dd?.name);
+    // 1. Core name field
+    const name = pd.name || dd?.name;
+    const hasName = Boolean(name && String(name).trim().length > 0);
+
+    // 2. Price must not be zero
+    const priceVal = pd.base_price ?? pd.price ?? dd?.base_price;
     const hasPrice =
-      (pd.base_price !== undefined && pd.base_price !== null && pd.base_price !== "") ||
-      pd.price !== undefined ||
-      dd?.base_price !== undefined;
+      priceVal !== undefined &&
+      priceVal !== null &&
+      priceVal !== "" &&
+      !isNaN(Number(priceVal)) &&
+      Number(priceVal) > 0;
 
+    // 3. Category & Subcategory
     const hasCategory = Boolean(
       pd.category?.id ||
       pd.category_id ||
@@ -224,15 +244,22 @@ export default function SellerProductDetailsPage() {
       dd?.category
     );
 
-    const hasDesc = Boolean(
-      pd.description ||
-      pd.description_html ||
-      dd?.description ||
-      pd.specifications_text ||
-      pd.specifications_html
-    );
+    // 4. Description (must not be empty)
+    const descRaw = pd.description || pd.description_html || dd?.description || "";
+    const hasDesc = hasReadableContent(descRaw);
 
-    // Images
+    // 5. Specifications (must not be empty)
+    const specRaw =
+      pd.specifications_text ||
+      pd.specifications_html ||
+      pd.specifications ||
+      dd?.specifications_text ||
+      dd?.specifications_html ||
+      dd?.specifications ||
+      "";
+    const hasSpec = hasReadableContent(specRaw);
+
+    // 6. Images (at least 1 image)
     const hasImages =
       (images && images.length > 0) ||
       Boolean(pd.images?.length) ||
@@ -240,26 +267,44 @@ export default function SellerProductDetailsPage() {
       Boolean(dd?.product_images?.length) ||
       Boolean(dd?.images?.length);
 
-    // Variants or specs
-    const variantsCount =
-      variations?.length ||
-      pd.variations?.length ||
-      dd?.variations?.length ||
-      0;
-    const hasInventory =
-      pd.inventory !== undefined ||
-      pd.stock !== undefined ||
-      pd.quantity !== undefined ||
-      dd?.inventory !== undefined ||
-      dd?.stock !== undefined;
-    const hasVariantsOrInventory =
-      variantsCount > 0 || hasInventory || pd.has_variations !== undefined;
+    // 7. Variants or Inventory (stock and price must not be zero)
+    const rawVariations =
+      variations?.length ? variations :
+      pd.variations?.length ? pd.variations :
+      dd?.variations?.length ? dd.variations : [];
 
-    return (
+    let hasVariantsOrInventory = false;
+    if (rawVariations.length > 0) {
+      hasVariantsOrInventory = rawVariations.every((v: any) => {
+        const vPrice = v.base_price ?? v.price ?? priceVal;
+        const vStock = v.stock ?? v.inventory ?? v.quantity;
+        return (
+          vPrice !== undefined &&
+          vPrice !== "" &&
+          !isNaN(Number(vPrice)) &&
+          Number(vPrice) > 0 &&
+          vStock !== undefined &&
+          vStock !== "" &&
+          !isNaN(Number(vStock)) &&
+          Number(vStock) > 0
+        );
+      });
+    } else {
+      const stockVal =
+        pd.inventory ?? pd.stock ?? pd.quantity ?? dd?.inventory ?? dd?.stock;
+      hasVariantsOrInventory =
+        stockVal !== undefined &&
+        stockVal !== "" &&
+        !isNaN(Number(stockVal)) &&
+        Number(stockVal) > 0;
+    }
+
+    return Boolean(
       hasName &&
       hasPrice &&
       hasCategory &&
       hasDesc &&
+      hasSpec &&
       hasImages &&
       hasVariantsOrInventory
     );
@@ -299,7 +344,7 @@ export default function SellerProductDetailsPage() {
         title={productDetails.name || "Product Details"} 
       />
 
-      <div className="w-full flex lg:flex-row flex-col justify-center gap-c48  bg-ffffff circle-shadow rounded-c16 py-6 px-6 lg:px-8 relative overflow-hidden mt-6 lg:mt-0">
+      <div className="w-full flex lg:flex-row flex-col lg:items-start justify-center gap-c48 bg-ffffff circle-shadow rounded-c16 py-6 px-6 lg:px-8 relative mt-6 lg:mt-0">
         {/* Mobile View Layout (reorganized) */}
         <div className="lg:hidden w-full flex flex-col  gap-8">
           <ProductImageGallery
@@ -317,6 +362,7 @@ export default function SellerProductDetailsPage() {
             ActivatingLoading={ActivatingLoading}
             submiting={submiting}
             deleteLoading={deleteLoading}
+            isDraftComplete={isDraftComplete()}
             setConfirmAction={setConfirmAction}
             handleCancelRequest={handleCancelRequest}
             handleSubmitDraftProduct={handleSubmitDraftProduct}
@@ -360,7 +406,7 @@ export default function SellerProductDetailsPage() {
 
         {/* Desktop View Layout (Keeping existing structure) */}
         <div className="hidden lg:flex w-full lg:flex-row flex-col gap-c48">
-          <div className="lg:flex-1 min-w-0 lg:w-full max-w-[616px]">
+          <div className="lg:flex-1 min-w-0 lg:w-full max-w-[616px] lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto hcustom-scroll">
             <ProductImageGallery
               images={images}
               selectedImageId={selectedImageId}
@@ -379,13 +425,16 @@ export default function SellerProductDetailsPage() {
               ActivatingLoading={ActivatingLoading}
               submiting={submiting}
               deleteLoading={deleteLoading}
+              isDraftComplete={isDraftComplete()}
               setConfirmAction={setConfirmAction}
               handleCancelRequest={handleCancelRequest}
               handleSubmitDraftProduct={handleSubmitDraftProduct}
               handleDeleteDraft={handleDeleteDraft}
             />
 
-            <ProductVariants variations={variations} />
+            <div className="lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-2 hcustom-scroll">
+              <ProductVariants variations={variations} />
+            </div>
           </div>
         </div>
 

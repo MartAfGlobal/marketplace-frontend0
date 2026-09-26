@@ -831,7 +831,7 @@ export default function ProductReviewPage({
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-auto  flex justify-end gap-4  ">
+            <div className="mt-auto pt-8 flex justify-end gap-4  ">
               <Button className="bg-transparent text-[#ff715b] border border-[#ff715b] hover:bg-[#ffe8e8] w-36 h-12">
                 Message Seller
               </Button>

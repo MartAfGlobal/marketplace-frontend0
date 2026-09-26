@@ -33,11 +33,16 @@ export default function AddProductStep1Page() {
 
   const [loading, setLoading] = useState(false);
 
-  const hasImage = images.some((img) => img !== null);
-
-  const isNextEnabled = specificationsText.trim().length > 0;
-
   const token = useSelector((state: RootState) => state.token?.token);
+  const step1Data = useSelector((state: RootState) => state.addProduct.step1);
+
+  const hasValidSpecifications =
+    specificationsText
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .trim().length > 0;
+
+  const isNextEnabled = hasValidSpecifications && Boolean(step1Data?.id);
 
   const { sendHttpRequest: savingToDraftReq, loading: savingDraft, error: saveDraftError, setError: setSaveDraftError } = useHttp();
   const { sendHttpRequest, loading: fetchingDraftDetails, error: fetchDraftError, setError: setFetchDraftError } = useHttp();
@@ -50,8 +55,6 @@ export default function AddProductStep1Page() {
     setUpdateDraftError(null);
   };
   const [saveDraftSuccess, setSaveDraftSuccess] = useState(false);
-
-  const step1Data = useSelector((state: RootState) => state.addProduct.step1);
 
   //   useEffect(() => {
   //   const existingId = draftId || step1Data.step1.id;
@@ -212,7 +215,7 @@ export default function AddProductStep1Page() {
             }
             onClick={handleSaveDraft}
             variant="secondary"
-            className="max-w-32.5"
+            className="max-w-32.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {savingDraft ? (
               <LoadingSpinner color="border-ff715b" />
@@ -223,11 +226,11 @@ export default function AddProductStep1Page() {
 
           <Button
             disabled={
-              loading || updating || fetchingDraftDetails || savingDraft
+              loading || updating || fetchingDraftDetails || savingDraft || !isNextEnabled
             }
             type="button"
             onClick={handleNext}
-            className="max-w-32.5"
+            className="max-w-32.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {updating || fetchingDraftDetails ? (
               <LoadingSpinner />

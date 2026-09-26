@@ -11,6 +11,7 @@ interface ProductActionsProps {
   ActivatingLoading: boolean;
   submiting: boolean;
   deleteLoading: boolean;
+  isDraftComplete?: boolean;
   setConfirmAction: (val: "activate" | "deactivate" | "cancel activation" | "cancel deactivation" | null) => void;
   handleCancelRequest: () => void;
   handleSubmitDraftProduct: () => void;
@@ -24,6 +25,7 @@ export default function ProductActions({
   ActivatingLoading,
   submiting,
   deleteLoading,
+  isDraftComplete = true,
   setConfirmAction,
   handleCancelRequest,
   handleSubmitDraftProduct,
@@ -113,9 +115,10 @@ export default function ProductActions({
           </p>): (
           !published && (
             <Button
-              disabled={submiting || !id}
+              disabled={submiting || !id || !isDraftComplete}
               onClick={handleSubmitDraftProduct}
-              className="w-full text-[14px] leading-tight px-1 py-1 min-h-[44px] h-auto whitespace-normal text-center"
+              title={!isDraftComplete ? "Please complete all product details before submitting for review" : undefined}
+              className="w-full text-[14px] leading-tight px-1 py-1 min-h-[44px] h-auto whitespace-normal text-center disabled:opacity-50 disabled:cursor-not-allowed"
               variant="primary"
             >
               {submiting ? <LoadingSpinner /> : "Submit for review"}
@@ -130,9 +133,9 @@ export default function ProductActions({
            productDetails.deactivation_requested === false &&
            productDetails.is_approved !== "pending")
         ) && (
-          <Button variant="primary"
+          <Button variant="secondary"
             onClick={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}${!published ? '?isPublish=false' : ''}`)}
-            className="w-full bg-ff715b text-white text-[14px] leading-tight px-1 py-1 min-h-[44px] h-auto whitespace-normal text-center"
+            className="w-full "
           >
             Edit product
           </Button>
@@ -140,7 +143,7 @@ export default function ProductActions({
       </div>
 
       {/* --- DESKTOP VIEW --- */}
-      <div className="hidden lg:flex w-full justify-end gap-6 items-center">
+      <div className="hidden lg:flex w-full flex-wrap justify-end gap-3 items-center">
         {!published && (
           <button
             onClick={handleDeleteDraft}
@@ -161,9 +164,9 @@ export default function ProductActions({
            productDetails.deactivation_requested === false &&
            productDetails.is_approved !== "pending")
         ) && (
-          <Button variant="primary"
+          <Button variant="secondary"
             onClick={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}${!published ? '?isPublish=false' : ''}`)}
-            className="max-w-[200px] bg-ff715b text-white text-sm"
+            className="max-w-[200px] "
           >
             Edit product
           </Button>
@@ -233,9 +236,10 @@ export default function ProductActions({
           </p>): (
           !published && (
             <Button
-              disabled={submiting || !id}
+              disabled={submiting || !id || !isDraftComplete}
               onClick={handleSubmitDraftProduct}
-              className="max-w-[200px] text-sm"
+              title={!isDraftComplete ? "Please complete all product details before submitting for review" : undefined}
+              className="max-w-[200px] text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               variant="primary"
             >
               {submiting ? <LoadingSpinner /> : "Submit for review"}

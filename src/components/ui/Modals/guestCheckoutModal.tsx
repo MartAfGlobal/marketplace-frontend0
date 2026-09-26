@@ -82,7 +82,7 @@ export default function GuestCheckoutModal({
   );
 
   useEffect(() => {
-    console.log("Selected Items in Guest Checkout Modal:", selectedItems);
+
   }, [selectedItems]);
 
   const [mounted, setMounted] = useState(false);

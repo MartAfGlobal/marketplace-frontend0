@@ -98,14 +98,14 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
   return (
     <div className="w-full">
       <p className="hidden lg:block text-c18 font-MontserratSemiBold mt-c32 mb-6">Variants</p>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-8 lg:gap-x-16 lg:gap-y-12 lg:mt-0">
+      <div className="grid grid-cols-1 2xl:grid-cols-2 gap-y-8 2xl:gap-x-8 2xl:gap-y-12 lg:mt-0">
         {variations.map((variant, index) => {
           const vId = variant.id ?? `variant-${index}`;
           const currentStock = stockMap[vId] ?? Number(variant.stock || variant.inventory || variant.quantity || 0);
           const isLoading = loadingVariationId === vId;
 
           return (
-            <div key={vId} className="pb-8 border-b border-gray-100 last:border-0">
+            <div key={vId} className="min-w-0 pb-8 border-b border-gray-100 last:border-0">
               {/* --- MOBILE VIEW --- */}
               <div className="flex flex-col gap-6 lg:hidden">
                 {/* Top Section: Image and Core Details */}
@@ -228,7 +228,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
                 </div>
 
                 {/* Right Column: Attributes Grid */}
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   {variant.attribute_summary && Object.keys(variant.attribute_summary).length > 0 && (
                     <div className="flex gap-x-8 gap-y-6 flex-wrap">
                       {Object.entries(variant.attribute_summary).map(([attribute, value]) => (
@@ -239,7 +239,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
                           </div>
                           <div className="flex flex-col gap-1">
                             <p className="text-[10px] font-MontserratSemiBold text-gray-900">Value</p>
-                            <span className="text-sm text-gray-600 capitalize">{String(value)}</span>
+                            <span className="text-sm text-gray-600 capitalize break-words">{String(value)}</span>
                           </div>
                         </div>
                       ))}
