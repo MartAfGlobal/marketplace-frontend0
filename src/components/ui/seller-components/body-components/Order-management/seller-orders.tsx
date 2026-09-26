@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import OrderSecions from "./Order-section-body/order-section-body";
 import DashboardTableSkeleton from "@/components/reloadSpinner/DashboardTableSkeleton";
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
+import { useOrderRefresh } from "@/hooks/useOrderRefresh";
 
 import SellerSearch from "../over-view/Filter-components/SellerSearch";
 import { SellerMobileHeader } from "@/components/ui/seller-components/header-components/SellerMobileHeader";
@@ -22,6 +23,8 @@ export default function SelleOrderspage({
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
+
+  useOrderRefresh(fetchOrders);
 
   if (loading) return <DashboardTableSkeleton />;
 
@@ -43,12 +46,14 @@ export default function SelleOrderspage({
         }
       />
 
-      <div className="md:hidden px-4 mt-4">
+      <div className="md:hidden  mt-4">
         <SellerSearch 
           value={searchQuery}
+          
           onChange={setSearchQuery}
           placeholder="Search by order ID, items, date..." 
           alwaysOpen={true}
+          
         />
       </div>
 

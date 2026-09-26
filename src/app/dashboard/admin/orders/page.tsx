@@ -41,6 +41,7 @@ import StatusFrame from "@/components/admin-components/users/status-frame";
 import QuickTrackDropdown from "@/components/admin-components/orders/QuickTrackDropdown";
 import TrackOrderModal from "@/components/admin-components/orders/TrackOrderModal";
 import RequestPickupModal from "@/components/admin-components/orders/RequestPickupModal";
+import { useOrderRefresh } from "@/hooks/useOrderRefresh";
 
 const PAGE_SIZE = 20;
 
@@ -324,6 +325,32 @@ export default function AdminOrdersPage() {
       });
     }
   }, [token]);
+
+  useOrderRefresh(() => {
+    if (!token) return;
+
+    if (activeTab === "cancel_request") {
+      fetchCancellationRequests(
+        cancellationSubTab,
+        (data: any[]) => setCancellationRequests(data.map(mapCancellationRequest)),
+      );
+    } else {
+      const statusMap: Record<string, string | undefined> = {
+        all: undefined,
+        unprocessed: "UNPROCESSED",
+        processed: "PROCESSED",
+        shipped: "SHIPPED_TO_BUYER",
+        delivered: "DELIVERED",
+        completed: "COMPLETED",
+        disputed: "DISPUTED",
+        cancelled: "CANCELLED",
+      };
+      fetchOrdersList(currentPage, statusMap[activeTab]);
+    }
+
+    fetchOrdersSummary(getRangeParam(selectedMonth), parseSummaryData);
+    fetchAdminDisputeStats((stats: any) => setDisputeStats(stats));
+  });
 
   // Reset page when search or tab changes
   useEffect(() => {

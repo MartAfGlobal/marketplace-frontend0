@@ -228,7 +228,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
       )}
 
       {/* Mobile Pagination Info */}
-      <div className="flex items-center justify-between mt-6 lg:hidden">
+      <div className="flex items-center  justify-between mt-6 lg:hidden">
         <p className="text-[10px] sm:text-c12 font-MontserratNormal text-000000/40">
           {totalRows > 0 ? `${startIndex}-${endIndex} of ${totalRows} results` : "0 results"}
         </p>

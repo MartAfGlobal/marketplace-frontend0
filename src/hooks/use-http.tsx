@@ -8,6 +8,7 @@ import { HttpRequestConfigProps } from "@/types/global";
 import { tokenActions } from "@/store/token/token-slice";
 import { openGlobalResultModal } from "@/store/uiSlice";
 import { clearStoredAuthTokens } from "@/utils/authStorage";
+import { notifyOrderChanged } from "@/utils/orderRefresh";
 
 export const useHttp = () => {
   const [loading, setLoading] = useState(false);
@@ -93,6 +94,12 @@ export const useHttp = () => {
             } else {
               toast.success(requestConfig.successMessage);
             }
+          }
+          if (
+            requestConfig.method.toUpperCase() !== "GET" &&
+            /order/i.test(requestConfig.url)
+          ) {
+            notifyOrderChanged();
           }
           successRes(res);
         }

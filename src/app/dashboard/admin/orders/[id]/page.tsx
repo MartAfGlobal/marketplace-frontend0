@@ -35,6 +35,7 @@ import OrderDisputeModal, {
   DisputeItem,
 } from "@/components/admin-components/orders/OrderDisputeModal";
 import DisputeDetailSideModal from "@/components/ui/Modals/admin/DisputeDetailSideModal";
+import { useOrderRefresh } from "@/hooks/useOrderRefresh";
 
 export default function AdminOrderDetailsPage() {
   const router = useRouter();
@@ -287,6 +288,10 @@ export default function AdminOrderDetailsPage() {
       loadOrder(rawId, true);
     }
   }, [token, rawId]);
+
+  useOrderRefresh(() => {
+    if (token && rawId) loadOrder(rawId, false);
+  });
 
   useEffect(() => {
     if (order && searchParams.get("viewDispute") === "true") {

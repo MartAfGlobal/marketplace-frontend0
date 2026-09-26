@@ -35,7 +35,7 @@ export default function SellerSearch({
     <div
       onClick={toggleSearch}
       className={`flex items-center justify-center bg-ffffff rounded-c8 circle-shadow h-10 transition-all duration-300 border-000000/10 border p-4 gap-2 ${
-        isVisible || alwaysOpen ? "w-full max-w-90" : "w-10"
+        isVisible || alwaysOpen ? "w-full md:max-w-90" : "w-10"
       } ${disabled ? "opacity-50 cursor-not-allowed" : alwaysOpen ? "cursor-default" : "cursor-pointer"}`}
     >
       <div className="flex-shrink-0 w-4 h-4">

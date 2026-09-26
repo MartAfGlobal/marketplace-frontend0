@@ -25,9 +25,13 @@ export const OrderActions = ({
 }: OrderActionsProps) => {
   const mappedStatus = (getMappedStatus(order) || "").toLowerCase().trim();
   const rawStatus = (order?.status || "").toLowerCase().trim();
-  const timelineStage = (order?.order_timeline_stage || "").toLowerCase().trim();
+  const timelineStage = (order?.order_timeline_stage || "")
+    .toLowerCase()
+    .trim();
   const isTrackingSubmitted =
-    String(order?.status ?? "").trim().toUpperCase() === "TRACKING_SUBMITTED" ||
+    String(order?.status ?? "")
+      .trim()
+      .toUpperCase() === "TRACKING_SUBMITTED" ||
     mappedStatus === "tracking submitted" ||
     mappedStatus === "tracking_submitted";
 
@@ -61,7 +65,7 @@ export const OrderActions = ({
       <div className={`hidden lg:flex flex-col min-w-[305px] ${className}`}>
         {/* Status-specific actions */}
         {isUnprocessed && (
-          <div className="flex flex-col gap-4">
+          <div className=" flex flex-col gap-4">
             <Button
               disabled={!canAccept}
               onClick={onAcceptClick}
@@ -98,7 +102,7 @@ export const OrderActions = ({
         )}
 
         {isProcessingOrAccepted && (
-          <div className="flex flex-col gap-4">
+          <div className="hidden md:flex flex-col gap-4">
             <Button
               disabled={timeLeft <= 0}
               onClick={onFulfillClick}
@@ -132,7 +136,8 @@ export const OrderActions = ({
           </div>
         )}
 
-        {(mappedStatus === "fulfilled" || mappedStatus === "in_transit_to_hub") && (
+        {(mappedStatus === "fulfilled" ||
+          mappedStatus === "in_transit_to_hub") && (
           <div className="w-full py-4 bg-000000/12 text-ffffff rounded-c8 flex items-center justify-center font-MontserratSemiBold text-sm">
             Order at warehouse
           </div>
@@ -143,24 +148,25 @@ export const OrderActions = ({
 
   // Mobile In-page Actions Card or Sticky View
   return (
-    <div className={`lg:hidden ${className || "fixed bottom-0 left-0 right-0 bg-white p-4 shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.1)] z-40 border-t border-gray-100"}`}>
-      <div className="flex gap-4 max-w-md mx-auto w-full">
+    <div
+      className={`lg:hidden ${className || "fixed bottom-0 left-0 right-0 bg-white p-4 shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.1)] z-40 border-t border-gray-100"}`}
+    >
+      <div className="flex flex-col gap-4 max-w-md mx-auto w-full">
         {isUnprocessed && (
           <>
+            <Button
+              disabled={!canAccept}
+              onClick={onAcceptClick}
+              
+            >
+              Accept order
+            </Button>
             <Button
               variant="secondary"
               disabled={!canAccept}
               onClick={onRejectClick}
-              className={`flex-1 py-3 border border-ca0202 text-ca0202 rounded-xl transition-all ${!canAccept ? "opacity-50 cursor-not-allowed border-gray-300 text-gray-400" : "hover:bg-red-50"}`}
             >
               Reject order
-            </Button>
-            <Button
-              disabled={!canAccept}
-              onClick={onAcceptClick}
-              className={`flex-1 py-3 bg-ff715b text-white rounded-xl transition-all shadow-lg shadow-ff715b/20 ${!canAccept ? "opacity-50 cursor-not-allowed bg-gray-400" : "hover:bg-ff715b/90"}`}
-            >
-              Accept order
             </Button>
           </>
         )}
@@ -168,7 +174,7 @@ export const OrderActions = ({
           <Button
             disabled={timeLeft <= 0}
             onClick={onFulfillClick}
-            className={`w-full py-3 ${timeLeft > 0 ? "bg-ff715b shadow-ff715b/20 hover:bg-ff715b/90" : "opacity-50 cursor-not-allowed bg-gray-400"}`}
+            
           >
             Submit tracking number
           </Button>
@@ -178,7 +184,8 @@ export const OrderActions = ({
             Tracking submitted (Awaiting hub confirmation)
           </div>
         )}
-        {(mappedStatus === "fulfilled" || mappedStatus === "in_transit_to_hub") && (
+        {(mappedStatus === "fulfilled" ||
+          mappedStatus === "in_transit_to_hub") && (
           <div className="w-full py-3 bg-000000/12 text-ffffff rounded-xl flex items-center justify-center font-MontserratSemiBold text-sm">
             Order at warehouse
           </div>

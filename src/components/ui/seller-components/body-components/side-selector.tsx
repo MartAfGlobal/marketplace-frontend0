@@ -57,7 +57,7 @@ export default function OrderSectionSelector({
         hideOnMobile ? "hidden sm:block" : ""
       }`}
     >
-      <ul className="flex flex-row lg:flex-col border-b  lg:border-b-0 border-gray-200 lg:border-transparent gap-2 lg:gap-0 w-full lg:w-full   lg:px-0">
+      <ul className="flex flex-row lg:flex-col border-b  lg:border-b-0 border-gray-200 bg-[#947fff]/10 lg:border-transparent gap-2 lg:gap-0 w-full lg:w-full   lg:px-0">
         {sections.map((s) => {
           const isActive = currentActiveId === s.id;
           const buttonContent = (

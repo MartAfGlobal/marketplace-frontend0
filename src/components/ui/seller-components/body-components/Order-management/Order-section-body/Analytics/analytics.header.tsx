@@ -259,12 +259,12 @@ export default function AnalyticsHeader({
                 className="font-MontserratNormal text-base text-000000/12
          "
               >
-                Unprocessed
+                Delivered
               </p>
 
               <div className="mt-3 flex gap-3 items-center">
                 <span className="font-MontserratMedium text-c32 ">
-                  {stats.unprocessed}
+                  {stats.delivered}
                 </span>
                 <div className="flex flex-col gap-1">
                   <Image
@@ -284,7 +284,7 @@ export default function AnalyticsHeader({
             </div>
             <div className="absolute z-10 right-5 bottom-[23.5px]">
               <Image
-                src={Unprocessed}
+                src={TotalOrderIcon}
                 alt="unprocessed"
                 width={48}
                 height={48}
@@ -298,19 +298,19 @@ export default function AnalyticsHeader({
                 className="font-MontserratNormal text-base text-000000/12
          "
               >
-                Fulfilled
+                Cancelled
               </p>
 
               <div className="mt-3 flex gap-3 items-center">
                 <span className="font-MontserratMedium text-c32 ">
-                  {stats.fulfilled}
+                  {stats.cancelled}
                 </span>
               
               </div>
             </div>
             <div className="absolute z-10 right-5 bottom-[23.5px]">
               <Image
-                src={FufilledIcon}
+                src={CancelIcon}
                 alt="unprocessed"
                 width={48}
                 height={48}

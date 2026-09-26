@@ -31,6 +31,29 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { VariantForm as BaseVariantForm } from "../../step2/page";
 import ResultModal from "@/components/ui/forms/resultModal";
 
+const normalizeSpecifications = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (!Array.isArray(value)) return "";
+
+  return value
+    .map((item: unknown) => {
+      if (!item || typeof item !== "object") return "";
+
+      const specification = item as Record<string, unknown>;
+      const title = typeof specification.title === "string" ? specification.title : "";
+      const text = typeof specification.text === "string" ? specification.text : "";
+      const content = [
+        title && `<strong>${title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</strong>`,
+        text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"),
+      ]
+        .filter(Boolean)
+        .join(": ");
+
+      return content ? `<p>${content}</p>` : "";
+    })
+    .join("");
+};
+
 export interface VariantForm extends Omit<BaseVariantForm, 'images'> {
   images: (File | string | null)[];
   attributeValueIds?: Record<string, string>;
@@ -166,7 +189,11 @@ export default function UpdateProductPage() {
         setProductName(draft.name ?? "");
         setDescription(draft.description_html || draft.description || draft.draft_data?.description || "");
         setBasePrice(draft.base_price ?? undefined);
-        setSpecificationsText(draft.specifications_html || draft.specifications_text || draft.specifications || "");
+        setSpecificationsText(
+          normalizeSpecifications(
+            draft.specifications_html || draft.specifications_text || draft.specifications,
+          ),
+        );
 
         const cat = draft.category_info?.category || draft.category;
         if (cat) {

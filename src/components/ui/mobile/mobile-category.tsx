@@ -172,13 +172,13 @@ export default function MobileCategory() {
                     whileHover={{ scale: 1.05 }}
                   >
                     <div className="flex flex-col  items-center">
-                      <div className=" w-[78.75px] h-[78.75px] rounded-full bg-e9eafd flex justify-center items-center">
+                      <div className=" w-[78.75px] h-[78.75px] rounded-full bg-e9eafd flex justify-center overflow-hidden items-center">
                         <Image
                           src={cat.image_url?.thumbnail || Electricity}
                           alt={cat.name}
                           width={56.25}
                           height={56.25}
-                          className="rounded-full flex-shrink-0"
+                          className=" flex-shrink-0 h-[56px] w-[56px] object-contain "
                           priority
                         />
                       </div>

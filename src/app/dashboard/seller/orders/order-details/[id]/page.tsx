@@ -23,6 +23,7 @@ import { SellerMobileHeader } from "@/components/ui/seller-components/header-com
 import downloadIcon from "@/assets/Seller/colourDownload.svg";
 import Image from "next/image";
 import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
+import { useOrderRefresh } from "@/hooks/useOrderRefresh";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -43,6 +44,10 @@ export default function OrderDetailsPage() {
   const pdfRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [mobileTab, setMobileTab] = useState<"items" | "inventory">("items");
+
+  useOrderRefresh(() => {
+    if (id && token) fetchOrderById(id as string, setOrder);
+  });
 
   // Accept Modal State
   const [showAcceptModal, setShowAcceptModal] = useState(false);
@@ -305,16 +310,16 @@ export default function OrderDetailsPage() {
         return "bg-[#FFAC061A] text-[#FFAC06]";
       case "tracking_submitted":
       case "tracking submitted":
-        return "bg-[#0070E91A] text-[#0070E9]";
+        return "bg-[#0070E9] text-[#0070E9]";
       case "fulfilled":
-        return "bg-[#0070E91A] text-[#0070E9]";
+        return "bg-[#0070E9] text-[#0070E9]";
       case "shipped":
         return "bg-[#FF715B1A] text-[#FF715B]";
       case "delivered":
         return "bg-[#2D75651A] text-[#2D7565]";
       case "partially_accepted":
       case "partially accepted":
-        return "bg-[#0070E91A] text-[#0070E9]";
+        return "bg-[#0070E9] text-[#0070E9]";
       case "rejected":
       case "cancelled":
         return "bg-[#CA02021A] text-[#CA0202]";
@@ -417,19 +422,7 @@ export default function OrderDetailsPage() {
             getMappedStatus={getMappedStatus}
           />
 
-          <div className="lg:hidden">
-            <OrderActions
-              order={order}
-              getMappedStatus={getMappedStatus}
-              onAcceptClick={() => setShowAcceptModal(true)}
-              onRejectClick={handleReject}
-              onFulfillClick={() => setShowFulfillModal(true)}
-              timeLeft={timeLeft}
-              formatTime={formatTime}
-              isDesktop={true}
-              className="!flex w-full"
-            />
-          </div>
+       
 
           <OrderInfoSections order={order} />
 

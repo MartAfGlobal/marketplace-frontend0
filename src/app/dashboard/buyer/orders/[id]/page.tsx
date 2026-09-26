@@ -23,6 +23,7 @@ import { setShippingAddress } from "@/store/orders/order-slice";
 import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
+import { useOrderRefresh } from "@/hooks/useOrderRefresh";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -61,17 +62,16 @@ export default function OrderDetailsPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch order details by id from backend
-  useEffect(() => {
+  const loadOrder = (showLoader = false) => {
     if (!id || !token) return;
 
     // Check if order is already available in redux store
-    const existing = orders?.find((o: any) => o.id === id);
-    if (existing) {
-      setOrder(existing);
+    if (showLoader) {
+      const existing = orders?.find((o: any) => o.id === id);
+      if (existing) setOrder(existing);
     }
 
-    setLoading(true);
+    if (showLoader) setLoading(true);
     fetchOrderReq({
       requestConfig: {
         url: `/orders/buyer/${id}/`,
@@ -94,7 +94,14 @@ export default function OrderDetailsPage() {
         setLoading(false);
       },
     });
+  };
+
+  // Fetch order details by id from backend
+  useEffect(() => {
+    loadOrder(true);
   }, [id, token]);
+
+  useOrderRefresh(() => loadOrder());
 
   // Order Number / Order ID resolution
   const orderNumber =

@@ -17,6 +17,7 @@ import ProcessingOrders from "./Component-ui/processing";
 import { useHttp } from "@/hooks/use-http";
 import Disputes from "./Component-ui/dispute-items";
 import { useFetchOrders } from "@/helpers/fetchOrders";
+import { useOrderRefresh } from "@/hooks/useOrderRefresh";
 
 const tabs = [
   "All",
@@ -48,6 +49,14 @@ export default function OrdersPage() {
       fetchDisputeList();
     }
   }, [token]);
+
+  useOrderRefresh(() => {
+    if (token) {
+      fetchOrders();
+      fetchAwaitingPayments();
+      fetchDisputeList();
+    }
+  });
 
   return (
     <div className="w-full  justify-center  flex flex-col">

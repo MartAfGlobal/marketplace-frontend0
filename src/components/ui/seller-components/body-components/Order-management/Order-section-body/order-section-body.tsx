@@ -57,7 +57,7 @@ export default function OrderSecions({
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mt-6 pb-8 relative " ref={containerRef}>
-      <div className="w-full lg:max-w-66.25 sticky top-20 self-start z-10">
+      <div className="w-full lg:max-w-66.25 sticky  overflow-x-scroll wno-scrollbar  top-18 md:top-20 self-start z-10">
         <OrderSectionSelector
           sections={sections}
           activeId={activeId}
