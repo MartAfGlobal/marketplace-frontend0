@@ -37,11 +37,13 @@ import ImageWithSkeleton from "@/components/ui/ImageWithSkeleton";
 
 
 
+
 type ProductVariationProp = {
   isModal: boolean;
   selectedVariaton?:string
 };
 
+ 
 const COLOR_MAP: Record<string, string> = {
   white: "#FFFFFF",
   black: "#000000",
