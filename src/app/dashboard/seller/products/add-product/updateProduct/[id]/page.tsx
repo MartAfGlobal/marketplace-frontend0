@@ -865,7 +865,7 @@ export default function UpdateProductPage() {
           {variants.map((variant) => (
             <div key={variant.id} className="mb-10">
               {/* Images */}
-              <div className="flex gap-4 mt-4">
+              <div className="flex flex-wrap gap-4 mt-4">
                 {variant.images.filter(Boolean).length < 4 && (
                   <label className="relative lg:h-24 lg:w-24 w-20 h-20 rounded-c8 border flex flex-col items-center justify-center cursor-pointer overflow-hidden">
                     <input

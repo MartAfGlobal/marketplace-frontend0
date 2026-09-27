@@ -9,7 +9,12 @@ import SizeGuideModal from "../Modals/sizeGuideModal";
 import { VariationOption } from "@/types/global";
 import { motion, AnimatePresence } from "framer-motion";
 import Heart from "@/assets/icons/heart.svg";
+import LoveIconFilled from "@/assets/images/wishlist.svg";
 import Share from "@/assets/icons/share.svg";
+import ShareModal from "../Modals/ShareModal";
+import { useRouter } from "next/navigation";
+import { setWishlist } from "@/store/cart/wishlist-slice";
+import { toast } from "sonner";
 import { Button } from "../Button/Button";
 import ItemAddToCart from "../ItemAddToCart";
 import ProductNav from "../navigation/ProductNavView";
@@ -169,6 +174,117 @@ const dispatch = useDispatch() as AppDispatch;
 
   const [pendingRequests, setPendingRequests] = useState(2); // 2 API calls
   const { sendHttpRequest } = useHttp();
+  const { loading: loadingWishlist, sendHttpRequest: addWishlistReq } = useHttp();
+  const { sendHttpRequest: wishlistReq } = useHttp();
+
+  const router = useRouter();
+  const token = useSelector((state: RootState) => state.token.token);
+  const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+
+  const wishlistItem = wishlistItems.find(
+    (item: any) =>
+      item.product?.id === productDetails?.id || item.product === productDetails?.id
+  );
+  const isInWishlist = Boolean(wishlistItem);
+  const wishlistId = wishlistItem?.id;
+
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+
+  const fetchWishlist = () => {
+    if (!token) return;
+    wishlistReq({
+      requestConfig: {
+        url: "/wishlist/all",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "buyer",
+      },
+      successRes: (res) => {
+        const items = res?.data?.results || [];
+        dispatch(setWishlist(items));
+      },
+    });
+  };
+
+  const handleToggleWishlist = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
+    if (!productDetails?.id) return;
+
+    if (!token) {
+      const isMobile =
+        typeof navigator !== "undefined" &&
+        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      toast.info("Please log in to manage your wishlist");
+      if (isMobile) {
+        router.replace("/?showLogin=true");
+      } else {
+        router.replace("/auth/login");
+      }
+      return;
+    }
+
+    if (isInWishlist && wishlistId) {
+      addWishlistReq({
+        requestConfig: {
+          url: `/wishlist/items/remove/${wishlistId}/`,
+          method: "DELETE",
+          token,
+          isAuth: true,
+          userType: "buyer",
+          successMessage: "Removed from wishlist",
+        },
+        successRes: () => {
+          fetchWishlist();
+        },
+      });
+      return;
+    }
+
+    addWishlistReq({
+      requestConfig: {
+        url: `/wishlist/add/${productDetails.id}/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "buyer",
+        successMessage: "Added to wishlist",
+      },
+      successRes: () => {
+        fetchWishlist();
+      },
+    });
+  };
+
+  const handleShare = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
+    const shareTitle = productDetails?.name || "Product";
+    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `Check out ${shareTitle} on MartAf!`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err: any) {
+        // If aborted or cancelled by user, don't fallback to modal
+        if (err?.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    setShareModalOpen(true);
+  };
 
   const subCategorySlug = productDetails?.category?.subcategory?.slug;
 
@@ -497,21 +613,35 @@ const dispatch = useDispatch() as AppDispatch;
                 {productDetails?.name}
               </h1>
               <div className="md:hidden flex gap-c19 md:mt-c24 items-center">
-                {" "}
-                <Image
-                  src={Heart}
-                  alt="Like"
-                  height={22.93}
-                  width={28}
-                  className="w-5.25 h-4.5"
-                />{" "}
-                <Image
-                  src={Share}
-                  alt="Share"
-                  height={24}
-                  width={28.01}
-                  className="h-5.25 w-4.5"
-                />{" "}
+                <button
+                  type="button"
+                  onClick={handleToggleWishlist}
+                  disabled={loadingWishlist}
+                  aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                  className="flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-60"
+                >
+                  <Image
+                    src={isInWishlist ? LoveIconFilled : Heart}
+                    alt={isInWishlist ? "Liked" : "Like"}
+                    height={22.93}
+                    width={28}
+                    className="w-5.25 h-4.5"
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  aria-label="Share product"
+                  className="flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <Image
+                    src={Share}
+                    alt="Share"
+                    height={24}
+                    width={28.01}
+                    className="h-5.25 w-4.5"
+                  />
+                </button>
               </div>
             </div>
 
@@ -549,21 +679,35 @@ const dispatch = useDispatch() as AppDispatch;
               </p>{" "}
             </div>
             <div className="hidden md:flex gap-c19 md:mt-c24 items-center">
-              {" "}
-              <Image
-                src={Heart}
-                alt="Like"
-                height={22.93}
-                width={28}
-                className="w-5.25 h-4.5"
-              />{" "}
-              <Image
-                src={Share}
-                alt="Share"
-                height={24}
-                width={28.01}
-                className="h-5.25 w-4.5"
-              />{" "}
+              <button
+                type="button"
+                onClick={handleToggleWishlist}
+                disabled={loadingWishlist}
+                aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+                className="flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-60"
+              >
+                <Image
+                  src={isInWishlist ? LoveIconFilled : Heart}
+                  alt={isInWishlist ? "Liked" : "Like"}
+                  height={22.93}
+                  width={28}
+                  className="w-5.25 h-4.5"
+                />
+              </button>
+              <button
+                type="button"
+                onClick={handleShare}
+                aria-label="Share product"
+                className="flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <Image
+                  src={Share}
+                  alt="Share"
+                  height={24}
+                  width={28.01}
+                  className="h-5.25 w-4.5"
+                />
+              </button>
             </div>
             {(productDetails?.has_variations || (productDetails?.variations && productDetails.variations.length > 0)) && (
 
@@ -760,6 +904,13 @@ const dispatch = useDispatch() as AppDispatch;
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             type="clothes"
+          />
+
+          <ShareModal
+            isOpen={shareModalOpen}
+            onClose={() => setShareModalOpen(false)}
+            title={productDetails?.name || "Product"}
+            url={typeof window !== "undefined" ? window.location.href : ""}
           />
         </div>
 

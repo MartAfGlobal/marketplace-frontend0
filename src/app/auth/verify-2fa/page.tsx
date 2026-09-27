@@ -237,7 +237,7 @@ function Verify2faContent() {
             variant="secondary"
             onClick={handleResendOtp}
             disabled={!canResend || resending || verifying}
-            className="w-full "
+            className="w-full text-nowrap"
           >
             {resending ? (
               <LoadingSpinner color="border-ff715b" />

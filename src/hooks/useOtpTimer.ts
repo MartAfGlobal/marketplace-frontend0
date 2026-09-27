@@ -22,7 +22,7 @@ export function isOtpExpiredError(err: any): boolean {
 export function useOtpTimer({
   scope,
   identifier = "default",
-  initialSeconds = 120,
+  initialSeconds = 60,
 }: UseOtpTimerOptions) {
   // Normalize identifier to avoid invalid characters in storage key
   const safeIdentifier = encodeURIComponent(identifier || "default");
