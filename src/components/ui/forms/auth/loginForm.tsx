@@ -131,10 +131,58 @@ export default function LoginForm({ userType }: RegProps) {
     router.push("/");
   };
 
+  const handleTwoFactorRedirect = (data: any) => {
+    const userId = data?.user_id || data?.userId || data?.id || data?.user?.id;
+    const params = new URLSearchParams();
+    if (userId) {
+      params.set("user_id", String(userId));
+    }
+    params.set("email", formData.email);
+    params.set("userType", userType);
+    const retryAfter =
+      data?.retry_after ??
+      data?.retry_after_seconds ??
+      data?.resend_after ??
+      data?.cooldown ??
+      data?.wait_seconds;
+    if (retryAfter !== undefined && retryAfter !== null) {
+      params.set("retry_after", String(retryAfter));
+    }
+    if (formData.rememberMe) {
+      params.set("remember", "true");
+    }
+    const message =
+      data?.message ||
+      data?.detail ||
+      "A 2FA verification code has been sent to your email.";
+    toast.info(message);
+    router.push(`/auth/verify-2fa?${params.toString()}`);
+  };
+
+  const is2FaRequired = (data: any) => {
+    return Boolean(
+      data?.requires_2fa ||
+      data?.requires_two_factor ||
+      data?.two_factor_required ||
+      data?.is_2fa ||
+      data?.is_two_factor ||
+      data?.two_factor ||
+      (!data?.access && !data?.token && (data?.user_id || data?.userId))
+    );
+  };
+
   const loginSuccess = (res: any) => {
-    const accessToken = res?.data?.access;
+    const data = res?.data?.data ?? res?.data;
+
+    // Check if response indicates 2FA is required
+    if (is2FaRequired(data)) {
+      handleTwoFactorRedirect(data);
+      return;
+    }
+
+    const accessToken = data?.access || data?.token || data?.accessToken;
     const refreshToken =
-      res?.data?.refresh || res?.data?.refresh_token || res?.data?.refreshToken;
+      data?.refresh || data?.refresh_token || data?.refreshToken;
 
     if (!accessToken) {
       toast.error("Login failed: No token received.");
@@ -145,6 +193,7 @@ export default function LoginForm({ userType }: RegProps) {
       localStorage.setItem("refreshToken", refreshToken);
     }
 
+    toast.success("Login successful!");
     handleLoginSuccess(accessToken);
   };
 
@@ -177,29 +226,12 @@ export default function LoginForm({ userType }: RegProps) {
           check: formData.rememberMe,
         },
         userType: userType,
-        successMessage: "Login successful!",
       },
       successRes: loginSuccess,
       errorRes: (err: any) => {
-        const data = err?.response?.data;
-        if (data?.requires_2fa) {
-          const params = new URLSearchParams();
-          params.set("user_id", data.user_id);
-          params.set("email", formData.email);
-          params.set("userType", userType);
-          const retryAfter =
-            data.retry_after ??
-            data.retry_after_seconds ??
-            data.resend_after ??
-            data.cooldown ??
-            data.wait_seconds;
-          if (retryAfter !== undefined && retryAfter !== null) {
-            params.set("retry_after", String(retryAfter));
-          }
-          if (formData.rememberMe) {
-            params.set("remember", "true");
-          }
-          router.push(`/auth/verify-2fa?${params.toString()}`);
+        const data = err?.response?.data?.data ?? err?.response?.data;
+        if (is2FaRequired(data)) {
+          handleTwoFactorRedirect(data);
         }
       }
     });

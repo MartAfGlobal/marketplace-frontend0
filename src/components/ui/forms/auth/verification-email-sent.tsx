@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/forms/Input";
 import { registrationActions } from "@/store/auth/registration-slice";
 import { useDispatch } from "react-redux";
+import { useOtpTimer, isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 export interface RegProps {
   userType: "seller" | "buyer";
@@ -56,18 +57,11 @@ export default function VerificationEmailSent({ userType }: RegProps) {
   /* ===============================
      TIMER STATE
   =============================== */
-  const [secondsLeft, setSecondsLeft] = useState(initialRetryAfter);
-
-  useEffect(() => {
-    if (secondsLeft <= 0) return;
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [secondsLeft]);
-
-  const minutes = Math.floor(secondsLeft / 60);
-  const seconds = secondsLeft % 60;
+  const { timer: secondsLeft, resetTimer, expireTimer, minutes, seconds } = useOtpTimer({
+    scope: "register_verify_email",
+    identifier: email,
+    initialSeconds: initialRetryAfter,
+  });
 
   /* ===============================
      OTP INPUT HANDLERS
@@ -154,8 +148,14 @@ export default function VerificationEmailSent({ userType }: RegProps) {
             router.push(`/auth/seller/sign-up/registeration-step1/${otpString}`);
           }
         }
+        expireTimer();
       },
       errorRes: (err: any) => {
+        if (isOtpExpiredError(err)) {
+          expireTimer();
+          setOtp(["", "", "", "", "", ""]);
+          document.getElementById("reg-otp-0")?.focus();
+        }
         const msg =
           err?.response?.data?.message ||
           err?.response?.data?.error ||
@@ -189,13 +189,13 @@ export default function VerificationEmailSent({ userType }: RegProps) {
           extractRetryAfter(res?.data) ??
           extractRetryAfter(res) ??
           DEFAULT_RESEND_TIMEOUT;
-        setSecondsLeft(backendRetry);
+        resetTimer(backendRetry);
         document.getElementById("reg-otp-0")?.focus();
       },
       errorRes: (err: any) => {
         const backendRetry = extractRetryAfter(err?.response?.data);
         if (backendRetry) {
-          setSecondsLeft(backendRetry);
+          resetTimer(backendRetry);
         }
         const msg =
           err?.response?.data?.message ||

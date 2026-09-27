@@ -87,12 +87,19 @@ export interface IdEntry {
   id_back_image_url?: string;
 }
 
-interface FieldErrors {
+export interface BusinessInfoErrors {
   business_registration_number?: string;
   CAC_No?: string;
+  CAC_No_file?: string;
   tax_identification_number?: string;
+  tax_identification_file?: string;
+  certificate_of_registration?: string;
   vat_number?: string;
+  proof_of_address_file?: string;
+  id_type?: string;
   id_numbers?: Record<number, string>;
+  id_front_images?: Record<number, string>;
+  id_back_images?: Record<number, string>;
 }
 
 interface BusinessInfoTabProps {
@@ -118,16 +125,18 @@ interface BusinessInfoTabProps {
   onIdChange: (ids: IdEntry[]) => void;
   onFileSelect: (key: string, file: File) => void;
   onViewImage: (url: string) => void;
+  errors?: BusinessInfoErrors;
+  setErrors?: React.Dispatch<React.SetStateAction<BusinessInfoErrors>>;
   /** Called by parent to run full validation before submit; returns true if valid */
   onValidate?: (validate: () => boolean) => void;
 }
 
-function getIdLabel(value: string): string {
+export function getIdLabel(value: string): string {
   return Object.keys(ID_TYPE_MAP).find((key) => ID_TYPE_MAP[key] === value) ?? value;
 }
 
 // ── Validators ────────────────────────────────────────────────────
-function validateCACNo(value: string): string {
+export function validateCACNo(value: string): string {
   const v = value.trim();
   if (!v) return "";
   if (v.length < 6 || v.length > 14 || !CAC_REGEX.test(v))
@@ -135,7 +144,7 @@ function validateCACNo(value: string): string {
   return "";
 }
 
-function validateBizRegNo(value: string): string {
+export function validateBizRegNo(value: string): string {
   const v = value.trim();
   if (!v) return "";
   if (v.length < 6 || v.length > 20 || !BIZ_REG_REGEX.test(v))
@@ -143,7 +152,7 @@ function validateBizRegNo(value: string): string {
   return "";
 }
 
-function validateTIN(value: string): string {
+export function validateTIN(value: string): string {
   const v = value.trim();
   if (!v) return "";
   if (v.length < 8 || v.length > 14 || !TIN_REGEX.test(v))
@@ -151,7 +160,7 @@ function validateTIN(value: string): string {
   return "";
 }
 
-function validateVAT(value: string): string {
+export function validateVAT(value: string): string {
   const v = value.trim();
   if (!v) return "";
   if (v.length < 8 || v.length > 14 || !VAT_REGEX.test(v))
@@ -159,7 +168,7 @@ function validateVAT(value: string): string {
   return "";
 }
 
-function validateIdNumber(idType: string, value: string): string {
+export function validateIdNumber(idType: string, value: string): string {
   const v = value.trim();
   if (!v) return "";
   const rule = ID_NUMBER_RULES[idType];
@@ -169,6 +178,203 @@ function validateIdNumber(idType: string, value: string): string {
   if (!rule.regex.test(v))
     return `${rule.hint}`;
   return "";
+}
+
+export function validateBusinessInformation(
+  formData: {
+    business_registration_number: string;
+    CAC_No: string;
+    tax_identification_number: string;
+    vat_number: string;
+    ids: IdEntry[];
+  },
+  businessType: string,
+  newFiles: Record<string, File>,
+  profile: Record<string, any>,
+  identificationSubmitted = false,
+): { isValid: boolean; errors: BusinessInfoErrors; firstMissingToast?: string } {
+  const errors: BusinessInfoErrors = {};
+  let firstMissingToast: string | undefined = undefined;
+
+  const setFirstToast = (msg: string) => {
+    if (!firstMissingToast) {
+      firstMissingToast = msg;
+    }
+  };
+
+  const existingCACDoc = profile?.documents?.find(
+    (doc: any) => doc.document_type === "CAC_CERTIFICATE"
+  );
+  const cacFileUrl =
+    profile?.certificate_of_registration_url ||
+    existingCACDoc?.file ||
+    existingCACDoc?.file_url;
+
+  if (businessType === "Registered company") {
+    // 1. Business registration number
+    const bizReg = formData.business_registration_number?.trim() || "";
+    if (!bizReg) {
+      errors.business_registration_number = "Please enter business registration number";
+      setFirstToast("Please enter business registration number");
+    } else {
+      const err = validateBizRegNo(bizReg);
+      if (err) {
+        errors.business_registration_number = err;
+        setFirstToast("Invalid business registration number format");
+      }
+    }
+
+    // 2. CAC registration number
+    const cac = formData.CAC_No?.trim() || "";
+    if (!cac) {
+      errors.CAC_No = "Please enter CAC registration number";
+      setFirstToast("Please enter CAC registration number");
+    } else {
+      const err = validateCACNo(cac);
+      if (err) {
+        errors.CAC_No = err;
+        setFirstToast("Invalid CAC registration number format");
+      }
+    }
+
+    // 3. CAC02 & CAC07 document
+    const hasCacFile = Boolean(newFiles["CAC_No_file"] || profile?.CAC_No_file_url);
+    if (!hasCacFile) {
+      errors.CAC_No_file = "Please upload CAC02 & CAC07 document";
+      setFirstToast("Please upload CAC02 & CAC07 document");
+    }
+
+    // 4. TIN
+    const tin = formData.tax_identification_number?.trim() || "";
+    if (!tin) {
+      errors.tax_identification_number = "Please enter TIN (tax identification number)";
+      setFirstToast("Please enter TIN (tax identification number)");
+    } else {
+      const err = validateTIN(tin);
+      if (err) {
+        errors.tax_identification_number = err;
+        setFirstToast("Invalid TIN format");
+      }
+    }
+
+    // 5. Upload TIN
+    const hasTinFile = Boolean(newFiles["tax_identification_file"] || profile?.tax_certificate_url);
+    if (!hasTinFile) {
+      errors.tax_identification_file = "Please upload TIN document";
+      setFirstToast("Please upload TIN document");
+    }
+
+    // 6. Certificate of registration
+    const hasCertFile = Boolean(newFiles["certificate_of_registration"] || cacFileUrl);
+    if (!hasCertFile) {
+      errors.certificate_of_registration = "Please upload Certificate of registration";
+      setFirstToast("Please upload Certificate of registration");
+    }
+
+    // 7. VAT number
+    const vat = formData.vat_number?.trim() || "";
+    if (!vat) {
+      errors.vat_number = "Please enter VAT number";
+      setFirstToast("Please enter VAT number");
+    } else {
+      const err = validateVAT(vat);
+      if (err) {
+        errors.vat_number = err;
+        setFirstToast("Invalid VAT format");
+      }
+    }
+  } else {
+    // Individual
+    if (formData.ids.length === 0) {
+      if (!identificationSubmitted) {
+        errors.id_type = "Please select at least one ID type";
+        setFirstToast("Please select an ID type and upload identification documents");
+      }
+    } else {
+      const idNumberErrors: Record<number, string> = {};
+      const idFrontErrors: Record<number, string> = {};
+      const idBackErrors: Record<number, string> = {};
+
+      formData.ids.forEach((id, idx) => {
+        const idLabel = getIdLabel(id.means_of_id);
+        const rule = ID_NUMBER_RULES[id.means_of_id];
+        const num = id.id_number?.trim() || "";
+
+        // ID number
+        if (!num) {
+          idNumberErrors[idx] = `Please enter ${idLabel} number`;
+          setFirstToast(`Please enter ${idLabel} number`);
+        } else {
+          const err = validateIdNumber(id.means_of_id, num);
+          if (err) {
+            idNumberErrors[idx] = err;
+            setFirstToast(`Invalid ${idLabel} number format`);
+          }
+        }
+
+        // Front view
+        const hasFront = Boolean(id.id_front_image || id.id_front_image_url);
+        if (!hasFront) {
+          idFrontErrors[idx] = `Please upload ${idLabel} front view`;
+          setFirstToast(`Please upload ${idLabel} front view`);
+        }
+
+        // Back view
+        const hasBack = Boolean(id.id_back_image || id.id_back_image_url);
+        if (!hasBack) {
+          idBackErrors[idx] = `Please upload ${idLabel} back view`;
+          setFirstToast(`Please upload ${idLabel} back view`);
+        }
+      });
+
+      if (Object.keys(idNumberErrors).length > 0) errors.id_numbers = idNumberErrors;
+      if (Object.keys(idFrontErrors).length > 0) errors.id_front_images = idFrontErrors;
+      if (Object.keys(idBackErrors).length > 0) errors.id_back_images = idBackErrors;
+    }
+
+    // TIN
+    const tin = formData.tax_identification_number?.trim() || "";
+    if (!tin) {
+      errors.tax_identification_number = "Please enter TIN (tax identification number)";
+      setFirstToast("Please enter TIN (tax identification number)");
+    } else {
+      const err = validateTIN(tin);
+      if (err) {
+        errors.tax_identification_number = err;
+        setFirstToast("Invalid TIN format");
+      }
+    }
+
+    // Upload TIN
+    const hasTinFile = Boolean(newFiles["tax_identification_file"] || profile?.tax_certificate_url);
+    if (!hasTinFile) {
+      errors.tax_identification_file = "Please upload TIN document";
+      setFirstToast("Please upload TIN document");
+    }
+
+    // VAT number
+    const vat = formData.vat_number?.trim() || "";
+    if (!vat) {
+      errors.vat_number = "Please enter VAT number";
+      setFirstToast("Please enter VAT number");
+    } else {
+      const err = validateVAT(vat);
+      if (err) {
+        errors.vat_number = err;
+        setFirstToast("Invalid VAT format");
+      }
+    }
+  }
+
+  // Proof of address (both Registered company and Individual)
+  const hasAddressProof = Boolean(newFiles["proof_of_address_file"] || profile?.proof_of_address_url);
+  if (!hasAddressProof) {
+    errors.proof_of_address_file = "Please upload Proof of address document";
+    setFirstToast("Please upload Proof of address document");
+  }
+
+  const isValid = !firstMissingToast;
+  return { isValid, errors, firstMissingToast };
 }
 
 // ── Component ─────────────────────────────────────────────────────
@@ -183,9 +389,14 @@ export default function BusinessInfoTab({
   onIdChange,
   onFileSelect,
   onViewImage,
+  errors: externalErrors,
+  setErrors: externalSetErrors,
 }: BusinessInfoTabProps) {
   const [idDropdownOpen, setIdDropdownOpen] = useState(false);
-  const [errors, setErrors] = useState<FieldErrors>({});
+  const [internalErrors, setInternalErrors] = useState<BusinessInfoErrors>({});
+
+  const errors = externalErrors ?? internalErrors;
+  const setErrors = externalSetErrors ?? setInternalErrors;
 
   const existingCACDoc = profile?.documents?.find(
     (doc: any) => doc.document_type === "CAC_CERTIFICATE"
@@ -201,21 +412,59 @@ export default function BusinessInfoTab({
 
     setErrors((prev) => {
       let msg = "";
-      if (field === "business_registration_number") msg = validateBizRegNo(value);
-      else if (field === "CAC_No") msg = validateCACNo(value);
-      else if (field === "tax_identification_number") msg = validateTIN(value);
-      else if (field === "vat_number") msg = validateVAT(value);
-      return { ...prev, [field]: msg };
+      if (field === "business_registration_number") {
+        if (!value.trim()) msg = "Please enter business registration number";
+        else msg = validateBizRegNo(value);
+      } else if (field === "CAC_No") {
+        if (!value.trim()) msg = "Please enter CAC registration number";
+        else msg = validateCACNo(value);
+      } else if (field === "tax_identification_number") {
+        if (!value.trim()) msg = "Please enter TIN (tax identification number)";
+        else msg = validateTIN(value);
+      } else if (field === "vat_number") {
+        if (!value.trim()) msg = "Please enter VAT number";
+        else msg = validateVAT(value);
+      }
+      return { ...prev, [field]: msg || undefined };
     });
   };
 
   const handleIdNumberChange = (index: number, idType: string, value: string) => {
     updateIdField(index, "id_number", value);
-    const msg = validateIdNumber(idType, value);
+    let msg = "";
+    if (!value.trim()) {
+      const idLabel = getIdLabel(idType);
+      msg = `Please enter ${idLabel} number`;
+    } else {
+      msg = validateIdNumber(idType, value);
+    }
     setErrors((prev) => ({
       ...prev,
-      id_numbers: { ...(prev.id_numbers || {}), [index]: msg },
+      id_numbers: { ...(prev.id_numbers || {}), [index]: msg || "" },
     }));
+  };
+
+  const handleFileSelectInternal = (key: string, file: File) => {
+    onFileSelect(key, file);
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const handleIdFrontImage = (index: number, file: File) => {
+    updateIdField(index, "id_front_image", file);
+    setErrors((prev) => {
+      const updated = { ...(prev.id_front_images || {}) };
+      delete updated[index];
+      return { ...prev, id_front_images: updated };
+    });
+  };
+
+  const handleIdBackImage = (index: number, file: File) => {
+    updateIdField(index, "id_back_image", file);
+    setErrors((prev) => {
+      const updated = { ...(prev.id_back_images || {}) };
+      delete updated[index];
+      return { ...prev, id_back_images: updated };
+    });
   };
 
   // ── ID list helpers ────────────────────────────────────────────
@@ -223,6 +472,7 @@ export default function BusinessInfoTab({
     const backendValue = ID_TYPE_MAP[idLabel];
     if (formData.ids.some((i) => i.means_of_id === backendValue)) return;
     if (formData.ids.length >= 2) return;
+    setErrors((prev) => ({ ...prev, id_type: undefined }));
     onIdChange([
       ...formData.ids,
       { means_of_id: backendValue, id_number: "", id_front_image: null, id_back_image: null },
@@ -292,8 +542,9 @@ export default function BusinessInfoTab({
                   (profile?.CAC_No_file_url ? "CAC_Document.jpg" : "")
                 }
                 fileUrl={profile?.CAC_No_file_url}
-                onFileSelect={(file) => onFileSelect("CAC_No_file", file)}
+                onFileSelect={(file) => handleFileSelectInternal("CAC_No_file", file)}
                 onViewImage={onViewImage}
+                error={isEditing ? errors.CAC_No_file : undefined}
               />
             </div>
 
@@ -326,8 +577,9 @@ export default function BusinessInfoTab({
                   (profile?.tax_certificate_url ? "Tax_Certificate.jpg" : "")
                 }
                 fileUrl={profile?.tax_certificate_url}
-                onFileSelect={(file) => onFileSelect("tax_identification_file", file)}
+                onFileSelect={(file) => handleFileSelectInternal("tax_identification_file", file)}
                 onViewImage={onViewImage}
+                error={isEditing ? errors.tax_identification_file : undefined}
               />
             </div>
 
@@ -342,8 +594,9 @@ export default function BusinessInfoTab({
                   (cacFileUrl ? "Registration_Certificate.jpg" : "")
                 }
                 fileUrl={cacFileUrl}
-                onFileSelect={(file) => onFileSelect("certificate_of_registration", file)}
+                onFileSelect={(file) => handleFileSelectInternal("certificate_of_registration", file)}
                 onViewImage={onViewImage}
+                error={isEditing ? errors.certificate_of_registration : undefined}
               />
             </div>
 
@@ -377,7 +630,9 @@ export default function BusinessInfoTab({
                 <div className="flex-1 flex flex-col gap-2 relative">
                   <label className="">ID type</label>
                   <div
-                    className="border border-[#e5e5e5] rounded-xl px-3 py-2 min-h-[48px] flex flex-wrap gap-2 cursor-pointer relative items-center bg-white"
+                    className={`border rounded-xl px-3 py-2 min-h-[48px] flex flex-wrap gap-2 cursor-pointer relative items-center bg-white ${
+                      isEditing && errors.id_type ? "border-red-400" : "border-[#e5e5e5]"
+                    }`}
                     onClick={() => setIdDropdownOpen((p) => !p)}
                   >
                     <div className="flex flex-wrap gap-2 flex-1">
@@ -409,6 +664,11 @@ export default function BusinessInfoTab({
                       <Image src={SelectButton} alt="select" width={12} height={7} />
                     </div>
                   </div>
+                  {isEditing && errors.id_type && (
+                    <p className="text-[11px] text-red-500 font-MontserratMedium leading-tight">
+                      {errors.id_type}
+                    </p>
+                  )}
 
                   {idDropdownOpen && (
                     <div className="absolute top-full w-full py-1.5 px-4 bg-white border rounded-xl shadow-lg z-20 mt-1">
@@ -461,7 +721,7 @@ export default function BusinessInfoTab({
                           maxLength={rule?.maxLength}
                           placeholder={rule?.hint || "Enter ID number"}
                           value={id.id_number}
-                          error={errors.id_numbers?.[index]}
+                          error={isEditing ? errors.id_numbers?.[index] : undefined}
                           onChange={(e) => {
                             // Passport / NIN / Voter's / Driver's — uppercase alphanumeric
                             const raw = e.target.value
@@ -482,8 +742,9 @@ export default function BusinessInfoTab({
                                 (id.id_front_image_url ? `Front_ID_${index + 1}.jpg` : "")
                               }
                               fileUrl={id.id_front_image_url}
-                              onFileSelect={(file) => updateIdField(index, "id_front_image", file)}
+                              onFileSelect={(file) => handleIdFrontImage(index, file)}
                               onViewImage={onViewImage}
+                              error={isEditing ? errors.id_front_images?.[index] : undefined}
                             />
                           </div>
                           <div className="flex flex-col gap-2">
@@ -496,8 +757,9 @@ export default function BusinessInfoTab({
                                 (id.id_back_image_url ? `Back_ID_${index + 1}.jpg` : "")
                               }
                               fileUrl={id.id_back_image_url}
-                              onFileSelect={(file) => updateIdField(index, "id_back_image", file)}
+                              onFileSelect={(file) => handleIdBackImage(index, file)}
                               onViewImage={onViewImage}
+                              error={isEditing ? errors.id_back_images?.[index] : undefined}
                             />
                           </div>
                         </div>
@@ -566,8 +828,9 @@ export default function BusinessInfoTab({
                   (profile?.tax_certificate_url ? "Tax_Certificate.jpg" : "")
                 }
                 fileUrl={profile?.tax_certificate_url}
-                onFileSelect={(file) => onFileSelect("tax_identification_file", file)}
+                onFileSelect={(file) => handleFileSelectInternal("tax_identification_file", file)}
                 onViewImage={onViewImage}
+                error={isEditing ? errors.tax_identification_file : undefined}
               />
             </div>
             <TextInput
@@ -671,8 +934,9 @@ export default function BusinessInfoTab({
                 (profile?.proof_of_address_url ? "proof_of_address_file.pdf" : "")
               }
               fileUrl={profile?.proof_of_address_url}
-              onFileSelect={(file) => onFileSelect("proof_of_address_file", file)}
+              onFileSelect={(file) => handleFileSelectInternal("proof_of_address_file", file)}
               onViewImage={onViewImage}
+              error={isEditing ? errors.proof_of_address_file : undefined}
             />
           </div>
         </div>

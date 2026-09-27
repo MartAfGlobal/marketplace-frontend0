@@ -54,7 +54,7 @@ export default function AddProductStep1Page() {
   const [showDraftSuccess, setShowDraftSuccess] = useState(false);
 
   const hasAllImages = images.every((img) => img !== null);
-  const hasValidName = productName.trim().length > 0;
+  const hasValidName = productName.trim().length > 0 && productName.trim().length <= 60;
   const hasValidPrice =
     basePrice !== undefined &&
     basePrice !== "" &&
@@ -364,13 +364,19 @@ export default function AddProductStep1Page() {
 
             <div className="md:flex-row flex flex-col items-center  md:gap-8 justify-center">
               <div className="w-full mb-6 md:mb-0 ">
-                <Label>Name of Product</Label>
+                <div className="flex justify-between items-center">
+                  <Label>Name of Product</Label>
+                  <span className="text-[11px] font-MontserratNormal text-000000/40">
+                    {productName.length}/60
+                  </span>
+                </div>
                 <Input
                   className=""
                   placeholder="Ankara shorts and blouse"
                   type="text"
+                  maxLength={60}
                   value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
+                  onChange={(e) => setProductName(e.target.value.slice(0, 60))}
                 />
               </div>
 

@@ -7,6 +7,7 @@ import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Link from "next/link";
+import { useOtpTimer, isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 const DEFAULT_RESEND_TIMEOUT = 120;
 
@@ -38,8 +39,13 @@ export default function OtpVerification() {
 
   const OTP_LENGTH = 6;
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [timer, setTimer] = useState(initialRetryAfter);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  const { timer, resetTimer, expireTimer, formattedTimer } = useOtpTimer({
+    scope: "buyer_reset_password",
+    identifier: email,
+    initialSeconds: initialRetryAfter,
+  });
 
   const { loading, sendHttpRequest: verifyOtp } = useHttp();
   const { loading: resendLoading, sendHttpRequest: resendOtp } = useHttp();
@@ -89,15 +95,6 @@ export default function OtpVerification() {
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
-
-  // Timer countdown
-  useEffect(() => {
-    if (timer <= 0) return;
-    const interval = setInterval(() => {
-      setTimer((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timer]);
 
   const handleDirectPaste = async () => {
     try {
@@ -191,12 +188,20 @@ export default function OtpVerification() {
         const data = res?.data || res;
         const resetToken = data?.token;
         if (resetToken) {
+          expireTimer();
           toast.success(data?.detail || "Code verified successfully.");
           router.push(
             `/auth/create-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(resetToken)}`
           );
         } else {
           toast.error(data?.detail || "Code verification failed.");
+        }
+      },
+      errorRes: (err: any) => {
+        if (isOtpExpiredError(err)) {
+          expireTimer();
+          setDigits(Array(OTP_LENGTH).fill(""));
+          inputRefs.current[0]?.focus();
         }
       },
       requestConfig: {
@@ -221,12 +226,12 @@ export default function OtpVerification() {
           extractRetryAfter(res?.data) ??
           extractRetryAfter(res) ??
           DEFAULT_RESEND_TIMEOUT;
-        setTimer(backendRetry);
+        resetTimer(backendRetry);
       },
       errorRes: (err: any) => {
         const backendRetry = extractRetryAfter(err?.response?.data);
         if (backendRetry) {
-          setTimer(backendRetry);
+          resetTimer(backendRetry);
         }
       },
       requestConfig: {
@@ -238,10 +243,6 @@ export default function OtpVerification() {
       },
     });
   };
-
-  const minutes = Math.floor(timer / 60);
-  const seconds = timer % 60;
-  const formattedTimer = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   return (
     <div className="w-full">

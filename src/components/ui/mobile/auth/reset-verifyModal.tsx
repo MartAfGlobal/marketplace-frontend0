@@ -8,6 +8,7 @@ import { LoadingSpinner } from "../../loading-spinner";
 import { ClipboardEvent, useState, useEffect } from "react";
 import { Input } from "@/components/ui/forms/Input";
 import { useRouter } from "next/navigation";
+import { useOtpTimer, isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 function extractRetryAfter(data: any): number | null {
   const raw =
@@ -32,18 +33,12 @@ export default function ResetVerify({
   const { loading, sendHttpRequest: resendUserReq } = useHttp();
   const { loading: verifying, sendHttpRequest: verifyOtpReq } = useHttp();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [timer, setTimer] = useState(DEFAULT_RESET_TIMEOUT);
+  const { timer, resetTimer, expireTimer, formattedTimer } = useOtpTimer({
+    scope: "mobile_reset_password",
+    identifier: email,
+    initialSeconds: DEFAULT_RESET_TIMEOUT,
+  });
   const router = useRouter();
-
-  useEffect(() => {
-    let interval: any;
-    if (timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [timer]);
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1);
@@ -97,11 +92,19 @@ export default function ResetVerify({
         const data = res?.data || res;
         const resetToken = data?.token;
         if (resetToken) {
+          expireTimer();
           toast.success(data?.detail || "Code verified successfully!");
           router.push("?resetToken=" + encodeURIComponent(resetToken));
           setStep("resetPassword");
         } else {
           toast.error(data?.detail || "OTP verification failed.");
+        }
+      },
+      errorRes: (err: any) => {
+        if (isOtpExpiredError(err)) {
+          expireTimer();
+          setOtp(["", "", "", "", "", ""]);
+          document.getElementById("reset-otp-0")?.focus();
         }
       },
       requestConfig: {
@@ -119,7 +122,9 @@ export default function ResetVerify({
       extractRetryAfter(res?.data) ??
       extractRetryAfter(res) ??
       DEFAULT_RESET_TIMEOUT;
-    setTimer(backendRetry);
+    resetTimer(backendRetry);
+    setOtp(["", "", "", "", "", ""]);
+    document.getElementById("reset-otp-0")?.focus();
   };
 
   // ✅ Handle resend link
@@ -139,7 +144,7 @@ export default function ResetVerify({
       errorRes: (err: any) => {
         const backendRetry = extractRetryAfter(err?.response?.data);
         if (backendRetry) {
-          setTimer(backendRetry);
+          resetTimer(backendRetry);
         }
       },
       requestConfig: {
@@ -197,9 +202,7 @@ export default function ResetVerify({
           {loading ? (
             <LoadingSpinner color="border-ff715b" />
           ) : timer > 0 ? (
-            `Resend OTP (${Math.floor(timer / 60)}:${(timer % 60)
-              .toString()
-              .padStart(2, "0")})`
+            `Resend OTP (${formattedTimer})`
           ) : (
             "Resend OTP"
           )}

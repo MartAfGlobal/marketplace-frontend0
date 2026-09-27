@@ -87,7 +87,7 @@ export default function AddProductForm() {
 
             <div className="text-c12 font-MontserratMedium w-full">
               <label>Name of Product</label>
-              <Input placeholder="Enter product name" className="" />
+              <Input placeholder="Enter product name" className="" maxLength={60} />
             </div>
 
             <div className="text-c12 font-MontserratMedium space-y-2 w-full">

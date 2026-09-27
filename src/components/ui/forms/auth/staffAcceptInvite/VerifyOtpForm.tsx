@@ -8,6 +8,7 @@ import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { tokenActions } from "@/store/token/token-slice";
+import { useOtpTimer, isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 const OTP_LENGTH = 6;
 const DEFAULT_RESEND_TIMEOUT = 300;
@@ -26,7 +27,11 @@ export default function VerifyOtpForm() {
   const initialRetryAfter = Number(searchParams.get("retry_after_seconds")) || DEFAULT_RESEND_TIMEOUT;
 
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [timer, setTimer] = useState(initialRetryAfter);
+  const { timer, resetTimer, expireTimer, formattedTimer } = useOtpTimer({
+    scope: "staff_accept_invite",
+    identifier: email,
+    initialSeconds: initialRetryAfter,
+  });
   const [wrongCode, setWrongCode] = useState(false);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -98,12 +103,6 @@ export default function VerifyOtpForm() {
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
-
-  useEffect(() => {
-    if (timer <= 0) return;
-    const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-    return () => clearInterval(interval);
-  }, [timer]);
 
   const handleChange = (index: number, value: string) => {
     const cleaned = value.replace(/\D/g, "");
@@ -186,11 +185,15 @@ export default function VerifyOtpForm() {
           dispatch(tokenActions.setToken(accessToken));
         }
         router.push(`/auth/admin/staff/accept-invite/success?email=${encodeURIComponent(email)}`);
+        expireTimer();
       },
-      errorRes: () => {
+      errorRes: (err: any) => {
         setWrongCode(true);
         setDigits(Array(OTP_LENGTH).fill(""));
         inputRefs.current[0]?.focus();
+        if (isOtpExpiredError(err)) {
+          expireTimer();
+        }
       },
     });
   };
@@ -211,14 +214,10 @@ export default function VerifyOtpForm() {
         setDigits(Array(OTP_LENGTH).fill(""));
         setWrongCode(false);
         inputRefs.current[0]?.focus();
-        setTimer(Number(data?.retry_after_seconds) || DEFAULT_RESEND_TIMEOUT);
+        resetTimer(Number(data?.retry_after_seconds) || DEFAULT_RESEND_TIMEOUT);
       },
     });
   };
-
-  const minutes = Math.floor(timer / 60);
-  const seconds = timer % 60;
-  const formattedTimer = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   return (
     <div className="w-full">

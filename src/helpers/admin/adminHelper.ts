@@ -498,6 +498,114 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const approveAdminProductUpdate = (
+    productId: string,
+    notes?: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/products/${productId}/approve-update/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: notes ? { notes } : {},
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const suspendAdminProduct = (
+    productId: string,
+    notes?: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/products/${productId}/suspend/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { notes: notes ?? "Seller requested temporary pause for restocking." },
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const reactivateAdminProduct = (
+    productId: string,
+    notes?: string,
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/products/${productId}/reactivate/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { notes: notes ?? "Restock confirmed, resuming sales." },
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const rejectAdminProductUpdate = (
+    productId: string,
+    payload: { reason: string; notes?: string },
+    callback?: (response?: any) => void,
+    errorCallback?: (err?: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/products/admin/products/${productId}/reject-update/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => {
+        setsuccess(true);
+        if (callback) callback(responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
   const rejectAdminSeller = (
     manufacturerId: string,
     payload: { reason: string },
@@ -2927,6 +3035,10 @@ export const AdminDetails = (id?: string) => {
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
     approveAdminProduct,
+    approveAdminProductUpdate,
+    rejectAdminProductUpdate,
+    suspendAdminProduct,
+    reactivateAdminProduct,
     fetchAdminSellersProductsList,
     fetchAdminProductsByCategory,
     fetchAdminSellers,

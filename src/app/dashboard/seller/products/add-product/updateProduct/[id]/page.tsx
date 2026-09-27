@@ -100,7 +100,7 @@ export default function UpdateProductPage() {
     Record<string, string>
   >({});
 
-  const hasValidName = productName.trim().length > 0;
+  const hasValidName = productName.trim().length > 0 && productName.trim().length <= 60;
   const hasValidPrice =
     basePrice !== undefined &&
     basePrice !== "" &&
@@ -796,13 +796,19 @@ export default function UpdateProductPage() {
 
             <div className="flex items-center md:flex-row flex-col  gap-8 justify-center">
               <div className="w-full">
-                <Label>Name of Product</Label>
+                <div className="flex justify-between items-center">
+                  <Label>Name of Product</Label>
+                  <span className="text-[11px] font-MontserratNormal text-000000/40">
+                    {productName.length}/60
+                  </span>
+                </div>
                 <Input
                   className=""
                   placeholder="Ankara shorts and blouse"
                   type="text"
+                  maxLength={60}
                   value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
+                  onChange={(e) => setProductName(e.target.value.slice(0, 60))}
                 />
               </div>
 

@@ -69,6 +69,47 @@ const getColorHex = (value: string, extraData?: Record<string, string>): string 
   return COLOR_MAP[normalized] || normalized;
 };
 
+/* ── Image Helpers ── */
+const getImageUrl = (img: any): string => {
+  if (!img) return "";
+  if (typeof img === "string") return img;
+  return (
+    img.image_urls?.original ||
+    img.image_urls?.large ||
+    img.image_urls?.medium ||
+    img.image_urls?.url ||
+    img.image_urls?.thumbnail ||
+    img.original ||
+    img.large ||
+    img.medium ||
+    img.image ||
+    img.url ||
+    img.thumbnail ||
+    img.main_image_url ||
+    ""
+  );
+};
+
+const getThumbUrl = (thumb: any): string => {
+  if (!thumb) return "";
+  if (typeof thumb === "string") return thumb;
+  return (
+    thumb.image_urls?.thumbnail ||
+    thumb.image_urls?.medium ||
+    thumb.image_urls?.small ||
+    thumb.image_urls?.original ||
+    thumb.image_urls?.large ||
+    thumb.image_urls?.url ||
+    thumb.thumbnail ||
+    thumb.medium ||
+    thumb.image ||
+    thumb.url ||
+    thumb.large ||
+    thumb.main_image_url ||
+    ""
+  );
+};
+
 export default function ProductVariation({
   isModal = true,
   selectedVariaton
@@ -85,17 +126,21 @@ console.log("available variation", productDetails)
 
   const [selectedVariation, setSelectedVariation] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const productImages = productDetails?.images || [];
-  const variationImages = selectedVariation?.images?.length
-    ? selectedVariation.images
-    : selectedVariation?.main_image_url
-    ? [selectedVariation.main_image_url]
-    : [];
+
+  const productImages = Array.isArray(productDetails?.images) ? productDetails.images : [];
+  const variationImages: any[] = [];
+  if (selectedVariation?.images && Array.isArray(selectedVariation.images) && selectedVariation.images.length > 0) {
+    variationImages.push(...selectedVariation.images);
+  } else if (selectedVariation?.main_image_url) {
+    variationImages.push(selectedVariation.main_image_url);
+  }
+
   const images = variationImages.length > 0 ? variationImages : productImages;
+
   const firstImage = images[0];
   const firstImageId = firstImage
     ? typeof firstImage === "object"
-      ? firstImage.id || firstImage.url || firstImage.large || firstImage.medium || firstImage.thumbnail || null
+      ? firstImage.id || getImageUrl(firstImage) || null
       : firstImage
     : null;
 
@@ -324,33 +369,6 @@ const dispatch = useDispatch() as AppDispatch;
       scrollToVariations();
   };
 
-  /* ── Image Helpers ── */
-  const getImageUrl = (img: any): string => {
-    if (!img) return "";
-    if (typeof img === "string") return img;
-    return (
-      img.large ||
-      img.medium ||
-      img.image ||
-      img.url ||
-      img.thumbnail ||
-      ""
-    );
-  };
-
-  const getThumbUrl = (thumb: any): string => {
-    if (!thumb) return "";
-    if (typeof thumb === "string") return thumb;
-    return (
-      thumb.thumbnail ||
-      thumb.medium ||
-      thumb.image ||
-      thumb.url ||
-      thumb.large ||
-      ""
-    );
-  };
-
   const productImageSource =
     (productDetails as any)?.thumbnail ||
     (productDetails as any)?.image ||
@@ -365,10 +383,12 @@ const dispatch = useDispatch() as AppDispatch;
     return imageId === selectedImageId;
   });
 
+  const selectedImageUrl = getImageUrl(selectedImage);
+  const firstImageUrl = images.length > 0 ? getImageUrl(images[0]) : "";
   const variationMainImage =
     selectedVariation?.main_image_url ||
     (selectedVariation?.images?.length ? getImageUrl(selectedVariation.images[0]) : "");
-  const mainImageSrc = getImageUrl(selectedImage) || variationMainImage || productImageSource;
+  const mainImageSrc = selectedImageUrl || firstImageUrl || variationMainImage || productImageSource;
 
   return (
     <div
@@ -439,6 +459,10 @@ const dispatch = useDispatch() as AppDispatch;
                     <button
                       key={thumbId || index}
                       onMouseEnter={() => {
+                        setSelectedImageId(thumbId);
+                        setActiveSlide(index);
+                      }}
+                      onClick={() => {
                         setSelectedImageId(thumbId);
                         setActiveSlide(index);
                       }}
@@ -757,10 +781,12 @@ const dispatch = useDispatch() as AppDispatch;
               <div className=" flex flex-col   gap-c24 pb-4 md:border-b md:border-gray-100">
                 <div className="w-full flex justify-between items-start">
                   <div className="flex gap-4">
-                    <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center">
-                      <p className="font-MontserratBold text-c12 text-000000">
-                        COMPANY LOGO
-                      </p>
+                    <div className="h-c88 w-c88 rounded-c12 bg-gray-100 flex items-center justify-center text-center overflow-hidden">
+                      {productDetails?.seller?.company_logo ? (
+                        <Image src={productDetails.seller.company_logo} alt="Seller logo" width={88} height={88} className="object-cover" />
+                      ) : (
+                        <p className="font-MontserratBold text-c12 text-000000">COMPANY LOGO</p>
+                      )}
                     </div>
                     <div>
                       <h1 className="font-MontserratSemiBold text-161616 text-c18">
@@ -776,7 +802,7 @@ const dispatch = useDispatch() as AppDispatch;
                           />
                         </div>
                         <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
-                          Suppliers Location
+                          {productDetails?.seller?.address?.state || productDetails?.seller?.company_address?.state || "Suppliers Location"}
                         </p>
                       </div>
                       <div className="md:hidden flex gap-2 items-center">
@@ -875,10 +901,12 @@ const dispatch = useDispatch() as AppDispatch;
           <div className="md:hidden flex flex-col-reverse mt-c32 m  gap-c24 pb-4 md:border-b md:border-gray-100">
             <div className="w-full flex justify-between items-start">
               <div className="flex gap-4">
-                <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center">
-                  <p className="font-MontserratBold text-c12 text-000000">
-                    COMPANY LOGO
-                  </p>
+                <div className="h-c88 w-c88 rounded-c12 bg-f89f1c flex items-center justify-center text-center overflow-hidden">
+                  {productDetails?.seller?.company_logo ? (
+                    <Image src={productDetails.seller.company_logo} alt="Seller logo" width={88} height={88} className="object-cover" />
+                  ) : (
+                    <p className="font-MontserratBold text-c12 text-000000">COMPANY LOGO</p>
+                  )}
                 </div>
                 <div>
                   <h1 className="font-MontserratSemiBold text-161616 text-c18">
@@ -894,7 +922,7 @@ const dispatch = useDispatch() as AppDispatch;
                       />
                     </div>
                     <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
-                      Suppliers Location
+                      {productDetails?.seller?.address?.state || productDetails?.seller?.company_address?.state || "Suppliers Location"}
                     </p>
                   </div>
                   <div className="md:hidden flex gap-2 items-center">

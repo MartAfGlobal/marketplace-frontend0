@@ -85,15 +85,7 @@ export const useHttp = () => {
 
         if (res.status >= 200 && res.status < 300) {
           if (requestConfig.successMessage) {
-            if (typeof window !== "undefined" && window.innerWidth < 768) {
-              dispatch(openGlobalResultModal({
-                result: "success",
-                title: "Success",
-                message: requestConfig.successMessage
-              }));
-            } else {
-              toast.success(requestConfig.successMessage);
-            }
+           toast.success(requestConfig.successMessage);
           }
           if (
             requestConfig.method.toUpperCase() !== "GET" &&

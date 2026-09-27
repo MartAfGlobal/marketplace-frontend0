@@ -10,6 +10,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { AdminProductDetail } from "@/types/global";
 import { clearAdminProductDetail } from "@/store/admin/products/adminProductDetailSlice";
+import SuspendProductModal from "@/components/ui/Modals/admin/SuspendProductModal";
+import ResultModal from "@/components/ui/forms/resultModal";
+import { toast } from "sonner";
 
 export default function ProductDetailsPage({
   params,
@@ -22,7 +25,27 @@ export default function ProductDetailsPage({
   const [activeImage, setActiveImage] = useState(0);
   const [variantIndex, setVariantIndex] = useState(0);
   const variantsScrollRef = useRef<HTMLDivElement>(null);
-  const { fetchAdminSellersProductDetails, loading } = AdminDetails();
+  const {
+    fetchAdminSellersProductDetails,
+    suspendAdminProduct,
+    reactivateAdminProduct,
+    loading,
+  } = AdminDetails();
+
+  const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [suspendModalAction, setSuspendModalAction] = useState<"suspend" | "reactivate">("suspend");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [resultModalState, setResultModalState] = useState<{
+    isOpen: boolean;
+    result: "success" | "error";
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    result: "success",
+    title: "",
+    message: "",
+  });
 
   const productId = unwrappedParams.id;
   const token = useSelector((state: RootState) => state.token?.token);
@@ -127,20 +150,61 @@ export default function ProductDetailsPage({
     : [];
 
   // ── Status badge ─────────────────────────────────────────────────────────────
-  const approvalStatus = product?.is_approved?.toLowerCase() ?? "unknown";
+  const approvalStatus = (product?.is_approved ?? "").toLowerCase();
+  const rawStatus = ((product as any)?.status ?? "").toLowerCase();
+  const isApproved = approvalStatus === "approved" || rawStatus === "approved";
+  const isSuspended = approvalStatus === "suspended" || rawStatus === "suspended";
+
   const statusClass =
-    approvalStatus === "approved"
+    isApproved
       ? "bg-green-100 text-green-700"
+      : isSuspended
+      ? "bg-[#6A0DAD]/12 text-[#6A0DAD]"
       : approvalStatus === "rejected"
       ? "bg-red-100 text-red-600"
       : (approvalStatus === "pending" || approvalStatus === "pending_update")
       ? "bg-ffaco6/12 text-ffaco6"
       : "bg-gray-100 text-gray-600";
   const statusLabel =
-    approvalStatus === "approved" ? "Approved"
+    isApproved ? "Approved"
+    : isSuspended ? "Suspended"
     : approvalStatus === "rejected" ? "Rejected"
     : approvalStatus === "pending" ? "Pending"
-    :approvalStatus ==="pending_update"? "Pending update" : "Unknown";
+    : approvalStatus === "pending_update" ? "Pending update" : "Unknown";
+
+  const handleSuspendConfirm = (notes: string) => {
+    setActionLoading(true);
+    const isSuspend = suspendModalAction === "suspend";
+    const apiCall = isSuspend ? suspendAdminProduct : reactivateAdminProduct;
+
+    apiCall(
+      productId,
+      notes,
+      () => {
+        setActionLoading(false);
+        setIsSuspendModalOpen(false);
+        setResultModalState({
+          isOpen: true,
+          result: "success",
+          title: isSuspend ? "Product Suspended" : "Product Reactivated",
+          message: isSuspend
+            ? "The product has been suspended and is no longer visible to buyers."
+            : "The product has been reactivated and is now live on the marketplace.",
+        });
+        // Refresh product details to update status and buttons
+        fetchAdminSellersProductDetails(productId);
+      },
+      (err: any) => {
+        setActionLoading(false);
+        const msg =
+          err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          err?.message ||
+          (isSuspend ? "Failed to suspend product." : "Failed to reactivate product.");
+        toast.error(msg);
+      }
+    );
+  };
 
   // ── Other real values ────────────────────────────────────────────────────────
   const basePrice = product?.base_price !== undefined && product?.base_price !== null
@@ -622,16 +686,38 @@ export default function ProductDetailsPage({
             <Button className="bg-transparent text-[#ff715b] border border-[#ff715b] hover:bg-[#ffe8e8] w-36 h-12">
               Message Seller
             </Button>
-            <Button
-              onClick={() =>
-                router.push(
-                  `/dashboard/admin/products/listings/${unwrappedParams.id}/review`,
-                )
-              }
-              className="bg-[#ff9a8a] text-white hover:bg-[#ff8673] w-32 h-12"
-            >
-              Review
-            </Button>
+            {isApproved ? (
+              <Button
+                onClick={() => {
+                  setSuspendModalAction("suspend");
+                  setIsSuspendModalOpen(true);
+                }}
+                className="bg-[#ffac06] text-white hover:bg-[#e69b05] w-32 h-12"
+              >
+                Suspend
+              </Button>
+            ) : isSuspended ? (
+              <Button
+                onClick={() => {
+                  setSuspendModalAction("reactivate");
+                  setIsSuspendModalOpen(true);
+                }}
+                className="bg-[#00BE5C] text-white hover:bg-[#009e4d] w-32 h-12"
+              >
+                Reactivate
+              </Button>
+            ) : (
+              <Button
+                onClick={() =>
+                  router.push(
+                    `/dashboard/admin/products/listings/${unwrappedParams.id}/review`,
+                  )
+                }
+                className="bg-[#ff9a8a] text-white hover:bg-[#ff8673] w-32 h-12"
+              >
+                Review
+              </Button>
+            )}
             <Button
               onClick={() =>
                 router.push("/dashboard/admin/products?type=listings")
@@ -643,6 +729,26 @@ export default function ProductDetailsPage({
           </div>
         </div>
       </div>
+
+      {/* Suspend / Reactivate Modal */}
+      <SuspendProductModal
+        isOpen={isSuspendModalOpen}
+        onClose={() => setIsSuspendModalOpen(false)}
+        onConfirm={handleSuspendConfirm}
+        loading={actionLoading}
+        action={suspendModalAction}
+        productName={productName}
+      />
+
+      {/* Result Modal */}
+      <ResultModal
+        isOpen={resultModalState.isOpen}
+        result={resultModalState.result}
+        title={resultModalState.title}
+        message={resultModalState.message}
+        onCancel={() => setResultModalState((s) => ({ ...s, isOpen: false }))}
+        onConfirm={() => setResultModalState((s) => ({ ...s, isOpen: false }))}
+      />
     </div>
   );
 }

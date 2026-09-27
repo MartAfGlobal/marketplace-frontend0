@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
 import { Button } from "@/components/ui/Button/Button";
 import ResultModal from "../forms/resultModal";
+import { useOtpTimer, isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 interface VerifyBankOtpModalProps {
   isOpen: boolean;
@@ -48,8 +49,11 @@ const VerifyBankOtpModal = ({
   onBack,
 }: VerifyBankOtpModalProps) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [timer, setTimer] = useState(DEFAULT_BANK_OTP_TIMEOUT);
-  const [canResend, setCanResend] = useState(false);
+  const { timer, resetTimer, expireTimer, formattedTimer, canResend } = useOtpTimer({
+    scope: "bank_otp",
+    identifier: bankDetails?.account_number || "bank",
+    initialSeconds: DEFAULT_BANK_OTP_TIMEOUT,
+  });
   const [verifying, setVerifying] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState(2); // Start from OTP step
@@ -113,18 +117,6 @@ const VerifyBankOtpModal = ({
       toast.error("Clipboard access denied. Please paste into the box.");
     }
   };
-
-  useEffect(() => {
-    let interval: any;
-    if (isOpen && timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    } else if (timer === 0) {
-      setCanResend(true);
-    }
-    return () => clearInterval(interval);
-  }, [isOpen, timer]);
 
   const handleOtpChange = (index: number, value: string) => {
     const cleaned = value.replace(/\D/g, "");
@@ -194,10 +186,16 @@ const VerifyBankOtpModal = ({
       },
       successRes: () => {
         setVerifying(false);
+        expireTimer();
         setStep(3); // Show success
       },
       errorRes: (err: any) => {
         setVerifying(false);
+        if (isOtpExpiredError(err)) {
+          expireTimer();
+          setOtp(Array(6).fill(""));
+          document.getElementById("bank-otp-0")?.focus();
+        }
         toast.error(err?.message || "Invalid OTP");
       }
     });
@@ -224,26 +222,20 @@ const VerifyBankOtpModal = ({
           extractRetryAfter(res?.data) ??
           extractRetryAfter(res) ??
           DEFAULT_BANK_OTP_TIMEOUT;
-        setTimer(backendRetry);
-        setCanResend(false);
+        resetTimer(backendRetry);
+        setOtp(Array(6).fill(""));
+        document.getElementById("bank-otp-0")?.focus();
         toast.success("New OTP sent successfully");
       },
       errorRes: (err: any) => {
         setSubmitting(false);
         const backendRetry = extractRetryAfter(err?.response?.data);
         if (backendRetry) {
-          setTimer(backendRetry);
-          setCanResend(false);
+          resetTimer(backendRetry);
         }
         toast.error(err?.message || "Failed to resend OTP");
       }
     });
-  };
-
-  const formatTimer = (time: number) => {
-    const mins = Math.floor(time / 60);
-    const secs = time % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -370,7 +362,7 @@ const VerifyBankOtpModal = ({
                         onClick={handleResendOtp}
                         disabled={!canResend || submitting}
                       >
-                        {submitting ? <LoadingSpinner  color="border-ff715b" /> : `Resend OTP (${formatTimer(timer)})`}
+                        {submitting ? <LoadingSpinner color="border-ff715b" /> : timer > 0 ? `Resend OTP (${formattedTimer})` : "Resend OTP"}
                       </Button>
                     </div>
                   </div>

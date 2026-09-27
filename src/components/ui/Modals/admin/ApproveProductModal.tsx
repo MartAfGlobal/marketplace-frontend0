@@ -48,7 +48,7 @@ export default function ApproveProductModal({
     ? "Resolve Flagged Product"
     : isRejected
     ? "Re-Approve Product"
-    : "Approve Product";
+    : isAprovalStatus === "pending"? "Approve Product": isAprovalStatus ==="pending_update"? "Aprove update" :"Approve";
 
   const modalDescription = isFlagged
     ? "You are about to resolve this flagged product back to Live. This clears the flagged state and reactivates the listing."
@@ -98,7 +98,7 @@ export default function ApproveProductModal({
                     type="text" 
                     readOnly 
                     value={adminName} 
-                    className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm font-MontserratMedium text-gray-500 bg-white focus:outline-none"
+                    className=""
                   />
                 </div>
                 <div>
@@ -110,7 +110,7 @@ export default function ApproveProductModal({
                       type="text" 
                       readOnly 
                       value={currentDateStr} 
-                      className="w-full h-12 px-4 rounded-xl border border-gray-200 text-sm font-MontserratMedium text-gray-500 bg-white focus:outline-none"
+                      className=""
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-MontserratMedium">
                       {currentTimeStr}

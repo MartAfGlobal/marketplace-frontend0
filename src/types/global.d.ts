@@ -379,6 +379,7 @@ export interface Specification {
 
 export interface ProductDetail {
   id: string;
+  seller:productSeller;
   name: string;
   slug: string;
   description: string;
@@ -439,12 +440,27 @@ export interface Product {
   };
   created_at: string;
   manufacturer_name: string;
+  seller:productSeller;
   name: string;
   price_range: PriceRange;
   rating_average: number;
   slug: string;
   sold: number;
   variation_count: number;
+}
+
+export interface SellerAddress {
+  address: string;
+  city: string;
+  country: string;
+  postal_code: string;
+  state: string;
+}
+
+export interface productSeller {
+  address:SellerAddress 
+  company_address:SellerAddress ;
+  company_logo:string
 }
 export interface Manufacturer {
   id: number;
@@ -1857,8 +1873,8 @@ export interface AdminProductData {
     thumbnail: string;
   } | null;
   created_at: string;
-  status: "PENDING" | "APPROVED" | "REJECTED" | string;
-  is_approved: "approved" | "pending" | "rejected";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED" | string;
+  is_approved: "approved" | "pending" | "rejected" | "suspended" | "pending_update" | string;
 }
 
 // ─── Admin Product Detail (single product full response) ──────────────────────

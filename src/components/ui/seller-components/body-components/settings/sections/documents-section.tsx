@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { sellerActions } from "@/store/user-data/seller/seller-slice";
 
 import ShopInfoTab from "./documents/shop-info-tab";
-import BusinessInfoTab, { IdEntry } from "./documents/business-info-tab";
+import BusinessInfoTab, { IdEntry, BusinessInfoErrors, validateBusinessInformation } from "./documents/business-info-tab";
 import ShippingInfoTab from "./documents/shipping-info-tab";
+
 
 // ── Validation helpers (mirrors business-info-tab.tsx) ────────────────────────
 const BIZ_REG_REGEX = /^[A-Z0-9\/-]{6,20}$/i;
@@ -169,6 +171,7 @@ export default function DocumentsSection() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [businessErrors, setBusinessErrors] = useState<BusinessInfoErrors>({});
 
   const { loading: fetchingIndustries, sendHttpRequest: fetchIndustriesReq } = useHttp();
   const { loading: updatingProfile, sendHttpRequest: updateProfileReq } = useHttp();
@@ -557,17 +560,28 @@ export default function DocumentsSection() {
 
   const handleSaveClick = () => {
     if (isEditing) {
-      // Run validation before showing the confirm modal
+      // Run full document validation before showing the confirm modal
       if (activeTab === "Business information") {
-        const validationErrors = validateBusinessInfoFields(formData, businessType);
-        if (validationErrors.length > 0) {
-          setErrorMessage(validationErrors.join("\n"));
-          setShowErrorModal(true);
+        const identificationSubmitted = Boolean(
+          profile?.identification_verifications?.length > 0
+        );
+        const result = validateBusinessInformation(
+          formData,
+          businessType,
+          newFiles,
+          profile,
+          identificationSubmitted,
+        );
+        setBusinessErrors(result.errors);
+        if (!result.isValid) {
+          toast.error(result.firstMissingToast ?? "Please complete all required fields");
           return;
         }
       }
       setShowWarningModal(true);
     } else {
+      // Entering edit mode — clear any previous business errors
+      setBusinessErrors({});
       setIsEditing(true);
     }
   };
@@ -682,6 +696,8 @@ export default function DocumentsSection() {
           onIdChange={(ids) => setFormData((prev) => ({ ...prev, ids }))}
           onFileSelect={handleFileSelect}
           onViewImage={handleViewImage}
+          errors={businessErrors}
+          setErrors={setBusinessErrors}
         />
       )}
 

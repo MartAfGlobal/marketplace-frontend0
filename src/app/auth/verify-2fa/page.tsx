@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Link from "next/link";
+import { useOtpTimer, isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 /** Extract retry_after from any response shape the backend might use. */
@@ -47,37 +48,16 @@ function Verify2faContent() {
   const initialRetryAfter = Number(searchParams.get("retry_after") || "300");
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [timer, setTimer] = useState(initialRetryAfter);
-  const [canResend, setCanResend] = useState(initialRetryAfter <= 0);
+  const { timer, resetTimer, expireTimer, canResend, formattedTimer } = useOtpTimer({
+    scope: "login_2fa",
+    identifier: userId || email,
+    initialSeconds: initialRetryAfter,
+  });
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { sendHttpRequest } = useHttp();
-
-  // Sync if the URL param ever changes (e.g. back/forward navigation)
-  useEffect(() => {
-    setTimer(initialRetryAfter);
-    setCanResend(initialRetryAfter <= 0);
-  }, [initialRetryAfter]);
-
-  // Countdown tick
-  useEffect(() => {
-    if (timer <= 0) {
-      setCanResend(true);
-      return;
-    }
-    const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          setCanResend(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timer]);
 
   // ── OTP input handlers ──────────────────────────────────────────────────────
   const handleOtpChange = (index: number, value: string) => {
@@ -100,7 +80,10 @@ function Verify2faContent() {
 
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
     if (!pasted) return;
 
     const nextOtp = Array(6).fill("");
@@ -108,7 +91,9 @@ function Verify2faContent() {
       nextOtp[index] = digit;
     });
     setOtp(nextOtp);
-    document.getElementById(`page-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
+    document
+      .getElementById(`page-otp-${Math.min(pasted.length - 1, 5)}`)
+      ?.focus();
   };
 
   // ── Verify ──────────────────────────────────────────────────────────────────
@@ -132,7 +117,8 @@ function Verify2faContent() {
       },
       successRes: (res: any) => {
         setVerifying(false);
-        const accessToken = res?.data?.access || res?.data?.token || res?.data?.accessToken;
+        const accessToken =
+          res?.data?.access || res?.data?.token || res?.data?.accessToken;
         if (accessToken) {
           localStorage.setItem("accessToken", accessToken);
           dispatch(tokenActions.setToken(accessToken));
@@ -151,15 +137,21 @@ function Verify2faContent() {
             router.push("/");
           }
         } else {
-          setErrorMsg("Login verification succeeded, but no token was returned.");
+          setErrorMsg(
+            "Login verification succeeded, but no token was returned.",
+          );
         }
       },
       errorRes: (err: any) => {
         setVerifying(false);
+        if (isOtpExpiredError(err)) {
+          expireTimer();
+          setOtp(["", "", "", "", "", ""]);
+        }
         setErrorMsg(
           err?.response?.data?.message ||
             err?.response?.data?.error ||
-            "Wrong Code, Try again."
+            "Wrong Code, Try again.",
         );
       },
     });
@@ -168,6 +160,7 @@ function Verify2faContent() {
   // ── Resend — uses backend retry_after ──────────────────────────────────────
   const handleResendOtp = () => {
     if (!canResend) return;
+    setOtp(["", "", "", "", "", ""]);
     setResending(true);
     setErrorMsg(null);
 
@@ -182,8 +175,7 @@ function Verify2faContent() {
 
         // ── Use the backend's retry_after if provided; fall back to 300 s ──
         const backendRetryAfter = extractRetryAfter(res?.data) ?? 300;
-        setTimer(backendRetryAfter);
-        setCanResend(false);
+        resetTimer(backendRetryAfter);
 
         toast.success("A new 2FA code has been sent.");
       },
@@ -191,8 +183,7 @@ function Verify2faContent() {
         setResending(false);
         const backendRetry = extractRetryAfter(err?.response?.data);
         if (backendRetry) {
-          setTimer(backendRetry);
-          setCanResend(false);
+          resetTimer(backendRetry);
         }
         const msg =
           err?.response?.data?.error ||
@@ -251,7 +242,7 @@ function Verify2faContent() {
             {resending ? (
               <LoadingSpinner color="border-ff715b" />
             ) : timer > 0 ? (
-              `Resend OTP (${formatTimer(timer)})`
+              `Resend OTP (${formattedTimer})`
             ) : (
               "Resend OTP"
             )}

@@ -37,11 +37,17 @@ export default function ProductReviewPage({
     message: "",
   });
   const [variantIndex, setVariantIndex] = useState(0);
+  // Track whether the product has been fetched at least once so that
+  // subsequent PATCH requests (e.g. checklist updates) don't re-trigger
+  // the image skeleton on the gallery images.
+  const [productFetched, setProductFetched] = useState(false);
   const variantsScrollRef = useRef<HTMLDivElement>(null);
   const {
     fetchAdminSellersProductDetails,
     updateAdminProductReviewChecklist,
     approveAdminProduct,
+    approveAdminProductUpdate,
+    rejectAdminProductUpdate,
     loading,
   } = AdminDetails();
 
@@ -52,6 +58,15 @@ export default function ProductReviewPage({
     (state: RootState) =>
       (state as any).adminProductDetail?.product as AdminProductDetail | null
   );
+
+  // Only show image loading skeleton during the initial product fetch.
+  const imageLoading = loading && !productFetched;
+
+  useEffect(() => {
+    if (product && !productFetched) {
+      setProductFetched(true);
+    }
+  }, [product, productFetched]);
 
   useEffect(() => {
     if (token) {
@@ -322,16 +337,29 @@ export default function ProductReviewPage({
   const percentage = Math.round((completedCount / totalItems) * 100) || 0;
   const allItemsChecked = completedCount === totalItems;
 
+  const isPendingUpdate = approvalStatus === "pending_update";
+
   const handleApprove = (notes: string) => {
     if (!allItemsChecked) return;
+
+    const doApprove = isPendingUpdate ? approveAdminProductUpdate : approveAdminProduct;
+    const successTitle = isFlagged
+      ? "Flag Cleared & Product Reactivated"
+      : isPendingUpdate
+      ? "Product Update Approved"
+      : "Product Approved Successfully";
+    const successMessage = isFlagged
+      ? "The flagged product has been resolved and is now live on the marketplace."
+      : isPendingUpdate
+      ? "The product update has been reviewed and approved. Changes are now live on the marketplace."
+      : "The product has been reviewed and approved. It is now live on the marketplace.";
 
     // First save review checklist
     updateAdminProductReviewChecklist(
       productId,
       checkedItems,
       () => {
-        // Post approval to POST /products/admin/products/{id}/approve/
-        approveAdminProduct(
+        doApprove(
           productId,
           notes,
           () => {
@@ -339,12 +367,8 @@ export default function ProductReviewPage({
             setResultModalState({
               isOpen: true,
               result: "success",
-              title: isFlagged
-                ? "Flag Cleared & Product Reactivated"
-                : "Product Approved Successfully",
-              message: isFlagged
-                ? "The flagged product has been resolved and is now live on the marketplace."
-                : "The product has been reviewed and approved. It is now live on the marketplace.",
+              title: successTitle,
+              message: successMessage,
             });
           },
           (err: any) => {
@@ -376,6 +400,37 @@ export default function ProductReviewPage({
         toast.error("Failed to update product review checklist before approval.");
       }
     );
+  };
+
+  const handleReject = (data: { reason: string; notes: string }) => {
+    const doReject = isPendingUpdate ? rejectAdminProductUpdate : null;
+
+    if (isPendingUpdate && doReject) {
+      doReject(
+        productId,
+        { reason: data.reason, notes: data.notes || undefined },
+        () => {
+          setIsRejectModalOpen(false);
+          setResultModalState({
+            isOpen: true,
+            result: "success",
+            title: "Product Update Rejected",
+            message: "The product update has been rejected. The seller will be notified.",
+          });
+        },
+        (err: any) => {
+          const errorMessage =
+            err?.response?.data?.detail ||
+            err?.response?.data?.message ||
+            err?.message;
+          toast.error(errorMessage || "Failed to reject product update.");
+        }
+      );
+    } else {
+      // Regular reject — navigate away (existing behaviour)
+      setIsRejectModalOpen(false);
+      router.push("/dashboard/admin/products?type=listings");
+    }
   };
 
   // SVG parameters for progress circle
@@ -413,7 +468,7 @@ export default function ProductReviewPage({
                   src={galleryUrls[0] ?? null}
                   alt={productName}
                   className="object-cover"
-                  isLoading={loading}
+                  isLoading={imageLoading}
                 />
             </div>
             <div className="flex flex-col justify-between h-35 text-base font-MontserratSemiBold py-2">
@@ -509,7 +564,7 @@ export default function ProductReviewPage({
                 src={galleryUrls[activeImage] ?? galleryUrls[0] ?? null}
                 alt={productName}
                 className="object-cover"
-                isLoading={loading}
+                isLoading={imageLoading}
               />
             </div>
 
@@ -832,19 +887,20 @@ export default function ProductReviewPage({
 
             {/* Action Buttons */}
             <div className="mt-auto pt-8 flex justify-end gap-4  ">
-              <Button className="bg-transparent text-[#ff715b] border border-[#ff715b] hover:bg-[#ffe8e8] w-36 h-12">
+              <Button variant="secondary" className=" min-w-36 max-w-fit ">
                 Message Seller
               </Button>
               <Button
                 onClick={() => setIsApproveModalOpen(true)}
                 disabled={!allItemsChecked || loading}
-                className="bg-ff715b text-white  w-fit"
+                className=" min-w-36 max-w-fit"
               >
                 {product?.is_approved ==="pending"? "Approve" : "Approve update"}
               </Button>
               <Button
+              variant="danger"
                 onClick={() => setIsRejectModalOpen(true)}
-                className=" w-fit"
+                className=" min-w-36 max-w-fit"
               >{product?.is_approved ==="pending"? "Reject" : "Reject update"}
                 
               </Button>
@@ -869,11 +925,8 @@ export default function ProductReviewPage({
           moderationNotes={(product as any)?.moderation_admin_notes}
           sellerInstruction={(product as any)?.seller_instruction}
           sellerNotification={(product as any)?.seller_notification}
-          onConfirm={(data) => {
-            console.log("Rejected with reason:", data.reason, "and notes:", data.notes);
-            setIsRejectModalOpen(false);
-            router.push("/dashboard/admin/products?type=listings");
-          }}
+          loading={loading}
+          onConfirm={handleReject}
         />
         <ResultModal
           isOpen={resultModalState.isOpen}

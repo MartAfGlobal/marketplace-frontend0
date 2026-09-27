@@ -13,6 +13,7 @@ interface FileInputProps {
   onFileSelect?: (file: File) => void;
   onViewImage?: (url: string) => void;
   accept?: string;
+  error?: string;
 }
 
 export const FileInput = ({
@@ -23,6 +24,7 @@ export const FileInput = ({
   onFileSelect,
   onViewImage,
   accept = ".pdf,.png,.jpg,.jpeg,.webp",
+  error,
 }: FileInputProps) => {
   const handleButtonClick = () => {
     if (fileUrl && onViewImage) {
@@ -33,7 +35,10 @@ export const FileInput = ({
   const hasFile = Boolean(fileName || fileUrl);
 
   return (
-    <div className="h-12 px-3.5 w-full rounded-c8 text-ffffff border outline-none md:text-sm p-1.5 flex items-center justify-between bg-white">
+    <div className="flex flex-col gap-1.5 w-full">
+      <div className={`h-12 px-3.5 w-full rounded-c8 text-ffffff border outline-none md:text-sm p-1.5 flex items-center justify-between bg-white ${
+        error ? "border-red-400 focus:ring-red-300" : "border-[#e0e0e0]"
+      }`}>
       <div
         className={`px-4 h-full flex items-center rounded-lg text-[12px] font-MontserratMedium truncate max-w-[70%] ${
           hasFile ? "bg-[#e5e5e5] text-[#666666]" : "bg-transparent text-[#cccccc]"
@@ -98,6 +103,12 @@ export const FileInput = ({
           />
         )}
       </div>
+      </div>
+      {error && (
+        <p className="text-[11px] text-red-500 font-MontserratMedium leading-tight">
+          {error}
+        </p>
+      )}
     </div>
   );
 };

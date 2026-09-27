@@ -16,6 +16,7 @@ import CaretDown from "@/assets/Seller/caretDown.png";
 import AddNewAccountModal from "@/components/ui/Modals/AddNewAccountModal";
 import VerifyBankOtpModal from "@/components/ui/Modals/VerifyBankOtpModal";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 interface WithdrawModalsProps {
   isOpen: boolean;
@@ -376,6 +377,11 @@ export default function WithdrawModals({
         fetchTransactions(1);
       },
       errorRes: (err: any) => {
+        if (isOtpExpiredError(err)) {
+          setTimer(0);
+          setDigits(Array(OTP_LENGTH).fill(""));
+          inputRefs.current[0]?.focus();
+        }
         const errorDetail =
           err?.response?.data?.detail ||
           err?.response?.data?.otp?.[0] ||

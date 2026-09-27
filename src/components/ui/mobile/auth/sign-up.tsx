@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/forms/Input";
 import RegisterForm from "@/components/ui/forms/auth/registerForm";
 import { useDispatch, useSelector } from "react-redux";
 import { registrationActions } from "@/store/auth/registration-slice";
+import { useOtpTimer, isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 import MobileLogin from "./sign-in";
 import { AuthStep } from "@/types/global";
@@ -68,31 +69,15 @@ const DEFAULT_RESEND_TIMEOUT = 120;
     email: "",
   });
 
-  const [secondsLeft, setSecondsLeft] = useState(DEFAULT_RESEND_TIMEOUT);
+  const { timer: secondsLeft, resetTimer, expireTimer, minutes, seconds } = useOtpTimer({
+    scope: "mobile_signup",
+    identifier: formData.email || savedEmail,
+    initialSeconds: DEFAULT_RESEND_TIMEOUT,
+  });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const { loading: resendLoading, sendHttpRequest: resendUserReq } = useHttp();
   const { loading: verifying, sendHttpRequest: verifyOtpReq } = useHttp();
-
-  useEffect(() => {
-    if (step === "verificationSent" && secondsLeft <= 0) {
-      setSecondsLeft(DEFAULT_RESEND_TIMEOUT);
-    }
-  }, [step]);
-
-  useEffect(() => {
-    if (step !== "verificationSent" || secondsLeft <= 0) return;
-
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [secondsLeft, step]);
-
-  const resetTimer = (customTime?: number) => {
-    setSecondsLeft(customTime ?? DEFAULT_RESEND_TIMEOUT);
-  };
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) value = value.slice(-1);
@@ -161,8 +146,14 @@ const DEFAULT_RESEND_TIMEOUT = 120;
         dispatch(registrationActions.setToken(token));
         setVerifiedOtp(token);
         setStep("personalDetails");
+        expireTimer();
       },
       errorRes: (err: any) => {
+        if (isOtpExpiredError(err)) {
+          expireTimer();
+          setOtp(["", "", "", "", "", ""]);
+          document.getElementById("signup-otp-0")?.focus();
+        }
         toast.error(
           err?.response?.data?.message ||
             err?.response?.data?.error ||
@@ -184,6 +175,8 @@ const DEFAULT_RESEND_TIMEOUT = 120;
           extractRetryAfter(res) ??
           DEFAULT_RESEND_TIMEOUT;
         resetTimer(backendRetry);
+        setOtp(["", "", "", "", "", ""]);
+        document.getElementById("signup-otp-0")?.focus();
       },
       errorRes: (err: any) => {
         const backendRetry = extractRetryAfter(err?.response?.data);
@@ -199,9 +192,6 @@ const DEFAULT_RESEND_TIMEOUT = 120;
       },
     });
   };
-
-  const minutes = Math.floor(secondsLeft / 60);
-  const seconds = secondsLeft % 60;
 
   useEffect(() => {
     if (open) {
