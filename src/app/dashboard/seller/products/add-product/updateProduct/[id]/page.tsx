@@ -1048,7 +1048,7 @@ export default function UpdateProductPage() {
               }
               type="button"
               onClick={handleNext}
-              className="max-w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+              className="max-w-32.5 min-w-fit disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {updating || fetchingNextDraftDetails ? <LoadingSpinner color="border-white" /> : "Next"}
             </Button>
@@ -1071,7 +1071,7 @@ export default function UpdateProductPage() {
         title="Update Submitted for Review"
         message="Your product updates have been successfully submitted."
         discRescription="Changes will be visible to customers once approved by an admin."
-        buttenText="Continue Editing"
+  
         secondaryButtonText="Go to Dashboard"
         isOpen={showLiveSuccess}
         onConfirm={() => setShowLiveSuccess(false)}
