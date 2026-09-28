@@ -153,21 +153,21 @@ export default function ProductDetailsPage({
   const approvalStatus = (product?.is_approved ?? "").toLowerCase();
   const rawStatus = ((product as any)?.status ?? "").toLowerCase();
   const isApproved = approvalStatus === "approved" || rawStatus === "approved";
-  const isSuspended = approvalStatus === "suspended" || rawStatus === "suspended";
+  const isSuspended = approvalStatus === "approved" &&  !product?.is_active ;
 
   const statusClass =
-    isApproved
+    isApproved  && !isSuspended 
       ? "bg-green-100 text-green-700"
-      : isSuspended
-      ? "bg-[#6A0DAD]/12 text-[#6A0DAD]"
+      : isApproved  && isSuspended
+      ? "bg-ffaco6/12 text-ffaco6"
       : approvalStatus === "rejected"
       ? "bg-red-100 text-red-600"
       : (approvalStatus === "pending" || approvalStatus === "pending_update")
       ? "bg-ffaco6/12 text-ffaco6"
       : "bg-gray-100 text-gray-600";
   const statusLabel =
-    isApproved ? "Approved"
-    : isSuspended ? "Suspended"
+    isApproved  && !isSuspended ? "Approved"
+    : isApproved  && isSuspended ? "Suspended"
     : approvalStatus === "rejected" ? "Rejected"
     : approvalStatus === "pending" ? "Pending"
     : approvalStatus === "pending_update" ? "Pending update" : "Unknown";
@@ -182,8 +182,9 @@ export default function ProductDetailsPage({
       notes,
       () => {
         setActionLoading(false);
-        setIsSuspendModalOpen(false);
+       setIsSuspendModalOpen(false)
         setResultModalState({
+           
           isOpen: true,
           result: "success",
           title: isSuspend ? "Product Suspended" : "Product Reactivated",
@@ -193,6 +194,7 @@ export default function ProductDetailsPage({
         });
         // Refresh product details to update status and buttons
         fetchAdminSellersProductDetails(productId);
+        
       },
       (err: any) => {
         setActionLoading(false);
@@ -258,7 +260,7 @@ export default function ProductDetailsPage({
     : "—";
 
   // ✅ Show skeleton while product is being fetched (null = cleared)
-  if (!product || loading) {
+  if (!product) {
     return (
       <div className="w-full">
         {/* Header skeleton */}
@@ -686,7 +688,7 @@ export default function ProductDetailsPage({
             <Button className="bg-transparent text-[#ff715b] border border-[#ff715b] hover:bg-[#ffe8e8] w-36 h-12">
               Message Seller
             </Button>
-            {isApproved ? (
+            {isApproved && product.is_active ? (
               <Button
                 onClick={() => {
                   setSuspendModalAction("suspend");
@@ -702,7 +704,7 @@ export default function ProductDetailsPage({
                   setSuspendModalAction("reactivate");
                   setIsSuspendModalOpen(true);
                 }}
-                className="bg-[#00BE5C] text-white hover:bg-[#009e4d] w-32 h-12"
+                className=" w-32 h-12"
               >
                 Reactivate
               </Button>

@@ -37,7 +37,7 @@ const CONFIG = {
     defaultNotes: "Restock confirmed, resuming sales.",
     confirmLabel: "Confirm Reactivate",
     confirmClass:
-      "bg-[#00BE5C] hover:bg-[#009e4d] text-white border-none",
+      "",
     checkLabel:
       "I understand the product will become live and visible to buyers.",
   },
@@ -146,6 +146,7 @@ export default function SuspendProductModal({
                   Cancel
                 </Button>
                 <Button
+                type="button"
                   onClick={() => onConfirm(notes)}
                   disabled={loading || !understood}
                   className={`disabled:cursor-not-allowed ${cfg.confirmClass}`}

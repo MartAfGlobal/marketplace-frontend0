@@ -23,7 +23,7 @@ import { RootState } from "@/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useHttp } from "@/hooks/use-http";
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
-import { setStep1Data } from "@/store/sellers/addProductSlice";
+import { resetForm } from "@/store/sellers/addProductSlice";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { ChevronRight, PackagePlus, FileText, Package, FileUp } from "lucide-react";
 
@@ -75,14 +75,7 @@ export default function ProductInventoryPage() {
 
   const router = useRouter();
   const handleAddNewProduct = () => {
-    dispatch(
-      setStep1Data({
-        id: "",
-
-        attributes: [],
-      }),
-    );
-
+    dispatch(resetForm());
     router.push("/dashboard/seller/products/add-product");
   };
 

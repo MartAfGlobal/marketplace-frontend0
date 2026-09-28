@@ -8,7 +8,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useEffect, useState } from "react";
 
 import RichTextEditor from "@/components/ui/seller-product-form/RichTextEditor";
-import { setStep1Data } from "@/store/sellers/addProductSlice";
+import { resetForm } from "@/store/sellers/addProductSlice";
 import { useDispatch, useSelector } from "react-redux";
 import ResultModal from "@/components/ui/forms/resultModal";
 
@@ -111,13 +111,7 @@ export default function AddProductStep1Page() {
   // PRODUCT IMAGES (FILES)
 
   const resetAllSteps = () => {
-    dispatch(
-      setStep1Data({
-        id: "",
-
-        attributes: [],
-      }),
-    );
+    dispatch(resetForm());
   };
 
   const handleNext = () => {

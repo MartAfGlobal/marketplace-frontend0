@@ -11,7 +11,7 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
       {/* --- MOBILE VIEW (Unchanged) --- */}
       <div className="lg:hidden">
         <div className="space-y-2 mt-6">
-          <h1 className="text-sm font-MontserratNormal text-gray-400">Product name</h1>
+          <h1 className="text-[clamp(10px,1vw,14px) text-nowrap font-MontserratNormal text-gray-400">Product name</h1>
           <p className="text-c18 font-MontserratMedium">
             {productDetails?.name || "Product name not available"}
           </p>
@@ -37,18 +37,18 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-3 gap-2 md:gap-6 mt-6">
           <div className="space-y-2">
-            <h1 className="text-sm font-MontserratNormal text-000000/44">Price</h1>
-            <p className="text-lg font-MontserratSemiBold">N{productDetails?.base_price?.toLocaleString()}</p>
+            <h1 className="md:text-sm text-c12 text-nowrap font-MontserratNormal text-000000/44">Price</h1>
+            <p className="md:text-lg text-base font-MontserratSemiBold">N{productDetails?.base_price?.toLocaleString()}</p>
           </div>
           <div className="space-y-2">
-            <h1 className="text-sm font-MontserratNormal text-000000/44">Quantity sold</h1>
-            <p className="text-lg font-MontserratNormal">{productDetails?.sold || 0}</p>
+            <h1 className="md:text-sm text-c12  font-MontserratNormal text-000000/44">Quantity sold</h1>
+            <p className="md:text-lg text-base font-MontserratNormal">{productDetails?.sold || 0}</p>
           </div>
           <div className="space-y-2">
-            <h1 className="text-sm font-MontserratNormal text-000000/44">Quantity in stock</h1>
-            <p className="text-lg font-MontserratNormal">
+            <h1 className="md:text-sm text-c12  text-nowrap font-MontserratNormal text-000000/44">Quantity in stock</h1>
+            <p className="md:text-lg text-base font-MontserratNormal">
               {productDetails.stock || productDetails.inventory || productDetails.quantity || 0}
             </p>
           </div>
@@ -56,7 +56,7 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
 
         <div className="mt-6">
           <h1 className="text-base font-MontserratNormal text-000000">Product description</h1>
-          <div className="mt-3 text-sm font-MontserratNormal text-000000 leading-relaxed">
+          <div className="mt-3 text-[clamp(10px,1vw,14px)  font-MontserratNormal text-000000 leading-relaxed">
             <div
               dangerouslySetInnerHTML={{
                 __html: productDetails?.description_html || productDetails?.description || "No description provided.",
@@ -67,7 +67,7 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
 
         <div className="mt-8">
           <h1 className="text-base font-MontserratNormal text-000000">Product specification</h1>
-          <div className="mt-3 text-sm font-MontserratNormal text-000000 leading-relaxed">
+          <div className="mt-3 text-[clamp(10px,1vw,14px)  font-MontserratNormal text-000000 leading-relaxed">
             <div
               dangerouslySetInnerHTML={{
                 __html: productDetails?.specifications_text || productDetails?.draft_data?.specifications_text || "No specifications provided.",
@@ -123,7 +123,7 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
         </div>
 
         <div className="mt-6">
-          <h1 className="text-sm font-MontserratSemiBold text-000000">Product description</h1>
+          <h1 className="text-[clamp(10px,1vw,14px) text-nowrap font-MontserratSemiBold text-000000">Product description</h1>
           <div className="mt-2 text-xs font-MontserratNormal text-000000 leading-relaxed">
             <div
               dangerouslySetInnerHTML={{
@@ -134,7 +134,7 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
         </div>
         
         <div className="mt-6">
-          <h1 className="text-sm font-MontserratSemiBold text-gray-800">Product specification</h1>
+          <h1 className="text-[clamp(10px,1vw,14px) text-nowrap font-MontserratSemiBold text-gray-800">Product specification</h1>
           <div className="text-xs font-MontserratNormal text-000000 leading-relaxed">
             <div
               dangerouslySetInnerHTML={{

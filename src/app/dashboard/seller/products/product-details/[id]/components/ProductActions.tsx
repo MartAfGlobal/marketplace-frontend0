@@ -36,7 +36,7 @@ export default function ProductActions({
   return (
     <>
       {/* --- MOBILE VIEW (Unchanged) --- */}
-      <div className="w-full grid grid-cols-2 gap-2 items-center lg:hidden">
+      <div className="w-full flex gap-2 items-center lg:hidden">
         {!published && (
           <button
             onClick={handleDeleteDraft}
@@ -91,11 +91,12 @@ export default function ProductActions({
           >
             {ActivatingLoading ? <LoadingSpinner /> : "Cancel deactivation"}
           </Button>
-        ) : published &&
+        ) 
+        : published &&
           !productDetails.activation_requested &&
           !productDetails.deactivation_requested &&
           productDetails.is_approved === "pending" ? (
-          <p className="text-ff715b font-MontserratSemiBold text-sm col-span-2 text-center">
+          <p className="text-ff715b font-MontserratSemiBold text-sm w-full text-center">
             Pending approval
           </p>
         )
@@ -103,16 +104,17 @@ export default function ProductActions({
           !productDetails.activation_requested &&
           !productDetails.deactivation_requested &&
           productDetails.is_approved === "pending_update" ? (
-          <p className="text-ff715b font-MontserratSemiBold text-sm col-span-2 text-center">
+          <p className="text-ff715b font-MontserratSemiBold text-sm w-full text-center">
             Pending update
           </p>)
         : published &&
           !productDetails.activation_requested &&
           !productDetails.deactivation_requested &&
           productDetails.is_approved === "rejected" ? (
-          <p className="text-ca0202 font-MontserratSemiBold text-sm col-span-2 text-center">
+          <p className="text-ca0202 font-MontserratSemiBold text-sm w-full text-center">
             Rejected
-          </p>): (
+          </p>)
+          : (
           !published && (
             <Button
               disabled={submiting || !id || !isDraftComplete}
@@ -129,11 +131,9 @@ export default function ProductActions({
         {(
           (!published) ||
           (published &&
-           productDetails.activation_requested === false &&
-           productDetails.deactivation_requested === false &&
-           productDetails.is_approved !== "pending")
+           productDetails.can_edit)
         ) && (
-          <Button variant="secondary"
+          <Button variant="primary"
             onClick={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}${!published ? '?isPublish=false' : ''}`)}
             className="w-full "
           >
@@ -157,16 +157,14 @@ export default function ProductActions({
           </button>
         )}
 
-        {(
+          {(
           (!published) ||
           (published &&
-           productDetails.activation_requested === false &&
-           productDetails.deactivation_requested === false &&
-           productDetails.is_approved !== "pending")
+           productDetails.can_edit)
         ) && (
-          <Button variant="secondary"
+          <Button variant="primary"
             onClick={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}${!published ? '?isPublish=false' : ''}`)}
-            className="max-w-[200px] "
+            className="w-full "
           >
             Edit product
           </Button>

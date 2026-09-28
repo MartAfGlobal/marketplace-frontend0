@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import HandBug from "@/assets/Seller/handBug.png";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { CheckCircle2, Clock3, XCircle } from "lucide-react";
+import { CheckCircle2, CircleSlash2, Clock3, XCircle } from "lucide-react";
 import { AdminProductData } from "@/types/global";
 
 // Re-export so other files can still import ProductRow if needed
@@ -18,16 +18,27 @@ interface ProductsTableProps {
   onToggleRow: (id: string) => void;
   onRowClick: (id: string) => void;
   onSetActiveRowId: (id: string | null) => void;
-  truncateText: (value: string | number | undefined, maxLength?: number) => string;
+  truncateText: (
+    value: string | number | undefined,
+    maxLength?: number,
+  ) => string;
 }
 
-const renderStatus = (status: string) => {
+const renderStatus = (status: string, active: boolean) => {
   const s = (status ?? "").toLowerCase();
-  if (s === "approved") {
+  if (s === "approved" && active) {
     return (
       <span className="inline-flex items-center gap-1 text-[#00BE5C] bg-[#00BE5C]/12 h-6 rounded-c32 px-3 text-[10px]">
         <CheckCircle2 size={14} />
         Approved
+      </span>
+    );
+  }
+  if (s === "approved" && !active) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[#CA0202] bg-[#CA0202]/12 h-6 rounded-c32 px-3 text-[10px]">
+        <CircleSlash2 size={14} />
+        Suspended
       </span>
     );
   }
@@ -81,13 +92,18 @@ export default function ProductsTable({
             <th className="font-MontserratNormal text-sm text-center w-10 p-3">
               <button
                 type="button"
-                aria-label={rows.length > 0 ? "Select all visible products" : "No products to select"}
+                aria-label={
+                  rows.length > 0
+                    ? "Select all visible products"
+                    : "No products to select"
+                }
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectAll();
                 }}
                 className={`mx-auto flex h-4 w-4 items-center justify-center border duration-200 ${
-                  rows.length > 0 && rows.every((row) => selectedProductIds.includes(row.id))
+                  rows.length > 0 &&
+                  rows.every((row) => selectedProductIds.includes(row.id))
                     ? "border-[#ff715b] bg-[#ff715b]"
                     : "border-[#161616] hover:border-[#ff715b]"
                 }`}
@@ -100,7 +116,8 @@ export default function ProductsTable({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   className={`h-2.5 w-2.5 ${
-                    rows.length > 0 && rows.every((row) => selectedProductIds.includes(row.id))
+                    rows.length > 0 &&
+                    rows.every((row) => selectedProductIds.includes(row.id))
                       ? "text-white"
                       : "text-[#ff715b] opacity-0 group-hover:opacity-100 group-hover:text-white"
                   }`}
@@ -113,8 +130,12 @@ export default function ProductsTable({
             <th className="p-3 font-MontserratNormal text-sm">Seller</th>
             <th className="p-3 font-MontserratNormal text-sm">Category</th>
             <th className="p-3 font-MontserratNormal text-sm">Price</th>
-            <th className="p-3 font-MontserratNormal text-sm text-center">Stock</th>
-            <th className="p-3 font-MontserratNormal text-sm text-center">Status</th>
+            <th className="p-3 font-MontserratNormal text-sm text-center">
+              Stock
+            </th>
+            <th className="p-3 font-MontserratNormal text-sm text-center">
+              Status
+            </th>
             <th className="p-3 font-MontserratNormal text-sm">Date Added</th>
             <th className="p-3 font-MontserratNormal text-sm text-center"></th>
           </tr>
@@ -170,20 +191,28 @@ export default function ProductsTable({
 
                 {/* Product Name */}
                 <td className="p-3">
-                  <span className="block max-w-[160px] truncate" title={row.name}>
+                  <span
+                    className="block max-w-[160px] truncate"
+                    title={row.name}
+                  >
                     {row.name}
                   </span>
                 </td>
 
                 {/* Seller */}
                 <td className="p-3">
-                  <span className="block max-w-[120px] truncate" title={row.manufacturer_name}>
+                  <span
+                    className="block max-w-[120px] truncate"
+                    title={row.manufacturer_name}
+                  >
                     {row.manufacturer_name || "—"}
                   </span>
                 </td>
 
                 {/* Category */}
-                <td className="p-3 max-w-[120px] truncate">{row.category?.name ?? "—"}</td>
+                <td className="p-3 max-w-[120px] truncate">
+                  {row.category?.name ?? "—"}
+                </td>
 
                 {/* Price */}
                 <td className="p-3">{row.base_price}</td>
@@ -192,13 +221,20 @@ export default function ProductsTable({
                 <td className="p-3 text-center">{row.inventory ?? 0}</td>
 
                 {/* Status */}
-                <td className="p-3 text-center">{renderStatus(row.is_approved ?? "")}</td>
+                <td className="p-3 text-center">
+                  {renderStatus(row.is_approved ?? "", row.is_active)}
+                </td>
 
                 {/* Date */}
-                <td className="py-3 px-4 text-gray-400">{formatDate(row.created_at)}</td>
+                <td className="py-3 px-4 text-gray-400">
+                  {formatDate(row.created_at)}
+                </td>
 
                 {/* Actions */}
-                <td className="py-3 px-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                <td
+                  className="py-3 px-4 text-center relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
                     onClick={(e) => {
@@ -252,7 +288,10 @@ export default function ProductsTable({
             ))
           ) : (
             <tr>
-              <td colSpan={9} className="py-8 text-center text-gray-400 font-MontserratMedium text-xs">
+              <td
+                colSpan={9}
+                className="py-8 text-center text-gray-400 font-MontserratMedium text-xs"
+              >
                 No records found matching your search.
               </td>
             </tr>
