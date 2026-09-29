@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown, Plus } from "lucide-react";
 import AddNewAccountModal from "@/components/ui/Modals/AddNewAccountModal";
 import VerifyBankOtpModal from "@/components/ui/Modals/VerifyBankOtpModal";
@@ -10,9 +10,29 @@ import { RootState } from "@/store";
 
 export default function PayoutSection() {
   const [showBankDropdown, setShowBankDropdown] = useState(false);
+  const bankDropdownRef = useRef<HTMLDivElement | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [selectedBankDetails, setSelectedBankDetails] = useState<{ bank_name: string; account_number: string } | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        bankDropdownRef.current &&
+        !bankDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowBankDropdown(false);
+      }
+    }
+    if (showBankDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showBankDropdown]);
   
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [fetching, setFetching] = useState(false);
@@ -151,11 +171,12 @@ export default function PayoutSection() {
             <p className="text-c12 text-000000/44 font-MontserratMedium">Choose where wallet withdrawals are made to</p>
          </div>
          
-         <div className="relative w-full md:w-[282.15px]">
+         <div className="relative w-full md:w-[282.15px]" ref={bankDropdownRef}>
             {bankAccounts.length > 0 && defaultAccount ? (
               <>
                 {/* Top select button */}
                 <button 
+                 type="button"
                  onClick={() => setShowBankDropdown(!showBankDropdown)}
                  className="w-full flex items-center gap-3 justify-center h-12  rounded-c8 px-6 py-3.5 bg-000000/4 text-sm text-000000/68 font-MontserratSemiBold hover:bg-gray-50 transition-colors"
                 >

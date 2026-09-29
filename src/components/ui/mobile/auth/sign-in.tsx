@@ -81,6 +81,24 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
     if (formData.rememberMe) {
       params.set("remember", "true");
     }
+    if (typeof window !== "undefined") {
+      if (formData.rememberMe) {
+        localStorage.setItem(
+          rememberKey,
+          JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        );
+        localStorage.removeItem("rememberEmail");
+        localStorage.removeItem("rememberPassword");
+      } else {
+        localStorage.removeItem(rememberKey);
+        localStorage.removeItem("rememberEmail");
+        localStorage.removeItem("rememberPassword");
+      }
+    }
+
     const message =
       data?.message ||
       data?.detail ||
@@ -229,19 +247,21 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="relative flex items-center gap-2 cursor-pointer">
+          <label className="relative flex items-center gap-2 cursor-pointer select-none py-1">
             <input
               type="checkbox"
+              id="mobileRememberMe"
+              name="rememberMe"
               checked={formData.rememberMe}
               onChange={(e) =>
-                setFormData({ ...formData, rememberMe: e.target.checked })
+                setFormData((prev) => ({ ...prev, rememberMe: e.target.checked }))
               }
               className="peer h-5 w-5 rounded-c4 border cursor-pointer border-ff715b appearance-none checked:bg-ff715b checked:border-ff715b"
             />
-            <span className="absolute left-0 top-0 h-5 w-5 flex items-center justify-center text-white font-bold scale-0 peer-checked:scale-100 transition-transform">
+            <span className="absolute left-0 top-1 h-5 w-5 flex items-center justify-center text-white font-bold scale-0 peer-checked:scale-100 transition-transform pointer-events-none">
               ✓
             </span>
-            <span className="text-c12 font-MontserratMedium text-161616">
+            <span className="text-c12 font-MontserratMedium text-161616 pointer-events-none">
               Remember me
             </span>
           </label>

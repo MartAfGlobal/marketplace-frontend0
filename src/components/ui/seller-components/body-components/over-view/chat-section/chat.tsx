@@ -133,6 +133,7 @@ export default function SalesChart() {
             <div className="flex gap-3 relative" ref={dropdownRef}>
               <FullFilterButton
                 onOpenFilter={() => setFilterOpen((prev) => !prev)}
+                isOpen={filterOpen}
               />
 
               {/* Dropdown Panel */}
@@ -267,6 +268,7 @@ export default function SalesChart() {
             <div className="flex gap-3 relative" ref={dropdownRef}>
               <FullFilterButton
                 onOpenFilter={() => setFilterOpen((prev) => !prev)}
+                isOpen={filterOpen}
               />
 
               {/* Dropdown Panel */}

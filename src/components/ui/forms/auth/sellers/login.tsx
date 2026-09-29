@@ -240,13 +240,18 @@ export default function SellerLogin() {
             </div>
 
             <div className="flex items-center gap-3 pt-6 pb-c32">
-              <input
-                type="checkbox"
-                className={`appearance-none h-5 w-5 rounded-c4 cursor-pointer border-1 border-ff715b checked:bg-ff715b checked:border-0 checked:after:content-['✓'] checked:after:block checked:after:text-white checked:after:font-bold checked:after:text-center checked:after:leading-5`}
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <p className="text-c12 font-MontserratMedium">Remember me</p>
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className={`appearance-none h-5 w-5 rounded-c4 cursor-pointer border-1 border-ff715b checked:bg-ff715b checked:border-0 checked:after:content-['✓'] checked:after:block checked:after:text-white checked:after:font-bold checked:after:text-center checked:after:leading-5`}
+                  checked={rememberMe}
+                  onChange={(e) => {
+                    setRememberMe(e.target.checked);
+                    setFormData((prev) => ({ ...prev, rememberMe: e.target.checked }));
+                  }}
+                />
+                <p className="text-c12 font-MontserratMedium">Remember me</p>
+              </label>
             </div>
           </fieldset>
           <Button type="submit" disabled={loading || !isFormValid}>

@@ -141,7 +141,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
 
           <div className="flex gap-2 lg:gap-3 relative" ref={dropdownRef}>
             <div className="hidden lg:block">
-              <FullFilterButton onOpenFilter={() => setFilterOpen((prev) => !prev)} />
+              <FullFilterButton onOpenFilter={() => setFilterOpen((prev) => !prev)} isOpen={filterOpen} />
             </div>
 
             {/* Dropdown Panel */}

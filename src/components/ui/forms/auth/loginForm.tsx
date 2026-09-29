@@ -66,10 +66,9 @@ export default function LoginForm({ userType }: RegProps) {
     setShowPassword((prev) => !prev);
   };
 
-  const handleLoginSuccess = (accessToken: string) => {
+  const saveRememberMe = () => {
     if (typeof window === "undefined") return;
 
-    // Save email & password for this specific user type only
     if (formData.rememberMe) {
       localStorage.setItem(
         rememberKey,
@@ -85,6 +84,12 @@ export default function LoginForm({ userType }: RegProps) {
       localStorage.removeItem("rememberEmail");
       localStorage.removeItem("rememberPassword");
     }
+  };
+
+  const handleLoginSuccess = (accessToken: string) => {
+    if (typeof window === "undefined") return;
+
+    saveRememberMe();
 
     localStorage.setItem("accessToken", accessToken);
 
@@ -132,6 +137,8 @@ export default function LoginForm({ userType }: RegProps) {
   };
 
   const handleTwoFactorRedirect = (data: any) => {
+    saveRememberMe();
+
     const userId = data?.user_id || data?.userId || data?.id || data?.user?.id;
     const params = new URLSearchParams();
     if (userId) {
@@ -283,19 +290,21 @@ export default function LoginForm({ userType }: RegProps) {
           {/* Remember Me */}
           <div className="flex justify-between pt-6 mb-c32 items-center">
             <div className="flex items-center gap-2">
-              <label className="relative flex items-center gap-2 cursor-pointer">
+              <label className="relative flex items-center gap-2 cursor-pointer select-none py-1">
                 <input
                   type="checkbox"
+                  id="rememberMe"
+                  name="rememberMe"
                   checked={formData.rememberMe}
                   onChange={(e) =>
-                    setFormData({ ...formData, rememberMe: e.target.checked })
+                    setFormData((prev) => ({ ...prev, rememberMe: e.target.checked }))
                   }
                   className="peer h-5 w-5 rounded-c4 border cursor-pointer border-ff715b appearance-none checked:bg-ff715b checked:border-ff715b"
                 />
-                <span className="absolute left-0 top-0 h-5 w-5 flex items-center justify-center text-white font-bold scale-0 peer-checked:scale-100 transition-transform">
+                <span className="absolute left-0 top-1 h-5 w-5 flex items-center justify-center text-white font-bold scale-0 peer-checked:scale-100 transition-transform pointer-events-none">
                   ✓
                 </span>
-                <span className="text-c12 font-MontserratMedium text-161616">
+                <span className="text-c12 font-MontserratMedium text-161616 pointer-events-none">
                   Remember me
                 </span>
               </label>

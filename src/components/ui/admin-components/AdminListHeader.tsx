@@ -196,7 +196,7 @@ export default function AdminListHeader({
               className="flex justify-center items-center gap-4 text-c12 font-MontserratNormal px-3 bg-white rounded-c8 transition-colors shadow-custom cursor-pointer h-10 w-23.25"
             >
               <span className="hidden sm:inline text-ff715b text-c12 font-MontserratNormal">Filters</span>
-              <SlidersHorizontal className="w-3.5 h-3.5 text-ff715b" />
+              <SlidersHorizontal className={`w-3.5 h-3.5 text-ff715b transition-transform duration-200 ${isFilterOpen ? "rotate-180" : ""}`} />
             </button>
             {renderFilterDropdown()}
           </div>
@@ -253,7 +253,7 @@ export default function AdminListHeader({
             className="flex items-center gap-4 text-c12 font-MontserratNormal px-3 bg-white rounded-c8 hover:bg-gray-50 transition-colors shadow-sm cursor-pointer h-11"
           >
             <span className="text-ff715b text-c12 font-MontserratNormal">Filters</span>
-            <SlidersHorizontal className="w-3.25 h-3 text-ff715b" />
+            <SlidersHorizontal className={`w-3.25 h-3 text-ff715b transition-transform duration-200 ${isFilterOpen ? "rotate-180" : ""}`} />
           </button>
           {renderFilterDropdown()}
         </div>

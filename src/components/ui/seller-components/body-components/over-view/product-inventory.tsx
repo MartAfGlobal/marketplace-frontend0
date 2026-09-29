@@ -68,6 +68,7 @@ export default function ProductInventory() {
           >
             <FullFilterButton
               onOpenFilter={() => setFilterOpen((prev) => !prev)}
+              isOpen={filterOpen}
             />
 
             {/* Dropdown Panel */}

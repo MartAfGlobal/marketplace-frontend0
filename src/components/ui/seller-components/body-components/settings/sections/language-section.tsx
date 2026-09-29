@@ -1,10 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 
 export default function LanguageSection() {
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const langDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        langDropdownRef.current &&
+        !langDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowLanguageDropdown(false);
+      }
+    }
+    if (showLanguageDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showLanguageDropdown]);
 
   return (
     <div id="Language">
@@ -16,9 +36,10 @@ export default function LanguageSection() {
            <p className="text-[10px] text-[#999999] font-MontserratMedium">Choose where wallet withdrawals are made to</p>
          </div>
          
-         <div className="relative w-full md:w-44">
+         <div className="relative w-full md:w-44" ref={langDropdownRef}>
            {/* Top select button */}
            <button 
+            type="button"
             onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
             className="w-full flex items-center justify-between h-10 border border-[#e5e5e5] rounded-lg px-4 bg-[#f8f9fa] text-[11px] text-[#333333] font-MontserratMedium"
            >

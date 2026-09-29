@@ -123,7 +123,11 @@ axios.interceptors.request.use((config) => {
     config.transformRequest = [(data: any) => data];
 
     if (config.headers) {
-      clearHeader(config.headers, "Content-Type");
+      // Setting to `false` (not undefined/deleted) prevents dispatchRequest.js from
+      // overwriting with 'application/x-www-form-urlencoded'. The XHR adapter will
+      // then let the browser auto-set 'multipart/form-data; boundary=...' correctly.
+      (config.headers as any)["Content-Type"] = false;
+      // Also clear any case variants that may have been set explicitly elsewhere
       clearHeader(config.headers, "content-type");
       clearHeader(config.headers, "Content-type");
     }

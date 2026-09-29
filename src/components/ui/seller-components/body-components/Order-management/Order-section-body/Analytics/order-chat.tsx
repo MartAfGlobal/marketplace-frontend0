@@ -83,6 +83,7 @@ export default function OrderQuantityChart({
         <div className="flex gap-3 relative" ref={dropdownRef}>
           <FullFilterButton
             onOpenFilter={() => setFilterOpen((prev) => !prev)}
+            isOpen={filterOpen}
           />
 
           {/* Dropdown Panel */}

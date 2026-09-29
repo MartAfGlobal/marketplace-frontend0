@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -23,6 +23,26 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
 
   const [selected, setSelected] = useState(filterOptions[2]);
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isOpen]);
 
   // Derive real order segments from Redux orders
   const segments = useMemo(() => {
@@ -111,12 +131,19 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
 
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={isIncomplete}
                 className="flex circle-shadow text-[10px] lg:text-c12 font-MontserratNormal text-ff715b bg-ffffff items-center w-fit p-2 lg:p-3 rounded-xl justify-center flex-shrink-0 gap-2 lg:gap-4.5 h-8 lg:h-10 border border-gray-100"
               >
                 <span>{selected}</span>
-                <Image src={CaretDown} alt="filter" width={11} height={6} />
+                <Image
+                  src={CaretDown}
+                  alt="filter"
+                  width={11}
+                  height={6}
+                  className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                />
               </button>
             </div>
           </div>
@@ -181,13 +208,20 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
           <div className="flex justify-between items-center mb-4 lg:mb-6 px-1 lg:px-8 lg:pt-6 ">
             <h2 className="text-c18 lg:text-lg font-MontserratMedium md:font-MontserratSemiBold text-000000">{title}</h2>
 
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex circle-shadow text-c14 lg:text-c12 font-MontserratNormal text-ff715b bg-ffffff items-center w-fit p-2 lg:p-3 rounded-xl justify-center flex-shrink-0 gap-2 lg:gap-4.5 h-8 lg:h-10 border border-gray-100"
               >
                 <span className="">{selected}</span>
-                <Image src={CaretDown} alt="filter" width={11} height={6} />
+                <Image
+                  src={CaretDown}
+                  alt="filter"
+                  width={11}
+                  height={6}
+                  className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               <AnimatePresence>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -37,19 +37,47 @@ export default function CategoryChat({title="Orders"}:SecondChatProps) {
     segments[1].color,
   ];
 
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
     <div className="w-full lg:max-w-134.75 h-auto lg:h-c460-69 py-6 px-4 lg:px-8 bg-ffffff circle-shadow rounded-c16">
       
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-MontserratSemiBold">{title}</h2>
 
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button
+            type="button"
             onClick={() => setIsOpen(!isOpen)}
             className="flex circle-shadow text-c12 font-MontserratNormal text-ff715b bg-ffffff items-center w-full max-w-fit p-3 rounded-xl justify-center flex-shrink-0 gap-4.5 h-10"
           >
             <span>{selected}</span>
-            <Image src={CaretDown} alt="filter" width={11} height={6} />
+            <Image
+              src={CaretDown}
+              alt="filter"
+              width={11}
+              height={6}
+              className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            />
           </button>
 
           <AnimatePresence>

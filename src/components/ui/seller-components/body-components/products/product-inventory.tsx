@@ -322,6 +322,7 @@ export default function ProductInventoryPage() {
             <div className={`flex gap-3 relative ${isSearchOpen ? "hidden md:flex" : "flex"}`} ref={dropdownRef}>
               <FullFilterButton
                 onOpenFilter={() => setFilterOpen((prev: boolean) => !prev)}
+                isOpen={filterOpen}
               />
 
               {/* Dropdown Panel */}

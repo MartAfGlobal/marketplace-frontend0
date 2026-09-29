@@ -304,13 +304,15 @@ export function FullScreenModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 cursor-pointer"
+      onClick={onClose}
     >
       <motion.div
         initial={{ y: 50 }}
         animate={{ y: 0 }}
         exit={{ y: 50 }}
-        className="bg-white w-full max-w-92 rounded-lg px-6 py-3"
+        className="bg-white w-full max-w-92 rounded-lg px-6 py-3 cursor-default"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="">

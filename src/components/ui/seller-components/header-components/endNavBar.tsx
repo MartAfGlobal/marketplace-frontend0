@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -19,10 +19,30 @@ import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 export default function EndNav() {
   const [userOpen, setUserOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement | null>(null);
   const token = useSelector((state: any) => state.token?.token);
   const seller = useSelector((state: any) => state.seller.data);
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target as Node)
+      ) {
+        setUserOpen(false);
+      }
+    }
+    if (userOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [userOpen]);
 
   // Prioritise company logo; fall back to profile picture, then default icon
   const profilePicture = seller?.profile?.company_logo_url || seller?.profile?.profile_picture || User;
@@ -51,10 +71,11 @@ export default function EndNav() {
         </button>
       </div>
       <div className="flex items-center gap-4">
-        <div className="relative">
+        <div className="relative" ref={userDropdownRef}>
           <button
+            type="button"
             onClick={() => setUserOpen((prev) => !prev)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 cursor-pointer"
           >
             {token ? (
               <div className="h-7.5 w-7.5 border-1 border-fffff rounded-full flex justify-center items-center overflow-hidden">
@@ -71,7 +92,7 @@ export default function EndNav() {
               alt="Dropdown"
               width={16}
               height={16}
-              className={`w-4 h-4 lg:block hidden ${userOpen ? "rotate-180" : "rotate-0"}`}
+              className={`w-4 h-4 lg:block hidden transition-transform duration-200 ${userOpen ? "rotate-180" : "rotate-0"}`}
             />
           </button>
 

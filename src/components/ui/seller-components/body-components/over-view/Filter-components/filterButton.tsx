@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -20,9 +20,29 @@ export default function FilterDropdown({
   onChange,
   className, // Add this
 }: FilterDropdownProps) {
-     const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+  const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
   const [selected, setSelected] = useState(defaultValue || options[0]);
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleSelect = (option: string) => {
     setSelected(option);
@@ -31,15 +51,22 @@ export default function FilterDropdown({
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        disabled ={isIncomplete}
+        disabled={isIncomplete}
         className={`flex  text-c12 font-MontserratNormal text-ff715b bg-ffffff md:border-[0.5px] md:border-ff715b
         items-center w-full max-w-fit p-3 text-nowrap rounded-c8 justify-between flex-shrink-0 gap-4.5 h-11 quickTrackShadow  ${isIncomplete? "cursor-not-allowed" : "cursor-pointer"} ${className}`}
       >
         <span>{selected}</span>
-        <Image src={CaretDown} alt="dropdown" width={11} height={6} />
+        <Image
+          src={CaretDown}
+          alt="dropdown"
+          width={11}
+          height={6}
+          className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       <AnimatePresence>
