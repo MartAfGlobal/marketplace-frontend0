@@ -13,6 +13,10 @@ interface AdminListHeaderProps {
   selectedMonth?: string;
   onMonthChange?: (val: string) => void;
   onExportClick?: () => void;
+  /** When provided, the Download button becomes a CSV/PDF picker instead of
+   * immediately exporting -- every existing caller that only passes
+   * onExportClick keeps its exact current one-click-CSV behaviour. */
+  onExportPdfClick?: () => void;
   searchExpandable?: boolean;
   filterOptions?: string[];
   selectedFilters?: string[];
@@ -32,6 +36,7 @@ export default function AdminListHeader({
   selectedMonth = "This month",
   onMonthChange,
   onExportClick,
+  onExportPdfClick,
   searchExpandable = false,
   filterOptions = [],
   selectedFilters = [],
@@ -43,9 +48,11 @@ export default function AdminListHeader({
 }: AdminListHeaderProps) {
   const [isSearchExpanded, setIsSearchExpanded] = React.useState(false);
   const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [isExportOpen, setIsExportOpen] = React.useState(false);
   const [localFilters, setLocalFilters] = React.useState<string[]>(selectedFilters);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const filterRef = React.useRef<HTMLDivElement>(null);
+  const exportRef = React.useRef<HTMLDivElement>(null);
 
   const isExpanded = isSearchExpanded || !!searchVal;
 
@@ -66,6 +73,9 @@ export default function AdminListHeader({
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
         setIsFilterOpen(false);
+      }
+      if (exportRef.current && !exportRef.current.contains(event.target as Node)) {
+        setIsExportOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -142,6 +152,49 @@ export default function AdminListHeader({
     );
   };
 
+  const renderExportButton = (size: "sm" | "lg") => {
+    const dims = size === "sm" ? "h-10 w-10" : "h-11 w-11";
+    const rounding = size === "sm" ? "rounded-c8" : "rounded-xl";
+    if (!onExportPdfClick) {
+      return (
+        <button
+          onClick={onExportClick}
+          className={`${dims} flex shrink-0 items-center justify-center bg-ff715b text-white ${rounding} hover:bg-opacity-95 transition-all active:scale-95 cursor-pointer`}
+          title="Download CSV"
+        >
+          <Download className="w-4 h-4" />
+        </button>
+      );
+    }
+    return (
+      <div className="relative" ref={exportRef}>
+        <button
+          onClick={() => setIsExportOpen((prev) => !prev)}
+          className={`${dims} flex shrink-0 items-center justify-center bg-ff715b text-white ${rounding} hover:bg-opacity-95 transition-all active:scale-95 cursor-pointer`}
+          title="Download"
+        >
+          <Download className="w-4 h-4" />
+        </button>
+        {isExportOpen && (
+          <div className="absolute top-full right-0 mt-2 w-36 bg-ffffff rounded-c8 shadow-custom border border-000000/4 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+            <button
+              onClick={() => { setIsExportOpen(false); onExportClick?.(); }}
+              className="w-full text-left px-4 py-2 text-c12 font-MontserratNormal hover:bg-gray-50 transition-colors"
+            >
+              Export as CSV
+            </button>
+            <button
+              onClick={() => { setIsExportOpen(false); onExportPdfClick?.(); }}
+              className="w-full text-left px-4 py-2 text-c12 font-MontserratNormal hover:bg-gray-50 transition-colors"
+            >
+              Export as PDF
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (searchExpandable) {
     return (
       <div className="flex items-center justify-between gap-4 w-full mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -211,14 +264,8 @@ export default function AdminListHeader({
             />
           )}
 
-          {/* Red/Coral Export PDF Button */}
-          <button
-            onClick={onExportClick}
-            className="h-10 w-10 flex shrink-0 items-center justify-center bg-ff715b text-white rounded-c8   hover:bg-opacity-95 transition-all active:scale-95 cursor-pointer"
-            title="Download"
-          >
-            <Download className="w-4 h-4" />
-          </button>
+          {/* Export Button */}
+          {renderExportButton("sm")}
         </div>
       </div>
     );
@@ -268,14 +315,8 @@ export default function AdminListHeader({
           />
         )}
 
-        {/* Red/Coral Export PDF Button */}
-        <button
-          onClick={onExportClick}
-          className="h-11 w-11 flex shrink-0 items-center justify-center bg-[#FF715B] text-white rounded-xl shadow-md shadow-[#FF715B]/10 hover:bg-opacity-95 transition-all active:scale-95 cursor-pointer"
-          title="Download"
-        >
-          <Download className="w-4 h-4" />
-        </button>
+        {/* Export Button */}
+        {renderExportButton("lg")}
       </div>
     </div>
   );
