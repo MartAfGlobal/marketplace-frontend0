@@ -13,21 +13,37 @@ import { tokenActions } from "@/store/token/token-slice";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { validatePassword } from "@/utils/passwordValidation";
+import ResultModal from "../resultModal";
 
-export default function ResetPasswordForm() {
+ export interface userTypeProp{
+    userType : string
+  }
+
+export default function ResetPasswordForm({userType}:userTypeProp) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const router = useRouter();
   const dispatch = useDispatch();
   const { token } = useParams();
+  const searchParams = useSearchParams();
+  const emailParam = searchParams.get("email") || "";
+  const tokenParam =
+    (Array.isArray(token) ? token[0] : token) ||
+    searchParams.get("token") ||
+    searchParams.get("resetToken") ||
+    "";
 
   const [formData, setFormData] = useState<ResetParams>({
     newPassword: "",
     comfirmPassword: "",
   });
+
+ 
+
 
   const { loading, sendHttpRequest: resetRequest } = useHttp();
 
@@ -53,17 +69,13 @@ export default function ResetPasswordForm() {
   const handleSuccess = (res: any) => {
     const accessToken = res?.data?.access;
 
-    toast.success("Password reset successful!");
+   
     if (accessToken) {
       dispatch(tokenActions.setToken(accessToken));
     }
 
-    router.push("/auth/login");
+    setIsModalOpen(true);
   };
-
-  const searchParams = useSearchParams();
-  const emailParam = searchParams.get("email") || "";
-  const tokenParam = (Array.isArray(token) ? token[0] : token) || searchParams.get("token") || searchParams.get("resetToken") || "";
 
   const passValidation = validatePassword(formData.newPassword);
 
@@ -88,9 +100,12 @@ export default function ResetPasswordForm() {
       return;
     }
 
+    const url = userType==="buyer"? `/accounts/forgot-password/confirm/` : ``
+
+
     resetRequest({
       requestConfig: {
-        url: "/accounts/reset-password/confirm/",
+        url: url,
         method: "POST",
         body: {
           email: emailParam,
@@ -108,7 +123,7 @@ export default function ResetPasswordForm() {
   const isFormValid = formData.newPassword && formData.comfirmPassword;
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow p-6">
+    <div className="">
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* New Password */}
         <div className="flex flex-col gap-2">
@@ -151,6 +166,9 @@ export default function ResetPasswordForm() {
           {loading ? <LoadingSpinner /> : "Reset password"}
         </Button>
       </form>
+
+
+      <ResultModal title="Password Reset Successful!" discRescription="Your password has been reset successfully." isOpen={isModalOpen} onConfirm={() => router.push("/dashboard/buyer")}  buttenText="Go to dashboard"/>
     </div>
   );
 }

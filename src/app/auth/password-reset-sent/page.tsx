@@ -7,8 +7,8 @@ import RecoveryEmailSent from "@/components/ui/forms/auth/recoverylinksent";
 export default function forgotPasswordPage() {
   return (
     <AuthenticationLayout userType="buyer"
-      title="Forgot password"
-      description="We’ve sent a recovery link to your email at"
+      title="Check your inbox"
+      description="if there’s an account associated with that email, you’ll receive a reset link shortly."
     >
       <div>
         <>

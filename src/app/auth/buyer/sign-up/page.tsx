@@ -9,7 +9,7 @@ const AUTH_CONTENT: Record<
 > = {
   buyer: {
     title: "Sign up",
-    description: "Welcome to MartAf, create an account to start shopping",
+    description: "Welcome to MartAf, let’s get you started",
   },
   seller: {
     title: "Sign up ",

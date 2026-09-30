@@ -1222,6 +1222,7 @@ export type AuthStep =
   | "signup"
   | "signin"
   | "forgot"
+  | "recoveryLinkSent"
   | "resetVerify"
   | "resetPassword"
   | "verificationSent"

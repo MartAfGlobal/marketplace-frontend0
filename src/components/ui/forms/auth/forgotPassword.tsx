@@ -22,7 +22,7 @@ export default function ForgotPassword() {
   const { loading, sendHttpRequest: UseremailingReq } = useHttp();
 
   const registerUserRes = (res: any) => {
-    router.push(`/auth/otp-verification?email=${encodeURIComponent(email)}`);
+    router.push(`/auth/password-reset-sent/?email=${encodeURIComponent(email)}`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,7 +36,7 @@ export default function ForgotPassword() {
     UseremailingReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/reset-password/",
+        url: "/accounts/forgot-password/",
         method: "POST",
         body: {
           email,

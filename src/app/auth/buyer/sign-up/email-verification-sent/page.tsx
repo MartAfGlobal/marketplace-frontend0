@@ -11,7 +11,7 @@ const AUTH_CONTENT: Record<UserType, { title: string; description: string }> = {
   },
   seller: {
     title: "Enter verification code",
-    description: "We've sent a 6-digit code to your email. Enter it below to continue.",
+    description: "We sent a 6-digit code to your email",
   },
 };
 

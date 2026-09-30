@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, KeyboardEvent, ClipboardEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  KeyboardEvent,
+  ClipboardEvent,
+} from "react";
 import Image from "next/image";
 import { X, CheckCircle2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
@@ -62,7 +69,8 @@ export default function WithdrawModals({
 
   // Add Bank Modal state
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
-  const [isVerifyBankOtpModalOpen, setIsVerifyBankOtpModalOpen] = useState(false);
+  const [isVerifyBankOtpModalOpen, setIsVerifyBankOtpModalOpen] =
+    useState(false);
   const [newlyAddedBankDetails, setNewlyAddedBankDetails] = useState<{
     bank_name: string;
     account_number: string;
@@ -75,12 +83,17 @@ export default function WithdrawModals({
 
   const token = useAppSelector((state) => state.token?.token);
   const sellerEmail = useAppSelector((state) => state.seller?.data?.email);
-  const { wallet_balance : financeBalance } = useAppSelector((state) => state.finance);
+  const { wallet_balance: financeBalance } = useAppSelector(
+    (state) => state.finance,
+  );
   const { fetchBanks, fetchBalance, fetchTransactions } = useFetchProducts();
 
-  const { loading: initiateLoading, sendHttpRequest: sendInitiateRequest } = useHttp();
-  const { loading: confirmLoading, sendHttpRequest: sendConfirmRequest } = useHttp();
-  const { loading: resendLoading, sendHttpRequest: sendResendRequest } = useHttp();
+  const { loading: initiateLoading, sendHttpRequest: sendInitiateRequest } =
+    useHttp();
+  const { loading: confirmLoading, sendHttpRequest: sendConfirmRequest } =
+    useHttp();
+  const { loading: resendLoading, sendHttpRequest: sendResendRequest } =
+    useHttp();
 
   const availableBalance = financeBalance?.wallet_balance || 0;
   const availableBalanceNum =
@@ -95,7 +108,9 @@ export default function WithdrawModals({
       fetchBanks((fetchedBanks) => {
         setBanks(fetchedBanks);
         if (fetchedBanks.length > 0) {
-          const defaultBank = fetchedBanks.find((b: BankAccount) => b.is_default) || fetchedBanks[0];
+          const defaultBank =
+            fetchedBanks.find((b: BankAccount) => b.is_default) ||
+            fetchedBanks[0];
           setSelectedBank(defaultBank);
         }
         setBanksLoading(false);
@@ -103,7 +118,10 @@ export default function WithdrawModals({
     }
   }, [isOpen, token]);
 
-  const handleAddBankSuccess = (details: { bank_name: string; account_number: string }) => {
+  const handleAddBankSuccess = (details: {
+    bank_name: string;
+    account_number: string;
+  }) => {
     setNewlyAddedBankDetails(details);
     setIsAddAccountModalOpen(false);
     setIsVerifyBankOtpModalOpen(true);
@@ -116,7 +134,8 @@ export default function WithdrawModals({
       setBanks(fetchedBanks);
       if (fetchedBanks.length > 0) {
         const newlyAdded = fetchedBanks.find(
-          (b: BankAccount) => b.account_number === newlyAddedBankDetails?.account_number
+          (b: BankAccount) =>
+            b.account_number === newlyAddedBankDetails?.account_number,
         );
         setSelectedBank(newlyAdded || fetchedBanks[0]);
       }
@@ -192,7 +211,9 @@ export default function WithdrawModals({
     }
 
     if (numericAmount < MINIMUM_WITHDRAWAL) {
-      toast.error(`Minimum withdrawal amount is ₦${MINIMUM_WITHDRAWAL.toLocaleString()}.`);
+      toast.error(
+        `Minimum withdrawal amount is ₦${MINIMUM_WITHDRAWAL.toLocaleString()}.`,
+      );
       return;
     }
 
@@ -220,7 +241,9 @@ export default function WithdrawModals({
         },
       },
       successRes: (res: any) => {
-        toast.success(res?.data?.detail || res?.data?.message || "OTP sent successfully.");
+        toast.success(
+          res?.data?.detail || res?.data?.message || "OTP sent successfully.",
+        );
         setTimer(DEFAULT_RESEND_TIMEOUT);
         setDigits(Array(OTP_LENGTH).fill(""));
         setStep(2);
@@ -245,7 +268,10 @@ export default function WithdrawModals({
     try {
       const text = await navigator.clipboard.readText();
       const numeric = text.replace(/\D/g, "").slice(0, OTP_LENGTH);
-      if (numeric.length === OTP_LENGTH && numeric !== lastCheckedClip.current) {
+      if (
+        numeric.length === OTP_LENGTH &&
+        numeric !== lastCheckedClip.current
+      ) {
         lastCheckedClip.current = numeric;
         setClipboardOtp(numeric);
       } else if (numeric.length !== OTP_LENGTH) {
@@ -267,7 +293,9 @@ export default function WithdrawModals({
   const applyClipboardOtp = () => {
     if (!clipboardOtp) return;
     const next = Array(OTP_LENGTH).fill("");
-    clipboardOtp.split("").forEach((ch, i) => { next[i] = ch; });
+    clipboardOtp.split("").forEach((ch, i) => {
+      next[i] = ch;
+    });
     setDigits(next);
     setClipboardOtp(null);
     lastCheckedClip.current = "";
@@ -281,7 +309,9 @@ export default function WithdrawModals({
       const numeric = text.replace(/\D/g, "").slice(0, OTP_LENGTH);
       if (numeric.length > 0) {
         const next = Array(OTP_LENGTH).fill("");
-        numeric.split("").forEach((ch, i) => { next[i] = ch; });
+        numeric.split("").forEach((ch, i) => {
+          next[i] = ch;
+        });
         setDigits(next);
         setClipboardOtp(null);
         lastCheckedClip.current = "";
@@ -298,9 +328,14 @@ export default function WithdrawModals({
 
   const handleOtpChange = (index: number, value: string) => {
     const cleaned = value.replace(/\D/g, "");
-    if (cleaned.length >= OTP_LENGTH || (cleaned.length > 1 && !digits[index])) {
+    if (
+      cleaned.length >= OTP_LENGTH ||
+      (cleaned.length > 1 && !digits[index])
+    ) {
       const next = [...digits];
-      const pasted = (cleaned.length > OTP_LENGTH ? cleaned.slice(-OTP_LENGTH) : cleaned).slice(0, OTP_LENGTH);
+      const pasted = (
+        cleaned.length > OTP_LENGTH ? cleaned.slice(-OTP_LENGTH) : cleaned
+      ).slice(0, OTP_LENGTH);
       pasted.split("").forEach((ch, i) => {
         next[i] = ch;
       });
@@ -320,7 +355,10 @@ export default function WithdrawModals({
     }
   };
 
-  const handleOtpKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+  const handleOtpKeyDown = (
+    index: number,
+    e: KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "Backspace") {
       if (digits[index]) {
         const next = [...digits];
@@ -338,7 +376,10 @@ export default function WithdrawModals({
 
   const handleOtpPaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, OTP_LENGTH);
     if (!pasted) return;
     const next = Array(OTP_LENGTH).fill("");
     pasted.split("").forEach((ch, i) => {
@@ -350,7 +391,8 @@ export default function WithdrawModals({
   };
 
   const otp = digits.join("");
-  const isOtpComplete = otp.length === OTP_LENGTH && digits.every((d) => d !== "");
+  const isOtpComplete =
+    otp.length === OTP_LENGTH && digits.every((d) => d !== "");
 
   // Step 2: Confirm OTP
   const handleConfirm = (e: React.FormEvent) => {
@@ -463,7 +505,9 @@ export default function WithdrawModals({
             className="relative w-full md:max-w-[440px] bg-white rounded-t-2xl md:rounded-[16px] p-6 sm:p-8 max-h-[90vh] overflow-y-auto shadow-2xl"
           >
             <div className="text-center mb-6">
-              <h2 className="text-lg font-MontserratMedium text-[#161616]">Withdraw money</h2>
+              <h2 className="text-lg font-MontserratMedium text-[#161616]">
+                Withdraw money
+              </h2>
               <button
                 onClick={handleReset}
                 className="absolute top-6 right-6 p-1 hover:bg-gray-100 rounded-full transition-colors"
@@ -500,9 +544,7 @@ export default function WithdrawModals({
             <form onSubmit={handleInitiate} className="space-y-4">
               {/* Custom Bank Dropdown */}
               <div className="space-y-1.5" ref={bankDropdownRef}>
-                <Label className="">
-                  Select Bank
-                </Label>
+                <Label className="">Select Bank</Label>
                 <div className="relative">
                   {!banksLoading && banks.length === 0 ? (
                     <button
@@ -519,12 +561,14 @@ export default function WithdrawModals({
                       onClick={() => setIsBankDropdownOpen((prev) => !prev)}
                       className="flex text-c12 font-MontserratNormal text-ff715b bg-white border-[0.5px] border-ff715b items-center w-full p-3 rounded-c8 justify-between h-12 cursor-pointer transition-colors"
                     >
-                      <span className={`truncate ${selectedBank ? "text-[#161616] font-MontserratMedium" : "text-ff715b font-MontserratNormal"}`}>
+                      <span
+                        className={`truncate ${selectedBank ? "text-[#161616] font-MontserratMedium" : "text-ff715b font-MontserratNormal"}`}
+                      >
                         {banksLoading
                           ? "Loading bank accounts…"
                           : selectedBank
-                          ? `${selectedBank.bank_name} - ${maskAccount(selectedBank.account_number)}`
-                          : "Select a bank"}
+                            ? `${selectedBank.bank_name} - ${maskAccount(selectedBank.account_number)}`
+                            : "Select a bank"}
                       </span>
                       <Image
                         src={CaretDown}
@@ -587,9 +631,7 @@ export default function WithdrawModals({
 
               {/* Custom Input for Amount */}
               <div className="space-y-1.5">
-                <Label className="">
-                  Amount
-                </Label>
+                <Label className="">Amount</Label>
                 <div className="relative">
                   <Input
                     type="number"
@@ -624,7 +666,8 @@ export default function WithdrawModals({
                 </div>
                 {amount && numericAmount < MINIMUM_WITHDRAWAL && (
                   <p className="text-[10px] text-red-500 font-MontserratMedium">
-                    Minimum withdrawal is ₦{MINIMUM_WITHDRAWAL.toLocaleString()}.00
+                    Minimum withdrawal is ₦{MINIMUM_WITHDRAWAL.toLocaleString()}
+                    .00
                   </p>
                 )}
                 {amount && numericAmount > availableBalanceNum && (
@@ -636,9 +679,7 @@ export default function WithdrawModals({
 
               {/* Custom TextArea for Reason */}
               <div className="space-y-1.5">
-                <Label className="">
-                  Description
-                </Label>
+                <Label className="">Description</Label>
                 <Textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
@@ -702,35 +743,11 @@ export default function WithdrawModals({
             </p>
 
             {/* Form — identical layout to auth OtpVerification */}
-            <form onSubmit={handleConfirm} className="flex flex-col items-center gap-c32">
-              {/* Clipboard paste suggestion banner */}
-              {clipboardOtp && (
-                <div className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-ff715b/10 border border-ff715b/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <svg className="w-4 h-4 text-ff715b shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <span className="flex-1 text-c12 font-MontserratMedium text-161616">
-                    OTP code copied — paste it?
-                  </span>
-                  <button
-                    type="button"
-                    onClick={applyClipboardOtp}
-                    className="text-c12 font-MontserratSemiBold text-ff715b hover:underline shrink-0"
-                  >
-                    Paste OTP
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setClipboardOtp(null); lastCheckedClip.current = ""; }}
-                    aria-label="Dismiss"
-                    className="text-161616/40 hover:text-161616 transition-colors ml-1 shrink-0"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              )}
+            <form
+              onSubmit={handleConfirm}
+              className="flex flex-col items-center gap-c32"
+            >
+            
 
               {/* OTP digit boxes */}
               <div className="flex flex-col items-center gap-2 w-full">
@@ -738,7 +755,9 @@ export default function WithdrawModals({
                   {digits.map((digit, i) => (
                     <input
                       key={i}
-                      ref={(el) => { inputRefs.current[i] = el; }}
+                      ref={(el) => {
+                        inputRefs.current[i] = el;
+                      }}
                       type="text"
                       inputMode="numeric"
                       autoComplete={i === 0 ? "one-time-code" : "off"}
@@ -754,9 +773,10 @@ export default function WithdrawModals({
                       className={`
                         w-10 h-12 sm:w-12 sm:h-14 text-center text-base sm:text-c18 font-MontserratSemiBold rounded-lg border-1
                         outline-none transition-all duration-200
-                        ${digit
-                          ? "border-ff715b  text-161616"
-                          : "border-efefef bg-white text-161616"
+                        ${
+                          digit
+                            ? "border-ff715b  text-161616"
+                            : "border-efefef bg-white text-161616"
                         }
                         focus:border-ff715b focus:ring-1 focus:ring-ff715b/20
                         caret-ff715b
@@ -764,17 +784,30 @@ export default function WithdrawModals({
                     />
                   ))}
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleDirectPaste}
-                  className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium text-ff715b hover:text-ff715b/80 transition-colors py-1 px-2.5 rounded-full hover:bg-ff715b/5"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  Paste code from clipboard
-                </button>
+                {clipboardOtp && (
+                  <button
+                    type="button"
+                    onClick={handleDirectPaste}
+                    className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium text-ff715b hover:text-ff715b/80 transition-colors py-1 px-2.5 rounded-full hover:bg-ff715b/5"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                    Paste code from clipboard
+                  </button>
+                )}{" "}
+               
+               
               </div>
 
               {/* Submit button — full width, matches auth */}
@@ -798,11 +831,13 @@ export default function WithdrawModals({
                 onClick={handleResendOtp}
                 disabled={resendLoading || timer > 0}
               >
-                {resendLoading
-                  ? <LoadingSpinner color="white"/>
-                  : timer > 0
-                  ? `Resend OTP in (${formattedTimer})`
-                  : "Resend OTP"}
+                {resendLoading ? (
+                  <LoadingSpinner color="white" />
+                ) : timer > 0 ? (
+                  `Resend OTP in (${formattedTimer})`
+                ) : (
+                  "Resend OTP"
+                )}
               </Button>
               <button
                 type="button"
@@ -842,19 +877,25 @@ export default function WithdrawModals({
 
             <div className="bg-[#f8f9fa] border border-[#f0f0f0] rounded-2xl p-5 space-y-4 mb-8 text-left">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-MontserratMedium text-[#999999]">Amount</span>
+                <span className="text-[10px] font-MontserratMedium text-[#999999]">
+                  Amount
+                </span>
                 <span className="text-[11px] font-MontserratBold text-[#161616]">
                   {formatCurrency(amount)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-MontserratMedium text-[#999999]">Bank</span>
+                <span className="text-[10px] font-MontserratMedium text-[#999999]">
+                  Bank
+                </span>
                 <span className="text-[11px] font-MontserratBold text-[#161616]">
                   {selectedBank?.bank_name || "—"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-MontserratMedium text-[#999999]">Account</span>
+                <span className="text-[10px] font-MontserratMedium text-[#999999]">
+                  Account
+                </span>
                 <span className="text-[11px] font-MontserratBold text-[#161616]">
                   {maskAccount(selectedBank?.account_number) || "—"}
                 </span>
@@ -862,10 +903,7 @@ export default function WithdrawModals({
             </div>
 
             {/* Custom Button */}
-            <Button
-              onClick={handleReset}
-              variant="primary"
-            >
+            <Button onClick={handleReset} variant="primary">
               Done
             </Button>
           </motion.div>

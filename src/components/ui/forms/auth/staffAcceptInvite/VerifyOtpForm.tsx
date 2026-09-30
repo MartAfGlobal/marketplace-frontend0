@@ -234,9 +234,7 @@ export default function VerifyOtpForm() {
             <svg className="w-4 h-4 text-ff715b shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <span className="flex-1 text-c12 font-MontserratMedium text-161616">
-              OTP code copied — paste it?
-            </span>
+           
             <button
               type="button"
               onClick={applyClipboardOtp}
@@ -294,7 +292,7 @@ export default function VerifyOtpForm() {
             ))}
           </div>
 
-          <button
+          {/* <button
             type="button"
             onClick={handleDirectPaste}
             className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium text-ff715b hover:text-ff715b/80 transition-colors py-1 px-2.5 rounded-full hover:bg-ff715b/5"
@@ -303,7 +301,7 @@ export default function VerifyOtpForm() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             Paste code from clipboard
-          </button>
+          </button> */}
         </div>
 
         <div className="flex gap-4 w-full">

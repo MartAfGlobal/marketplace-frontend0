@@ -1,6 +1,13 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, KeyboardEvent, ClipboardEvent } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  KeyboardEvent,
+  ClipboardEvent,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button/Button";
 import { useHttp } from "@/hooks/use-http";
@@ -28,6 +35,7 @@ export default function OtpVerification() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const initialRetryAfter =
     extractRetryAfter({
@@ -58,7 +66,10 @@ export default function OtpVerification() {
     try {
       const text = await navigator.clipboard.readText();
       const numeric = text.replace(/\D/g, "").slice(0, OTP_LENGTH);
-      if (numeric.length === OTP_LENGTH && numeric !== lastCheckedClip.current) {
+      if (
+        numeric.length === OTP_LENGTH &&
+        numeric !== lastCheckedClip.current
+      ) {
         lastCheckedClip.current = numeric;
         setClipboardOtp(numeric);
       } else if (numeric.length !== OTP_LENGTH) {
@@ -80,7 +91,9 @@ export default function OtpVerification() {
   const applyClipboardOtp = () => {
     if (!clipboardOtp) return;
     const next = Array(OTP_LENGTH).fill("");
-    clipboardOtp.split("").forEach((ch, i) => { next[i] = ch; });
+    clipboardOtp.split("").forEach((ch, i) => {
+      next[i] = ch;
+    });
     setDigits(next);
     setClipboardOtp(null);
     lastCheckedClip.current = "";
@@ -102,7 +115,9 @@ export default function OtpVerification() {
       const numeric = text.replace(/\D/g, "").slice(0, OTP_LENGTH);
       if (numeric.length > 0) {
         const next = Array(OTP_LENGTH).fill("");
-        numeric.split("").forEach((ch, i) => { next[i] = ch; });
+        numeric.split("").forEach((ch, i) => {
+          next[i] = ch;
+        });
         setDigits(next);
         setClipboardOtp(null);
         lastCheckedClip.current = "";
@@ -119,9 +134,14 @@ export default function OtpVerification() {
 
   const handleChange = (index: number, value: string) => {
     const cleaned = value.replace(/\D/g, "");
-    if (cleaned.length >= OTP_LENGTH || (cleaned.length > 1 && !digits[index])) {
+    if (
+      cleaned.length >= OTP_LENGTH ||
+      (cleaned.length > 1 && !digits[index])
+    ) {
       const next = [...digits];
-      const pasted = (cleaned.length > OTP_LENGTH ? cleaned.slice(-OTP_LENGTH) : cleaned).slice(0, OTP_LENGTH);
+      const pasted = (
+        cleaned.length > OTP_LENGTH ? cleaned.slice(-OTP_LENGTH) : cleaned
+      ).slice(0, OTP_LENGTH);
       pasted.split("").forEach((ch, i) => {
         next[i] = ch;
       });
@@ -136,6 +156,7 @@ export default function OtpVerification() {
     const next = [...digits];
     next[index] = digit;
     setDigits(next);
+     setErrorMsg(null);
 
     // Move to next input
     if (digit && index < OTP_LENGTH - 1) {
@@ -161,10 +182,15 @@ export default function OtpVerification() {
 
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, OTP_LENGTH);
     if (!pasted) return;
     const next = Array(OTP_LENGTH).fill("");
-    pasted.split("").forEach((ch, i) => { next[i] = ch; });
+    pasted.split("").forEach((ch, i) => {
+      next[i] = ch;
+    });
     setDigits(next);
     const focusIndex = Math.min(pasted.length, OTP_LENGTH - 1);
     inputRefs.current[focusIndex]?.focus();
@@ -173,7 +199,7 @@ export default function OtpVerification() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isComplete) {
-      toast.error("Please enter the full 6-digit OTP.");
+      setErrorMsg("Please enter the complete 6-digit code.");
       return;
     }
 
@@ -182,6 +208,7 @@ export default function OtpVerification() {
       router.push("/auth/forgot-password");
       return;
     }
+   
 
     verifyOtp({
       successRes: (res: any) => {
@@ -191,7 +218,7 @@ export default function OtpVerification() {
           expireTimer();
           toast.success(data?.detail || "Code verified successfully.");
           router.push(
-            `/auth/create-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(resetToken)}`
+            `/auth/create-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(resetToken)}`,
           );
         } else {
           toast.error(data?.detail || "Code verification failed.");
@@ -247,40 +274,22 @@ export default function OtpVerification() {
   return (
     <div className="w-full">
       {/* Email hint */}
-      <p className="text-center font-MontserratMedium text-c12 text-161616 mb-c32">
-        Enter the 6-digit code sent to{" "}
-        <span className="font-MontserratSemiBold text-ff715b break-all">{email}</span>
+       <p className="text-base font-MontserratSemiBold text-center mt-3 mb-8 text-161616 break-all">
+        {email}
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-c32">
+      {/* Error message */}
+      {errorMsg && (
+        <p className="text-red-500 font-MontserratSemiBold text-sm mb-4 text-center">
+          {errorMsg}
+        </p>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col items-center gap-c32"
+      >
         {/* Clipboard paste suggestion banner */}
-        {clipboardOtp && (
-          <div className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-ff715b/10 border border-ff715b/30 animate-in fade-in slide-in-from-top-2 duration-200">
-            <svg className="w-4 h-4 text-ff715b shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span className="flex-1 text-c12 font-MontserratMedium text-161616">
-              OTP code copied — paste it?
-            </span>
-            <button
-              type="button"
-              onClick={applyClipboardOtp}
-              className="text-c12 font-MontserratSemiBold text-ff715b hover:underline shrink-0"
-            >
-              Paste OTP
-            </button>
-            <button
-              type="button"
-              onClick={() => { setClipboardOtp(null); lastCheckedClip.current = ""; }}
-              aria-label="Dismiss"
-              className="text-161616/40 hover:text-161616 transition-colors ml-1 shrink-0"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
 
         {/* OTP digit boxes */}
         <div className="flex flex-col items-center gap-2">
@@ -288,7 +297,9 @@ export default function OtpVerification() {
             {digits.map((digit, i) => (
               <input
                 key={i}
-                ref={(el) => { inputRefs.current[i] = el; }}
+                ref={(el) => {
+                  inputRefs.current[i] = el;
+                }}
                 type="text"
                 inputMode="numeric"
                 autoComplete={i === 0 ? "one-time-code" : "off"}
@@ -301,30 +312,33 @@ export default function OtpVerification() {
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 onPaste={handlePaste}
                 aria-label={`OTP digit ${i + 1}`}
-                className={`
-                  w-12 h-14 text-center text-c18 font-MontserratSemiBold rounded-lg border-2
-                  outline-none transition-all duration-200
-                  ${digit
-                    ? "border-ff715b bg-ff715b/5 text-161616"
-                    : "border-efefef bg-white text-161616"
-                  }
-                  focus:border-ff715b focus:ring-2 focus:ring-ff715b/20
-                  caret-ff715b
-                `}
+               className="w-full max-w-[47.33px] h-c64 md:w-c56 text-center text-xl font-MontserratBold border border-efefef rounded-c8 p-0 focus:border-ff715b focus:ring-1 focus:ring-ff715b outline-none transition-all"
+          
               />
             ))}
           </div>
-
-          <button
-            type="button"
-            onClick={handleDirectPaste}
-            className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium text-ff715b hover:text-ff715b/80 transition-colors py-1 px-2.5 rounded-full hover:bg-ff715b/5"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            Paste code from clipboard
-          </button>
+          {clipboardOtp && (
+            <button
+              type="button"
+              onClick={handleDirectPaste}
+              className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-MontserratMedium text-ff715b hover:text-ff715b/80 transition-colors py-1 px-2.5 rounded-full hover:bg-ff715b/5"
+            >
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                />
+              </svg>
+              Paste code from clipboard
+            </button>
+          )}
         </div>
 
         <Button
@@ -339,7 +353,7 @@ export default function OtpVerification() {
       {/* Resend */}
       <div className="flex flex-col items-center gap-2 mt-c24 font-MontserratMedium text-c12">
         <Button
-        variant="secondary"
+          variant="secondary"
           onClick={handleResend}
           disabled={resendLoading || timer > 0}
           className=""
@@ -347,10 +361,13 @@ export default function OtpVerification() {
           {resendLoading
             ? "Resending…"
             : timer > 0
-            ? `Resend OTP in (${formattedTimer})`
-            : "Resend OTP"}
+              ? `Resend OTP in (${formattedTimer})`
+              : "Resend OTP"}
         </Button>
-        <Link href="/auth/login" className="text-161616/60 hover:text-ff715b transition-colors">
+        <Link
+          href="/auth/login"
+          className="text-161616/60 hover:text-ff715b transition-colors"
+        >
           Return to login
         </Link>
       </div>

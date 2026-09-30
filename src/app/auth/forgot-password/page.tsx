@@ -9,7 +9,7 @@ export default function forgotPasswordPage() {
     <AuthenticationLayout
     userType="buyer"
       title="Forgot password"
-      description="We’d send a recovery link to your email address"
+      description="We’ll send a verification code to your email address to reset your password."
     >
       <div>
         <>

@@ -85,7 +85,7 @@ export default function ResponseModal({
           </Button>
           <Button
             className=""
-            onClick={() => alert("Continuing shopping...")}
+            onClick={() => router.push("/#production-section")}
           >
             Continue Shopping
           </Button>

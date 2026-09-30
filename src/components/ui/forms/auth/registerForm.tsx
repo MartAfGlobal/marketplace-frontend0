@@ -21,7 +21,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { tokenActions } from "@/store/token/token-slice";
 
 
+
 import { validatePassword } from "@/utils/passwordValidation";
+import ResultModal from "../resultModal";
 
 export interface RegProps {
   userType: "seller" | "buyer" | "admin";
@@ -33,6 +35,7 @@ export interface RegProps {
 export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
   const dispatch = useDispatch()
 
+
   const VerifiedEmail = useSelector((state: any) => state.registration.email);
   const [formData, setFormData] = useState<RegisterParams>({
     password: "",
@@ -41,6 +44,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
   });
 
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isOpen, setIsOpen] = useState (false)
 
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword((prev) => !prev);
@@ -52,6 +56,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
 
   const registerUserRes = (res: any) => {
     const accessToken = res?.data?.access;
+    setIsOpen(true)
     console.log("reg token", res);
 
     if (accessToken) {
@@ -67,9 +72,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
     // On mobile, call onSuccess to close the modal gracefully
     if (onSuccess) {
       onSuccess();
-    } else {
-      router.push(`/auth/login`);
-    }
+    } 
   };
 
   const [submitted, setSubmitted] = useState(false);
@@ -106,7 +109,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
           email: VerifiedEmail
         },
         userType: userType,
-        successMessage: "Registration successful! You’re now logged in.",
+        
       },
     });
 
@@ -245,6 +248,8 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
               </div>
             </>
         </div>
+
+        <ResultModal isOpen ={isOpen} title="Success" discRescription="Registration successful! You’re now logged in." buttenText="dashboard"  secondaryButtonText="Shop now" onConfirm ={()=> router.push("/dashboard/buyer")} onSecondaryAction={()=>router.push("/#production-section")}/>
       </div>
     </>
   );

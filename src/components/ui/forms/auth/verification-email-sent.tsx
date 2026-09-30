@@ -127,6 +127,7 @@ export default function VerificationEmailSent({ userType }: RegProps) {
       },
       successRes: (res: any) => {
         console.log("tokebn email", res)
+        toast.success ("Email verified!")
         // The backend may return a token to continue registration
         const token =
           res?.data?.token

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button/Button";
 import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
+import { LoadingSpinner } from "../../loading-spinner";
 
 export default function RecoveryEmailSent() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function RecoveryEmailSent() {
     resendUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/register/resend-otp/",
+        url: "/accounts/forgot-password/",
         method: "POST",
         body: { email },
         userType: "buyer",
@@ -39,31 +40,29 @@ export default function RecoveryEmailSent() {
 
   return (
     <div className="full">
-      <form className="full" onSubmit={handleReturnToSignIn}>
+      <form className="full">
         <p className="text-base font-MontserratSemiBold text-center mt-c8 mb-c24 text-161616">
           {email}
         </p>
-        <Button type="submit">Return to sign in</Button>
+        <Button onClick={handleResentLink} type="button">{loading ? <LoadingSpinner/>:"Resend email link"}</Button>
       </form>
 
-      <div className="mt-3">
+      {/* <div className="mt-3">
         <Button
           onClick={handleResentLink}
           className="text-ff715b bg-transparent border-0 hover:bg-tr"
         >
           {loading ? "resending" : "Resend recovery link"}
         </Button>
-      </div>
+      </div> */}
 
-      <div className="font-MontserratMedium text-c12 justify-center mt-c24 px-c42">
-        <p className="text-161616 text-center">
-          If you haven't received the email, check your spam folder{" "}
-          <span>
-            <Link href="/auth/register" className="text-ff715b">
-              Sign up
-            </Link>
-          </span>
-        </p>
+      <div className=" flex justify-center items-center mt-4 ">
+        <Link
+          href="/auth/forgot-password"
+          className="text-[#6A0DAD] font-MontserratSemiBold leading-[24px]"
+        >
+          Change email
+        </Link>
       </div>
     </div>
   );

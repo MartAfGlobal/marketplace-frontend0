@@ -7,12 +7,12 @@ export default function ResetPasswordPage() {
   return (
     <AuthenticationLayout
       userType="buyer"
-      title="Reset your password."
+      title="Reset your password"
       description="Enter a new password for your account"
     >
       <div>
         <>
-          <ResetPasswordForm />
+          <ResetPasswordForm  userType="buyer"/>
         </>
       </div>
     </AuthenticationLayout>

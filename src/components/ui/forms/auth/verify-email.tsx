@@ -44,6 +44,8 @@ export default function VerifyEmail({ userType, token }: RegProps) {
   const email = formData.email;
 
   const registerUserRes = (res: any) => {
+    toast.success("OTP sent to your Email")
+    
     dispatch(registrationActions.setEmail(email));
     router.push(
       `/auth/${userType === "buyer" ? "buyer" : "seller"}/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
@@ -75,6 +77,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
     }
 
     registerUserReq({
+      
       successRes: registerUserRes,
       requestConfig: {
         url: userType === "buyer" ? "/accounts/register" : "/accounts/register/manufacturer/",

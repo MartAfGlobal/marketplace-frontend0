@@ -2,11 +2,11 @@
 
 import { useHttp } from "@/hooks/use-http";
 import { MobileLoginProps } from "@/types/global";
-import { useRouter } from "next/navigation"; // ✅ Correct import for Next.js App Router
 import { useState } from "react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../../loading-spinner";
 import { Button } from "../../Button/Button";
+import { Input } from "../../forms/Input";
 
 export default function ForgotPasswordModal({
   onClose,
@@ -16,14 +16,12 @@ export default function ForgotPasswordModal({
 }: MobileLoginProps) {
   const [localEmail, setLocalEmail] = useState(defaultEmail);
   const isFormValid = localEmail.trim() !== "";
-  const router = useRouter();
   const { loading, sendHttpRequest: UseremailingReq } = useHttp();
 
   const UserResetLinkRes = (res: any) => {
-    toast.success("Reset OTP sent successfully!");
-    if (setEmail) setEmail(localEmail); // ✅ update parent AuthModal email
-    setStep("resetVerify");
-  
+    toast.success("Reset link sent successfully!");
+    if (setEmail) setEmail(localEmail);
+    setStep("recoveryLinkSent");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,34 +34,35 @@ export default function ForgotPasswordModal({
     UseremailingReq({
       successRes: UserResetLinkRes,
       requestConfig: {
-        url: "/accounts/reset-password/",
+        url: "/accounts/forgot-password/",
         method: "POST",
         body: { email: localEmail },
-        successMessage: "Otp sent to your email.",
+        userType: "buyer",
+        successMessage: "Reset link sent to your email.",
       },
     });
   };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h2 className="font-MontserratSemiBold text-c20">Forgot password</h2>
+      <div className="space-y-2 text-left">
+        <h2 className="font-MontserratSemiBold  text-c20">Forgot password</h2>
         <p className="font-MontserratNormal text-sm">
-          Enter your email and we’ll send you a reset otp.
+          We’ll send a reset link to your email address.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
+        <Input
           type="email"
           value={localEmail}
           onChange={(e) => setLocalEmail(e.target.value)}
-          className="w-full border border-black/10 rounded-lg px-3 h-c48 focus:ring-1 focus:ring-ff715b outline-none"
+          className=""
           placeholder="Email address"
         />
 
         <Button type="submit" disabled={!isFormValid || loading}>
-          {loading ? <LoadingSpinner /> : "Send reset otp"}
+          {loading ? <LoadingSpinner /> : "Send reset link"}
         </Button>
       </form>
 

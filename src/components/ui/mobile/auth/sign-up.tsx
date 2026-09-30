@@ -24,6 +24,7 @@ import { AuthStep } from "@/types/global";
 import ResetVerify from "./reset-verifyModal";
 import ForgotPasswordModal from "./forgot-password";
 import ResetPasswordModal from "./reset-passwordModal";
+import RecoveryLinkSent from "./recovery-link-sent";
 import { Button } from "../../Button/Button";
 import { Label } from "../../forms/Label";
 
@@ -380,6 +381,14 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                     onClose={onClose}
                     setStep={setStep}
                     setEmail={setEmail}
+                  />
+                )}
+
+                {step === "recoveryLinkSent" && (
+                  <RecoveryLinkSent
+                    onClose={onClose}
+                    setStep={setStep}
+                    email={email}
                   />
                 )}
 
