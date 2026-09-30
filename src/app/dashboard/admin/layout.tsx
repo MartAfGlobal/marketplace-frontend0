@@ -20,6 +20,14 @@ import {
   X,
   User,
   LogOut,
+  Store,
+  Package,
+  Wallet,
+  RotateCcw,
+  Activity,
+  History,
+  HeartPulse,
+  ClipboardCheck,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDispatch } from "react-redux";
@@ -118,7 +126,17 @@ const requiredCategory = (path: string) =>
 
 const isIconComponent = (
   icon: React.ComponentType<any> | StaticImageData,
-): icon is React.ComponentType<any> => typeof icon === "function";
+): icon is React.ComponentType<any> => {
+  // A plain function component (typeof === "function") -- but lucide-react
+  // icons are React.forwardRef components, which are OBJECTS at runtime
+  // (typeof === "object"), so that check alone misclassified every lucide
+  // icon as StaticImageData and fed it to next/image's src prop, which
+  // silently renders an <img> with no src. StaticImageData always has a
+  // `src` string; a forwardRef component never does -- check for that
+  // instead of `typeof`.
+  if (typeof icon === "function") return true;
+  return typeof icon === "object" && icon !== null && !("src" in icon);
+};
 
 const renderSidebarIcon = (
   icon: React.ComponentType<any> | StaticImageData,
@@ -319,7 +337,24 @@ export default function AdminLayout({
         },
       ],
     },
-    { name: "Reports", icon: ReportsIcon, path: "/dashboard/admin/reports" },
+    {
+      name: "Reports",
+      icon: ReportsIcon,
+      path: "/dashboard/admin/reports",
+      subItems: [
+        { name: "Sales & Orders", path: "/dashboard/admin/reports/sales-orders", icon: ShoppingCart },
+        { name: "Buyers", path: "/dashboard/admin/reports/buyers", icon: Users },
+        { name: "Sellers", path: "/dashboard/admin/reports/sellers", icon: Store },
+        { name: "Admin Staff", path: "/dashboard/admin/reports/admin-staff", icon: UserSquare2 },
+        { name: "Products", path: "/dashboard/admin/reports/products-inventory", icon: Package },
+        { name: "Payments", path: "/dashboard/admin/reports/payments-revenue", icon: Wallet },
+        { name: "Refunds", path: "/dashboard/admin/reports/refunds-disputes", icon: RotateCcw },
+        { name: "Operations", path: "/dashboard/admin/reports/marketplace-operations", icon: Activity },
+        { name: "Activity Log", path: "/dashboard/admin/reports/activity-log", icon: History },
+        { name: "System Health", path: "/dashboard/admin/reports/system-health", icon: HeartPulse },
+        { name: "Audits", path: "/dashboard/admin/reports/audits", icon: ClipboardCheck },
+      ],
+    },
     {
       name: "Staff",
       icon: StaffIcon,
@@ -493,6 +528,10 @@ export default function AdminLayout({
                               "/dashboard/admin/staff/roles-permissions",
                             );
                           }
+                        } else if (pathname.startsWith("/dashboard/admin/reports")) {
+                          // Each of the 11 report sections is its own route
+                          // (separate pages, not one page's query-string tab).
+                          isSubActive = pathname.startsWith(sub.path);
                         }
 
                         return (
