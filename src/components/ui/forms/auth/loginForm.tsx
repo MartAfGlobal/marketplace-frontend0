@@ -17,9 +17,11 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useDispatch } from "react-redux";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { RegProps } from "./verify-email";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export default function LoginForm({ userType }: RegProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [showInvalidCredentialsModal, setShowInvalidCredentialsModal] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
@@ -233,20 +235,31 @@ export default function LoginForm({ userType }: RegProps) {
           check: formData.rememberMe,
         },
         userType: userType,
+        suppressErrorNotification: true,
       },
       successRes: loginSuccess,
       errorRes: (err: any) => {
         const data = err?.response?.data?.data ?? err?.response?.data;
         if (is2FaRequired(data)) {
           handleTwoFactorRedirect(data);
+          return;
         }
-      }
+
+        const status = err?.response?.status;
+        if (status === 400 || status === 401 || status === 403) {
+          setShowInvalidCredentialsModal(true);
+          return;
+        }
+
+        toast.error(data?.detail || data?.message || "Unable to sign in. Please try again.");
+      },
     });
   };
 
   const isFormValid = formData.email !== "" && formData.password !== "";
 
   return (
+    <>
     <div className="w-full">
       <form onSubmit={handleSubmit}>
         {/* Email */}
@@ -363,5 +376,18 @@ export default function LoginForm({ userType }: RegProps) {
         </>
       )}
     </div>
+    <ResultModal
+      isOpen={showInvalidCredentialsModal}
+      result="error"
+      title="Invalid credentials"
+      message="The email or password is incorrect. Sign up to create an account."
+      buttenText="Sign up"
+      onConfirm={() => {
+        setShowInvalidCredentialsModal(false);
+        router.push(userType === "seller" ? "/auth/seller/sign-up" : "/auth/register");
+      }}
+      onCancel={() => setShowInvalidCredentialsModal(false)}
+    />
+    </>
   );
 }

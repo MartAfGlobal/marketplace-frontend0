@@ -80,6 +80,12 @@ const DEFAULT_RESEND_TIMEOUT = 120;
     initialSeconds: DEFAULT_RESEND_TIMEOUT,
   });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [signupErrorModal, setSignupErrorModal] = useState<{
+    title: string;
+    bodyTitle?: string;
+    message: string;
+    buttonText: string;
+  } | null>(null);
 
   const { loading: resendLoading, sendHttpRequest: resendUserReq } = useHttp();
   const { loading: verifying, sendHttpRequest: verifyOtpReq } = useHttp();
@@ -202,6 +208,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
     if (open) {
       setStep(defaultStep);
       setEmail(initialEmail);
+      setSignupErrorModal(null);
     }
   }, [defaultStep, initialEmail, open]);
 
@@ -227,7 +234,8 @@ const DEFAULT_RESEND_TIMEOUT = 120;
     if (backendRetry) {
       resetTimer(backendRetry);
     }
-    const errorMsg = typeof data === "string" ? data : JSON.stringify(data);
+    const status = err?.response?.status;
+    const errorMsg = typeof data === "string" ? data : JSON.stringify(data ?? "");
     const lowerError = errorMsg.toLowerCase();
     if (
       lowerError.includes("already been sent") ||
@@ -235,7 +243,29 @@ const DEFAULT_RESEND_TIMEOUT = 120;
     ) {
       dispatch(registrationActions.setEmail(formData.email));
       setStep("verificationSent");
+      return;
     }
+
+    const duplicateEmail =
+      status === 409 ||
+      (/email|account|user|profile/.test(lowerError) &&
+        /(already|exist|registered|taken|in use|linked|associated)/.test(lowerError));
+
+    if (duplicateEmail) {
+      setSignupErrorModal({
+        title: "Separate email required",
+        bodyTitle: `To create a new ${userType === "seller" ? "Seller" : "Buyer"} account,`,
+        message: "you must use an email address that isn't already linked to an existing profile.",
+        buttonText: "Use Different Email",
+      });
+      return;
+    }
+
+    setSignupErrorModal({
+      title: "Unable to sign up",
+      message: data?.detail || data?.message || "We couldn't create your account. Please try again.",
+      buttonText: "Try Again",
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -255,6 +285,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
         body: {
           email: formData.email,
         },
+        suppressErrorNotification: true,
       },
     });
 
@@ -512,6 +543,16 @@ const DEFAULT_RESEND_TIMEOUT = 120;
         buttenText="Okay"
         onConfirm={() => setShowSuccessModal(false)}
         onCancel={() => setShowSuccessModal(false)}
+      />
+      <ResultModal
+        isOpen={Boolean(signupErrorModal)}
+        result="error"
+        title={signupErrorModal?.title}
+        bodyTitle={signupErrorModal?.bodyTitle}
+        message={signupErrorModal?.message}
+        buttenText={signupErrorModal?.buttonText}
+        onConfirm={() => setSignupErrorModal(null)}
+        onCancel={() => setSignupErrorModal(null)}
       />
     </>
   );

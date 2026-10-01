@@ -38,6 +38,7 @@ export default function SellerProductDetailsPage() {
 
   const [successful, setSuccessful] = useState(false);
   const [DeleteDraftSuccess, setDeleteDraftSuccess] = useState(false);
+  const [showDeleteDraftConfirm, setShowDeleteDraftConfirm] = useState(false);
   const [showIncompleteModal, setShowIncompleteModal] = useState(false);
   const [confirmAction, setConfirmAction] = useState<
     | "activate"
@@ -183,7 +184,12 @@ export default function SellerProductDetailsPage() {
   };
 
   const handleDeleteDraft = () => {
+    setShowDeleteDraftConfirm(true);
+  };
+
+  const confirmDeleteDraft = () => {
     if (!token) return;
+    setShowDeleteDraftConfirm(false);
 
     deleteReq({
       requestConfig: {
@@ -439,6 +445,17 @@ export default function SellerProductDetailsPage() {
         </div>
 
         {/* SUCCESS MODALS */}
+        <ResultModal
+          result="warning"
+          title="Delete this product draft?"
+          message="This will permanently delete the draft and its product details."
+          buttenText="Delete draft"
+          isOpen={showDeleteDraftConfirm}
+          loading={deleteLoading}
+          onConfirm={confirmDeleteDraft}
+          onCancel={() => setShowDeleteDraftConfirm(false)}
+        />
+
         <ResultModal
           title="Product deleted from draft"
           message="Your product has been deleted from the draft."

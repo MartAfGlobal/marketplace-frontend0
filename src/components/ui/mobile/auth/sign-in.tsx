@@ -10,9 +10,11 @@ import Image from "next/image";
 
 import Mail from "@/assets/FormIcon/email.svg";
 import { LoadingSpinner } from "../../loading-spinner";
+import ResultModal from "@/components/ui/forms/resultModal";
 
 export default function MobileLogin({ onClose, setStep, userType = "buyer" }: MobileLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [showInvalidCredentialsModal, setShowInvalidCredentialsModal] = useState(false);
   const router = useRouter();
 
   const rememberKey = `rememberLogin_${userType}`;
@@ -183,13 +185,27 @@ export default function MobileLogin({ onClose, setStep, userType = "buyer" }: Mo
           check: formData.rememberMe,
         },
         userType,
+        suppressErrorNotification: true,
       },
       successRes: loginSuccess,
       errorRes: (err: any) => {
         const data = err?.response?.data?.data ?? err?.response?.data;
         if (is2FaRequired(data)) {
           handleTwoFactorRedirect(data);
+          return;
         }
+
+        const status = err?.response?.status;
+        const errorText = (typeof data === "string" ? data : JSON.stringify(data ?? "")).toLowerCase();
+        const invalidCredentials =
+          status === 400 || status === 401 || status === 403 ||
+          /invalid|incorrect|credential|unable to log in|bad password/.test(errorText);
+
+        if (invalidCredentials) {
+          setShowInvalidCredentialsModal(true);
+          return;
+        }
+        toast.error(data?.detail || data?.message || "Unable to sign in. Please try again.");
       },
     });
   };
@@ -197,6 +213,7 @@ export default function MobileLogin({ onClose, setStep, userType = "buyer" }: Mo
   const isFormValid = formData.email !== "" && formData.password !== "";
 
   return (
+    <>
     <form onSubmit={handleLogin} className="space-y-8">
       <div className="space-y-2">
         <h2 className="font-MontserratSemiBold text-c20">Sign in</h2>
@@ -295,5 +312,18 @@ export default function MobileLogin({ onClose, setStep, userType = "buyer" }: Mo
         </span>
       </p>
     </form>
+    <ResultModal
+      isOpen={showInvalidCredentialsModal}
+      result="error"
+      title="Invalid credentials"
+      message="The email or password is incorrect. Sign up to create an account."
+      buttenText="Sign up"
+      onConfirm={() => {
+        setShowInvalidCredentialsModal(false);
+        setStep("signup");
+      }}
+      onCancel={() => setShowInvalidCredentialsModal(false)}
+    />
+    </>
   );
 }

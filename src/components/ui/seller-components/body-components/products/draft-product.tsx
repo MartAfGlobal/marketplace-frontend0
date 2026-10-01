@@ -30,6 +30,7 @@ export default function DraftProduct() {
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [draftToDeleteId, setDraftToDeleteId] = useState<string | null>(null);
   
   const draft = useSelector((state: RootState) =>state.draft.draft);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -40,11 +41,15 @@ export default function DraftProduct() {
   const { fetchdDraft } = useFetchProducts();
 
   const handleDeleteDraft = (id: string) => {
-    if (!token) return;
-    setDeletingId(id);
+    setDraftToDeleteId(id);
+  };
+
+  const confirmDeleteDraft = () => {
+    if (!token || !draftToDeleteId) return;
+    setDeletingId(draftToDeleteId);
     sendHttpRequest({
       requestConfig: {
-        url: `/products/manufacturer/drafts/${id}/`,
+        url: `/products/manufacturer/drafts/${draftToDeleteId}/`,
         method: "DELETE",
         token,
         isAuth: true,
@@ -52,9 +57,11 @@ export default function DraftProduct() {
       },
       successRes: () => {
         setDeletingId(null);
+        setDraftToDeleteId(null);
         setShowDeleteModal(true);
         fetchdDraft();
-      }
+      },
+      errorRes: () => setDeletingId(null),
     });
   };
 
@@ -223,6 +230,17 @@ export default function DraftProduct() {
           )}
         </div>
       </div>
+
+      <ResultModal
+        result="warning"
+        title="Delete this product draft?"
+        message="This will permanently delete the draft and its product details."
+        buttenText="Delete draft"
+        isOpen={Boolean(draftToDeleteId)}
+        loading={deletingId !== null}
+        onConfirm={confirmDeleteDraft}
+        onCancel={() => setDraftToDeleteId(null)}
+      />
 
       <ResultModal
         title="Product deleted from draft"

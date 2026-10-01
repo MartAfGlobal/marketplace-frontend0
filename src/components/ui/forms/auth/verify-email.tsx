@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/forms/Label";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button/Button";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Google from "@/assets/socialIcons/Google.svg";
 import eye from "@/assets/FormIcon/eyeIcon.svg";
@@ -30,6 +30,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
   const [formData, setFormData] = useState<VerifyParams>({
     email: "",
   });
+  const [showExistingEmailModal, setShowExistingEmailModal] = useState(false);
 
   const dispatch = useDispatch();
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -40,7 +41,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
 
   const router = useRouter();
 
-  const { loading, error, sendHttpRequest: registerUserReq } = useHttp();
+  const { loading, sendHttpRequest: registerUserReq } = useHttp();
   const email = formData.email;
 
   const registerUserRes = (res: any) => {
@@ -52,22 +53,6 @@ export default function VerifyEmail({ userType, token }: RegProps) {
     );
   };
 
-  useEffect(() => {
-    if (!error) return;
-    console.log("Error message:", error);
-
-    const lowerError = error.toLowerCase();
-    if (
-      lowerError.includes("already been sent") ||
-      lowerError.includes("already sent")
-    ) {
-      router.push(
-        `/auth/${userType === "buyer" ? "buyer" : "seller"}/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
-      );
-      dispatch(registrationActions.setEmail(email));
-    }
-  }, [error, email, router, userType, dispatch]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -77,8 +62,37 @@ export default function VerifyEmail({ userType, token }: RegProps) {
     }
 
     registerUserReq({
-      
       successRes: registerUserRes,
+      errorRes: (err: any) => {
+        const data = err?.response?.data;
+        const errorMessage = typeof data === "string" ? data : JSON.stringify(data ?? "");
+        const lowerError = errorMessage.toLowerCase();
+
+        if (
+          lowerError.includes("already been sent") ||
+          lowerError.includes("already sent")
+        ) {
+          router.push(
+            `/auth/${userType === "buyer" ? "buyer" : "seller"}/sign-up/email-verification-sent?email=${encodeURIComponent(email)}`,
+          );
+          dispatch(registrationActions.setEmail(email));
+          return;
+        }
+
+        const duplicateEmail =
+          err?.response?.status === 409 ||
+          ((/email|account|user|profile/.test(lowerError)) &&
+            /(already|exist|registered|taken|in use|linked|associated)/.test(lowerError));
+
+        if (duplicateEmail && userType !== "admin") {
+          setShowExistingEmailModal(true);
+          return;
+        }
+
+        toast.error(
+          data?.detail || data?.message || "Unable to send a verification code. Please try again.",
+        );
+      },
       requestConfig: {
         url: userType === "buyer" ? "/accounts/register" : "/accounts/register/manufacturer/",
         method: "POST",
@@ -86,6 +100,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
           ...formData,
         },
         userType: userType,
+        suppressErrorNotification: userType !== "admin",
       },
     });
 
@@ -151,6 +166,16 @@ export default function VerifyEmail({ userType, token }: RegProps) {
           </Link>
         </div>
       </div>
+      <ResultModal
+        isOpen={showExistingEmailModal}
+        result="error"
+        title="Email already exist"
+
+        message={`To create a new ${userType === "seller" ? "seller" : "buyer"} account, you must use an email address that isn't already linked to an existing profile.`}
+        buttenText="Use Different Email"
+        onConfirm={() => setShowExistingEmailModal(false)}
+        onCancel={() => setShowExistingEmailModal(false)}
+      />
     </div>
   );
 }

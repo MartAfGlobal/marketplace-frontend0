@@ -232,7 +232,7 @@ export const useHttp = () => {
         // and the caller's own confirm modal already surfaces that message.
         if (!error?.response?.data?.requires_2fa && !error?.response?.data?.requires_confirmation) {
           const isSilentTokenError = isTokenError && !requestConfig.isAuth;
-          if (!isSilentTokenError) {
+          if (!requestConfig.suppressErrorNotification && !isSilentTokenError) {
             if (typeof window !== "undefined" && window.innerWidth < 768) {
               dispatch(openGlobalResultModal({
                 result: "error",

@@ -24,6 +24,7 @@ type HttpRequestConfigType = {
   url: string;
   method: string;
   successMessage?: string;
+  suppressErrorNotification?: boolean;
   token?: string;
   params?: any;
   body?: any;

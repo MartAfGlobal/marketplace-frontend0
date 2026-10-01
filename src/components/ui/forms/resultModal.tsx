@@ -13,6 +13,7 @@ type ResultModalProps = {
   onCancel?: () => void;
   result?: "warning" | "error" | "success" | "failed";
   title?: string;
+  bodyTitle?: string;
   message?: string;
   buttenText?: string;
   discRescription?: string;
@@ -27,6 +28,7 @@ export default function ResultModal({
   onCancel,
   result = "success",
   title,
+  bodyTitle,
   message,
   buttenText,
   discRescription,
@@ -164,15 +166,22 @@ export default function ResultModal({
             <div
               className={`h-38.25 w-full ${active.bg} relative flex items-center justify-center overflow-hidden`}
             >
-              <button className="h-6 w-6 absolute z-50 right-4 top-13.25" onClick={onCancel}>
-                <Image
-                  src={Xicon}
-                  alt="X"
-                  height={24}
-                  width={24}
-                  className=" "
-                />
-              </button>
+              {onCancel && (
+                <button
+                  type="button"
+                  aria-label="Close dialog"
+                  className="h-6 w-6 absolute z-50 right-4 top-13.25"
+                  onClick={onCancel}
+                >
+                  <Image
+                    src={Xicon}
+                    alt=""
+                    height={24}
+                    width={24}
+                    className=" "
+                  />
+                </button>
+              )}
               <motion.div
                 className="w-[279.22px] h-[279.22px] rounded-full border-50 flex items-center justify-center "
                 style={{ borderColor: active.border }}
@@ -212,6 +221,12 @@ export default function ResultModal({
                   <h1 className="text-c18 font-MontserratSemiBold text-[#161616]">
                     {title}
                   </h1>
+                )}
+
+                {bodyTitle && (
+                  <p className="text-sm font-MontserratSemiBold text-[#161616]">
+                    {bodyTitle}
+                  </p>
                 )}
 
                 {message && (
