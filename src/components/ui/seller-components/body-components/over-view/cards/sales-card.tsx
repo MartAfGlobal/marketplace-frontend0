@@ -8,86 +8,41 @@ import WhitePointerIcon from "@/assets/Seller/WhitePointer.svg";
 import { useSelector } from "react-redux";
 
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
-import { ChevronDown } from "lucide-react";
+import { getChangeDirection, getChangeValue, getMetricArray, getMetricChange, getMetricSection, getMetricTotal, toMetricNumber } from "../overview-data";
 
-const STATIC_CHART_DATA = [
-  { name: "Jan", value: 30 },
-  { name: "Feb", value: 45 },
-  { name: "Mar", value: 35 },
-  { name: "Apr", value: 55 },
-  { name: "May", value: 48 },
-  { name: "Jun", value: 65 },
-  { name: "Jul", value: 75 },
-];
-
-const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
-export default function SalesCard() {
+export default function SalesCard({ analytics }: { analytics: any }) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
-  const orders = useSelector((state: any) => state.orders.orders);
-
-  console.log("sales-card orders:....", orders);
-
-    const { totalRevenue, targets, labels, chartData } = useMemo(() => {
-      const productMap: Record<string, { qty: number; revenue: number }> = {};
-      const monthBuckets: Record<string, number> = {};
-      let totalRevenue = 0;
-
-  
-      orders.forEach((order: any) => {
-        const date = new Date(order.created_at || order.date || "");
-        if (!isNaN(date.getTime())) {
-          const key = MONTH_NAMES[date.getMonth()];
-          (order.order_items || []).forEach((item: any) => {
-            const qty = item.quantity || 1;
-            const price = parseFloat(item.unit_price || item.price || 0);
-            monthBuckets[key] = (monthBuckets[key] || 0) + qty * price;
-          });
-        }
-  
-        (order.order_items || []).forEach((item: any) => {
-          const name = item.product_name || "Unknown";
-          const qty = item.quantity || 1;
-          const price = parseFloat(item.unit_price || item.price || 0);
-          totalRevenue += qty * price;
-          if (!productMap[name]) productMap[name] = { qty: 0, revenue: 0 };
-          productMap[name].qty += qty;
-          productMap[name].revenue += qty * price;
-        });
-      });
-  
-      if (totalRevenue === 0) totalRevenue = 350000;
-  
-      const dynamicChart = MONTH_NAMES.map((name) => ({
-        name,
-      value: monthBuckets[name] || 0,
-    })).filter((d) => d.value > 0);
-
-    const chartData =
-      dynamicChart.length >= 2 ? dynamicChart.slice(-7) : STATIC_CHART_DATA;
-
-    const sorted = Object.entries(productMap)
-      .sort(([, a], [, b]) => b.qty - a.qty)
-      .slice(0, 2);
-
-    const maxQty = Math.max(...sorted.map(([, v]) => v.qty), 1);
-    const topProducts = sorted.map(([name, v]) => ({
-      label: name,
-      target: Math.round((v.qty / maxQty) * 100),
+  const { totalRevenue, targets, labels, chartData, change } = useMemo(() => {
+    const section = getMetricSection(analytics, "sales");
+    const totalRevenue = getMetricTotal(analytics, "sales", ["revenue", "total_sales"]);
+    const topProducts = getMetricArray(
+      section,
+      "top_products",
+      "topProducts",
+      "products_by_revenue",
+      "top_selling_products",
+    ).slice(0, 2);
+    const targets = topProducts.map((product: any) => {
+      const share = toMetricNumber(product.revenue_share ?? product.share ?? product.percentage);
+      if (share > 0) return Math.round(share <= 1 ? share * 100 : share);
+      const revenue = toMetricNumber(product.revenue ?? product.total_revenue);
+      return totalRevenue > 0 ? Math.round((revenue / totalRevenue) * 100) : 0;
+    });
+    const labels = topProducts.map(
+      (product: any) => product.product_name ?? product.name ?? product.title ?? "Product",
+    );
+    const chartData = getMetricArray(section, "chart_data", "trend", "sales_trend").map((item: any) => ({
+      name: item.period ?? item.date ?? item.label ?? item.month ?? "",
+      value: toMetricNumber(item.gross_revenue ?? item.revenue ?? item.sales ?? item.total),
     }));
-
-    const targets =
-      topProducts.length > 0 ? topProducts.map((p) => p.target) : [0, 0];
-    const labels =
-      topProducts.length > 0
-        ? topProducts.map((p) => p.label)
-        : ["No data", "No data"];
-
-    return { totalRevenue, targets, labels, chartData };
-  }, [orders]);
+    return {
+      totalRevenue,
+      targets: [targets[0] ?? 0, targets[1] ?? 0],
+      labels: [labels[0] ?? "No data", labels[1] ?? "No data"],
+      chartData,
+      change: getMetricChange(analytics, "sales"),
+    };
+  }, [analytics]);
 
   const [progresses, setProgresses] = useState<number[]>(targets.map(() => 0));
 
@@ -109,7 +64,7 @@ export default function SalesCard() {
     }, 15);
 
     return () => clearInterval(interval);
-  }, [orders, targets]);
+  }, [analytics, targets]);
 
   const formatProgress = (index: number) => {
     const p = progresses[index] || 0;
@@ -142,8 +97,16 @@ export default function SalesCard() {
               })}
             </h2>
             <div className="flex items-center justify-center mt-2">
-              <svg width="14" height="10" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 10L0 0H14L7 10Z" fill="white"/>
+              <svg
+                width="14"
+                height="10"
+                viewBox="0 0 14 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-label={`Sales ${getChangeDirection(change)} ${getChangeValue(change)} vs yesterday`}
+                style={{ transform: getChangeDirection(change) === "up" ? "rotate(180deg)" : undefined }}
+              >
+                <path d="M7 10L0 0H14L7 10Z" fill="white" />
               </svg>
             </div>
           </div>
@@ -237,9 +200,10 @@ export default function SalesCard() {
                 <Image
                   src={RedPointerIcon}
                   alt="pointer"
+                  title={`Sales ${getChangeDirection(change)} ${getChangeValue(change)} vs yesterday`}
                   width={16.5}
                   height={9}
-                  className="mt-4"
+                  className={`mt-4 ${getChangeDirection(change) === "up" ? "rotate-180" : ""}`}
                 />
               </div>
             </div>

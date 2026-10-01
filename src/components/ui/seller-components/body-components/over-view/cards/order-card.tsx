@@ -10,45 +10,21 @@ import whitePointer from "@/assets/Seller/WhitePointer.svg";
 import whitePointeruP from "@/assets/Seller/WhitePointer.png";
 import whitePlane from "@/assets/Seller/whitePlane.png";
 import { useSelector } from "react-redux";
+import { getChangeDirection, getChangeValue, getMetricChange, getMetricSection, getMetricTotal, getWeekdayCounts } from "../overview-data";
 
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-export default function OrderCard() {
+export default function OrderCard({ analytics }: { analytics: any }) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
-  const orders = useSelector((state: any) => state.orders.orders);
-
-  // Real stats derived from orders
-  const { total, fulfilled, cancelled, weeklyData } = useMemo(() => {
-    const total = orders.length;
-    const fulfilled = orders.filter((o: any) => {
-      const s = (o.order_timeline_stage || o.status || "").toLowerCase();
-      return s === "delivered" || s === "fulfilled" || s === "shipped";
-    }).length;
-    const cancelled = orders.filter((o: any) => {
-      const s = (o.order_timeline_stage || o.status || "").toLowerCase();
-      return s === "cancelled" || s === "rejected" || s === "returned";
-    }).length;
-
-    // Count orders per weekday (Mon=0…Sun=6) for the last 7 days
-    const counts = Array(7).fill(0);
-    const now = new Date();
-    orders.forEach((o: any) => {
-      const d = new Date(o.created_at);
-      const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
-      if (diffDays <= 7) {
-        // getDay(): 0=Sun,1=Mon…6=Sat → map to Mon-Sun index
-        const idx = (d.getDay() + 6) % 7;
-        counts[idx]++;
-      }
-    });
-    const maxCount = Math.max(...counts, 1);
-    // Scale to max 60px
-    const weeklyData = DAY_LABELS.map((label, i) => ({
-      label,
-      progress: Math.round((counts[i] / maxCount) * 60),
+  const orderSection = getMetricSection(analytics, "orders");
+  const total = getMetricTotal(analytics, "orders", ["order_count", "total_orders"]);
+  const change = getMetricChange(analytics, "orders");
+  const weeklyData = useMemo(() => {
+    const counts = getWeekdayCounts(orderSection);
+    const maxCount = Math.max(...counts.map((day) => day.count), 1);
+    return counts.map((day) => ({
+      label: day.label,
+      progress: Math.round((day.count / maxCount) * 60),
     }));
-    return { total, fulfilled, cancelled, weeklyData };
-  }, [orders]);
+  }, [orderSection]);
 
   const [chartProgress, setChartProgress] = useState(weeklyData.map(() => 0));
 
@@ -95,7 +71,7 @@ export default function OrderCard() {
 
           {/* Chart */}
           <div className="flex gap-3 mt-12 items-end">
-            {DAY_LABELS.map((label) => (
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label) => (
               <div
                 key={label}
                 className="w-6 flex flex-col items-center justify-end"
@@ -123,17 +99,15 @@ export default function OrderCard() {
             </div>
             <div className="w-full max-w-c46">
               <div className="flex justify-between items-center w-full h-4">
-                <span className="font-MontserratMedium text-c12">{fulfilled}</span>
+                <span className="font-MontserratMedium text-c12">
+                  {getChangeValue(change).toLocaleString()} vs yesterday
+                </span>
                 <Image
-                  src={greenPointerIcon}
-                  alt="good"
+                  src={getChangeDirection(change) === "up" ? greenPointerIcon : redPointerIcon}
+                  alt={getChangeDirection(change) === "up" ? "up" : "down"}
                   width={16.5}
                   height={9}
                 />
-              </div>
-              <div className="flex items-center justify-between w-full h-4">
-                <span className="font-MontserratMedium text-c12">{cancelled}</span>
-                <Image src={redPointerIcon} alt="bad" width={16.5} height={9} />
               </div>
             </div>
           </div>

@@ -93,7 +93,10 @@ export default function DraftProduct() {
           <div className="w-full max-w-87.5">
             <SellerSearch 
               value={filters.sku || ""}
-              onChange={(val) => setFilters(prev => ({ ...prev, sku: val }))}
+              onChange={(val) => {
+                setFilters((prev) => ({ ...prev, sku: val }));
+                setCurrentPage(1);
+              }}
               placeholder="Search draft products..."
             />
           </div>

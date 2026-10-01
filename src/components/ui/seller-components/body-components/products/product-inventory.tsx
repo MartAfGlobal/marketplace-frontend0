@@ -313,7 +313,11 @@ export default function ProductInventoryPage() {
             <div className="w-full max-w-87.5">
               <SellerSearch 
                 value={filters.sku || ""}
-                onChange={(val) => setFilters((prev: any) => ({ ...prev, sku: val }))}
+                onChange={(val) => {
+                  setFilters((prev: any) => ({ ...prev, sku: val }));
+                  setCurrentPage(1);
+                  setCurrentDraftPage(1);
+                }}
                 onToggle={setIsSearchOpen}
                 placeholder="Search products..."
               />

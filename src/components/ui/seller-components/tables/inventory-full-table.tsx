@@ -131,8 +131,10 @@ if (filters.perc) {
   }
 
   if (filters.sku) {
+    const searchTerm = filters.sku.trim().toLowerCase();
     filteredRows = filteredRows.filter((row) =>
-      row.stockcode?.toLowerCase().includes(filters.sku!.toLowerCase())
+      row.name?.toLowerCase().includes(searchTerm) ||
+      row.stockcode?.toLowerCase().includes(searchTerm)
     );
   }
 

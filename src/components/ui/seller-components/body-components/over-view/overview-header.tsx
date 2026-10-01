@@ -9,7 +9,13 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-export default function OverviewHeader() {
+export default function OverviewHeader({
+  period,
+  onPeriodChange,
+}: {
+  period: "month" | "year";
+  onPeriodChange: (period: "month" | "year") => void;
+}) {
   const verificationStatus = useSelector(
     (state: any) => state.seller.verificationStatus,
   );
@@ -19,6 +25,8 @@ export default function OverviewHeader() {
 
   console.log("overview-header status", percentage);
   const router = useRouter();
+  const selectedPeriod = period === "year" ? "This Year" : "This Month";
+  const overviewPeriodOptions = ["This Month", "This Year"];
   console.log("checking-seller data:....", isIncomplete);
 
   return (
@@ -31,8 +39,9 @@ export default function OverviewHeader() {
         <p className="text-c18 font-MontserratMedium">Overview</p>
 
         <FilterDropdown
-          options={filterOptions}
-          onChange={(value) => console.log("Selected:", value)}
+          options={overviewPeriodOptions}
+          defaultValue={selectedPeriod}
+          onChange={(value) => onPeriodChange(value === "This Year" ? "year" : "month")}
         />
       </div>
 
@@ -47,8 +56,9 @@ export default function OverviewHeader() {
         {/* Desktop Filter */}
         <div className="  hidden lg:block">
            <FilterDropdown
-              options={filterOptions}
-              onChange={(value) => console.log("Selected:", value)}
+              options={overviewPeriodOptions}
+              defaultValue={selectedPeriod}
+              onChange={(value) => onPeriodChange(value === "This Year" ? "year" : "month")}
             />
           {/* {!isIncomplete && (
            

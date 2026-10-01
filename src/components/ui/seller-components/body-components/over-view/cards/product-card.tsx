@@ -1,47 +1,30 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
 import UsableCard from "./cardUse";
 import Image from "next/image";
 import ProductBox from "@/assets/Seller/productBox.png";
 import EmptyProductBox from "@/assets/Seller/Package.png";
 import { useSelector } from "react-redux";
-import { RootState } from "@/store";
+import { getMetricSection, getMetricTotal, toMetricNumber } from "../overview-data";
 
-export default function ProductStockCard() {
+export default function ProductStockCard({ analytics }: { analytics: any }) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
-  const products = useSelector((state: RootState) => state.sellerProduct.product);
-
-  const { totalProducts, stockPercent } = useMemo(() => {
-    const totalProducts = products?.length || 0;
-    if (totalProducts === 0) return { totalProducts: 0, stockPercent: 0 };
-    const fullyStocked = products.filter((p: any) => {
-      const qty = p.stock_quantity ?? p.quantity ?? p.stock ?? 0;
-      return qty > 10;
-    }).length;
-    const stockPercent = Math.round((fullyStocked / totalProducts) * 100);
-    return { totalProducts, stockPercent };
-  }, [products]);
-
-  const target = stockPercent;
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    let start = 0;
-    const interval = setInterval(() => {
-      if (start < target) {
-        start += 1;
-        setProgress(start);
-      } else {
-        clearInterval(interval);
-      }
-    }, 20);
-    return () => clearInterval(interval);
-  }, [target]);
+  const productSection = getMetricSection(analytics, "products");
+  const totalProducts = getMetricTotal(analytics, "products", ["active_product_count", "active_products"]);
+  const stockHealth = productSection.stock_health ?? productSection.stockHealth ?? analytics?.stock_health ?? {};
+  const stockCounts = [
+    toMetricNumber(stockHealth.fully_stocked ?? stockHealth.fullyStocked),
+    toMetricNumber(stockHealth.average_stocked ?? stockHealth.averageStocked),
+    toMetricNumber(stockHealth.low_stock ?? stockHealth.lowStock),
+  ];
+  const stockTotal = stockCounts.reduce((sum, count) => sum + count, 0);
+  const stockPercentages = stockCounts.map((count) => stockTotal ? (count / stockTotal) * 100 : 0);
 
   const radius = 22;
   const circumference = 2 * Math.PI * radius;
-  const preload = Math.min(progress + 0.7 * (100 - progress), 90);
+  const fullyLength = (stockPercentages[0] / 100) * circumference;
+  const averageLength = (stockPercentages[1] / 100) * circumference;
+  const lowLength = (stockPercentages[2] / 100) * circumference;
 
   return (
     <>
@@ -51,7 +34,7 @@ export default function ProductStockCard() {
           <p className="text-000000 text-base font-MontserratNormal mb-4">Products</p>
           <div className="flex items-center gap-2 mt-2">
             <h2 className="text-[#161616] text-3xl font-MontserratBold">
-              {totalProducts > 0 ? totalProducts.toLocaleString() : "1,000"}
+              {totalProducts.toLocaleString()}
             </h2>
           </div>
         </div>
@@ -99,23 +82,37 @@ export default function ProductStockCard() {
                     cx="30.1"
                     cy="30.1"
                     r={radius}
-                    stroke="#947FFF"
+                    stroke="#6A0DAD"
                     strokeWidth="12"
                     fill="transparent"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={circumference - (preload / 100) * circumference}
+                    strokeDasharray={`${fullyLength} ${circumference}`}
+                    strokeDashoffset="0"
+                    transform="rotate(-90 30.1 30.1)"
                     className="transition-all duration-300"
                   />
                   <circle
                     cx="30.1"
                     cy="30.1"
                     r={radius}
-                    stroke="#6A0DAD"
+                    stroke="#947FFF"
+                    strokeWidth="12"
+                    fill="transparent"
+                    strokeDasharray={`${averageLength} ${circumference}`}
+                    strokeDashoffset={-fullyLength}
+                    transform="rotate(-90 30.1 30.1)"
+                    className="transition-all duration-300"
+                  />
+                  <circle
+                    cx="30.1"
+                    cy="30.1"
+                    r={radius}
+                    stroke="#947FFF"
                     strokeOpacity="0.30"
                     strokeWidth="12"
                     fill="transparent"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={circumference - (progress / 100) * circumference}
+                    strokeDasharray={`${lowLength} ${circumference}`}
+                    strokeDashoffset={-(fullyLength + averageLength)}
+                    transform="rotate(-90 30.1 30.1)"
                     className="transition-all duration-300"
                   />
                 </svg>
