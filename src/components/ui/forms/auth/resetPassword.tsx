@@ -54,10 +54,11 @@ export default function ResetPasswordForm({userType}: {userType: "seller" | "buy
 
     setIsMobile(isMobileDevice);
 
-    if (isMobileDevice && token) {
+    const mobileResetToken = userType === "buyer" ? tokenParam : token;
+    if (isMobileDevice && mobileResetToken) {
       const params = new URLSearchParams({
         authStep: "resetPassword",
-        resetToken: String(token),
+        resetToken: String(mobileResetToken),
         email: emailParam,
         authUserType: userType,
       });

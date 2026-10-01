@@ -35,7 +35,6 @@ export default function RecoveryEmailSent({ userType }: { userType: "seller" | "
         method: "POST",
         body: { email },
         userType: userType,
-        successMessage: "verification link resent.",
       },
     });
   };

@@ -38,7 +38,6 @@ export default function ForgotPasswordModal({
         method: "POST",
         body: { email: localEmail },
         userType: "buyer",
-        successMessage: "Reset link sent to your email.",
       },
     });
   };
