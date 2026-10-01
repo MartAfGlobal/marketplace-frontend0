@@ -38,6 +38,8 @@ export default function Header() {
   const searchParams = useSearchParams();
   const showLogin = searchParams.get("showLogin");
   const resetToken = searchParams.get("resetToken");
+  const authUserType = searchParams.get("authUserType") === "seller" ? "seller" : "buyer";
+  const authEmail = searchParams.get("email") || "";
   // const  {fetchLogs} = useFetchOrders()
 
   const token = useSelector((state: RootState) => state.token?.token);
@@ -399,6 +401,8 @@ export default function Header() {
               setAuthOpen(false);
               setShowModal(false);
             }}
+            userType={authUserType}
+            initialEmail={authEmail}
             defaultStep={
               authStep ? authStep : showLogin === "true" ? "signin" : "signup"
             }

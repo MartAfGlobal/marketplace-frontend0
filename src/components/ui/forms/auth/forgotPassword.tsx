@@ -13,16 +13,22 @@ import { useRouter } from "next/navigation";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-export default function ForgotPassword() {
+export default function ForgotPassword({userType}: {userType: "seller" | "buyer"}) {
   const [email, setEmail] = useState("");
   const isFormValid = email !== "";
 
   const router = useRouter();
 
+  
+
   const { loading, sendHttpRequest: UseremailingReq } = useHttp();
 
   const registerUserRes = (res: any) => {
-    router.push(`/auth/password-reset-sent/?email=${encodeURIComponent(email)}`);
+    router.push(
+  userType === "buyer"
+    ? `/auth/password-reset-sent?email=${encodeURIComponent(email)}`
+    : `/auth/seller/password-reset-sent?email=${encodeURIComponent(email)}`
+);;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,16 +39,18 @@ export default function ForgotPassword() {
       return;
     }
 
+    const url = userType === "seller" ? "/accounts/manufacturer/forgot-password/" : "/accounts/forgot-password/";
+
     UseremailingReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/forgot-password/",
+        url: url,
         method: "POST",
         body: {
           email,
         },
-        userType: "buyer",
-        successMessage: "verification OTP sent.",
+        userType: userType,
+        successMessage: "Password reset link sent.",
       },
     });
 
@@ -72,7 +80,7 @@ export default function ForgotPassword() {
 
       <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-c24">
         {!loading && (
-          <Link href="/auth/login" className="text-ff715b">
+          <Link href={userType === "seller" ? "/auth/seller/login" : "/auth/login"} className="text-ff715b">
             Return to login
           </Link>
         )}

@@ -19,7 +19,7 @@ import ResultModal from "../resultModal";
     userType : string
   }
 
-export default function ResetPasswordForm({userType}:userTypeProp) {
+export default function ResetPasswordForm({userType}: {userType: "seller" | "buyer"}) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -55,10 +55,15 @@ export default function ResetPasswordForm({userType}:userTypeProp) {
     setIsMobile(isMobileDevice);
 
     if (isMobileDevice && token) {
-      // Redirect to home, where AuthModal auto-opens with reset form
-      router.replace(`/?authStep=resetPassword&resetToken=${token}`);
+      const params = new URLSearchParams({
+        authStep: "resetPassword",
+        resetToken: String(token),
+        email: emailParam,
+        authUserType: userType,
+      });
+      router.replace(`/?${params.toString()}`);
     }
-  }, [router, token]);
+  }, [router, token, emailParam, userType]);
 
   // ✅ If it's mobile, don’t render the form
   if (isMobile) return null;
@@ -100,7 +105,7 @@ export default function ResetPasswordForm({userType}:userTypeProp) {
       return;
     }
 
-    const url = userType==="buyer"? `/accounts/forgot-password/confirm/` : ``
+    const url = userType==="buyer"? `/accounts/forgot-password/confirm/` : `/accounts/manufacturer/forgot-password/confirm/`
 
 
     resetRequest({
@@ -113,7 +118,7 @@ export default function ResetPasswordForm({userType}:userTypeProp) {
           password: newPassword,
           confirm_password: comfirmPassword,
         },
-        userType: "buyer",
+        userType: userType,
         successMessage: "Password reset successful!",
       },
       successRes: handleSuccess,
@@ -168,7 +173,13 @@ export default function ResetPasswordForm({userType}:userTypeProp) {
       </form>
 
 
-      <ResultModal title="Password Reset Successful!" discRescription="Your password has been reset successfully." isOpen={isModalOpen} onConfirm={() => router.push("/dashboard/buyer")}  buttenText="Go to dashboard"/>
+      <ResultModal title="Password Reset Successful!" discRescription="Your password has been reset successfully." isOpen={isModalOpen} onConfirm={() => {
+        if (userType === "seller" && isMobile) {
+          router.push("/?showLogin=true&authUserType=seller");
+          return;
+        }
+        router.push(userType === "buyer" ? "/auth/login" : "/auth/seller/login");
+      }}  buttenText="Sign in"/>
     </div>
   );
 }

@@ -7,13 +7,13 @@ import ForgotPassword from "@/components/ui/forms/auth/forgotPassword";
 export default function forgotPasswordPage() {
   return (
     <AuthenticationLayout
-    userType="buyer"
+    userType="seller"
       title="Forgot password"
       description="We’ll send a verification code to your email address to reset your password."
     >
       <div>
         <>
-        <ForgotPassword userType="buyer"/>
+        <ForgotPassword userType="seller"/>
         </>
       </div>
     </AuthenticationLayout>

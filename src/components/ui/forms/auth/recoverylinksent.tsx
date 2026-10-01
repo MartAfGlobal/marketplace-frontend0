@@ -7,7 +7,7 @@ import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../../loading-spinner";
 
-export default function RecoveryEmailSent() {
+export default function RecoveryEmailSent({ userType }: { userType: "seller" | "buyer" }) {
   const router = useRouter();
 
   const searchParams = useSearchParams();
@@ -22,17 +22,19 @@ export default function RecoveryEmailSent() {
     toast.success("verification link resents");
   };
 
+
   const { loading, sendHttpRequest: resendUserReq } = useHttp();
+  const url = userType === "seller" ? "/accounts/manufacturer/forgot-password/" : "/accounts/forgot-password/";
 
   const handleResentLink = (e: React.FormEvent) => {
     e.preventDefault();
     resendUserReq({
       successRes: registerUserRes,
       requestConfig: {
-        url: "/accounts/forgot-password/",
+        url: url,
         method: "POST",
         body: { email },
-        userType: "buyer",
+        userType: userType,
         successMessage: "verification link resent.",
       },
     });
@@ -58,7 +60,7 @@ export default function RecoveryEmailSent() {
 
       <div className=" flex justify-center items-center mt-4 ">
         <Link
-          href="/auth/forgot-password"
+          href={ userType ==="buyer" ? "/auth/forgot-password": userType ==="seller" ? "/auth/seller/forgot-password" : "/auth/admin/forgot-password"}
           className="text-[#6A0DAD] font-MontserratSemiBold leading-[24px]"
         >
           Change email

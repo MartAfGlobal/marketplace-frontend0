@@ -12,7 +12,7 @@ export default function forgotPasswordPage() {
     >
       <div>
         <>
-        <RecoveryEmailSent/>
+        <RecoveryEmailSent userType="buyer"/>
         </>
       </div>
     </AuthenticationLayout>

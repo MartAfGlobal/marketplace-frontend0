@@ -11,11 +11,11 @@ import Image from "next/image";
 import Mail from "@/assets/FormIcon/email.svg";
 import { LoadingSpinner } from "../../loading-spinner";
 
-export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
+export default function MobileLogin({ onClose, setStep, userType = "buyer" }: MobileLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const rememberKey = "rememberLogin_buyer";
+  const rememberKey = `rememberLogin_${userType}`;
 
   const [formData, setFormData] = useState<LoginParams>({
     email: "",
@@ -68,7 +68,7 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
       params.set("user_id", String(userId));
     }
     params.set("email", formData.email);
-    params.set("userType", "buyer");
+    params.set("userType", userType);
     const retryAfter =
       data?.retry_after ??
       data?.retry_after_seconds ??
@@ -156,6 +156,9 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
     dispatch(tokenActions.setToken(accessToken));
     toast.success("Login successful!");
     onClose();
+    if (userType === "seller") {
+      router.push("/dashboard/seller/overview");
+    }
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -172,14 +175,14 @@ export default function MobileLogin({ onClose, setStep }: MobileLoginProps) {
 
     loginRequest({
       requestConfig: {
-        url: "/accounts/login",
+        url: userType === "seller" ? "/accounts/manufacturer/login/" : "/accounts/login",
         method: "POST",
         body: {
           email: formData.email,
           password: formData.password,
           check: formData.rememberMe,
         },
-        userType: "buyer",
+        userType,
       },
       successRes: loginSuccess,
       errorRes: (err: any) => {

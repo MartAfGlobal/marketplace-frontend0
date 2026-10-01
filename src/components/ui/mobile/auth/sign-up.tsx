@@ -32,13 +32,17 @@ export default function AuthModal({
   open,
   onClose,
   defaultStep = "signup",
+  userType = "buyer",
+  initialEmail = "",
 }: {
   open: boolean;
   onClose: () => void;
   defaultStep?: AuthStep;
+  userType?: "buyer" | "seller";
+  initialEmail?: string;
 }) {
   const [step, setStep] = useState<AuthStep>(defaultStep);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [verifiedOtp, setVerifiedOtp] = useState("");
   const router = useRouter();
@@ -197,8 +201,9 @@ const DEFAULT_RESEND_TIMEOUT = 120;
   useEffect(() => {
     if (open) {
       setStep(defaultStep);
+      setEmail(initialEmail);
     }
-  }, [defaultStep, open]);
+  }, [defaultStep, initialEmail, open]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -372,7 +377,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                 )}
 
                 {step === "signin" && (
-                  <MobileLogin onClose={onClose} setStep={setStep} />
+                  <MobileLogin onClose={onClose} setStep={setStep} userType={userType} />
                 )}
 
                 {/* ---------- FORGOT PASSWORD ---------- */}
@@ -402,7 +407,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                 )}
 
                 {step === "resetPassword" && (
-                  <ResetPasswordModal onClose={onClose} setStep={setStep} email={email} />
+                  <ResetPasswordModal onClose={onClose} setStep={setStep} email={email} userType={userType} />
                 )}
 
                 {step === "verificationSent" && (

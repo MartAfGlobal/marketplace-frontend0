@@ -311,7 +311,7 @@ export default function LoginForm({ userType }: RegProps) {
             </div>
 
             <Link
-              href="/auth/forgot-password"
+              href={ userType ==="buyer" ? "/auth/forgot-password": userType ==="seller" ? "/auth/seller/forgot-password" : "/auth/admin/forgot-password"}
               className="text-ff715b text-c12 font-MontserratMedium"
             >
               Forgot password?

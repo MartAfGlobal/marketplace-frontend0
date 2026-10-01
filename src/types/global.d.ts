@@ -1216,6 +1216,7 @@ export interface MobileLoginProps {
   setStep: React.Dispatch<React.SetStateAction<AuthStep>>;
   email?: string;
   setEmail?: React.Dispatch<React.SetStateAction<string>>;
+  userType?: "buyer" | "seller";
 }
 
 export type AuthStep =

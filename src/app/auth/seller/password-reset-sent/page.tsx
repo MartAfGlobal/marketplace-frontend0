@@ -2,16 +2,17 @@
 import AuthenticationLayout from "@/components/ui/LayoutWrappers/AuthenticationLayout";
 import RecoveryEmailSent from "@/components/ui/forms/auth/recoverylinksent";
 
-export default function LoginPage() {
+
+
+export default function forgotPasswordPage() {
   return (
-    <AuthenticationLayout
-      userType="buyer"
-      title="Forgot password"
-      description="We’ve sent a recovery link to your email at"
+    <AuthenticationLayout userType="seller"
+      title="Check your inbox"
+      description="if there’s an account associated with that email, you’ll receive a reset link shortly."
     >
       <div>
         <>
-          <RecoveryEmailSent userType="buyer" />
+        <RecoveryEmailSent userType="seller"/>
         </>
       </div>
     </AuthenticationLayout>

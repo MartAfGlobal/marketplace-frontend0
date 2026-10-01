@@ -11,7 +11,7 @@ import { MobileLoginProps } from "@/types/global";
 
 import { validatePassword } from "@/utils/passwordValidation";
 
-export default function ResetPasswordModal({ onClose, setStep, email }: MobileLoginProps) {
+export default function ResetPasswordModal({ onClose, setStep, email, userType = "buyer" }: MobileLoginProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,7 +55,9 @@ export default function ResetPasswordModal({ onClose, setStep, email }: MobileLo
 
     await sendHttpRequest({
       requestConfig: {
-        url: "/accounts/reset-password/confirm/",
+        url: userType === "seller"
+          ? "/accounts/manufacturer/forgot-password/confirm/"
+          : "/accounts/reset-password/confirm/",
         method: "POST",
         body: {
           email,
@@ -63,7 +65,7 @@ export default function ResetPasswordModal({ onClose, setStep, email }: MobileLo
           password: newPassword,
           confirm_password: confirmPassword,
         },
-        userType: "buyer",
+        userType,
       },
       successRes: () => {
         toast.success("Password reset successful!");
