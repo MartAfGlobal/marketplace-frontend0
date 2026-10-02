@@ -42,15 +42,18 @@ function CreateCategoryPageInner() {
 
   useEffect(() => {
     if (!isEditMode) {
-      if (typeParam === "sub") {
-        setCategoryType("sub");
+      const shouldBeSub = typeParam === "sub" || Boolean(parentIdParam);
+      setCategoryType(shouldBeSub ? "sub" : "main");
+      if (shouldBeSub) {
+        setSelectedParentCategory({ id: parentIdParam || "", name: "Parent Category" });
+      } else {
+        setSelectedParentCategory(null);
       }
-      if (parentIdParam) {
-        setCategoryType("sub");
-        setSelectedParentCategory({ id: parentIdParam, name: "Parent Category" });
+      if (searchParams.get("reset") === "true" || !searchParams.get("edit")) {
+        resetCategoryForm();
       }
     }
-  }, [isEditMode, typeParam, parentIdParam]);
+  }, [isEditMode, typeParam, parentIdParam, searchParams]);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -87,6 +90,23 @@ function CreateCategoryPageInner() {
     result: "success",
     onConfirmRedirect: false,
   });
+
+  const resetCategoryForm = () => {
+    setName("");
+    setDescription("");
+    setIsHidden(false);
+    setCategoryType(typeParam === "sub" || Boolean(parentIdParam) ? "sub" : "main");
+    setImageFile(null);
+    setUploadedFileName(null);
+    setPreviewUrl(null);
+    setSelectedParentCategory(parentIdParam ? { id: parentIdParam, name: "Parent Category" } : null);
+    setSelectedAttributeIds([]);
+    setAttributeValues({});
+    setAttributeInputs({});
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   // Fetch attributes and parent categories on load
   useEffect(() => {
@@ -337,6 +357,11 @@ function CreateCategoryPageInner() {
       return;
     }
 
+    if (!imageFile && !previewUrl) {
+      toast.error("Please upload a category image before submitting.");
+      return;
+    }
+
     if (categoryType === "sub" && !selectedParentCategory?.id) {
       toast.error("Please select a parent category for the subcategory.");
       return;
@@ -398,7 +423,9 @@ function CreateCategoryPageInner() {
 
     let payload: FormData | Record<string, any>;
 
-    if (imageFile) {
+    const shouldUseFormData = Boolean(imageFile) || Boolean(previewUrl);
+
+    if (shouldUseFormData) {
       const formData = new FormData();
       formData.append("name", name.trim());
       formData.append("description", description.trim());
@@ -419,12 +446,14 @@ function CreateCategoryPageInner() {
         });
       }
 
-      // Serialize attribute_values as JSON string for FormData
       if (Object.keys(updatedAttributeValues).length > 0) {
         formData.append("attribute_values", JSON.stringify(updatedAttributeValues));
       }
 
-      formData.append("image", imageFile);
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
       payload = formData;
     } else {
       payload = {
@@ -446,6 +475,7 @@ function CreateCategoryPageInner() {
         payload,
         (_res: any) => {
           setIsSubmitting(false);
+          resetCategoryForm();
           setResultModalState({
             isOpen: true,
             title: "Category Updated!",
@@ -471,6 +501,7 @@ function CreateCategoryPageInner() {
         payload,
         (_res: any) => {
           setIsSubmitting(false);
+          resetCategoryForm();
           setResultModalState({
             isOpen: true,
             title: "Category Created!",
@@ -597,6 +628,7 @@ function CreateCategoryPageInner() {
                     className="hidden"
                     ref={fileInputRef}
                     onChange={handleFileChange}
+                    required
                   />
                   <button
                     type="button"

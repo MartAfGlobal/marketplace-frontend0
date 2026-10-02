@@ -597,7 +597,7 @@ export default function AdminCategoriesPage() {
             Create Attribute
           </Button>
           <Button
-            onClick={() => router.push("/dashboard/admin/categories/create")}
+            onClick={() => router.push("/dashboard/admin/categories/create?reset=true")}
           >
             Create Category
           </Button>
