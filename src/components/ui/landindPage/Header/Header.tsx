@@ -290,7 +290,10 @@ export default function Header() {
 
             {token ? (
               <button
-                onClick={() => dispatch(openMobileMenu())}
+                type="button"
+                onClick={() => setUserOpen((prev) => !prev)}
+                aria-label="Open account menu"
+                aria-expanded={userOpen}
                 className="h-7 w-7 border-1 border-ffffff rounded-full flex justify-center items-center overflow-hidden cursor-pointer"
               >
                 <Image
@@ -302,9 +305,15 @@ export default function Header() {
                 />
               </button>
             ) : (
-              <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setUserOpen((prev) => !prev)}
+                aria-label="Open account menu"
+                aria-expanded={userOpen}
+                className="flex items-center gap-2"
+              >
                 <Image src={User} alt="User" width={19.52} height={18.77} />
-              </div>
+              </button>
             )}
 
             <div className="flex items-center gap-1">
@@ -334,7 +343,7 @@ export default function Header() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="absolute right-12.75 w-38.75 top-15.25 py-3 font-normal text-c12 rounded-c8 z-40 custom-shadow bg-white border h-20.5 "
+              className="absolute right-3 lg:right-12.75 w-38.75 top-15.25 py-3 font-normal text-c12 rounded-c8 z-40 custom-shadow bg-white border h-20.5 "
             >
               <ul className="  text-gray-700 flex flex-col gap-2.5">
                 <li>
@@ -348,13 +357,26 @@ export default function Header() {
                       Settings
                     </Link>
                   ) : (
-                    <Link
-                      href="/auth/login"
-                      onClick={() => setUserOpen(false)}
-                      className="block px-4 py-2  h-6"
-                    >
-                      Login
-                    </Link>
+                    <>
+                      <Link
+                        href="/auth/login"
+                        onClick={() => setUserOpen(false)}
+                        className="hidden lg:block px-4 py-2 h-6"
+                      >
+                        Login
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserOpen(false);
+                          setAuthStep("signin");
+                          setAuthOpen(true);
+                        }}
+                        className="lg:hidden block px-4 py-2 h-6"
+                      >
+                        Login
+                      </button>
+                    </>
                   )}
                 </li>
                 <li>
@@ -370,12 +392,26 @@ export default function Header() {
                       Log out
                     </button>
                   ) : (
-                    <Link
-                      href="/auth/register"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                    >
-                      Sign Up
-                    </Link>
+                    <>
+                      <Link
+                        href="/auth/register"
+                        onClick={() => setUserOpen(false)}
+                        className="hidden lg:block px-4 py-2 hover:bg-gray-100"
+                      >
+                        Sign Up
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserOpen(false);
+                          setAuthStep("signup");
+                          setAuthOpen(true);
+                        }}
+                        className="lg:hidden block px-4 py-2 hover:bg-gray-100"
+                      >
+                        Sign Up
+                      </button>
+                    </>
                   )}
                 </li>
               </ul>

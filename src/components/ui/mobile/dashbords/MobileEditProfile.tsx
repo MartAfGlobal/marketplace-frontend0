@@ -63,6 +63,17 @@ export default function MobileEditProfile() {
   const handleeditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const requiredFields = [
+      { value: formData.first_name, label: "First name" },
+      { value: formData.last_name, label: "Last name" },
+      { value: formData.phone, label: "Phone Number" },
+    ];
+    const emptyField = requiredFields.find(({ value }) => !value.trim());
+    if (emptyField) {
+      toast.error(`${emptyField.label} is required.`);
+      return;
+    }
+
     const form = new FormData();
     form.append("first_name", formData.first_name ?? "");
     form.append("last_name", formData.last_name ?? "");

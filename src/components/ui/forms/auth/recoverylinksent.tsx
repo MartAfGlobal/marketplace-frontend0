@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/Button/Button";
 import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../../loading-spinner";
+import { usePasswordResetCooldown } from "@/hooks/usePasswordResetCooldown";
 
 export default function RecoveryEmailSent({ userType }: { userType: "seller" | "buyer" }) {
   const router = useRouter();
 
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  const { timer, recordSuccessfulSend } = usePasswordResetCooldown(userType, email || "");
 
   const handleReturnToSignIn = (e: React.FormEvent) => {
     e.preventDefault(); // prevent form submission
@@ -19,6 +21,7 @@ export default function RecoveryEmailSent({ userType }: { userType: "seller" | "
   };
 
   const registerUserRes = (res: any) => {
+    recordSuccessfulSend();
     toast.success("verification link resents");
   };
 
@@ -28,6 +31,7 @@ export default function RecoveryEmailSent({ userType }: { userType: "seller" | "
 
   const handleResentLink = (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || timer > 0) return;
     resendUserReq({
       successRes: registerUserRes,
       requestConfig: {
@@ -45,7 +49,15 @@ export default function RecoveryEmailSent({ userType }: { userType: "seller" | "
         <p className="text-base font-MontserratSemiBold text-center mt-c8 mb-c24 text-161616">
           {email}
         </p>
-        <Button onClick={handleResentLink} type="button">{loading ? <LoadingSpinner/>:"Resend email link"}</Button>
+        <Button onClick={handleResentLink} type="button" disabled={loading || timer > 0}>
+          {loading ? (
+            <LoadingSpinner />
+          ) : timer > 0 ? (
+            `Resend email link in (${String(Math.floor(timer / 60)).padStart(2, "0")}:${String(timer % 60).padStart(2, "0")})`
+          ) : (
+            "Resend email link"
+          )}
+        </Button>
       </form>
 
       {/* <div className="mt-3">

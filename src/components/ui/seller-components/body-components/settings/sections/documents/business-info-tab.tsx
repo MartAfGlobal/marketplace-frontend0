@@ -155,7 +155,7 @@ export function validateBizRegNo(value: string): string {
 export function validateTIN(value: string): string {
   const v = value.trim();
   if (!v) return "";
-  if (v.length < 8 || v.length > 14 || !TIN_REGEX.test(v))
+  if (v.length < 8 || v.length > 10 || !TIN_REGEX.test(v))
     return "Invalid TIN format. Expected 8 digits or 8 digits-4 digits (e.g. 12345678-0001)";
   return "";
 }
@@ -554,7 +554,7 @@ export default function BusinessInfoTab({
               name="tax_identification_number"
               type="text"
               minLength={8}
-              maxLength={14}
+              maxLength={10}
               placeholder="e.g. 12345678-0001"
               value={formData.tax_identification_number}
               disabled={!isEditing}

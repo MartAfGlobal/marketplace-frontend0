@@ -317,8 +317,8 @@ export default function MobileLogin({ onClose, setStep, userType = "buyer" }: Mo
       result="error"
       title="Invalid credentials"
       message="The email or password is incorrect. Sign up to create an account."
-      buttenText="Sign up"
-      onConfirm={() => {
+      TertiaryButtonText="Sign up"
+      onTertiaryAction={() => {
         setShowInvalidCredentialsModal(false);
         setStep("signup");
       }}

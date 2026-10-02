@@ -103,7 +103,7 @@ export default function SellerDashboardLayout({
 
       <main className="flex-1 w-full pt-6 md:pt-6 px-4 md:px-c48 bg-[#947fff]/10 mt-18 relative">
         {isSuspended && (
-          <div className="kyc-alert-pulse bg-0070e9/68 w-full md:w-108.25! flex gap-2.5 p-4 md:h-18 fixed top-20 z-20 right-0 md:right-c48 px-2.5 py-3">
+          <div className="kyc-alert-pulse bg-0070e9/68 w-full md:w-108.25! flex gap-2.5 p-4  md:fixed top-20 z-50 right-0 md:right-c48 mb-4 md:mb-0 ">
             <div className="w-6 h-6 flex-shrink-0">
               <Image src={kycIcon} alt="warning" width={24} height={24} />
             </div>

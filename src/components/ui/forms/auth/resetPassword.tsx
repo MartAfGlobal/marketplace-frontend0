@@ -75,11 +75,14 @@ export default function ResetPasswordForm({userType}: {userType: "seller" | "buy
   const handleSuccess = (res: any) => {
     const accessToken = res?.data?.access;
 
-   
     if (accessToken) {
       dispatch(tokenActions.setToken(accessToken));
     }
 
+    setFormData({ newPassword: "", comfirmPassword: "" });
+    setSubmitted(false);
+    setShowPassword(false);
+    setShowConfirmPass(false);
     setIsModalOpen(true);
   };
 
@@ -175,8 +178,8 @@ export default function ResetPasswordForm({userType}: {userType: "seller" | "buy
 
 
       <ResultModal title="Password Reset Successful!" discRescription="Your password has been reset successfully." isOpen={isModalOpen} onConfirm={() => {
-        if (userType === "seller" && isMobile) {
-          router.push("/?showLogin=true&authUserType=seller");
+        if (isMobile) {
+          router.push(`/?showLogin=true&authUserType=${userType}`);
           return;
         }
         router.push(userType === "buyer" ? "/auth/login" : "/auth/seller/login");

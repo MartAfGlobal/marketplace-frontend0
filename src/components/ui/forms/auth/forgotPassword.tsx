@@ -12,10 +12,12 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { usePasswordResetCooldown } from "@/hooks/usePasswordResetCooldown";
 
 export default function ForgotPassword({userType}: {userType: "seller" | "buyer"}) {
   const [email, setEmail] = useState("");
   const isFormValid = email !== "";
+  const { recordSuccessfulSend } = usePasswordResetCooldown(userType, email);
 
   const router = useRouter();
 
@@ -24,6 +26,7 @@ export default function ForgotPassword({userType}: {userType: "seller" | "buyer"
   const { loading, sendHttpRequest: UseremailingReq } = useHttp();
 
   const registerUserRes = (res: any) => {
+    recordSuccessfulSend();
     router.push(
   userType === "buyer"
     ? `/auth/password-reset-sent?email=${encodeURIComponent(email)}`

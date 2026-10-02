@@ -415,7 +415,7 @@ export default function RegisterIndividual3({
               <Label>Full Legal Name*</Label>
               <Input
                 type="text"
-                validateName={true}
+                
                 maxLength={80}
                 placeholder="Enter your full legal name"
                 value={formData.fullname}
@@ -621,7 +621,7 @@ export default function RegisterIndividual3({
               <Input
                 type="text"
                 minLength={8}
-                maxLength={14}
+                maxLength={10}
                 placeholder="e.g. 12345678-0001"
                 value={formData.tax_identification_number}
                 valid={!errors.tax_identification_number}

@@ -147,6 +147,7 @@ export default function RegisterFormStep2({ userType }: RegProps) {
     }
   };
   const handleSubmit = (e: React.FormEvent) => {
+     e.preventDefault();
     if(!token){
       return
     }
@@ -158,7 +159,7 @@ export default function RegisterFormStep2({ userType }: RegProps) {
 
       
     }, "is token trueee:", token);
-    e.preventDefault();
+   
     if (Invalid) {
       return;
     }

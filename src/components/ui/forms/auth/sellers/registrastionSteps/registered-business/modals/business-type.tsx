@@ -26,9 +26,13 @@ export function DropdownInput({
   loading,
   emptyState = "No options available"
 }: DropdownInputProps) {
-  console.log("DropdownInput rendering with options:", options);
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const filteredOptions = options.filter((option) => {
+    const label = typeof option === "object" ? option.label : option;
+    return label.toLowerCase().includes(searchQuery.trim().toLowerCase());
+  });
 
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -47,6 +51,7 @@ export function DropdownInput({
   const handleSelect = (opt: string | { label: string; value: string }) => {
     const val = typeof opt === "object" ? opt.value : opt;
     setOpen(false);
+    setSearchQuery("");
     onChange?.(val);
   };
 
@@ -73,17 +78,29 @@ export function DropdownInput({
     >
       <div
         className="relative w-full h-fit"
-        onClick={() => !disabled && setOpen(!open)}
+        onClick={() => {
+          if (!disabled && !open) {
+            setOpen(true);
+            setSearchQuery("");
+          }
+        }}
       >
         <Input
           type="text"
-          readOnly
-          value={getSelectedLabel()}
-          placeholder={placeholder}
-          className=" cursor-pointer"
+          readOnly={!open}
+          value={open ? searchQuery : getSelectedLabel()}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder={open ? "Search options..." : placeholder}
+          autoFocus={open}
+          className={`pr-10 ${open ? "cursor-text" : "cursor-pointer"}`}
         />
         <button
           type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            setOpen(!open);
+            setSearchQuery("");
+          }}
           className="absolute  right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"
         >
           {loading? <LoadingSpinner color="border-ff715b"/>:   <Image
@@ -98,12 +115,13 @@ export function DropdownInput({
       </div>
       {open && (
         <div className="absolute top-full left-0 w-full bg-white border border-gray-200 max-h-60 overflow-y-auto py-2 px-3 rounded-lg shadow-lg mt-1 z-[9999] flex flex-col">
-          {options.length > 0 ? (
-            options.map((opt, idx) => {
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((opt, idx) => {
               const label = typeof opt === "object" ? opt.label : opt;
               return (
                 <button
                   key={idx}
+                  type="button"
                   onClick={() => handleSelect(opt)}
                   className="w-full text-left px-3 py-2 font-MontserratNormal text-c12 hover:bg-[#F4E7FD]"
                 >
@@ -113,7 +131,7 @@ export function DropdownInput({
             })
           ) : (
             <div className="px-3 py-2 text-gray-400 font-MontserratNormal text-c12 italic text-center">
-              {emptyState}
+              {options.length > 0 ? "No matching options" : emptyState}
             </div>
           )}
         </div>

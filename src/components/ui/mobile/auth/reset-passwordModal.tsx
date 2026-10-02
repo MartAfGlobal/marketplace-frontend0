@@ -69,6 +69,9 @@ export default function ResetPasswordModal({ onClose, setStep, email, userType =
       },
       successRes: () => {
         toast.success("Password reset successful!");
+        setNewPassword("");
+        setConfirmPassword("");
+        setSubmitted(false);
         setStep("signin");
       },
     });

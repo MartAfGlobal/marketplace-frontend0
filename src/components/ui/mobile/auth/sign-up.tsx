@@ -85,6 +85,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
     bodyTitle?: string;
     message: string;
     buttonText: string;
+    showSignInAction?: boolean;
   } | null>(null);
 
   const { loading: resendLoading, sendHttpRequest: resendUserReq } = useHttp();
@@ -139,7 +140,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
           email: formData.email || savedEmail,
           otp: otpString,
         },
-        userType: "buyer",
+        userType,
       },
       successRes: (res: any) => {
         console.log(" checking seller", res);
@@ -199,7 +200,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
         url: "/accounts/register/resend-otp/",
         method: "POST",
         body: { email: formData.email },
-        userType: "buyer",
+        userType,
       },
     });
   };
@@ -257,6 +258,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
         bodyTitle: `To create a new ${userType === "seller" ? "Seller" : "Buyer"} account,`,
         message: "you must use an email address that isn't already linked to an existing profile.",
         buttonText: "Use Different Email",
+        showSignInAction: true,
       });
       return;
     }
@@ -280,11 +282,12 @@ const DEFAULT_RESEND_TIMEOUT = 120;
       successRes: registerUserRes,
       errorRes: handleRegisterError,
       requestConfig: {
-        url: "/accounts/register",
+        url: userType === "seller" ? "/accounts/register/manufacturer/" : "/accounts/register",
         method: "POST",
         body: {
           email: formData.email,
         },
+        userType,
         suppressErrorNotification: true,
       },
     });
@@ -417,6 +420,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                     onClose={onClose}
                     setStep={setStep}
                     setEmail={setEmail}
+                    userType={userType}
                   />
                 )}
 
@@ -425,6 +429,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                     onClose={onClose}
                     setStep={setStep}
                     email={email}
+                    userType={userType}
                   />
                 )}
 
@@ -524,7 +529,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                     </div>
                     <div className="max-h-[60vh] overflow-y-auto">
                       <RegisterForm
-                        userType="buyer"
+                        userType={userType}
                         token={verifiedOtp}
                         onSuccess={onClose}
                       />
@@ -553,6 +558,11 @@ const DEFAULT_RESEND_TIMEOUT = 120;
         buttenText={signupErrorModal?.buttonText}
         onConfirm={() => setSignupErrorModal(null)}
         onCancel={() => setSignupErrorModal(null)}
+        TertiaryButtonText={signupErrorModal?.showSignInAction ? "Already have an account? Sign in" : undefined}
+        onTertiaryAction={() => {
+          setSignupErrorModal(null);
+          setStep("signin");
+        }}
       />
     </>
   );

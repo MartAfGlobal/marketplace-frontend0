@@ -20,6 +20,8 @@ type ResultModalProps = {
   loading?: boolean;
   secondaryButtonText?: string;
   onSecondaryAction?: () => void;
+  TertiaryButtonText?: string;
+  onTertiaryAction?: () => void;
 };
 
 export default function ResultModal({
@@ -34,6 +36,8 @@ export default function ResultModal({
   discRescription,
   loading,
   secondaryButtonText,
+  TertiaryButtonText,
+  onTertiaryAction,
   onSecondaryAction,
 }: ResultModalProps) {
   useEffect(() => {
@@ -262,6 +266,12 @@ export default function ResultModal({
                   >
                     {loading ? <LoadingSpinner color="border-white" /> : buttenText || "Okay"}
                   </Button>
+                )}
+
+                {onTertiaryAction && TertiaryButtonText && (
+                  <button  onClick={onTertiaryAction} disabled={loading} className="font-xs font-MontserratMedium text-ff715b hover:underling w-full text-center">
+                    {TertiaryButtonText}
+                  </button>
                 )}
               </div>
             </div>

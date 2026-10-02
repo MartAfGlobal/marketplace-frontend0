@@ -115,6 +115,21 @@ export default function VerifyEmail({ userType, token }: RegProps) {
 
   const isFormValid = formData.email !== "";
 
+  const handleExistingAccountSignIn = () => {
+    setShowExistingEmailModal(false);
+    const isMobileDevice = /iphone|ipad|android|mobile|ipod|blackberry|iemobile|opera mini/.test(
+      navigator.userAgent.toLowerCase(),
+    );
+
+    if (isMobileDevice) {
+      const authUserType = userType === "seller" ? "seller" : "buyer";
+      router.push(`/?showLogin=true&authUserType=${authUserType}`);
+      return;
+    }
+
+    router.push(userType === "buyer" ? "/auth/login" : "/auth/seller/login");
+  };
+
   //   const handleSubmit = async (e: React.FormEvent) => {
   //     e.preventDefault();
   //     setIsSubmitting(true);
@@ -172,9 +187,9 @@ export default function VerifyEmail({ userType, token }: RegProps) {
         title="Email already exist"
 
         message={`To create a new ${userType === "seller" ? "seller" : "buyer"} account, you must use an email address that isn't already linked to an existing profile.`}
-        buttenText="Use Different Email"
-        onConfirm={() => setShowExistingEmailModal(false)}
+        TertiaryButtonText="Already have an account? Sign in"
         onCancel={() => setShowExistingEmailModal(false)}
+        onTertiaryAction={handleExistingAccountSignIn}
       />
     </div>
   );

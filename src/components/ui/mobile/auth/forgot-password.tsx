@@ -7,19 +7,23 @@ import { toast } from "sonner";
 import { LoadingSpinner } from "../../loading-spinner";
 import { Button } from "../../Button/Button";
 import { Input } from "../../forms/Input";
+import { usePasswordResetCooldown } from "@/hooks/usePasswordResetCooldown";
 
 export default function ForgotPasswordModal({
   onClose,
   setStep,
   email: defaultEmail = "",
   setEmail,
+  userType = "buyer",
 }: MobileLoginProps) {
   const [localEmail, setLocalEmail] = useState(defaultEmail);
   const isFormValid = localEmail.trim() !== "";
+  const { recordSuccessfulSend } = usePasswordResetCooldown(userType, localEmail);
   const { loading, sendHttpRequest: UseremailingReq } = useHttp();
 
   const UserResetLinkRes = (res: any) => {
     toast.success("Reset link sent successfully!");
+    recordSuccessfulSend();
     if (setEmail) setEmail(localEmail);
     setStep("recoveryLinkSent");
   };
@@ -34,10 +38,10 @@ export default function ForgotPasswordModal({
     UseremailingReq({
       successRes: UserResetLinkRes,
       requestConfig: {
-        url: "/accounts/forgot-password/",
+        url: userType === "seller" ? "/accounts/manufacturer/forgot-password/" : "/accounts/forgot-password/",
         method: "POST",
         body: { email: localEmail },
-        userType: "buyer",
+        userType,
       },
     });
   };

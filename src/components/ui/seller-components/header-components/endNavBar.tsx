@@ -15,10 +15,14 @@ import LogOut from "@/assets/icons/ArrowBendDownRight.svg";
 
 import { useLogout } from "@/utils/logout";
 import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
+import AuthModal from "@/components/ui/mobile/auth/sign-up";
+import { AuthStep } from "@/types/global";
 
 export default function EndNav() {
   const [userOpen, setUserOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalStep, setAuthModalStep] = useState<AuthStep>("signin");
   const userDropdownRef = useRef<HTMLDivElement | null>(null);
   const token = useSelector((state: any) => state.token?.token);
   const seller = useSelector((state: any) => state.seller.data);
@@ -46,6 +50,12 @@ export default function EndNav() {
 
   // Prioritise company logo; fall back to profile picture, then default icon
   const profilePicture = seller?.profile?.company_logo_url || seller?.profile?.profile_picture || User;
+
+  const openAuthModal = (step: AuthStep) => {
+    setUserOpen(false);
+    setAuthModalStep(step);
+    setAuthModalOpen(true);
+  };
 
   return (
     <nav className="flex items-center gap-6">
@@ -92,7 +102,7 @@ export default function EndNav() {
               alt="Dropdown"
               width={16}
               height={16}
-              className={`w-4 h-4 lg:block hidden transition-transform duration-200 ${userOpen ? "rotate-180" : "rotate-0"}`}
+              className={`w-4 h-4 transition-transform duration-200 ${userOpen ? "rotate-180" : "rotate-0"}`}
             />
           </button>
 
@@ -117,13 +127,22 @@ export default function EndNav() {
                         Settings
                       </Link>
                     ) : (
-                      <Link
-                        href="/auth/seller/login"
-                        onClick={() => setUserOpen(false)}
-                        className="block px-4 py-2 h-6"
-                      >
-                        Login
-                      </Link>
+                      <>
+                        <Link
+                          href="/auth/seller/login"
+                          onClick={() => setUserOpen(false)}
+                          className="hidden lg:block px-4 py-2 h-6"
+                        >
+                          Login
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => openAuthModal("signin")}
+                          className="lg:hidden block px-4 py-2 h-6"
+                        >
+                          Login
+                        </button>
+                      </>
                     )}
                   </li>
                   <li>
@@ -136,12 +155,22 @@ export default function EndNav() {
                         Log out
                       </button>
                     ) : (
-                      <Link
-                        href="/auth/register"
-                        className="block px-4 py-2 hover:bg-gray-100"
-                      >
-                        Sign Up
-                      </Link>
+                      <>
+                        <Link
+                          href="/auth/register"
+                          onClick={() => setUserOpen(false)}
+                          className="hidden lg:block px-4 py-2 hover:bg-gray-100"
+                        >
+                          Sign Up
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => openAuthModal("signup")}
+                          className="lg:hidden block px-4 py-2 hover:bg-gray-100"
+                        >
+                          Sign Up
+                        </button>
+                      </>
                     )}
                   </li>
                 </ul>
@@ -160,6 +189,12 @@ export default function EndNav() {
         isOpen={logoutModalOpen}
         onConfirm={() => { setLogoutModalOpen(false); logout(); }}
         onCancel={() => setLogoutModalOpen(false)}
+      />
+      <AuthModal
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        userType="seller"
+        defaultStep={authModalStep}
       />
     </nav>
   );

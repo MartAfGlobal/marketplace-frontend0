@@ -381,8 +381,8 @@ export default function LoginForm({ userType }: RegProps) {
       result="error"
       title="Invalid credentials"
       message="The email or password is incorrect. Sign up to create an account."
-      buttenText="Sign up"
-      onConfirm={() => {
+      TertiaryButtonText="Sign up"
+      onTertiaryAction={() => {
         setShowInvalidCredentialsModal(false);
         router.push(userType === "seller" ? "/auth/seller/sign-up" : "/auth/register");
       }}

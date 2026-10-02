@@ -78,7 +78,7 @@ function validateTIN(val: string): string {
   const v = val.trim();
   if (!v) return "";
   if (v.length < 8 || v.length > 14) {
-    return "TIN must be between 8 and 14 characters";
+    return "TIN must be between 8 and 10 characters";
   }
   if (!TIN_REGEX.test(v)) {
     return "Invalid TIN format. Expected 8 digits or 8 digits-4 digits (e.g. 12345678-0001)";
@@ -482,7 +482,7 @@ export default function RegisterFormStep3({}: RegisterFormStep3Props) {
               <Input
                 type="text"
                 minLength={8}
-                maxLength={14}
+                maxLength={10}
                 placeholder="e.g. 12345678-0001"
                 value={formData.tax_identification_number}
                 valid={!errors.tax_identification_number}
