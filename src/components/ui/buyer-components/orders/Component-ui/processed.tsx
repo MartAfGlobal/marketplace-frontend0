@@ -21,12 +21,16 @@ import {
   getBuyerOrderDateLabel,
   getBuyerOrderStatusLabel,
 } from "@/utils/buyerOrderDisplay";
+import { getOrderReviewState } from "@/utils/buyerOrderReview";
 interface OrdersProps {
   searchTerm: string;
   category: "delivered" | "completed";
 }
 
-export default function ProccessedDetais({ searchTerm, category }: OrdersProps) {
+export default function ProccessedDetais({
+  searchTerm,
+  category,
+}: OrdersProps) {
   const dispatch = useDispatch();
   const { sendHttpRequest: addToCartReq } = useHttp();
   const [copied, setCopied] = useState(false);
@@ -157,6 +161,7 @@ export default function ProccessedDetais({ searchTerm, category }: OrdersProps) 
                 {filteredOrders.map((item: OrderItem) => {
                   const orderItems =
                     item.order_items || (item as any).items || [];
+                  const reviewState = getOrderReviewState(item);
                   const isSingleItemOrder = orderItems.length === 1;
                   const orderDate = getBuyerOrderDateLabel(item);
                   const firstItem = orderItems[0] as any;
@@ -185,29 +190,25 @@ export default function ProccessedDetais({ searchTerm, category }: OrdersProps) 
                       {(item.buyer_status || item.status)?.toUpperCase() ===
                         "DELIVERED" && (
                         <>
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/buyer/orders/confirm-delivery/${item.id}`,
-                              )
-                            }
-                          >
-                            Confirm delivery
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() =>
-                              router.push(getBuyerOrderTrackingPath(item.id))
-                            }
-                          >
-                            Track order
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => handleReview(item.id)}
-                          >
-                            Leave a review
-                          </Button>
+                          <>
+                            <Button
+                              onClick={() => handleAddOrderItemToCart(item)}
+                            >
+                              Add to cart
+                            </Button>
+                          </>
+
+                          {reviewState.hasReviewableItems && (
+                            <Button
+                              disabled={!reviewState.canReview}
+                              variant="secondary"
+                              onClick={() => handleReview(item.id)}
+                            >
+                              {reviewState.allReviewed
+                                ? "Reviewed"
+                                : "Leave a review"}
+                            </Button>
+                          )}
                         </>
                       )}
                       {["CONFIRMED", "COMPLETED", "CANCELLED"].includes(
@@ -302,7 +303,7 @@ export default function ProccessedDetais({ searchTerm, category }: OrdersProps) 
                                     <p className=" text-c12 font-MontserratMedium mb-3">
                                       {item.manufacturer}
                                     </p>
-                                    <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
+                                    <p className="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center ">
                                       {prod.fulfilled_quantity ?? prod.quantity}
                                       Pc,
                                       {prod.variation_name || prod.product_name}
@@ -482,7 +483,7 @@ export default function ProccessedDetais({ searchTerm, category }: OrdersProps) 
                         )}
 
                         <div className="w-full  pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
-                           {item.buyer_status === "Delivered" && (
+                          {item.buyer_status === "Delivered" && (
                             <>
                               <Button
                                 className=""
@@ -490,16 +491,21 @@ export default function ProccessedDetais({ searchTerm, category }: OrdersProps) 
                               >
                                 Add to cart
                               </Button>
-                              <Button
-                                onClick={() => handleReview(item.id)}
-                                variant="secondary"
-                                className=""
-                              >
-                                Leave a review
-                              </Button>
+                              {reviewState.hasReviewableItems && (
+                                <Button
+                                  disabled={!reviewState.canReview}
+                                  onClick={() => handleReview(item.id)}
+                                  variant="secondary"
+                                  className=""
+                                >
+                                  {reviewState.allReviewed
+                                    ? "Reviewed"
+                                    : "Leave a review"}
+                                </Button>
+                              )}
                             </>
                           )}
-                          {["CONFIRMED", "COMPLETED", "CANCELLED"].includes(
+                          {/* {["CONFIRMED", "COMPLETED", "CANCELLED"].includes(
                             (item.buyer_status || item.status)?.toUpperCase() ||
                               "",
                           ) && (
@@ -510,7 +516,7 @@ export default function ProccessedDetais({ searchTerm, category }: OrdersProps) 
                                 Add to cart
                               </Button>
                             </>
-                          )}
+                          )} */}
                           {/* <Button className="border-0" variant="secondary">
                             Remove
                           </Button> */}

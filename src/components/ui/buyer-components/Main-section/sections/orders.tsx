@@ -29,6 +29,7 @@ import {
   getBuyerOrderDateLabel,
   getBuyerOrderStatusLabel,
 } from "@/utils/buyerOrderDisplay";
+import { getOrderReviewState } from "@/utils/buyerOrderReview";
 
 export default function Orders() {
   const dispatch = useDispatch();
@@ -312,6 +313,7 @@ const [itemId, setItemId] = useState("")
           <div className="w-full space-y-c24 mt-c32">
             {lastOrders.map((item: OrderItem) => {
               const orderItems = item.order_items || (item as any).items || [];
+              const reviewState = getOrderReviewState(item);
               const hasOrderItems = orderItems.length > 0;
               const firstItem = orderItems[0] as any;
               const productImage =
@@ -487,8 +489,9 @@ const [itemId, setItemId] = useState("")
                           >
                             Add to cart
                           </Button>
-                          {item.buyer_status?.toUpperCase() === "DELIVERED" && (
+                          {item.buyer_status?.toUpperCase() === "DELIVERED" && reviewState.hasReviewableItems && (
                             <Button
+                              disabled={!reviewState.canReview}
                               variant="secondary"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -497,7 +500,7 @@ const [itemId, setItemId] = useState("")
                               }}
                               className=""
                             >
-                              Leave a review
+                              {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
                             </Button>
                           )}
                         </>
@@ -553,8 +556,9 @@ const [itemId, setItemId] = useState("")
                           >
                             Add to cart
                           </Button>
-                          {item.buyer_status?.toUpperCase() === "DELIVERED" && (
+                          {item.buyer_status?.toUpperCase() === "DELIVERED" && reviewState.hasReviewableItems && (
                             <Button
+                              disabled={!reviewState.canReview}
                               variant="secondary"
                               onClick={(e) => {
                                 e.preventDefault();
@@ -563,7 +567,7 @@ const [itemId, setItemId] = useState("")
                               }}
                               className="flex-1 text-xs py-2 h-9"
                             >
-                              Leave a review
+                              {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
                             </Button>
                           )}
                         </>

@@ -7,27 +7,38 @@ import Sad from "@/assets/mobile/sad.png";
 import Happy from "@/assets/mobile/happy.png";
 import { useRouter } from "next/navigation";
 import { Button } from "../../Button/Button";
+import {
+  BuyerOrderReviewSource,
+  getOrderReviewState,
+} from "@/utils/buyerOrderReview";
 
 export default function ResponseModal({
   isOpen,
   id,
   onClose,
   type,
+  order,
 }: {
   id: string
   isOpen: boolean;
   onClose: () => void;
   type: "yes" | "no";
+  order?: BuyerOrderReviewSource | null;
 }) {
   const router = useRouter();
   if (!isOpen) return null;
+  const reviewState = getOrderReviewState(order);
 
   const description =
     type === "no"
       ? "We’re sorry! Please contact support for help."
       : "Thanks for confirming your delivery!";
 
-  const primaryButtonLabel = type === "no" ? "Live Chat" : "Leave a review";
+  const primaryButtonLabel = type === "no"
+    ? "Live Chat"
+    : reviewState.allReviewed
+      ? "Reviewed"
+      : "Leave a review";
   const primaryButtonAction =
     type === "no"
       ? () => alert("Starting live chat...")
@@ -76,13 +87,16 @@ export default function ResponseModal({
 
         {/* Buttons */}
         <div className="flex flex-col gap-6 text-c12 font-MontserratSemiBold">
-          <Button
-          variant="secondary"
-            className=" "
-            onClick={primaryButtonAction}
-          >
-            {primaryButtonLabel}
-          </Button>
+          {(type === "no" || reviewState.hasReviewableItems) && (
+            <Button
+              variant="secondary"
+              className=" "
+              disabled={type === "yes" && !reviewState.canReview}
+              onClick={primaryButtonAction}
+            >
+              {primaryButtonLabel}
+            </Button>
+          )}
           <Button
             className=""
             onClick={() => router.push("/#production-section")}

@@ -24,6 +24,7 @@ import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
 import { useOrderRefresh } from "@/hooks/useOrderRefresh";
+import { getOrderReviewState } from "@/utils/buyerOrderReview";
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
@@ -82,6 +83,8 @@ export default function OrderDetailsPage() {
       },
       successRes: (res: any) => {
         const orderData = res?.data;
+
+        console.log("Fetched order data:", orderData);
         if (orderData) {
           setOrder(orderData);
           if (orderData.shipping_address_snapshot) {
@@ -180,6 +183,7 @@ export default function OrderDetailsPage() {
 
   // Order Items
   const orderItems = order?.items || order?.order_items || [];
+  const reviewState = getOrderReviewState(order);
 
   const handleBuyAgain = async () => {
     if (!token || orderItems.length === 0 || buyAgainLoading) return;
@@ -298,7 +302,7 @@ export default function OrderDetailsPage() {
       successRes: () => {
         fetchOrders();
         setOpenConfirmModal(false);
-        router.refresh();
+        loadOrder();
       },
     });
   };
@@ -511,16 +515,19 @@ export default function OrderDetailsPage() {
                       >
                         {buyAgainLoading ? <LoadingSpinner /> : "Buy again"}
                       </Button>
-                      <Button
-                        onClick={() =>
-                          router.push(
-                            `/dashboard/buyer/orders/leave-review/${id}`,
-                          )
-                        }
-                        variant="secondary"
-                      >
-                        Leave a review
-                      </Button>
+                      {reviewState.hasReviewableItems && (
+                        <Button
+                          disabled={!reviewState.canReview}
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/buyer/orders/leave-review/${id}`,
+                            )
+                          }
+                          variant="secondary"
+                        >
+                          {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
+                        </Button>
+                      )}
                     </>
                   )}
 
@@ -834,14 +841,17 @@ export default function OrderDetailsPage() {
                 <Button disabled={buyAgainLoading} onClick={handleBuyAgain}>
                   {buyAgainLoading ? <LoadingSpinner /> : "Buy again"}
                 </Button>
-                <Button
-                  onClick={() =>
-                    router.push(`/dashboard/buyer/orders/leave-review/${id}`)
-                  }
-                  variant="secondary"
-                >
-                  Leave a review
-                </Button>
+                {reviewState.hasReviewableItems && (
+                  <Button
+                    disabled={!reviewState.canReview}
+                    onClick={() =>
+                      router.push(`/dashboard/buyer/orders/leave-review/${id}`)
+                    }
+                    variant="secondary"
+                  >
+                    {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
+                  </Button>
+                )}
               </>
             )}
 

@@ -174,7 +174,7 @@ export default function Disputes({ searchTerm }: OrdersProps) {
                               <p className="text-c12 font-MontserratMedium mb-3">
                                 {item.seller_name}
                               </p>
-                              <p className="rounded-c12 bg-000000/10 text-000000/60 p-2 w-fit font-MontserratSemiBold text-c12 flex items-center">
+                              <p className="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center">
                                 {item.variant_name || item.product_name}
                               </p>
                               <p className="font-MontserratSemiBold text-c16 pt-3">

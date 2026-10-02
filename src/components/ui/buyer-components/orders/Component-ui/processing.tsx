@@ -170,8 +170,8 @@ export default function ProcessingOrders({ searchTerm }: OrdersProps) {
                                       <p className=" text-c12 font-MontserratMedium mb-3">
                                         {item.manufacturer}
                                       </p>
-                                      <p className="rounded-c12 bg-000000/10 text-000000/60  h-c32 py-2 w-fit min-w-24.5  px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center">
-                                      {prod.fulfilled_quantity ?? prod.quantity}Pc {prod.variation_name},
+                                      <p className="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center">
+                                      {prod.fulfilled_quantity ?? prod.quantity}Pc, {prod.variation_name},
                                       </p>
                                       <p className="font-MontserratSemiBold text-c16 pt-3">
                                         ₦{(prod.price_at_purchase * (prod.fulfilled_quantity ?? prod.quantity ?? 0)).toLocaleString()}

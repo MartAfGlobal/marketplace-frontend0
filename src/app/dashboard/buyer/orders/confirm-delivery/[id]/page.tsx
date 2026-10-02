@@ -19,6 +19,7 @@ import { RootState } from "@/store";
 import { useParams } from "next/navigation";
 import { useHttp } from "@/hooks/use-http";
 import { Button } from "@/components/ui/Button/Button";
+import { useFetchOrders } from "@/helpers/fetchOrders";
 
 export default function OrderOnTheWayPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,6 +33,7 @@ export default function OrderOnTheWayPage() {
 
   const { id } = useParams();
   const { orders } = useSelector((state: any) => state.orders);
+  const { fetchOrders } = useFetchOrders();
 
   const order = orders?.find((o: any) => o.id === id);
   const orderId = order?.order_id || id;
@@ -61,6 +63,7 @@ export default function OrderOnTheWayPage() {
         successMessage: "Delivery confirmed successfully!",
       },
       successRes: () => {
+        fetchOrders();
         setModalType("yes");
         setIsModalOpen(true);
       },
@@ -328,7 +331,13 @@ export default function OrderOnTheWayPage() {
       <ResponseModal
         id={order.id}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        order={order}
+        onClose={() => {
+          setIsModalOpen(false);
+          if (modalType === "yes") {
+            router.replace(`/dashboard/buyer/orders/${id}`);
+          }
+        }}
         type={modalType}
       />
     </div>

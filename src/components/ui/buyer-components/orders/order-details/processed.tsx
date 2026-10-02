@@ -28,6 +28,7 @@ import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
+import { getOrderReviewState } from "@/utils/buyerOrderReview";
 import AdressSkeleton from "@/components/reloadSpinner/addressSkeleton";
 import { fetchDisputeDetails } from "@/store/orders/order-slice";
 import { addOrderItemToCart } from "@/utils/addOrderItemToCart";
@@ -67,6 +68,7 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
   const [isMobile, setIsMobile] = useState(false);
 
   const orderItems = order?.order_items || (order as any).items || [];
+  const reviewState = getOrderReviewState(order);
 
   console.log("order item", order);
 
@@ -221,13 +223,14 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
                 <div className=" hidden md:flex flex-col gap-c32 w-full max-w-84">
                   <>
                     <Button className="" onClick={handleAddOrderItemsToCart}>Add to cart</Button>
-                    {isDelivered && (
+                    {isDelivered && reviewState.hasReviewableItems && (
                       <Button
+                        disabled={!reviewState.canReview}
                         onClick={() => handleReview(order.id)}
                         variant="secondary"
                         className=""
                       >
-                        Leave a review
+                        {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
                       </Button>
                     )}
                   </>
@@ -430,9 +433,14 @@ export default function ProessedOrderDetails({ id }: { id: string }) {
           <div className="flex gap-4 items-center justify-center w-full text-c12 font-MontserratSemiBold">
             <>
               <Button className="" onClick={handleAddOrderItemsToCart}>Add to cart</Button>
-              {isDelivered && (
-                <Button variant="secondary" className="">
-                  Leave a review
+              {isDelivered && reviewState.hasReviewableItems && (
+                <Button
+                  disabled={!reviewState.canReview}
+                  onClick={() => handleReview(order.id)}
+                  variant="secondary"
+                  className=""
+                >
+                  {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
                 </Button>
               )}
             </>

@@ -32,6 +32,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useFetchOrders } from "@/helpers/fetchOrders";
+import { notifyOrderChanged } from "@/utils/orderRefresh";
 import { ChevronDown } from "lucide-react";
 import { Textarea } from "@/components/ui/forms/auth/text-area";
 import { Label } from "recharts";
@@ -81,6 +82,7 @@ export default function OrderDetailsPage() {
           userType: "buyer",
         },
         successRes: (res: any) => {
+          console.log("Fetched order data:", res?.data);
           const orderData = res?.data;
           if (orderData) {
             setDirectOrder({
@@ -94,6 +96,7 @@ export default function OrderDetailsPage() {
   }, [id, token, selectedOrder]);
 
   const activeOrder = selectedOrder || directOrder;
+  console.log("Active order:", activeOrder);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<
@@ -174,6 +177,7 @@ export default function OrderDetailsPage() {
       },
       successRes: () => {
         fetchOrders();
+        notifyOrderChanged();
         setSucess(true);
       },
       errorRes: (err: any) => {
@@ -464,14 +468,14 @@ export default function OrderDetailsPage() {
                       </div>
 
                       <Button
-                        disabled={loading || rating === 0 }
+                        disabled={loading || rating === 0 || isReviewed || !canReview}
                         onClick={() => handleReturnItem(productId, orderItemId)}
                         className="mt-8"
                       >
                         {loading ? (
                           <LoadingSpinner />
                         ) : isReviewed ? (
-                          "Already Reviewed"
+                          "Reviewed"
                         ) : canReview === false ? (
                           "Cannot Review (Not Delivered)"
                         ) : (

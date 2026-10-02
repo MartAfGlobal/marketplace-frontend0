@@ -33,6 +33,7 @@ import {
   getBuyerOrderDateLabel,
   getBuyerOrderStatusLabel,
 } from "@/utils/buyerOrderDisplay";
+import { getOrderReviewState } from "@/utils/buyerOrderReview";
 
 interface OrdersProps {
   searchTerm: string;
@@ -316,6 +317,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                 {filteredOrders.map((item: OrderItem) => {
                   const orderItems =
                     item.order_items || (item as any).items || [];
+                  const reviewState = getOrderReviewState(item);
                   const hasOrderItems = orderItems.length > 0;
                   const isSingleItemOrder = orderItems.length === 1;
 
@@ -343,6 +345,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                   );
 
                   const orderNo = item.order_id;
+                  const buyerStatus = String(item.buyer_status ?? item.status ?? "").toLowerCase();
                   const orderDate = getBuyerOrderDateLabel(item);
 
                   const storeName =
@@ -381,19 +384,22 @@ export default function Orders({ searchTerm }: OrdersProps) {
                           </Button>
                         </>
                       )}
-                      {item.buyer_status === "Delivered" && (
+                      {item.buyer_status === "Delivered"  &&  (
                         <>
                           <Button
                             onClick={() => handleAddOrderItemToCart(item)}
                           >
                             Add to cart
                           </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => handleReview(item.id)}
-                          >
-                            Leave a review
-                          </Button>
+                          {reviewState.hasReviewableItems && (
+                            <Button
+                              disabled={!reviewState.canReview}
+                              variant="secondary"
+                              onClick={() => handleReview(item.id)}
+                            >
+                              {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
+                            </Button>
+                          )}
                         </>
                       )}
                       {item.buyer_status === "RECEIVED_AT_HUB" && (
@@ -516,7 +522,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         {!hasOrderItems ? (
                           <>
                             <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${buyerStatus}`}
                               className="flex flex-col md:flex-row gap-4 items-start flex-1"
                             >
                               <div className="flex gap-4 items-start w-full">
@@ -557,7 +563,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         ) : isSingleItemOrder ? (
                           <>
                             <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${buyerStatus}`}
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
                               {orderItems.map((prod: any) => (
@@ -581,7 +587,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                     <p className=" text-c12 font-MontserratMedium mb-3">
                                       {item.manufacturer || item.seller_name}
                                     </p>
-                                    <p className="rounded-c12 bg-000000/10 text-000000/60 p-2  w-fit font-MontserratSemiBold text-c12 flex items-center ">
+                                    <p className="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center ">
                                       {prod.fulfilled_quantity ?? prod.quantity}
                                       Pc,
                                       {prod.variation_name || prod.product_name}
@@ -604,7 +610,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                         ) : (
                           <>
                             <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${buyerStatus}`}
                               className="flex gap-4 w-full"
                             >
                               <div className="hidden sm:flex gap-4">
@@ -742,13 +748,16 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               >
                                 Add to cart
                               </Button>
-                              <Button
-                                onClick={() => handleReview(item.id)}
-                                variant="secondary"
-                                className=""
-                              >
-                                Leave a review
-                              </Button>
+                              {reviewState.hasReviewableItems && (
+                                <Button
+                                  disabled={!reviewState.canReview}
+                                  onClick={() => handleReview(item.id)}
+                                  variant="secondary"
+                                  className=""
+                                >
+                                  {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
+                                </Button>
+                              )}
                             </>
                           )}
 
@@ -847,7 +856,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
                           <div className="w-full hidden md:flex justify-center">
                             <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${item.buyer_status.toLowerCase()}`}
+                              href={`/dashboard/buyer/orders/${item.id}?mode=${buyerStatus}`}
                               className="text-c14 font-MontserratSemiBold text-ff715b"
                             >
                               Order details
