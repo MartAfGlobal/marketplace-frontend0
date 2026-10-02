@@ -162,7 +162,6 @@ export default function RejectOrderPage() {
       setRejecting(true);
       const payload = {
         rejection_reason_id: reason.id,
-        rejection_note: reason.name || "Out of stock for all items",
       };
 
       rejectOrder(
@@ -470,7 +469,6 @@ export default function RejectOrderPage() {
         result={resultModal.result}
         title={resultModal.title}
         message={resultModal.message}
-        onCancel={() => setResultModal((prev) => ({ ...prev, isOpen: false }))}
         buttenText="Back to orders"
         onConfirm={() => {
           setResultModal((prev) => ({ ...prev, isOpen: false }));
@@ -487,11 +485,11 @@ export default function RejectOrderPage() {
     result="warning"
     title="Are you sure?"
     message={isAllSelected 
-      ? "You are about to reject this entire order. This action cannot be undone."
+      ? "Rejecting this order takes effect immediately, restores the stock, and creates a seller-sourced refund for each item. This action cannot be undone."
       : "You are about to partially reject some items in this order."}
     onCancel={() => setShowWarningModal(false)}
     onConfirm={handleHandleResult}
-    buttenText="Proceed"
+    buttenText={isAllSelected ? "Reject order" : "Proceed"}
   />
 
   {/* Warehouse Modal */}

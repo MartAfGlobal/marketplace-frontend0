@@ -69,7 +69,7 @@ export default function AllOrderTable({
       dateValue: order.created_at || null,
       sku: order.items?.length > 1 ? "Multiple SKU" : (order.items?.[0]?.variation_sku || "N/A"),
       items: order.items?.length > 1 ? "Multiple items" : (order.items?.[0]?.product_name || "N/A"),
-      amount: order.subtotal ? `#${order.subtotal}` : "N/A",
+      amount: order.subtotal ? `#${order.subtotal}` : order.total_amount ? `#${order.total_amount}` : "N/A",
       perc: 0,
       stock: order.items?.reduce((acc, item) => acc + (item.quantity || 0), 0) || 0,
       realStatus,
@@ -195,15 +195,17 @@ export default function AllOrderTable({
     onSelectionChange?.(selectedObjects);
   }, [selectedRows, onSelectionChange]);
 
+
+  console.log("AllOrderTable rendered with filters:", filters, "and currentPage:", currentRows);
   return (
     <div className="w-full">
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col gap-4">
+      <div className="lg:hidden flex min-w-0 w-full flex-col gap-4">
         {currentRows.length > 0 ? (
           currentRows.map((row: any) => (
-            <div key={row.id} className="flex flex-col border-b border-gray-100 pb-6 mb-2">
+            <div key={row.id} className="flex min-w-0 w-full flex-col border-b border-gray-100 pb-6 mb-2">
               <div 
-                className="flex justify-between items-start mb-4 cursor-pointer"
+                className="flex min-w-0 justify-between items-start mb-4 cursor-pointer"
                 onClick={() => handleViewDetails(row.id)}
               >
                 <div className="flex flex-col">
@@ -218,11 +220,11 @@ export default function AllOrderTable({
                 </div>
               </div>
               
-              <div className="flex flex-col gap-0.5 text-c12">
-                <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
-                  <span className="text-00000 font-MontserratNormal">Items</span>
-                  <div className="flex flex-col items-end">
-                    <span className="font-MontserratSemiBold text-000000">{row.items}</span>
+              <div className="flex flex-col gap-0.5 text-c12 w-full">
+                <div className="flex min-w-0 w-full items-center justify-between bg-[#ffffff] px-4 py-2.5">
+                  <span className="w-[20%] shrink-0 font-MontserratNormal text-00000">Items</span>
+                  <div className="flex min-w-0 flex-1 flex-col items-end">
+                    <span className="block w-full truncate text-right font-MontserratSemiBold text-000000">{row.items}</span>
                     {row.realStatus.toLowerCase() === "partially accepted" && (
                       <span className="text-[10px] text-gray-400">
                         (Acc: {row.accepted_quantity}, Rej: {row.rejected_quantity})

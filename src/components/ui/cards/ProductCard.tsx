@@ -239,23 +239,25 @@ export default function ProductCard({ product }: ProductCardProps) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        // ⭐ Add animation on hover
+        
         whileHover={{ scale: 1.03, boxShadow: "0 8px 20px rgba(0,0,0,0.15)" }}
         whileTap={{ scale: 0.98 }}
         className="rounded-lg shadow-custom w-full min-w-0 h-[264.69px] pb-4 bg-ffffff overflow-hidden cursor-pointer"
       >
         {/* Product Image */}
         <div onClick={handleClick} className="relative h-[168.69px] w-full">
-          <Image
+         {productImage && <Image
             src={productImage}
-            alt={product.name || "Product name"}
+            alt={product.name.split(" ")[0] || "Product name"}
             fill
-            className="object-cover"
-          />
+            className="object-cover truncate"
+          />}
 
-          {product.inventory && product.inventory > 0 && (
+          {product.inventory && product.inventory > 0 ? (
             <span className="absolute top-4 left-4 font-MontserratSemiBold bg-[#FFAC06] text-[12px] text-white w-[71px] h-[32px] flex items-center justify-center rounded-[8px]">
               On sale
+            </span>): (<span className="absolute top-4 left-4 font-MontserratSemiBold bg-ca0202 text-[12px] text-white w-[71px] h-[32px] flex items-center justify-center rounded-[8px]">
+             All sold
             </span>
           )}
 
@@ -288,7 +290,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         <div className="flex items-end justify-between p-4 h-[96px] w-full 5">
           <div className="flex flex-col gap-1 max-w-[91.56px] ">
-            <p className="font-MontserratMedium text-[12px] w-full truncate text-[#161616]">
+            <p className="font-MontserratMedium  text-[12px] w-full max-w-[91.56px] truncate text-[#161616]">
               {product.name || "Product name"}
             </p>
 

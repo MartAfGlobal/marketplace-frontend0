@@ -83,6 +83,9 @@ export default function ItemAddToCart({
   // const variationId = selectedVariation?.variation_id;
 
   const selectedVariationId = selectedVariation?.id;
+  const isOutOfStock = Boolean(
+    selectedVariation && Number(selectedVariation.stock) <= 0,
+  );
 
   const existingCartItem = useSelector((state: RootState) =>
     selectedVariationId
@@ -109,6 +112,11 @@ export default function ItemAddToCart({
 
   const handleAddToCart = async () => {
     if (addToCartInFlight.current) return;
+
+    if (isOutOfStock) {
+      toast.error("This variation is out of stock");
+      return;
+    }
 
     if (!selectedVariationId) {
       if (onIncompleteVariation) {
@@ -503,7 +511,10 @@ export default function ItemAddToCart({
               productId={productId}
             />
           ) : (
-            <Button onClick={handleAddToCart} disabled={loading || addingToCart}>
+            <Button
+              onClick={handleAddToCart}
+              disabled={loading || addingToCart || isOutOfStock}
+            >
               {loading || addingToCart ? <LoadingSpinner /> : "Add to cart"}
             </Button>
           )}
@@ -548,7 +559,7 @@ export default function ItemAddToCart({
                 className="w-full"
                 variant="secondary"
                 onClick={handleAddToCart}
-                disabled={loading || addingToCart}
+                disabled={loading || addingToCart || isOutOfStock}
               >
                 {loading || addingToCart ? <LoadingSpinner /> : "Add to cart"}
               </Button>
@@ -574,7 +585,7 @@ export default function ItemAddToCart({
                 className="w-full"
                 variant="secondary"
                 onClick={handleAddToCart}
-                disabled={loading || addingToCart}
+                disabled={loading || addingToCart || isOutOfStock}
               >
                 {loading || addingToCart ? <LoadingSpinner color="border-ff715b" /> : "Add to cart"}
               </Button>

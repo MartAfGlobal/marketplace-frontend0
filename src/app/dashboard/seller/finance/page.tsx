@@ -10,8 +10,8 @@ export const metadata: Metadata = {
     title: "Seller Dashboard Finance | Manage Your Store",
     description:
       "Stay on top of your store’s earnings, withdrawals, and transaction history in your finance dashboard.",
-    url: "https://yourdomain.com/dashboard/seller/finance",
-    siteName: "Your Store",
+    url: "https://martaf.com/dashboard/seller/finance",
+    siteName: "martaf",
     type: "website",
   },
   twitter: {

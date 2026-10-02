@@ -267,20 +267,21 @@ const router = useRouter()
   return (
     <div className="mt-c32 w-full">
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col gap-6">
+      <div className="lg:hidden flex min-w-0 w-full flex-col gap-6">
         {currentRows.length > 0 && !isIncomplete ? (
           currentRows.map((row) => (
-            <div key={row.id} className="py-3 flex flex-col gap-3 justify-center border-b border-gray-100 last:border-0">
+            <div key={row.id} className="flex min-w-0 w-full flex-col justify-center gap-3 border-b border-gray-100 py-3 last:border-0">
               <div 
-                className="flex pl-4 items-center justify-between cursor-pointer"
+                className="flex min-w-0 w-full items-center justify-between pl-4 cursor-pointer"
                 onClick={() => setActiveRowId(activeRowId === row.id ? null : row.id)}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-gray-100">
                     <DraftItemImage row={row} width={40} height={40} />
                   </div>
                   <button
-                    className="font-MontserratSemiBold text-sm text-[#000000] cursor-pointer text-left"
+                    className="min-w-0 flex-1 truncate font-MontserratSemiBold text-sm text-[#000000] cursor-pointer text-left"
+                    title={row.name}
                     onClick={(e) => { e.stopPropagation(); handleViewDetails(row.id); }}
                   >
                     {row.name}
@@ -288,7 +289,7 @@ const router = useRouter()
                 </div>
                 <ChevronRight 
                   size={18} 
-                  className={`text-000000/40 transition-transform duration-200 ${activeRowId === row.id ? "rotate-90" : ""}`} 
+                  className={`ml-2 shrink-0 text-000000/40 transition-transform duration-200 ${activeRowId === row.id ? "rotate-90" : ""}`} 
                 />
               </div>
 

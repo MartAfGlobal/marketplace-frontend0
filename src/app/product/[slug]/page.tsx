@@ -1,81 +1,85 @@
-"use client";
+import type { Metadata } from "next";
+import ProductPageClient from "./ProductPageClient";
 
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/store/index";
-import { useParams } from "next/navigation";
+type ProductImageData =
+  | string
+  | {
+      url?: string;
+      large?: string;
+      medium?: string;
+      thumbnail?: string;
+    };
 
-import DetailPageNavbar from "@/components/ui/navigation/detail-page-nav";
+type ProductMetadataData = {
+  name?: string;
+  description?: string;
+  main_image?: ProductImageData;
+  images?: ProductImageData[];
+};
 
-import { useHttp } from "@/hooks/use-http";
-import { setProduct, clearProduct } from "@/store/productDetails/productDetailsSlice";
-import ProductVariation from "@/components/ui/DetailPage/productVariation";
-import ProductDetailsSkeleton from "@/components/reloadSpinner/ProductDetailsSkeleton";
-import { useSearchParams } from "next/navigation";
+type ProductPageProps = {
+  params: Promise<{ slug: string }>;
+};
 
-export default function ProductPage() {
-  const dispatch = useDispatch();
-  const params = useParams();
-  const slug = params?.slug as string;
-  const searchParams = useSearchParams();
-  const variationId = searchParams.get("variationId") || undefined;
+const getImageUrl = (image?: ProductImageData): string | undefined => {
+  const imagePath =
+    typeof image === "string"
+      ? image
+      : image?.url || image?.large || image?.medium || image?.thumbnail;
 
-  const { loading: loadingDetails, sendHttpRequest: fetchDetailsReq } =
-    useHttp();
+  if (!imagePath) return undefined;
 
-  useEffect(() => {
-    if (!slug) return;
+  try {
+    return new URL(imagePath, process.env.NEXT_PUBLIC_BACKEND_URL).toString();
+  } catch {
+    return undefined;
+  }
+};
 
-    // ✅ Clear old product immediately so stale data never renders
-    dispatch(clearProduct());
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-    fetchDetailsReq({
-      requestConfig: {
-        url: `/products/public/products/${slug}/`,
-        method: "GET",
-        userType: "buyer",
-      },
-      successRes: (res) => {
-        dispatch(setProduct(res.data));
-      },
-    });
-  }, [slug]);
-
-  const [selectedQty, setSelectedQty] = useState(1);
-
-  const productDetails = useSelector(
-    (state: RootState) => state.productDetails.product
-  );
-
-  // ✅ Show skeleton while product is null (cleared) or still loading
-  if (!productDetails || loadingDetails) {
-    return (
-      <main className="px-4 md:px-6 lg:pl-c60 lg:pr-[43.95px] pb-c32">
-        <ProductDetailsSkeleton />
-      </main>
-    );
+  if (!backendUrl) {
+    return { title: "Product | MartAf" };
   }
 
-  return (
-    <main className="px-4 md:px-6 lg:pl-c60 lg:pr-[43.95px] pb-c32 ">
-      <div className="hidden md:flex">
-        <DetailPageNavbar
-          productName={productDetails?.name || ""}
-          categoryName={productDetails?.category?.name || ""}
-          subCategoryName={productDetails?.category?.subcategory?.name || ""}
-          categorySlug={productDetails?.category?.slug || ""}
-          subCategorySlug={productDetails?.category?.subcategory?.slug || ""}
-        />
-      </div>
+  try {
+    const response = await fetch(
+      `${backendUrl.replace(/\/$/, "")}/products/public/products/${encodeURIComponent(slug)}/`,
+      { next: { revalidate: 60 } },
+    );
 
-      {/* Product main section */}
-      <div className="flex flex-col md:flex-row md:gap-c67 justify-center ">
-        <div className="flex flex-col gap-c32 w-full ">
-          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-12   md:border-b md:border-gray-200 h-fit pb-1.5 ">
-            <ProductVariation isModal={false} selectedVariaton={variationId} />
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+    if (!response.ok) {
+      return { title: "Product | MartAf" };
+    }
+
+    const product = (await response.json()) as ProductMetadataData;
+    const imageUrl = getImageUrl(product.main_image) || getImageUrl(product.images?.[0]);
+    const title = product.name ? `${product.name} | MartAf` : "Product | MartAf";
+    const description = product.description || `Shop ${product.name || "this product"} on MartAf.`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "website",
+        ...(imageUrl ? { images: [{ url: imageUrl, alt: product.name || "Product" }] } : {}),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        ...(imageUrl ? { images: [imageUrl] } : {}),
+      },
+    };
+  } catch {
+    return { title: "Product | MartAf" };
+  }
+}
+
+export default function ProductPage() {
+  return <ProductPageClient />;
 }

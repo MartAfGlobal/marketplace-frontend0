@@ -184,18 +184,18 @@ if (filters.perc) {
   return (
     <div className="mt-c32 w-full">
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col gap-6">
+      <div className="lg:hidden flex min-w-0 w-full flex-col gap-6">
         {currentRows.length > 0 && !isIncomplete ? (
           currentRows.map((row) => (
-            <div key={row.id} className="py-3 flex flex-col gap-3 justify-center border-b border-gray-100 last:border-0">
+            <div key={row.id} className="flex min-w-0 w-full flex-col justify-center gap-3 border-b border-gray-100 py-3 last:border-0">
               <div 
-                className="flex pl-4 items-center justify-between cursor-pointer"
+                className="flex min-w-0 w-full items-center justify-between pl-4 cursor-pointer"
                 onClick={() => setActiveRowId(activeRowId === row.id ? null : row.id)}
               >
-                <h3 className="font-MontserratSemiBold text-sm text-[#000000]">{row.name}</h3>
+                <h3 className="min-w-0 flex-1 truncate font-MontserratSemiBold text-sm text-[#000000]" title={row.name}>{row.name}</h3>
                 <ChevronRight 
                   size={18} 
-                  className={`text-000000/40 transition-transform duration-200 ${activeRowId === row.id ? "rotate-90" : ""}`} 
+                  className={`ml-2 shrink-0 text-000000/40 transition-transform duration-200 ${activeRowId === row.id ? "rotate-90" : ""}`} 
                 />
               </div>
               

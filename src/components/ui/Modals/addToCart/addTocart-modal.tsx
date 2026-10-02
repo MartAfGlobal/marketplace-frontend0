@@ -157,6 +157,7 @@ export default function AddCartModal({
                           <ProductVariation
                             isModal={true}
                             selectedVariaton={selectedVariationId}
+                            productSlug={productSlug}
                           />
                         </div>
                       </div>

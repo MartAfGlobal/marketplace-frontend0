@@ -40,7 +40,8 @@ import ImageWithSkeleton from "@/components/ui/ImageWithSkeleton";
 
 type ProductVariationProp = {
   isModal: boolean;
-  selectedVariaton?:string
+  selectedVariaton?: string;
+  productSlug?: string;
 };
 
  
@@ -119,7 +120,8 @@ const getThumbUrl = (thumb: any): string => {
 
 export default function ProductVariation({
   isModal = true,
-  selectedVariaton
+  selectedVariaton,
+  productSlug,
 }: ProductVariationProp) {
   const productDetails = useSelector(
     (state: RootState) => state.productDetails.product
@@ -349,6 +351,21 @@ const dispatch = useDispatch() as AppDispatch;
     // Scroll to variation section if needed
     scrollToVariations();
   }, [selectedVariaton, productDetails]);
+
+  useEffect(() => {
+    const variations = productDetails?.variations;
+    if (
+      !variations ||
+      variations.length !== 1 ||
+      (productSlug && productDetails.slug !== productSlug)
+    ) {
+      return;
+    }
+
+    const onlyVariation = variations[0];
+    setSelectedAttributes(onlyVariation.attribute_summary || {});
+    setSelectedVariation(onlyVariation);
+  }, [productDetails, productSlug, selectedVariaton]);
 
   useEffect(() => {
     if (!subCategorySlug) return;
@@ -958,7 +975,7 @@ const dispatch = useDispatch() as AppDispatch;
                           {productDetails?.seller?.address?.state || productDetails?.seller?.company_address?.state || "Suppliers Location"}
                         </p>
                       </div>
-                      <div className="md:hidden flex gap-2 items-center">
+                      {/* <div className="md:hidden flex gap-2 items-center">
                         <div className="w-5 h-5">
                           <Image
                             src={phone}
@@ -970,7 +987,7 @@ const dispatch = useDispatch() as AppDispatch;
                         <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
                           +234 80312345678
                         </p>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
@@ -1078,14 +1095,14 @@ const dispatch = useDispatch() as AppDispatch;
                       {productDetails?.seller?.address?.state || productDetails?.seller?.company_address?.state || "Suppliers Location"}
                     </p>
                   </div>
-                  <div className="md:hidden flex gap-2 items-center">
+                  {/* <div className="md:hidden flex gap-2 items-center">
                     <div className="w-5 h-5">
                       <Image src={phone} alt="phone" width={20} height={20} />
                     </div>
                     <p className="font-MontserratMedium text-c12 text-161616 pt-1 pb-2">
                       +234 80312345678
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

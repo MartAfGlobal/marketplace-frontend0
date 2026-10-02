@@ -68,10 +68,10 @@ export default function CategoryRankingTable({
             {displayedData.map((item, index) => (
               <div
                 key={index}
-                className="py-3 flex flex-col gap-3 justify-center  px-4  border-b border-gray-100  last:border-0"
+                className="flex min-w-0 w-full flex-col justify-center gap-3 border-b border-gray-100 px-4 py-3 last:border-0"
               >
-                <div className="">
-                  <span className="font-MontserratBold text-sm text-000000">
+                <div className="min-w-0 w-full">
+                  <span className="block max-w-full truncate font-MontserratBold text-sm text-000000" title={item.category}>
                     {item.category}
                   </span>
                 </div>

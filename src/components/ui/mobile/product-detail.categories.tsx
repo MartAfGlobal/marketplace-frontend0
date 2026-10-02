@@ -9,8 +9,6 @@ import { motion, Variants } from "framer-motion";
 import CartRight from "@/assets/mobile/CaretRight.png";
 import YellowStar from "@/assets/icons/Star1.svg";
 import Star from "@/assets/icons/Star2.svg";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 
 interface ProductProps {
   ProductDetail: ProductDetail | null;
@@ -24,35 +22,39 @@ export default function ProductDetailCategory({
   const router = useRouter();
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [hasOpenedRatings, setHasOpenedRatings] = useState(false);
-  const productDetails = useSelector(
-    (state: RootState) => state.productDetails.product
-  );
 
   const Categories: CategoryD[] = [
     {
       name: "Product details",
-      subcategories: productDetails?.description,
+      subcategories: ProductDetail?.description || "No product details available.",
     },
     {
       name: "Product Specifications",
       subcategories: (
-        <div className="text-161616 space-y-4">
-          <div className="font-MontserratSemiBold text-sm space-y-2">
-            {ProductDetail?.specifications &&
-            ProductDetail.specifications.length > 0 ? (
-              <ul className="list-disc pl-5 space-y-3">
-                {ProductDetail.specifications.map((spec: any) => (
-                  <li key={spec.id} className="text-sm text-gray-700">
-                    {spec.title}: {spec.value}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-gray-500">
-                No specifications available.
-              </p>
-            )}
-          </div>
+        <div className="max-w-full space-y-3 text-sm text-161616">
+          {ProductDetail?.specifications_html ? (
+            <div
+              className="max-w-full overflow-x-auto break-words font-MontserratNormal [&_img]:h-auto [&_img]:max-w-full"
+              dangerouslySetInnerHTML={{
+                __html: ProductDetail.specifications_html,
+              }}
+            />
+          ) : ProductDetail?.specifications_text ? (
+            <p className="whitespace-pre-wrap break-words font-MontserratNormal">
+              {ProductDetail.specifications_text}
+            </p>
+          ) : ProductDetail?.specifications?.length ? (
+            <ul className="list-disc space-y-3 pl-5 font-MontserratNormal">
+              {ProductDetail.specifications.map((spec) => (
+                <li key={spec.id} className="break-words text-gray-700">
+                  <span className="font-MontserratSemiBold">{spec.title}:</span>{" "}
+                  {spec.text}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500">No specifications available.</p>
+          )}
         </div>
       ),
     },
@@ -62,14 +64,14 @@ export default function ProductDetailCategory({
         <div className="space-y-4.5">
           <div className="mt-3 flex items-center gap-3">
             <p className="font-MontserratMedium text-base text-161616">
-              {productDetails?.rating_average}/5
+              {ProductDetail?.rating_average ?? 0}/5
             </p>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Image
                   key={i}
                   src={
-                    i <= Math.floor(Number(ProductDetail?.rating_average))
+                    i <= Math.floor(Number(ProductDetail?.rating_average ?? 0))
                       ? YellowStar
                       : Star
                   }

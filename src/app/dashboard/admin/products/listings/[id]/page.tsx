@@ -54,6 +54,8 @@ export default function ProductDetailsPage({
       (state as any).adminProductDetail?.product as AdminProductDetail | null
   );
 
+
+
   useEffect(() => {
     if (token) {
       // ✅ Clear stale product immediately so old images never flash
@@ -104,6 +106,10 @@ export default function ProductDetailsPage({
     if (url && !galleryUrls.includes(url)) galleryUrls.push(url);
   });
   const images = galleryUrls;
+
+
+  
+
 
   // Product variants come only from the API response.
   const variants = product?.variations?.length

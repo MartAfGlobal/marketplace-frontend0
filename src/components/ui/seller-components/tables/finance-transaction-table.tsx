@@ -155,15 +155,15 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
             return (
               <div
                 key={rowId}
-                className="py-3 flex flex-col gap-3 justify-center border-b border-gray-100 last:border-0"
+                className="flex min-w-0 w-full flex-col justify-center gap-3 border-b border-gray-100 py-3 last:border-0"
               >
                 {/* Header item */}
                 <div className="flex pl-1 pr-1 items-center justify-between">
                   <div
-                    className="flex flex-col cursor-pointer flex-1"
+                    className="flex min-w-0 flex-1 flex-col cursor-pointer"
                     onClick={() => handleOpenDetails(row)}
                   >
-                    <span className="font-MontserratSemiBold text-sm text-[#000000]">
+                    <span className="block min-w-0 max-w-full truncate font-MontserratSemiBold text-sm text-[#000000]" title={row.transaction_id}>
                       {row.transaction_id}
                     </span>
                     <span className="font-MontserratNormal text-[11px] text-[#000000]/50 mt-0.5">
@@ -210,7 +210,7 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
                         {Boolean(row.category) && (
                           <div className="flex justify-between items-center">
                             <span className="text-[#000000]/60">Category:</span>
-                            <span className="font-MontserratSemiBold text-[#000000]">
+                            <span className="min-w-0 max-w-[65%] truncate text-right font-MontserratSemiBold text-[#000000]">
                               {row.category as string}
                             </span>
                           </div>
@@ -218,7 +218,7 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
                         {Boolean(row.reference) && (
                           <div className="flex justify-between items-center">
                             <span className="text-[#000000]/60">Reference:</span>
-                            <span className="font-MontserratMedium text-[#000000] truncate max-w-[180px]">
+                            <span className="min-w-0 max-w-[65%] truncate text-right font-MontserratMedium text-[#000000]">
                               {row.reference as string}
                             </span>
                           </div>
@@ -255,7 +255,7 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
 
                 {/* Alternating Striped Rows */}
                 <div className="flex flex-col gap-0.5">
-                  <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
+                  <div className="flex min-w-0 justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
                     <span className="text-[#000000] font-MontserratNormal text-c12">Date &amp; time</span>
                     <span className="font-MontserratMedium text-[#666666] text-xs">
                       {formatDate((row.created_at || row.date) as string)}
@@ -293,14 +293,14 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
                   </div>
                   <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
                     <span className="text-[#000000] font-MontserratNormal text-c12">Linked entity</span>
-                    <span className="font-MontserratSemiBold text-[#000000] text-xs">
+                    <span className="min-w-0 max-w-[65%] truncate text-right font-MontserratSemiBold text-[#000000] text-xs">
                       {((row.linked_entity || row.linked_entity_type) as string) ?? "—"}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
+                  <div className="flex min-w-0 justify-between items-center bg-[#ffffff] px-4 py-2.5">
                     <span className="text-[#000000] font-MontserratNormal text-c12">Description</span>
                     <span
-                      className="font-MontserratMedium text-[#666666] text-xs text-right max-w-[200px] truncate"
+                      className="min-w-0 max-w-[65%] truncate text-right font-MontserratMedium text-[#666666] text-xs"
                       title={(row.description as string) || "—"}
                     >
                       {(row.description as string) ?? "—"}

@@ -346,11 +346,11 @@ export default function SellerProductDetailsPage() {
   /* ------------------------- UI ------------------------- */
   return (
     <div>
-      <SellerMobileHeader 
+      <SellerMobileHeader  showBorder ={false}  showBackButton={true}
         title={productDetails.name || "Product Details"} 
       />
 
-      <div className="w-full flex lg:flex-row flex-col lg:items-start justify-center gap-c48 bg-ffffff circle-shadow rounded-c16 py-6 px-6 lg:px-8 relative mt-6 lg:mt-0">
+      <div className="w-full flex lg:flex-row flex-col lg:items-start justify-center gap-c48 bg-ffffff circle-shadow rounded-c16 p-6 lg:p-8 relative mt-6 lg:mt-0">
         {/* Mobile View Layout (reorganized) */}
         <div className="lg:hidden w-full flex flex-col  gap-8">
           <ProductImageGallery

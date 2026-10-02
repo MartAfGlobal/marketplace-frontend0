@@ -11,17 +11,19 @@ import { useSelector } from "react-redux";
 
 interface SecondChatProps {
   title?: string;
+  externalPeriod?: string;
 }
 
 const filterOptions = ["This Week", "This Month", "This Year"];
 const COLORS = ["#947FFF", "#6A0DAD", "#947FFF80", "#6A0DAD80", "#E1D5FF"];
 const lightGray = "#f3f4f6";
 
-export default function SecondChat({ title = "Orders" }: SecondChatProps) {
+export default function SecondChat({ title = "Orders", externalPeriod }: SecondChatProps) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
   const orders = useSelector((state: any) => state.orders.orders);
 
   const [selected, setSelected] = useState(filterOptions[2]);
+  const activePeriod = externalPeriod ?? selected;
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -56,10 +58,10 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
 
     const filtered = sortedOrders.filter((order: any) => {
       const d = new Date(order.created_at);
-      if (selected === "This Week") {
+      if (activePeriod === "This Week") {
         return (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24) <= 7;
       }
-      if (selected === "This Month") {
+      if (activePeriod === "This Month") {
         return (
           d.getMonth() === now.getMonth() &&
           d.getFullYear() === now.getFullYear()
@@ -117,7 +119,7 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
       value: categoryMap[cat] || 0,
       color: COLORS[i % COLORS.length],
     }));
-  }, [orders, selected]);
+  }, [orders, activePeriod]);
 
   const equalSlices = segments.map((seg) => ({ ...seg, renderValue: 1 }));
   const hasData = segments.length > 0;
@@ -129,14 +131,14 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
           <div className="flex justify-between  items-center mb-4 lg:mb-6 px-1 lg:px-8 lg:pt-6 lg:bg-ffffff lg:rounded-t-c16 lg:shadow-none">
             <h2 className="text-base lg:text-lg  md:font-MontserratSemiBold text-000000">{title}</h2>
 
-            <div className="relative">
+            {externalPeriod === undefined && <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 disabled={isIncomplete}
                 className="flex circle-shadow text-[10px] lg:text-c12 font-MontserratNormal text-ff715b bg-ffffff items-center w-fit p-2 lg:p-3 rounded-xl justify-center flex-shrink-0 gap-2 lg:gap-4.5 h-8 lg:h-10 border border-gray-100"
               >
-                <span>{selected}</span>
+                <span>{activePeriod}</span>
                 <Image
                   src={CaretDown}
                   alt="filter"
@@ -145,7 +147,7 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
                   className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                 />
               </button>
-            </div>
+            </div>}
           </div>
 
           <div className="w-full h-auto lg:h-[calc(100%-80px)] py-6 px-5 lg:px-8 bg-ffffff circle-shadow rounded-c16 lg:rounded-t-none lg:shadow-none lg:bg-transparent">
@@ -208,13 +210,13 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
           <div className="flex justify-between items-center mb-4 lg:mb-6 px-1 lg:px-8 lg:pt-6 ">
             <h2 className="text-c18 lg:text-lg font-MontserratMedium md:font-MontserratSemiBold text-000000">{title}</h2>
 
-            <div className="relative" ref={dropdownRef}>
+            {externalPeriod === undefined && <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex circle-shadow text-c14 lg:text-c12 font-MontserratNormal text-ff715b bg-ffffff items-center w-fit p-2 lg:p-3 rounded-xl justify-center flex-shrink-0 gap-2 lg:gap-4.5 h-8 lg:h-10 border border-gray-100"
               >
-                <span className="">{selected}</span>
+                <span className="">{activePeriod}</span>
                 <Image
                   src={CaretDown}
                   alt="filter"
@@ -248,7 +250,7 @@ export default function SecondChat({ title = "Orders" }: SecondChatProps) {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </div>}
           </div>
 
           <div className="w-full h-auto lg:h-[calc(100%-80px)] py-6 px-5 lg:px-8 bg-ffffff  rounded-c16 lg:rounded-t-none lg:shadow-none lg:bg-transparent">

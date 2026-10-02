@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     title: "Seller Sign Up | MARTAF",
     description:
       "Join MARTAF as a seller and expand your business online. Register now to manage your store and reach more buyers.",
-    url: "https://yourdomain.com/seller/sign-up", // update with real domain
+    url: "https://martaf.com/seller/sign-up", // update with real domain
     siteName: "MARTAF",
     images: [
       {

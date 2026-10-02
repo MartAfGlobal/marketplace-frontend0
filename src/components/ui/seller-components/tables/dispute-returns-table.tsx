@@ -132,18 +132,18 @@ export default function DisputeTable({
   };
 
   return (
-    <div className="mt-c32 w-full min-h-[400px] overflow-x-auto">
+    <div className="mt-c32 w-full min-h-[400px] lg:overflow-x-auto">
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col gap-4">
+      <div className="lg:hidden flex min-w-0 w-full flex-col gap-4">
         {currentRows.length > 0 ? (
           currentRows.map((row: any) => (
-            <div key={row.id} className="flex flex-col border-b border-gray-100 pb-6 mb-2">
+            <div key={row.id} className="flex min-w-0 w-full flex-col border-b border-gray-100 pb-6 mb-2">
               <div 
                 className="flex justify-between items-start mb-4 cursor-pointer"
                 onClick={() => router.push(`/dashboard/seller/orders/dispute-details/${row.id}`)}
               >
-                <div className="flex flex-col">
-                  <span className="font-MontserratSemiBold text-sm text-[#000000]">{row.orderid}</span>
+                <div className="flex min-w-0 flex-col">
+                  <span className="max-w-full truncate font-MontserratSemiBold text-sm text-[#000000]" title={row.orderid}>{row.orderid}</span>
                   <span className="font-MontserratNormal text-[10px] text-000000/50 mt-1">{new Date(row.date).toLocaleDateString("en-GB")}</span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -154,14 +154,14 @@ export default function DisputeTable({
                 </div>
               </div>
               
-              <div className="flex flex-col gap-0.5 text-c12">
+              <div className="flex min-w-0 flex-col gap-0.5 text-c12">
                 <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
                   <span className="text-00000 font-MontserratNormal">Items</span>
-                  <span className="font-MontserratSemiBold text-000000">{row.items}</span>
+                  <span className="min-w-0 max-w-[65%] truncate text-right font-MontserratSemiBold text-000000" title={row.items}>{row.items}</span>
                 </div>
                 <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5 rounded">
                   <span className="text-00000 font-MontserratNormal">Type</span>
-                  <span className="font-MontserratSemiBold text-000000">{row.type}</span>
+                  <span className="min-w-0 max-w-[65%] truncate text-right font-MontserratSemiBold text-000000" title={row.type}>{row.type}</span>
                 </div>
                 <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
                   <span className="text-00000 font-MontserratNormal">Amount</span>
@@ -169,7 +169,7 @@ export default function DisputeTable({
                 </div>
                 <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5 rounded">
                   <span className="text-00000 font-MontserratNormal">Initiated by</span>
-                  <span className="font-MontserratSemiBold text-000000">{row.initiatedBy}</span>
+                  <span className="min-w-0 max-w-[65%] truncate text-right font-MontserratSemiBold text-000000" title={row.initiatedBy}>{row.initiatedBy}</span>
                 </div>
                 <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5 rounded">
                   <span className="text-00000 font-MontserratNormal">Status</span>

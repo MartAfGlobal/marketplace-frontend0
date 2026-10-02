@@ -164,13 +164,13 @@ export default function ProductListPage() {
         </>
       ) : (
         <>
-          {todayProduct.length > 0 && (
+          {/* {todayProduct.length > 0 && (
             <ProductSection
               title="Today’s deals"
               products={todayProduct}
               searchKey="created_today=true"
             />
-          )}
+          )} */}
 
           {trending.length > 0 && (
             <ProductSection

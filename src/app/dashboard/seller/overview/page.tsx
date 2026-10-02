@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     description:
       "Quick insights into your sales, orders, products, and customers — all in one overview dashboard.",
     url: "https://martarf.com/dashboard/seller/overview",
-    siteName: "Your Store",
+    siteName: "martaf",
     type: "website",
   },
   twitter: {

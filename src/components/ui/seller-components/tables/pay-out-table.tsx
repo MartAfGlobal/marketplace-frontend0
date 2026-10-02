@@ -188,14 +188,14 @@ export default function PayOutTable({
           currentRows.map((row) => (
             <div
               key={row.id}
-              className="py-3 flex flex-col gap-3 justify-center border-b border-gray-100 last:border-0"
+              className="flex min-w-0 w-full flex-col justify-center gap-3 border-b border-gray-100 py-3 last:border-0"
             >
               <div className="flex pl-1 pr-1 items-center justify-between">
                 <div
-                  className="flex flex-col cursor-pointer flex-1"
+                  className="flex min-w-0 flex-1 flex-col cursor-pointer"
                   onClick={() => handleOpenDetails(row)}
                 >
-                  <span className="font-MontserratSemiBold text-sm text-[#000000]">
+                  <span className="block min-w-0 max-w-full truncate font-MontserratSemiBold text-sm text-[#000000]" title={row.transactionid}>
                     {row.transactionid}
                   </span>
                   <span className="font-MontserratNormal text-[11px] text-[#000000]/50 mt-0.5">
@@ -237,12 +237,12 @@ export default function PayOutTable({
                 </div>
                 <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
                   <span className="text-[#000000] font-MontserratNormal text-c12">Withdrawn to</span>
-                  <span className="font-MontserratSemiBold text-[#000000] text-xs">{row.withdrawnTo}</span>
+                  <span className="min-w-0 max-w-[65%] truncate text-right font-MontserratSemiBold text-[#000000] text-xs" title={row.withdrawnTo}>{row.withdrawnTo}</span>
                 </div>
                 <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
                   <span className="text-[#000000] font-MontserratNormal text-c12">Description</span>
                   <span
-                    className="font-MontserratMedium text-[#666666] text-xs text-right max-w-[200px] truncate"
+                    className="min-w-0 max-w-[65%] truncate text-right font-MontserratMedium text-[#666666] text-xs"
                     title={row.description}
                   >
                     {row.description}

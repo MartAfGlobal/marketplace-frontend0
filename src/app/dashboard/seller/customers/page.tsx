@@ -10,8 +10,8 @@ export const metadata: Metadata = {
     title: "Seller Dashboard Customers | Manage Your Store",
     description:
       "Access customer data, monitor activity, and manage relationships directly from your seller customers dashboard.",
-    url: "https://yourdomain.com/dashboard/seller/customers",
-    siteName: "Your Store",
+    url: "https://martaf.com/dashboard/seller/customers",
+    siteName: "martaf",
     type: "website",
   },
   twitter: {

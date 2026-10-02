@@ -509,7 +509,7 @@ const cancelProductRequest = (type: "activation" | "deactivation") => {
 
   const rejectOrder = (
     orderId: string,
-    payload: { rejection_reason_id: string; rejection_note: string },
+    payload: { rejection_reason_id: string },
     callback?: (data: any) => void,
     errorCallback?: (err: any) => void
   ) => {

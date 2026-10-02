@@ -143,7 +143,7 @@ export default function ProductActions({
       </div>
 
       {/* --- DESKTOP VIEW --- */}
-      <div className="hidden lg:flex w-full flex-wrap justify-end gap-3 items-center">
+      <div className="hidden md:flex w-full  justify-end gap-3 items-center">
         {!published && (
           <button
             onClick={handleDeleteDraft}
@@ -157,18 +157,7 @@ export default function ProductActions({
           </button>
         )}
 
-          {(
-          (!published) ||
-          (published &&
-           productDetails.can_edit)
-        ) && (
-          <Button variant="primary"
-            onClick={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}${!published ? '?isPublish=false' : ''}`)}
-            className="w-full "
-          >
-            Edit product
-          </Button>
-        )}
+          
 
         {published &&
         productDetails.is_active &&
@@ -214,7 +203,7 @@ export default function ProductActions({
           !productDetails.activation_requested &&
           !productDetails.deactivation_requested &&
           productDetails.is_approved === "pending" ? (
-          <p className="text-ff715b font-MontserratSemiBold text-sm text-right">
+          <p className="w-full text-ff715b font-MontserratSemiBold text-sm text-left">
             Pending approval
           </p>
         )
@@ -222,14 +211,14 @@ export default function ProductActions({
           !productDetails.activation_requested &&
           !productDetails.deactivation_requested &&
           productDetails.is_approved === "pending_update" ? (
-          <p className="text-ff715b font-MontserratSemiBold text-sm text-right">
+          <p className="w-full text-ff715b font-MontserratSemiBold text-sm text-left">
             Pending update
           </p>)
         : published &&
           !productDetails.activation_requested &&
           !productDetails.deactivation_requested &&
           productDetails.is_approved === "rejected" ? (
-          <p className="text-ca0202 font-MontserratSemiBold text-sm text-right">
+          <p className="text-ca0202 font-MontserratSemiBold text-sm text-left w-full">
             Rejected
           </p>): (
           !published && (
@@ -243,6 +232,20 @@ export default function ProductActions({
               {submiting ? <LoadingSpinner /> : "Submit for review"}
             </Button>
           )
+          
+        )}
+
+        {(
+          (!published) ||
+          (published &&
+           productDetails.can_edit)
+        ) && (
+          <Button variant="primary"
+            onClick={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}${!published ? '?isPublish=false' : ''}`)}
+            className="w-full "
+          >
+            Edit product
+          </Button>
         )}
       </div>
     </>

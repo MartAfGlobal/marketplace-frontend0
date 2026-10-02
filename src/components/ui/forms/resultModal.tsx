@@ -170,7 +170,7 @@ export default function ResultModal({
                 <button
                   type="button"
                   aria-label="Close dialog"
-                  className="h-6 w-6 absolute z-50 right-4 top-13.25"
+                  className="h-6 w-6 absolute z-50 right-4 top-4"
                   onClick={onCancel}
                 >
                   <Image
@@ -242,11 +242,11 @@ export default function ResultModal({
 
               {/* BUTTONS */}
               <div className="flex justify-center gap-2 mt-c24 ">
-                {onCancel && result === "warning" && (
+                {/* {onCancel && result === "warning" && (
                   <Button variant="secondary" onClick={onCancel}>
                     Cancel
                   </Button>
-                )}
+                )} */}
 
                 {onSecondaryAction && secondaryButtonText && (
                   <Button variant="secondary" onClick={onSecondaryAction} disabled={loading}>

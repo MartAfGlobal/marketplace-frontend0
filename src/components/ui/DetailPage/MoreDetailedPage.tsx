@@ -19,13 +19,7 @@ import CartBtn from "@/assets/mobile/cart.png";
 
 type RatingKey = 1 | 2 | 3 | 4 | 5;
 
-interface ReviewOverview {
-  name: string;
-  date: string;
-  rating: number;
-  text: string;
-  country?: string;
-}
+
 interface ProductProps {
   ProductDetail: ProductDetail | null;
 }
@@ -33,6 +27,8 @@ interface ProductProps {
 export default function MoreDetailedPage({ProductDetail}:ProductProps) {
   const dispatch = useDispatch();
 
+
+  console.log("products details", ProductDetail)
  
 
   const [activeRating, setActiveRating] = useState<RatingKey | null>(null);
@@ -97,8 +93,7 @@ export default function MoreDetailedPage({ProductDetail}:ProductProps) {
             Product details
           </h2>
           <p className="text-base font-MontserratNormal text-[#1a1a1a] leading-relaxed">
-            {ProductDetail.description ||
-              "New range of formal shirts are designed keeping you in mind. With fits and styling that will make you stand apart."}
+            {ProductDetail.description || "No description available for this product."}
           </p>
 
           
@@ -107,21 +102,37 @@ export default function MoreDetailedPage({ProductDetail}:ProductProps) {
 
       {/* ================= PRODUCT SPECIFICATIONS ================= */}
       <section id="specifications" className="mb-8">
-        <h3 className="font-MontserratSemiBold text-base mb-6">
+        <h3 className="font-MontserratSemiBold text-base mb-3">
           Product specifications
         </h3>
-        {ProductDetail.specifications &&
-        ProductDetail.specifications.length > 0 ? (
-          <ul className="list-disc pl-5 space-y-3">
-            {ProductDetail.specifications.map((spec: any) => (
-              <li key={spec.id} className="text-sm text-gray-700">
-                {spec.title}: {spec.value}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-gray-500">No specifications available.</p>
-        )}
+        {ProductDetail?.specifications_html &&
+       
+         <div className="mb-6">
+            
+            {ProductDetail?.specifications_html ? (
+              <div
+                className="text-base font-MontserratNormal text-[#1a1a1a] leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: ProductDetail.specifications_html }}
+              />
+            ) : ProductDetail?.specifications_text ? (
+              <p className="text-base font-MontserratNormal text-[#1a1a1a] leading-relaxed whitespace-pre-line">
+                {ProductDetail.specifications_text}
+              </p>
+            ) : Array.isArray(ProductDetail?.specifications) && ProductDetail.specifications.length > 0 ? (
+              <div className="space-y-1">
+                {ProductDetail.specifications.map((spec: any, idx: number) => (
+                  <div key={idx} className="flex text-base font-MontserratNormal text-[#1a1a1a] leading-relaxed">
+                    <span className="font-MontserratMedium mr-2">{spec.name || spec.key}:</span>
+                    <span>{spec.value || spec.val}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs font-MontserratNormal">
+                No specifications available for this product.
+              </p>
+            )}
+          </div>}
       </section>
 
       {/* ================= REVIEWS SECTION ================= */}

@@ -10,8 +10,8 @@ export const metadata: Metadata = {
     title: "Seller Dashboard Orders | Manage Your Store",
     description:
       "Easily manage customer orders, track progress, and process shipments directly from your seller dashboard.",
-    url: "https://yourdomain.com/dashboard/seller/orders",
-    siteName: "Your Store",
+    url: "https://martaf.com/dashboard/seller/orders",
+    siteName: "martaf",
     type: "website",
   },
   twitter: {

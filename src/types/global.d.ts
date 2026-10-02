@@ -411,6 +411,8 @@ export interface ProductDetail {
 
   features: Feature[];
   specifications: Specification[];
+  specifications_text?: string | null;
+  specifications_html?: string | null;
 }
 
 export interface SpecificationData {
@@ -1600,6 +1602,7 @@ export interface SellerOrderResult {
   time_remaining_to_accept: number;
   time_remaining_to_fulfill: number | null;
   updated_at: string;
+  total_amount: string;
 }
 
 export interface AdminBuyerData {
