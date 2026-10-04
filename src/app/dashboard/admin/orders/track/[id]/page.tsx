@@ -142,7 +142,7 @@ export default function AdminTrackOrderPage() {
     order?.order_number ||
     order?.id ||
     rawId ||
-    "N/A";
+    "Not set";
 
   const orderDate = order?.created_at
     ? new Date(order.created_at).toLocaleDateString("en-US", {
@@ -150,7 +150,7 @@ export default function AdminTrackOrderPage() {
         day: "numeric",
         year: "numeric",
       })
-    : order?.date || "N/A";
+    : order?.date || "Not set";
 
   const estimatedDeliveryDate = order?.estimated_delivery
     ? new Date(order.estimated_delivery).toLocaleDateString("en-US", {
@@ -197,7 +197,7 @@ export default function AdminTrackOrderPage() {
     "Buyer";
 
   const buyerEmail =
-    buyer?.email || shippingInfo?.email || order?.buyer_email || "N/A";
+    buyer?.email || shippingInfo?.email || order?.buyer_email || "Not set";
 
   const buyerPhone =
     shippingInfo?.phone ||
@@ -206,7 +206,7 @@ export default function AdminTrackOrderPage() {
     buyer?.phone_number ||
     order?.delivery_address?.phone ||
     order?.delivery_address?.phone_number ||
-    "N/A";
+    "Not set";
 
   const buyerAddress =
     [
@@ -219,7 +219,7 @@ export default function AdminTrackOrderPage() {
       .join(", ") ||
     order?.delivery_address?.address ||
     order?.shipping_address?.address ||
-    "N/A";
+    "Not set";
 
   const buyerAvatar =
     buyer?.avatar || buyer?.profile_picture || buyer?.image || "";
@@ -236,7 +236,7 @@ export default function AdminTrackOrderPage() {
       .join(", ") ||
     order?.shipping_address?.address ||
     order?.delivery_address?.address ||
-    "N/A";
+    "Not set";
 
   const shippingMethod =
     order?.shipping_method ||
@@ -248,7 +248,7 @@ export default function AdminTrackOrderPage() {
     order?.tracking_no ||
     order?.parcel_id ||
     rawId ||
-    "N/A";
+    "Not set";
 
   // Seller Info
   const firstSellerOrder =
@@ -518,7 +518,7 @@ export default function AdminTrackOrderPage() {
 
   /* ── handlers ── */
   const handleCopyOrderId = () => {
-    if (!displayOrderId || displayOrderId === "N/A") return;
+    if (!displayOrderId || displayOrderId === "Not set") return;
     navigator.clipboard.writeText(displayOrderId).then(() => {
       setCopiedOrder(true);
       setTimeout(() => setCopiedOrder(false), 2000);

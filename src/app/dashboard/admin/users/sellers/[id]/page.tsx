@@ -88,7 +88,7 @@ export default function AdminSellerDetailsPage() {
             {parentCategory}
           </button>
           <ChevronRight className="text-000000/44 w-4 h-4 px-[2.5px]" />
-          <span className="font-MontserratSemiBold">
+          <span className="font-MontserratSemiBold w-full truncate" title={seller?.company_name || "Not set"}>
             {seller?.company_name}
           </span>
         </div>

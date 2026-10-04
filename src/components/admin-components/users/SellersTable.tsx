@@ -184,7 +184,7 @@ export default function SellersTable({
                     className="block max-w-[190px] truncate"
                     title={row.company_name}
                   >
-                    {row.company_name}
+                    {row.company_name || "Not set"}
                   </span>
                 </td>
                 <td className="p-3 text-gray-500 capitalize">
@@ -209,13 +209,13 @@ export default function SellersTable({
                     title={
                       row.location ||
                       row.company_country_name ||
-                      "N/A"
+                      "Not set"
                     }
                   >
                     {truncateText(
                       row.location ||
                         row.company_country_name ||
-                        "N/A",
+                        "Not set",
                     )}
                   </span>
                 </td>

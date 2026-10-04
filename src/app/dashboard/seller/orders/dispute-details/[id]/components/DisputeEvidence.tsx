@@ -17,7 +17,7 @@ export const DisputeEvidence = ({ dispute }: DisputeEvidenceProps) => {
             <span className="text-gray-900 font-MontserratSemiBold">
               Buyer&apos;s Claim:
             </span>{" "}
-            {dispute.cancellation_reason_title || dispute.reason || "N/A"}
+            {dispute.cancellation_reason_title || dispute.reason || "Not set"}
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export const DisputeEvidence = ({ dispute }: DisputeEvidenceProps) => {
             <span className="text-gray-900 font-MontserratSemiBold">
               Buyer&apos;s Claim:
             </span>{" "}
-            {dispute.cancellation_reason_title || dispute.reason || "N/A"}
+            {dispute.cancellation_reason_title || dispute.reason || "Not set"}
           </p>
         </div>
 

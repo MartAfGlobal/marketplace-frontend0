@@ -199,7 +199,7 @@ export default function AdminCategoriesPage() {
           const dateStr =
             d && !isNaN(d.getTime())
               ? d.toLocaleDateString("en-GB")
-              : "N/A";
+              : "Not set";
 
           const imageUrl = resolveImageUrl(sub.image_url ?? sub.image);
 
@@ -322,7 +322,7 @@ export default function AdminCategoriesPage() {
       console.log("=== Attribute Details API Response ===", data);
 
       const fmtDate = (raw: string | undefined) => {
-        if (!raw) return "N/A";
+        if (!raw) return "Not set";
         const d = new Date(raw);
         return isNaN(d.getTime()) ? raw : d.toLocaleDateString("en-US");
       };

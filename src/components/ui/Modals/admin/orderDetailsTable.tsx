@@ -47,7 +47,7 @@ export default function OrderDetailsTable({ items = [] }: OrderDetailsTableProps
   );
 
   const getItemSku = (item: OrderDetailItem) => {
-    return item.sku || item.product_sku || item.product?.sku || "N/A";
+    return item.sku || item.product_sku || item.product?.sku || "Not set";
   };
 
   const getItemName = (item: OrderDetailItem) => {
@@ -57,7 +57,7 @@ export default function OrderDetailsTable({ items = [] }: OrderDetailsTableProps
       item.product_name ||
       item.product?.title ||
       item.product?.name ||
-      "N/A"
+      "Not set"
     );
   };
 
@@ -78,12 +78,12 @@ export default function OrderDetailsTable({ items = [] }: OrderDetailsTableProps
     if (raw != null && raw !== "" && !isNaN(Number(raw))) {
       return `₦${Number(raw).toLocaleString()}`;
     }
-    return "N/A";
+    return "Not set";
   };
 
   const getItemQty = (item: OrderDetailItem) => {
     const raw = item.quantity ?? item.qty;
-    return raw != null ? String(raw) : "N/A";
+    return raw != null ? String(raw) : "Not set";
   };
 
   const getItemTotal = (item: OrderDetailItem) => {
@@ -101,7 +101,7 @@ export default function OrderDetailsTable({ items = [] }: OrderDetailsTableProps
     ) {
       return `₦${(Number(unitPrice) * Number(qty)).toLocaleString()}`;
     }
-    return "N/A";
+    return "Not set";
   };
 
   return (

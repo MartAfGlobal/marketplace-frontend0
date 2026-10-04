@@ -336,7 +336,7 @@ export default function RejectOrderPage() {
                         <div className="flex justify-between items-center bg-[#F8F8F8] px-2.5 py-2 border-b border-white">
                           <span className="text-gray-500">SKU</span>
                           <span className="font-MontserratSemiBold text-[#161616] truncate max-w-[100px]">
-                            {item.variation_sku || item.product_sku || "N/A"}
+                            {item.variation_sku || item.product_sku || "Not set"}
                           </span>
                         </div>
 

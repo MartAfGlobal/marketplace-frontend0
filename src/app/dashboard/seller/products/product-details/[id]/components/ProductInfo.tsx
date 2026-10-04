@@ -110,15 +110,15 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4 min-w-0">
           <div className="min-w-0 space-y-2">
             <h1 className="text-[12px] font-MontserratNormal text-000000">Category</h1>
-            <p className="text-base font-MontserratMedium break-words">{productDetails?.category?.name || "N/A"}</p>
+            <p className="text-base font-MontserratMedium break-words">{productDetails?.category?.name || "Not set"}</p>
           </div>
           <div className="min-w-0 space-y-2">
             <h1 className="text-[12px] font-MontserratNormal text-000000">Subcategory</h1>
-            <p className="text-base font-MontserratMedium break-words">{productDetails?.category?.subcategory?.name || "N/A"}</p>
+            <p className="text-base font-MontserratMedium break-words">{productDetails?.category?.subcategory?.name || "Not set"}</p>
           </div>
           <div className="min-w-0 space-y-2">
             <h1 className="text-[12px] font-MontserratNormal text-000000">Stock Code</h1>
-            <p className="text-base font-MontserratMedium break-words">{productDetails?.stockcode || "N/A"}</p>
+            <p className="text-base font-MontserratMedium break-words">{productDetails?.stockcode || "Not set"}</p>
           </div>
         </div>
 

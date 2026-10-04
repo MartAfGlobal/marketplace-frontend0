@@ -151,7 +151,7 @@ export default function CategoriesTable({
               const dateStr =
                 d && !isNaN(d.getTime())
                   ? d.toLocaleDateString("en-GB")
-                  : "N/A";
+                  : "Not set";
 
               const categoryImgUrl = resolveImageUrl(row.image_url ?? row.image);
 
@@ -203,7 +203,7 @@ export default function CategoriesTable({
                           className="rounded-full object-cover"
                         />
                       ) : (
-                        "N/A"
+                        "Not set"
                       )}
                       <span className="block truncate" title={row.name}>
                         {row.name}

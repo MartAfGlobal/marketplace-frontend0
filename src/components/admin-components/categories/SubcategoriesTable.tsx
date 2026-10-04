@@ -170,7 +170,7 @@ export default function SubcategoriesTable({
                           className="rounded-full object-cover"
                         />
                       ) : (
-                        "N/A"
+                        "Not set"
                       )}
                       <span className="block truncate" title={row.name}>
                         {row.name}

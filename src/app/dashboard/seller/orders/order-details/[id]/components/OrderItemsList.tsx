@@ -127,7 +127,7 @@ export const OrderItemsList = ({
                         SKU
                       </span>
                       <span className="font-MontserratSemiBold text-[#161616] truncate ml-4 text-right">
-                        {item.variation_sku || item.product_sku || "N/A"}
+                        {item.variation_sku || item.product_sku || "Not set"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center bg-[#F8F8F8] px-3 py-2 border-b border-white">
@@ -206,7 +206,7 @@ export const OrderItemsList = ({
                   return (
                     <tr key={idx} className="">
                       <td className="pl-3 pr-1 py-3 text-sm font-MontserratNormal">
-                        {item.variation_sku || item.product_sku || "N/A"}
+                        {item.variation_sku || item.product_sku || "Not set"}
                       </td>
                       <td className="pl-3 pr-1 py-3">
                         <div className="flex items-center gap-4">
@@ -336,10 +336,10 @@ export const OrderItemsList = ({
                         SKU: {item.variation_sku || item.product_sku}
                       </p>
                       <p className="text-c12 font-MontserratMedium">
-                        Size: {item.attributes?.Size?.value || "N/A"}
+                        Size: {item.attributes?.Size?.value || "Not set"}
                       </p>
                       <p className="text-c12 font-MontserratMedium">
-                        Color: {item.attributes?.Color?.value || "N/A"}
+                        Color: {item.attributes?.Color?.value || "Not set"}
                       </p>
                     </div>
                     <div className="flex flex-col justify-center gap-3">
@@ -453,19 +453,19 @@ export const OrderItemsList = ({
                         SKU
                       </span>
                       <span className="font-MontserratSemiBold text-[#161616] truncate ml-4 text-right">
-                        {item.variation_sku || item.product_sku || "N/A"}
+                        {item.variation_sku || item.product_sku || "Not set"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center bg-[#ffffff] px-3 py-2 border-b border-gray-50">
                       <span className="text-[#161616]">Size</span>
                       <span className="font-MontserratSemiBold text-[#161616]">
-                        {item.attributes?.Size?.value || "N/A"}
+                        {item.attributes?.Size?.value || "Not set"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center bg-[#F8F8F8] px-3 py-2">
                       <span className="text-[#161616]">Color</span>
                       <span className="font-MontserratSemiBold text-[#161616]">
-                        {item.attributes?.Color?.value || "N/A"}
+                        {item.attributes?.Color?.value || "Not set"}
                       </span>
                     </div>
                   </div>

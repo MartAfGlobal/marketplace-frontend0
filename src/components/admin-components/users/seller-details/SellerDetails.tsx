@@ -73,10 +73,10 @@ export default function SellerDetails({ userId }: SellerDetailsProps) {
 
           <div className="w-full flex flex-col items-center">
             {/* Profile Info */}
-            <h2 className="text-c18 font-MontserratSemiBold mb-1">
-              {seller?.company_name || "—"}
+            <h2 className="text-c18 font-MontserratSemiBold mb-1 w-full truncate " title={seller?.company_name || "Not set"}>
+              {seller?.company_name || "Not set" }
             </h2>
-            <span className="text-sm font-MontserratNormal w-full truncate px-3 text-000000/44 mb-3">
+            <span className="text-sm font-MontserratNormal w-full truncate px-3 text-000000/44 mb-3" title={seller?.user_id || "Not set"}>
               {seller?.user_id}
             </span>
             <span className="text-[12px] text-center font-MontserratMedium mb-3">

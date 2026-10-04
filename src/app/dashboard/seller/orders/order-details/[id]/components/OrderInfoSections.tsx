@@ -17,13 +17,13 @@ export const OrderInfoSections = ({ order }: OrderInfoSectionsProps) => {
                 ? `${order.buyer.first_name} ${order.buyer.last_name}`.trim()
                 : order.shipping_address?.first_name
                   ? `${order.shipping_address.first_name} ${order.shipping_address.last_name}`.trim()
-                  : order.shipping_address_snapshot?.full_name || "N/A"}
+                  : order.shipping_address_snapshot?.full_name || "Not set"}
             </span>
           </div>
           <div className="flex justify-between items-center bg-[#ffffff] px-4 py-3 rounded-b-lg">
             <span className="text-[#161616]">Email address</span>
             <span className="font-MontserratSemiBold text-[#161616]">
-              {order.buyer?.email || order.shipping_address_snapshot?.email || "N/A"}
+              {order.buyer?.email || order.shipping_address_snapshot?.email || "Not set"}
             </span>
           </div>
         </div>
@@ -36,11 +36,11 @@ export const OrderInfoSections = ({ order }: OrderInfoSectionsProps) => {
               ? `${order.buyer.first_name} ${order.buyer.last_name}`.trim()
               : order.shipping_address?.first_name
                 ? `${order.shipping_address.first_name} ${order.shipping_address.last_name}`.trim()
-                : order.shipping_address_snapshot?.full_name || "N/A"}
+                : order.shipping_address_snapshot?.full_name || "Not set"}
           </p>
           <p className="font-MontserratNormal text-sm">
             Email address:{" "}
-            {order.buyer?.email || order.shipping_address_snapshot?.email || "N/A"}
+            {order.buyer?.email || order.shipping_address_snapshot?.email || "Not set"}
           </p>
         </div>
       </div>
@@ -52,7 +52,7 @@ export const OrderInfoSections = ({ order }: OrderInfoSectionsProps) => {
           <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-3 rounded-t-lg">
             <span className="text-[#161616] min-w-[100px]">Shipping address</span>
             <span className="font-MontserratSemiBold text-[#161616] text-right line-clamp-2">
-              {order.shipping_address?.address || order.shipping_address_snapshot?.address || "N/A"}, {order.shipping_address?.state || order.shipping_address_snapshot?.state || ""} {order.shipping_address?.city || ""}
+              {order.shipping_address?.address || order.shipping_address_snapshot?.address || "Not set"}, {order.shipping_address?.state || order.shipping_address_snapshot?.state || ""} {order.shipping_address?.city || ""}
             </span>
           </div>
           <div className="flex justify-between items-center bg-[#ffffff] px-4 py-3">
@@ -75,7 +75,7 @@ export const OrderInfoSections = ({ order }: OrderInfoSectionsProps) => {
             Shipping address:{" "}
             {order.shipping_address?.address ||
               order.shipping_address_snapshot?.address ||
-              "N/A"}
+              "Not set"}
             ,{" "}
             {order.shipping_address?.state ||
               order.shipping_address_snapshot?.state ||
@@ -84,7 +84,7 @@ export const OrderInfoSections = ({ order }: OrderInfoSectionsProps) => {
           </p>
           <p className="font-MontserratNormal text-sm">
             Shipping method:{" "}
-            {order.delivery_partner || order.shipping_method || "N/A"}
+            {order.delivery_partner || order.shipping_method || "Not set"}
           </p>
           <p className="font-MontserratNormal text-sm">
             Tracking number:{" "}

@@ -76,7 +76,7 @@ export default function AdminCategoryDetailsPage() {
   const parentName = category?.full_path?.split(">")?.[0]?.trim() || category?.parent_name || "—";
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "Not set";
     try {
       const date = new Date(dateString);
       return isNaN(date.getTime()) ? dateString : date.toLocaleDateString();

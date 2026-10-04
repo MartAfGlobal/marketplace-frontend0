@@ -139,7 +139,7 @@ export default function DisputeDetailSideModal({
     dispute?.reference ||
     dispute?.id ||
     disputeId ||
-    "N/A";
+    "Not set";
 
   const statusInfo = formatStatus(
     dispute?.status_display || dispute?.status || "Pending",

@@ -47,7 +47,7 @@ export function getFileExtension(url?: string): string {
 }
 
 export function formatDocumentDate(dateStr?: string): string {
-  if (!dateStr) return "N/A";
+  if (!dateStr) return "Not set";
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;

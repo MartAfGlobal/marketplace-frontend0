@@ -41,13 +41,13 @@ export const DisputeInfo = ({
               label: "Order date",
               value: dispute.created_at
                 ? new Date(dispute.created_at).toLocaleDateString("en-GB")
-                : "N/A",
+                : "Not set",
             },
             {
               label: "Delivery date",
               value: dispute.resolved_at
                 ? new Date(dispute.resolved_at).toLocaleDateString("en-GB")
-                : "N/A",
+                : "Not set",
             },
             {
               label: "Order amount",
@@ -85,7 +85,7 @@ export const DisputeInfo = ({
                       day: "numeric",
                       year: "numeric",
                     })
-                  : "N/A"}
+                  : "Not set"}
               </span>
             </p>
             <p className="text-sm font-MontserratNormal flex items-center">
@@ -97,7 +97,7 @@ export const DisputeInfo = ({
                       day: "numeric",
                       year: "numeric",
                     })
-                  : "N/A"}
+                  : "Not set"}
               </span>
             </p>
             <p className="text-sm font-MontserratNormal flex items-center pt-1">

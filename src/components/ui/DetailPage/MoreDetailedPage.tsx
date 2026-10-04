@@ -70,7 +70,7 @@ export default function MoreDetailedPage({ProductDetail}:ProductProps) {
   // Map filtered reviews to Overview component type
   // const overviewReviews: ReviewOverview[] = filteredReviews.map((r: any) => ({
   //   name: r.name || r.user || "Anonymous",
-  //   date: r.date || "N/A",
+  //   date: r.date || "Not set",
   //   rating: r.rating || 0,
   //   text: r.comment || "",
   //   country: r.country || "",

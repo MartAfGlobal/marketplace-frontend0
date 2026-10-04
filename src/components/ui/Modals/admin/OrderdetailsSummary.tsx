@@ -12,14 +12,14 @@ export default function OrderDetailsSummary({ order }: OrderDetailsSummaryProps)
         month: "short",
         day: "numeric",
       })
-    : order?.date || "N/A";
+    : order?.date || "Not set";
 
   const transactionId =
     order?.payment_reference ||
     order?.payment_no ||
     order?.transaction_id ||
     order?.reference ||
-    "N/A";
+    "Not set";
 
   const rawTotal =
     order?.total_price ??
@@ -32,10 +32,10 @@ export default function OrderDetailsSummary({ order }: OrderDetailsSummaryProps)
   const formattedTotal =
     rawTotal != null && rawTotal !== "" && !isNaN(Number(rawTotal))
       ? `₦${Number(rawTotal).toLocaleString()}`
-      : "N/A";
+      : "Not set";
 
   const rawStatus = (order?.status ?? order?.order_status ?? "").toLowerCase();
-  let statusLabel = order?.status ?? order?.order_status ?? "N/A";
+  let statusLabel = order?.status ?? order?.order_status ?? "Not set";
   let statusBadgeStyle = "text-[#FFAC06] bg-[#FFAC06]/12";
 
   if (rawStatus === "delivered" || rawStatus === "completed") {
@@ -72,7 +72,7 @@ export default function OrderDetailsSummary({ order }: OrderDetailsSummaryProps)
   const shippingAddress =
     deliveryAddress ||
     (locationParts.length > 0 ? locationParts.join(", ") : null) ||
-    "N/A";
+    "Not set";
 
   // Shipping Method
   const shippingMethod =
@@ -83,7 +83,7 @@ export default function OrderDetailsSummary({ order }: OrderDetailsSummaryProps)
       ? "Standard Shipping"
       : order?.fulfillment_preference
       ? `Preference ${order.fulfillment_preference}`
-      : "N/A");
+      : "Not set");
 
   // Tracking Number
   const trackingNumber =
@@ -91,7 +91,7 @@ export default function OrderDetailsSummary({ order }: OrderDetailsSummaryProps)
     order?.tracking_no ||
     order?.tracking_code ||
     order?.payment_no ||
-    "N/A";
+    "Not set";
 
   // Summary Metrics
   const totalItems =
@@ -100,19 +100,19 @@ export default function OrderDetailsSummary({ order }: OrderDetailsSummaryProps)
       ? order.order_items.length
       : Array.isArray(order?.items)
       ? order.items.length
-      : "N/A");
+      : "Not set");
 
   const discounts =
     order?.discount != null && Number(order.discount) > 0
       ? `-₦${Number(order.discount).toLocaleString()}`
       : order?.discount === 0
       ? "₦0"
-      : "N/A";
+      : "Not set";
 
   const subtotal =
     order?.subtotal != null && order?.subtotal !== "" && !isNaN(Number(order.subtotal))
       ? `₦${Number(order.subtotal).toLocaleString()}`
-      : "N/A";
+      : "Not set";
 
   const shippingFees =
     order?.shipping_cost != null &&
@@ -123,7 +123,7 @@ export default function OrderDetailsSummary({ order }: OrderDetailsSummaryProps)
         order?.shipping_fee !== "" &&
         !isNaN(Number(order.shipping_fee))
       ? `₦${Number(order.shipping_fee).toLocaleString()}`
-      : "N/A";
+      : "Not set";
 
   return (
     <div className="bg-ffffff rounded-2xl p-6 w-full animate-in fade-in duration-300">

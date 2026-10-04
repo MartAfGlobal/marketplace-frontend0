@@ -352,13 +352,13 @@ const router = useRouter()
                 <div className="flex justify-between items-center bg-[#F8F8F8] px-4 py-2.5">
                   <span className="text-00000 font-MontserratNormal text-c12">Category</span>
                   <span className="font-MontserratSemiBold text-000000 text-sm">
-                    {row.category_info?.category?.name || "N/A"}
+                    {row.category_info?.category?.name || "Not set"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center bg-[#ffffff] px-4 py-2.5">
                   <span className="text-00000 font-MontserratNormal text-c12">Subcategory</span>
                   <span className="font-MontserratSemiBold text-000000 text-sm">
-                    {row.category_info?.subcategory?.name || "N/A"}
+                    {row.category_info?.subcategory?.name || "Not set"}
                   </span>
                 </div>
               </div>
@@ -472,10 +472,10 @@ const router = useRouter()
                 <td className="px-4 text-center">{row.quantity || 0}</td>
                 <td className="px-4 text-center">{row.base_price || 0}</td>
                 <td className="px-4 text-center">
-                  {row.category_info?.category?.name || "N/A"}
+                  {row.category_info?.category?.name || "Not set"}
                 </td>
                 <td className="px-4 text-center">
-                  {row.category_info?.subcategory?.name || "N/A"}
+                  {row.category_info?.subcategory?.name || "Not set"}
                 </td>
                 <td className="px-4 text-center relative">
                   <button

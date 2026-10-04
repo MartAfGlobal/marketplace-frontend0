@@ -627,7 +627,7 @@ export default function AdminOrderDetailsPage() {
   };
 
   const handleCopyOrderId = () => {
-    if (!displayOrderId || displayOrderId === "N/A") return;
+    if (!displayOrderId || displayOrderId === "Not set") return;
     navigator.clipboard.writeText(displayOrderId).then(() => {
       setCopiedOrder(true);
       setTimeout(() => setCopiedOrder(false), 2000);
@@ -635,7 +635,7 @@ export default function AdminOrderDetailsPage() {
   };
 
   const handleCopyTxnId = () => {
-    if (!transactionId || transactionId === "N/A") return;
+    if (!transactionId || transactionId === "Not set") return;
     navigator.clipboard.writeText(transactionId).then(() => {
       setCopiedTxn(true);
       setTimeout(() => setCopiedTxn(false), 2000);
@@ -679,21 +679,21 @@ export default function AdminOrderDetailsPage() {
     order?.payment_no ||
     order?.id ||
     rawId ||
-    "N/A";
+    "Not set";
 
   const transactionId =
     order?.payment_no ||
     order?.payment ||
     order?.transaction_id ||
     order?.payment_no ||
-    (order?.id ? `TNX-${order.id.slice(0, 8).toUpperCase()}` : "N/A");
+    (order?.id ? `TNX-${order.id.slice(0, 8).toUpperCase()}` : "Not set");
   const orderDate = order?.created_at
     ? new Date(order.created_at).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
       })
-    : order?.date || "N/A";
+    : order?.date || "Not set";
   const paymentDate = order?.paid_at
     ? new Date(order.paid_at).toLocaleDateString("en-US", {
         month: "short",
@@ -741,14 +741,14 @@ export default function AdminOrderDetailsPage() {
     order?.buyer_name ||
     "Buyer";
   const buyerEmail =
-    buyer?.email || shippingInfo?.email || order?.buyer_email || "N/A";
+    buyer?.email || shippingInfo?.email || order?.buyer_email || "Not set";
   const buyerPhone =
     shippingInfo?.phone ||
     shippingInfo?.phone_number ||
     buyer?.phone ||
     buyer?.phone_number ||
     order?.delivery_address?.phone ||
-    "N/A";
+    "Not set";
   const buyerAddress =
     [
       shippingInfo?.address || shippingInfo?.line1,
@@ -760,7 +760,7 @@ export default function AdminOrderDetailsPage() {
       .join(", ") ||
     order?.delivery_address?.address ||
     order?.shipping_address?.address ||
-    "N/A";
+    "Not set";
   const buyerAvatar =
     buyer?.avatar || buyer?.profile_picture || buyer?.image || "";
   const buyerId =
@@ -777,7 +777,7 @@ export default function AdminOrderDetailsPage() {
       .join(", ") ||
     order?.shipping_address?.address ||
     order?.delivery_address?.address ||
-    "N/A";
+    "Not set";
   const shippingMethod =
     order?.shipping_method ||
     order?.delivery_partner ||
@@ -1400,7 +1400,7 @@ export default function AdminOrderDetailsPage() {
               order?.shipping_breakdown?.shipping_method ||
               firstSellerOrder?.delivery_partner?.name ||
               firstSellerOrder?.delivery_partner ||
-              "N/A"
+              "Not set"
             }
             trackingNumber={
               order?.seller_tracking_id_to_hub ||
@@ -1410,7 +1410,7 @@ export default function AdminOrderDetailsPage() {
               firstSellerOrder?.seller_tracking_id_to_hub ||
               firstSellerOrder?.tracking_number ||
               order?.parcel_id ||
-              "N/A"
+              "Not set"
             }
           />
         )}

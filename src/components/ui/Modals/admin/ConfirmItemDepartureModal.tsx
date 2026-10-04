@@ -140,7 +140,7 @@ export default function ConfirmItemDepartureModal({
               <Label>Order ID</Label>
               <Input
                 type="text"
-                value={orderId || "N/A"}
+                value={orderId || "Not set"}
                 disabled
                 className="bg-[#FAFAFA] text-000000/68 cursor-not-allowed"
               />

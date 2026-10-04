@@ -37,7 +37,7 @@ export function mapApiAttribute(
 
   const rawDate = attr.created_at || attr.date_created || attr.date;
   const d = rawDate ? new Date(rawDate) : null;
-  const dateStr = d && !isNaN(d.getTime()) ? d.toLocaleDateString("en-GB") : "N/A";
+  const dateStr = d && !isNaN(d.getTime()) ? d.toLocaleDateString("en-GB") : "Not set";
 
   return {
     id: String(attr.id ?? attr.pk ?? ""),

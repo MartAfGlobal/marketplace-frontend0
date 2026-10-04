@@ -70,7 +70,7 @@ export default function ConfirmSellerTrackingModal({
               <Label>Order ID</Label>
               <Input
                 type="text"
-                value={orderId || "N/A"}
+                value={orderId || "Not set"}
                 disabled
                 className="bg-transparent"
               />
@@ -80,7 +80,7 @@ export default function ConfirmSellerTrackingModal({
               <Label>Logistics company</Label>
               <Input
                 type="text"
-                value={logisticsCompany || "N/A"}
+                value={logisticsCompany || "Not set"}
                 disabled
                 icon={<ChevronDown className="w-5 h-5 text-000000/68 pointer-events-none" />}
                 className="bg-transparent"
@@ -91,7 +91,7 @@ export default function ConfirmSellerTrackingModal({
               <Label>Order tracking number</Label>
               <Input
                 type="text"
-                value={trackingNumber || "N/A"}
+                value={trackingNumber || "Not set"}
                 disabled
                 className="bg-transparent"
               />

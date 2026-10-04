@@ -293,7 +293,7 @@ export default function AdminCancelOrderModal({
                     item.product_name ||
                     item.product?.title ||
                     item.product?.name ||
-                    "N/A";
+                    "Not set";
                   const itemImage =
                     item.product_image 
                   const unitPrice = item.unit_price ?? item.price ?? item.price_at_purchase;
@@ -336,15 +336,15 @@ export default function AdminCancelOrderModal({
                       <td className="px-3">
                         {unitPrice != null && unitPrice !== "" && !isNaN(Number(unitPrice))
                           ? `₦${Number(unitPrice).toLocaleString()}`
-                          : "N/A"}
+                          : "Not set"}
                       </td>
-                      <td className="px-3 text-center">{quantity != null ? quantity : "N/A"}</td>
+                      <td className="px-3 text-center">{quantity != null ? quantity : "Not set"}</td>
                       <td className="px-3 font-MontserratSemiBold">
                         {totalPrice != null && totalPrice !== "" && !isNaN(Number(totalPrice))
                           ? `₦${Number(totalPrice).toLocaleString()}`
                           : unitPrice != null && quantity != null && !isNaN(Number(unitPrice)) && !isNaN(Number(quantity))
                             ? `₦${(Number(unitPrice) * Number(quantity)).toLocaleString()}`
-                            : "N/A"}
+                            : "Not set"}
                       </td>
                       <td className="px-3"></td>
                     </tr>

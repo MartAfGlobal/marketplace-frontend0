@@ -74,16 +74,16 @@ export default function OrderTable({
       orderId: order.id,
       product: order.items?.length > 1 
         ? "Multiple items" 
-        : (order.items?.[0]?.product_name || "N/A"),
-      date: order.created_at ? new Date(order.created_at).toLocaleDateString() : "N/A",
+        : (order.items?.[0]?.product_name || "Not set"),
+      date: order.created_at ? new Date(order.created_at).toLocaleDateString() : "Not set",
       realStatus,
       tableStatus,
       status: tableStatus,
-      payment: order.payout_status || "N/A",
-      country: order.shipping_address?.country || "N/A",
+      payment: order.payout_status || "Not set",
+      country: order.shipping_address?.country || "Not set",
       accepted_quantity: order.accepted_quantity || 0,
       rejected_quantity: order.rejected_quantity || 0,
-      sku: order.items?.[0]?.variation_sku || "N/A",
+      sku: order.items?.[0]?.variation_sku || "Not set",
       stock: order.items?.[0]?.quantity || 0,
       perc: 0, // Placeholder if percentage is needed
     };

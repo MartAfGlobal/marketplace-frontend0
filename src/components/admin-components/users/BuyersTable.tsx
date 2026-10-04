@@ -125,14 +125,14 @@ export default function BuyersTable({
                   </button>
                 </td>
                 <td onClick={() => onRowClick(String(row.user_id))} className="p-3">
-                  <span className="block max-w-[190px] lg:w-[243px]  truncate" title={`${row.first_name || ""} ${row.last_name || ""}`.trim() || row.email}>
-                    {`${row.first_name || ""} ${row.last_name || ""}`.trim() || row.user_id}
+                  <span className="block max-w-[190px] lg:max-w-[243px]  truncate" title={`${row.first_name || ""} ${row.last_name || ""}`.trim() || row.email}>
+                    {`${row.first_name || ""} ${row.last_name || ""}`.trim() || "Not set"}
                   </span>
                 </td>
                 <td className="p-3 text-000000/68">
                   <span className="block max-w-[12rem]  lg:w-[243px] truncate" title={row.email}>{row.email}</span>
                 </td>
-                <td className="p-3 text-000000/68 max-w-[137px] text-center">{row.phone || "N/A"}</td>
+                <td className="p-3 text-000000/68 max-w-[137px] text-center">{row.phone || "Not set"}</td>
                 <td className="py-2.25  px-1 text-center">
                   <span
                     className={`text-[10px] px-4 py-1 flex items-center justify-center h-6 rounded-c32 text-center ${
@@ -147,7 +147,7 @@ export default function BuyersTable({
                 <td className="p-3 text-center max-w-[124px] truncate">{row.total_orders ?? 0}</td>
                 <td className="py-3 px-4 text-000000/68">
                   <span className="block max-w-[86px] truncate" title={row.state || row.city || ""}>
-                    {truncateText(row.state || row.city || "N/A")}
+                    {truncateText(row.state || row.city || "Not set")}
                   </span>
                 </td>
                 <td className="p-3 text-center max-w-6.25 truncate">{row.disputes ?? 0}</td>

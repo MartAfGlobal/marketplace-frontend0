@@ -76,8 +76,8 @@ export default function DisputeTable({
   // apply filters
   let filteredRows = data.map((item, index) => ({
     id: item.id || index,
-    orderid: item.order_number || item.order_no || item.order_id || "N/A",
-    date: item.created_at || item.date || "N/A",
+    orderid: item.order_number || item.order_no || item.order_id || "Not set",
+    date: item.created_at || item.date || "Not set",
     status: item.status_display || item.status || "Open",
     country: item.country || "Kenya",
     initiatedBy: item.buyer_name || item.initiated_by || item.initiator || "Buyer",
