@@ -61,21 +61,7 @@ export default function ResetVerify({
     }
   };
 
-  const handleOtpPaste = (e: ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!pasted) return;
-
-    const nextOtp = Array(6).fill("");
-    pasted.split("").forEach((digit, index) => {
-      nextOtp[index] = digit;
-    });
-    setOtp(nextOtp);
-    document.getElementById(`reset-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
-  };
-
-  const handleVerifyOtp = () => {
-    const otpString = otp.join("");
+  const handleVerifyOtp = (otpString = otp.join("")) => {
     if (otpString.length < 6) {
       toast.error("Please enter a valid 6-digit OTP");
       return;
@@ -113,6 +99,20 @@ export default function ResetVerify({
         body: { email, otp: otpString },
       },
     });
+  };
+
+  const handleOtpPaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+
+    const nextOtp = Array(6).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+    setOtp(nextOtp);
+    document.getElementById(`reset-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
+    if (pasted.length === 6) handleVerifyOtp(pasted);
   };
 
   // ✅ Success handler for resend request
@@ -187,7 +187,7 @@ export default function ResetVerify({
       <div className="flex flex-col gap-4">
         <Button
           type="button"
-          onClick={handleVerifyOtp}
+          onClick={() => handleVerifyOtp()}
           disabled={otp.some((d) => d === "")}
         >
           Verify

@@ -99,6 +99,7 @@ export default function OtpVerification() {
     lastCheckedClip.current = "";
     const focusIndex = Math.min(clipboardOtp.length, OTP_LENGTH - 1);
     inputRefs.current[focusIndex]?.focus();
+    handleSubmit(undefined, clipboardOtp);
   };
 
   const otp = digits.join("");
@@ -124,6 +125,7 @@ export default function OtpVerification() {
         const focusIndex = Math.min(numeric.length, OTP_LENGTH - 1);
         inputRefs.current[focusIndex]?.focus();
         toast.success("Code pasted from clipboard");
+        if (numeric.length === OTP_LENGTH) handleSubmit(undefined, numeric);
       } else {
         toast.error("No code found in clipboard");
       }
@@ -180,25 +182,9 @@ export default function OtpVerification() {
     }
   };
 
-  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, OTP_LENGTH);
-    if (!pasted) return;
-    const next = Array(OTP_LENGTH).fill("");
-    pasted.split("").forEach((ch, i) => {
-      next[i] = ch;
-    });
-    setDigits(next);
-    const focusIndex = Math.min(pasted.length, OTP_LENGTH - 1);
-    inputRefs.current[focusIndex]?.focus();
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isComplete) {
+  const handleSubmit = (e?: React.FormEvent, otpValue = otp) => {
+    e?.preventDefault();
+    if (otpValue.length !== OTP_LENGTH) {
       setErrorMsg("Please enter the complete 6-digit code.");
       return;
     }
@@ -234,10 +220,27 @@ export default function OtpVerification() {
       requestConfig: {
         url: "/accounts/reset-password/verify-otp/",
         method: "POST",
-        body: { email, otp },
+        body: { email, otp: otpValue },
         userType: "buyer",
       },
     });
+  };
+
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, OTP_LENGTH);
+    if (!pasted) return;
+    const next = Array(OTP_LENGTH).fill("");
+    pasted.split("").forEach((ch, i) => {
+      next[i] = ch;
+    });
+    setDigits(next);
+    const focusIndex = Math.min(pasted.length, OTP_LENGTH - 1);
+    inputRefs.current[focusIndex]?.focus();
+    if (pasted.length === OTP_LENGTH) handleSubmit(undefined, pasted);
   };
 
   const handleResend = (e: React.FormEvent) => {

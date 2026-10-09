@@ -89,27 +89,12 @@ export default function VerificationEmailSent({ userType }: RegProps) {
     }
   };
 
-  const handleOtpPaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!pasted) return;
-    const newOtp = [...otp];
-    pasted.split("").forEach((char, i) => {
-      if (i < 6) newOtp[i] = char;
-    });
-    setOtp(newOtp);
-    // Focus the last filled input
-    const lastIndex = Math.min(pasted.length - 1, 5);
-    document.getElementById(`reg-otp-${lastIndex}`)?.focus();
-  };
-
   /* ===============================
      CONFIRM OTP
   =============================== */
   const { loading: verifying, sendHttpRequest: confirmOtpReq } = useHttp();
 
-  const handleVerifyOtp = () => {
-    const otpString = otp.join("");
+  const handleVerifyOtp = (otpString = otp.join("")) => {
     if (otpString.length < 6) {
       setErrorMsg("Please enter the complete 6-digit code.");
       return;
@@ -165,6 +150,19 @@ export default function VerificationEmailSent({ userType }: RegProps) {
         setErrorMsg(msg);
       },
     });
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const newOtp = [...otp];
+    pasted.split("").forEach((char, i) => {
+      newOtp[i] = char;
+    });
+    setOtp(newOtp);
+    document.getElementById(`reg-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
+    if (pasted.length === 6) handleVerifyOtp(pasted);
   };
 
   /* ===============================
@@ -236,7 +234,7 @@ export default function VerificationEmailSent({ userType }: RegProps) {
             disabled={verifying}
             onChange={(e) => handleOtpChange(idx, e.target.value)}
             onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-            onPaste={idx === 0 ? handleOtpPaste : undefined}
+            onPaste={handleOtpPaste}
             className="w-full max-w-[47.33px] h-c64 md:w-c56 text-center text-xl font-MontserratBold border border-efefef rounded-c8 p-0 focus:border-ff715b focus:ring-1 focus:ring-ff715b outline-none transition-all"
           />
         ))}
@@ -245,7 +243,7 @@ export default function VerificationEmailSent({ userType }: RegProps) {
       {/* Verify Button */}
       <div className="w-full max-w-[360px] mb-4">
         <Button
-          onClick={handleVerifyOtp}
+          onClick={() => handleVerifyOtp()}
           disabled={verifying || !isOtpComplete}
         >
           {verifying ? <LoadingSpinner /> : "Verify Code"}

@@ -78,27 +78,8 @@ function Verify2faContent() {
     }
   };
 
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 6);
-    if (!pasted) return;
-
-    const nextOtp = Array(6).fill("");
-    pasted.split("").forEach((digit, index) => {
-      nextOtp[index] = digit;
-    });
-    setOtp(nextOtp);
-    document
-      .getElementById(`page-otp-${Math.min(pasted.length - 1, 5)}`)
-      ?.focus();
-  };
-
   // ── Verify ──────────────────────────────────────────────────────────────────
-  const handleVerifyOtp = () => {
-    const otpString = otp.join("");
+  const handleVerifyOtp = (otpString = otp.join("")) => {
     if (otpString.length < 6) {
       setErrorMsg("Please enter a valid 6-digit OTP");
       return;
@@ -155,6 +136,25 @@ function Verify2faContent() {
         );
       },
     });
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (!pasted) return;
+
+    const nextOtp = Array(6).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+    setOtp(nextOtp);
+    document
+      .getElementById(`page-otp-${Math.min(pasted.length - 1, 5)}`)
+      ?.focus();
+    if (pasted.length === 6) handleVerifyOtp(pasted);
   };
 
   // ── Resend — uses backend retry_after ──────────────────────────────────────
@@ -248,7 +248,7 @@ function Verify2faContent() {
             )}
           </Button>
           <Button
-            onClick={handleVerifyOtp}
+            onClick={() => handleVerifyOtp()}
             disabled={verifying || otp.some((d) => d === "")}
             className="w-full py-4 text-sm font-MontserratSemiBold bg-ff715b text-white hover:bg-ff715b/90 transition-colors"
           >

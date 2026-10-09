@@ -101,6 +101,7 @@ const VerifyBankOtpModal = ({
     document
       .getElementById(`bank-otp-${Math.min(clipboardOtp.length - 1, 5)}`)
       ?.focus();
+    handleVerifyOtp(clipboardOtp);
   };
 
   const handleDirectPaste = async () => {
@@ -118,6 +119,7 @@ const VerifyBankOtpModal = ({
         document
           .getElementById(`bank-otp-${Math.min(numeric.length - 1, 5)}`)
           ?.focus();
+        if (numeric.length === 6) handleVerifyOtp(numeric);
         toast.success("Code pasted from clipboard");
       } else {
         toast.error("No code found in clipboard");
@@ -163,26 +165,7 @@ const VerifyBankOtpModal = ({
     }
   };
 
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 6);
-    if (!pasted) return;
-
-    const nextOtp = Array(6).fill("");
-    pasted.split("").forEach((digit, index) => {
-      nextOtp[index] = digit;
-    });
-    setOtp(nextOtp);
-    document
-      .getElementById(`bank-otp-${Math.min(pasted.length - 1, 5)}`)
-      ?.focus();
-  };
-
-  const handleVerifyOtp = () => {
-    const otpString = otp.join("");
+  const handleVerifyOtp = (otpString = otp.join("")) => {
     if (otpString.length < 6) {
       toast.error("Please enter a valid 6-digit OTP");
       return;
@@ -216,6 +199,25 @@ const VerifyBankOtpModal = ({
         toast.error(err?.message || "Invalid OTP");
       },
     });
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (!pasted) return;
+
+    const nextOtp = Array(6).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+    setOtp(nextOtp);
+    document
+      .getElementById(`bank-otp-${Math.min(pasted.length - 1, 5)}`)
+      ?.focus();
+    if (pasted.length === 6) handleVerifyOtp(pasted);
   };
 
   const handleResendOtp = () => {
@@ -356,7 +358,7 @@ const VerifyBankOtpModal = ({
 
                     <div className="flex flex-col gap-4 w-full">
                       <Button
-                        onClick={handleVerifyOtp}
+                        onClick={() => handleVerifyOtp()}
                         disabled={verifying || otp.some((d) => d === "")}
                       >
                         {verifying ? <LoadingSpinner /> : "Verify"}

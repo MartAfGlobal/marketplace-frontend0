@@ -112,21 +112,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
     }
   };
 
-  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!pasted) return;
-
-    const nextOtp = Array(6).fill("");
-    pasted.split("").forEach((digit, index) => {
-      nextOtp[index] = digit;
-    });
-    setOtp(nextOtp);
-    document.getElementById(`signup-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
-  };
-
-  const handleVerifySignupOtp = () => {
-    const otpString = otp.join("");
+  const handleVerifySignupOtp = (otpString = otp.join("")) => {
     if (otpString.length < 6) {
       toast.error("Please enter a valid 6-digit OTP");
       return;
@@ -174,6 +160,20 @@ const DEFAULT_RESEND_TIMEOUT = 120;
         );
       },
     });
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+
+    const nextOtp = Array(6).fill("");
+    pasted.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+    setOtp(nextOtp);
+    document.getElementById(`signup-otp-${Math.min(pasted.length - 1, 5)}`)?.focus();
+    if (pasted.length === 6) handleVerifySignupOtp(pasted);
   };
 
   const handleResendLink = (e: React.FormEvent) => {
@@ -480,7 +480,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
 
                     <Button
                       type="button"
-                      onClick={handleVerifySignupOtp}
+                      onClick={() => handleVerifySignupOtp()}
                       disabled={otp.some((d) => d === "") || verifying}
                       className=""
                     >

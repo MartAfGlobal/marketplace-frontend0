@@ -301,6 +301,7 @@ export default function WithdrawModals({
     lastCheckedClip.current = "";
     const focusIndex = Math.min(clipboardOtp.length, OTP_LENGTH - 1);
     inputRefs.current[focusIndex]?.focus();
+    handleConfirm(undefined, clipboardOtp);
   };
 
   const handleDirectPaste = async () => {
@@ -317,6 +318,7 @@ export default function WithdrawModals({
         lastCheckedClip.current = "";
         const focusIndex = Math.min(numeric.length, OTP_LENGTH - 1);
         inputRefs.current[focusIndex]?.focus();
+        if (numeric.length === OTP_LENGTH) handleConfirm(undefined, numeric);
         toast.success("Code pasted from clipboard");
       } else {
         toast.error("No code found in clipboard");
@@ -374,30 +376,14 @@ export default function WithdrawModals({
     }
   };
 
-  const handleOtpPaste = (e: ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, OTP_LENGTH);
-    if (!pasted) return;
-    const next = Array(OTP_LENGTH).fill("");
-    pasted.split("").forEach((ch, i) => {
-      next[i] = ch;
-    });
-    setDigits(next);
-    const focusIndex = Math.min(pasted.length, OTP_LENGTH - 1);
-    inputRefs.current[focusIndex]?.focus();
-  };
-
   const otp = digits.join("");
   const isOtpComplete =
     otp.length === OTP_LENGTH && digits.every((d) => d !== "");
 
   // Step 2: Confirm OTP
-  const handleConfirm = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isOtpComplete) {
+  const handleConfirm = (e?: React.FormEvent, otpValue = otp) => {
+    e?.preventDefault();
+    if (otpValue.length !== OTP_LENGTH) {
       toast.error("Please enter the complete 6-digit OTP.");
       return;
     }
@@ -409,7 +395,7 @@ export default function WithdrawModals({
         token: token || undefined,
         isAuth: true,
         userType: "seller",
-        body: { otp },
+        body: { otp: otpValue },
       },
       successRes: () => {
         toast.success("Withdrawal request confirmed successfully.");
@@ -433,6 +419,23 @@ export default function WithdrawModals({
         toast.error(errorDetail);
       },
     });
+  };
+
+  const handleOtpPaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, OTP_LENGTH);
+    if (!pasted) return;
+    const next = Array(OTP_LENGTH).fill("");
+    pasted.split("").forEach((ch, i) => {
+      next[i] = ch;
+    });
+    setDigits(next);
+    const focusIndex = Math.min(pasted.length, OTP_LENGTH - 1);
+    inputRefs.current[focusIndex]?.focus();
+    if (pasted.length === OTP_LENGTH) handleConfirm(undefined, pasted);
   };
 
   // Resend OTP handler
