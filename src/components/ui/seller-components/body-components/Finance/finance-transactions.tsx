@@ -10,11 +10,14 @@ import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 import { useAppSelector } from "@/store/Provider";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import type { Transaction } from "@/store/finance/transactionsSlice";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 const PAGE_SIZE = 10;
 
 export default function FinanceTransaction() {
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [selectedTransactions, setSelectedTransactions] = useState<Transaction[]>([]);
   const { fetchTransactions } = useFetchProducts();
   const token = useSelector((state: RootState) => state.token.token);
 
@@ -46,11 +49,18 @@ export default function FinanceTransaction() {
           setFilters={setFilters}
           className="bg-transparent border border-ff715b"
           image={downloadIcon}
+          downloadDisabled={selectedTransactions.length === 0}
+          onDownload={() =>
+            downloadTableRows(selectedTransactions, "finance-transactions")
+          }
         />
       </motion.div>
 
       <div className="mt-8  h-fit">
-        <FinanceTransactionsTable filters={filters} />
+        <FinanceTransactionsTable
+          filters={filters}
+          onSelectionChange={setSelectedTransactions}
+        />
       </div>
 
       <div className="mt-10">

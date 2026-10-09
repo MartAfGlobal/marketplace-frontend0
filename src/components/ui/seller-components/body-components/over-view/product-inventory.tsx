@@ -18,6 +18,7 @@ import FilterModal from "../../tables/Filters/filter-modal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { ChevronRight } from "lucide-react";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export default function ProductInventory() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
@@ -27,6 +28,8 @@ export default function ProductInventory() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState({});
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   
   const product = useSelector((state: RootState) => state.sellerProduct.product) || [];
@@ -58,12 +61,13 @@ export default function ProductInventory() {
           <SellerSearch 
             value={searchQuery}
             onChange={setSearchQuery}
+            onToggle={setIsSearchOpen}
             disabled={isIncomplete}
             placeholder="Search products..."
           />
           
           <div 
-            className={`flex gap-2 lg:gap-3 transition-opacity duration-300 relative `}
+            className={`gap-2 lg:gap-3 relative ${isSearchOpen ? "hidden lg:flex" : "flex"}`}
             ref={dropdownRef}
           >
             <FullFilterButton
@@ -82,9 +86,13 @@ export default function ProductInventory() {
             )}
 
             <button
-              disabled={isIncomplete}
+              disabled={isIncomplete || selectedProducts.length === 0}
+              onClick={() => downloadTableRows(selectedProducts, "products-inventory")}
+              aria-label="Download selected products"
               className={`w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8 ${
-                isIncomplete ? "cursor-not-allowed" : "cursor-pointer"
+                isIncomplete || selectedProducts.length === 0
+                  ? "cursor-not-allowed opacity-50"
+                  : "cursor-pointer"
               }`}
             >
               <Image
@@ -144,6 +152,7 @@ export default function ProductInventory() {
           rowsPerPage={resultsPerPage}
           filters={{ ...filters, sku: searchQuery }}
           onFilteredCount={setFilteredCount}
+          onSelectionChange={setSelectedProducts}
         />
 
         {/* Bottom Pagination controls */}

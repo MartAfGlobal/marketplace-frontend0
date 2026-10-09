@@ -34,6 +34,7 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [selectedData, setSelectedData] = useState<any[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
   const orders = useSelector((state: any) => state.orders.orders);
 
@@ -136,10 +137,11 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
           <SellerSearch 
             value={searchQuery}
             onChange={setSearchQuery}
+            onToggle={setIsSearchOpen}
             placeholder="Search by order ID..."
           />
 
-          <div className="flex gap-2 lg:gap-3 relative" ref={dropdownRef}>
+          <div className={`gap-2 lg:gap-3 relative ${isSearchOpen ? "hidden lg:flex" : "flex"}`} ref={dropdownRef}>
             <div className="hidden lg:block">
               <FullFilterButton onOpenFilter={() => setFilterOpen((prev) => !prev)} isOpen={filterOpen} />
             </div>
@@ -175,10 +177,14 @@ export default function MyOrders({ externalSearchQuery }: { externalSearchQuery?
               }}
             />
 
-            <button 
-              className="w-10 h-10 flex shrink-0 items-center justify-center bg-ff715b rounded-c8 animate-in fade-in zoom-in duration-300 cursor-pointer"
+            <button
+              disabled={selectedData.length === 0}
+              className={`w-10 h-10 flex shrink-0 items-center justify-center bg-ff715b rounded-c8 ${
+                selectedData.length === 0 ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+              }`}
               onClick={handleExportPDF}
               title="Export selected as PDF"
+              aria-label="Download selected orders"
             >
               <Image src={downloadIcon} alt="download" width={10.67} height={10.67} />
             </button>

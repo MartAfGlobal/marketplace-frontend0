@@ -4,7 +4,7 @@ import Image from "next/image";
 import { motion, Variants } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useHttp } from "@/hooks/use-http";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Category, subcategory } from "@/types/global";
 import CategorySkeleton from "@/components/reloadSpinner/CategorySkeleton";
 import Electricity from "@/assets/mobile/electricals.png";
@@ -18,8 +18,14 @@ import { RootState } from "@/store";
 const CATEGORIES_CACHE_KEY = "mobile_categories";
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
+const getCategoryHref = (category: Category) => {
+  const slug =
+    category.slug || category.name.trim().toLowerCase().replace(/\s+/g, "-");
+
+  return `/categories/${encodeURIComponent(slug)}`;
+};
+
 export default function MobileCategory() {
-  const router = useRouter();
   const { sendHttpRequest, loading } = useHttp();
   const isFetchingRef = useRef(false);
   const dispatch = useDispatch();
@@ -171,24 +177,26 @@ export default function MobileCategory() {
                     variants={getVariants(index)}
                     whileHover={{ scale: 1.05 }}
                   >
-                    <div className="flex flex-col  items-center">
-                      <div className=" w-[78.75px] h-[78.75px] rounded-full bg-e9eafd flex justify-center overflow-hidden items-center">
-                        <Image
-                          src={cat.image_url?.thumbnail || Electricity}
-                          alt={cat.name}
-                          width={56.25}
-                          height={56.25}
-                          className=" flex-shrink-0 h-[56px] w-[56px] object-contain "
-                          priority
-                        />
-                      </div>
+                    <Link href={getCategoryHref(cat)} className="block h-full w-full">
+                      <div className="flex flex-col items-center">
+                        <div className="w-[78.75px] h-[78.75px] rounded-full bg-e9eafd flex justify-center overflow-hidden items-center">
+                          <Image
+                            src={cat.image_url?.thumbnail || Electricity}
+                            alt={cat.name}
+                            width={78.75}
+                            height={78.75}
+                            className="flex-shrink-0 h-full w-full  object-cover rounded-full"
+                            priority
+                          />
+                        </div>
 
-                      <div className="w-full h-15  flex items-center justify-center">
-                        <p className="text-161616 text-base font-MontserratMedium text-center text-nowrap">
-                          {cat.name.trim().split(/\s+/)[0]}
-                        </p>
+                        <div className="w-full h-15 flex items-center justify-center">
+                          <p className="text-161616 text-base font-MontserratMedium text-center text-nowrap">
+                            {cat.name.trim().split(/\s+/)[0]}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   </motion.div>
                 ))}
               </div>
@@ -206,18 +214,23 @@ export default function MobileCategory() {
                     variants={getVariants(index)}
                     whileHover={{ scale: 1.05 }}
                   >
-                    <Image
-                      src={cat.image_url?.thumbnail || Electricity}
-                      alt={cat.name}
-                      fill
-                      className="object-cover"
-                      priority
-                    />
-                    <div className="w-full h-15 bg-000000 absolute bottom-0 flex items-center justify-center">
-                      <p className="text-ffffff text-base font-MontserratMedium text-center ">
-                        {cat.name.replace(/products/i, "").trim()}
-                      </p>
-                    </div>
+                    <Link
+                      href={getCategoryHref(cat)}
+                      className="relative block h-full w-full rounded-lg overflow-hidden"
+                    >
+                      <Image
+                        src={cat.image_url?.thumbnail || Electricity}
+                        alt={cat.name}
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+                      <div className="w-full h-15 bg-000000 absolute bottom-0 flex items-center justify-center">
+                        <p className="text-ffffff text-base font-MontserratMedium text-center ">
+                          {cat.name.replace(/products/i, "").trim()}
+                        </p>
+                      </div>
+                    </Link>
                   </motion.div>
                 ))}
               </div>

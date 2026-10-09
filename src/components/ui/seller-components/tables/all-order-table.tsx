@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import HandBug from "@/assets/Seller/handBug.png";
 import { useSelector } from "react-redux";
 import { SellerOrderResult } from "@/types/global";
@@ -11,6 +11,8 @@ import EyeIcon from "@/assets/icons/eye.png";
 import downloadIcon from "@/assets/Seller/colourDownload.svg";
 import Empty from "@/assets/Seller/Empty.svg";
 import { ChevronRight } from "lucide-react";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 import { getOrderDisplayStatus } from "@/helpers/admin/orderStatusHelper";
 import {
   getSellerDetailedStatus,
@@ -48,8 +50,7 @@ export default function AllOrderTable({
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
 
   const handleExport = (row: any) => {
-    localStorage.setItem("exported_order", JSON.stringify(row));
-    alert("Order exported to local storage");
+    downloadTableRows([row], `order-${row.orderId || row.id}`);
   };
 
   const handleViewDetails = (orderId: string) => {
@@ -111,12 +112,14 @@ export default function AllOrderTable({
 
   // ✅ other filters
   if (filters.search) {
-    const term = filters.search.toLowerCase();
+    const term = filters.search.trim().toLowerCase();
     filteredRows = filteredRows.filter(
       (row: any) =>
-        row.orderId.toLowerCase().includes(term) ||
-        row.items.toLowerCase().includes(term) ||
-        row.date.toLowerCase().includes(term)
+        String(row.orderId ?? "").toLowerCase().includes(term) ||
+        String(row.items ?? "").toLowerCase().includes(term) ||
+        String(row.date ?? "").toLowerCase().includes(term) ||
+        String(row.tableStatus ?? "").toLowerCase().includes(term) ||
+        String(row.realStatus ?? "").toLowerCase().includes(term)
     );
   }
 
@@ -167,6 +170,8 @@ export default function AllOrderTable({
 
   // ✅ selected rows
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const isMobile = useMobileViewport();
+  const lastSelectionSignature = useRef("");
 
   const toggleRow = (id: number) => {
     setSelectedRows((prev: number[]) =>
@@ -191,9 +196,14 @@ export default function AllOrderTable({
 
   // ✅ Notify parent of selection changes
   useEffect(() => {
-    const selectedObjects = allRows.filter((r: any) => selectedRows.includes(r.id));
+    const selectedObjects = isMobile
+      ? filteredRows
+      : allRows.filter((r: any) => selectedRows.includes(r.id));
+    const signature = JSON.stringify(selectedObjects);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
     onSelectionChange?.(selectedObjects);
-  }, [selectedRows, onSelectionChange]);
+  }, [allRows, filteredRows, isMobile, onSelectionChange, selectedRows]);
 
 
   console.log("AllOrderTable rendered with filters:", filters, "and currentPage:", currentRows);

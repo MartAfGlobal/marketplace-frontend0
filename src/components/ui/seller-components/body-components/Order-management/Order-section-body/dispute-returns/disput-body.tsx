@@ -15,6 +15,7 @@ import ArrowRightIcon from "@/assets/Seller/ArrowRight2.png";
 import CalenderIcon from "@/assets/Seller/calender2.png";
 import PercentageIcon from "@/assets/Seller/Percent2.png";
 import Quantity from "@/assets/Seller/quantity2.png";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export default function DisputeBody({
   externalSearchQuery,
@@ -25,6 +26,7 @@ export default function DisputeBody({
   const [filters, setFilters] = useState({});
   const [totalRows, setTotalRows] = useState(0);
   const [disputes, setDisputes] = useState<any[]>([]);
+  const [selectedDisputes, setSelectedDisputes] = useState<any[]>([]);
   const { sendHttpRequest, loading } = useHttp();
   const token = useSelector((state: RootState) => state.token.token);
 
@@ -72,6 +74,8 @@ export default function DisputeBody({
         setFilters={setFilters}
         placeholder="Search by order ID, status, date..."
         hideSearchOnMobile={true}
+        downloadDisabled={selectedDisputes.length === 0}
+        onDownload={() => downloadTableRows(selectedDisputes, "disputes-returns")}
       />
 
       {/* Active filter chips */}
@@ -141,6 +145,7 @@ export default function DisputeBody({
           filters={filters}
           data={disputes}
           onFilteredCountChange={setTotalRows}
+          onSelectionChange={setSelectedDisputes}
         />
       )}
 

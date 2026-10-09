@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import HandBug from "@/assets/Seller/handBug.png";
 import ProductImage from "@/assets/Seller/productImage.png";
@@ -16,6 +16,7 @@ import EyeIcon from "@/assets/icons/eye.png";
 import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ChevronRight } from "lucide-react";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
 
 //  helper for approval badge
 const getApprovalClass = (approval: string) => {
@@ -51,6 +52,7 @@ const formatApprovalText = (approval: string) => {
     timeFilter?: string;
   };
   onFilteredCount?: (count: number) => void;
+  onSelectionChange?: (rows: sellerProduct[]) => void;
   onToggleActive?: (id: string, isActive: boolean) => void;
   togglingId?: string | null;
 };
@@ -60,6 +62,7 @@ export default function InventoryFullTable({
   rowsPerPage,
   filters = {},
   onFilteredCount,
+  onSelectionChange,
   onToggleActive,
   togglingId,
 }: InventoryFullTableProps) {
@@ -132,10 +135,13 @@ if (filters.perc) {
 
   if (filters.sku) {
     const searchTerm = filters.sku.trim().toLowerCase();
-    filteredRows = filteredRows.filter((row) =>
-      row.name?.toLowerCase().includes(searchTerm) ||
-      row.stockcode?.toLowerCase().includes(searchTerm)
-    );
+    if (searchTerm) {
+      filteredRows = filteredRows.filter((row) =>
+        row.name?.toLowerCase().includes(searchTerm) ||
+        row.stockcode?.toLowerCase().includes(searchTerm) ||
+        (row.is_active ? "live" : "inactive").includes(searchTerm)
+      );
+    }
   }
 
   if (filters.qty?.min !== undefined || filters.qty?.max !== undefined) {
@@ -157,6 +163,18 @@ if (filters.perc) {
 
   //  selected row state (per table, not pagination)
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const isMobile = useMobileViewport();
+  const lastSelectionSignature = useRef("");
+
+  useEffect(() => {
+    const selectedProducts = isMobile
+      ? filteredRows
+      : filteredRows.filter((row) => selectedRows.includes(row.id));
+    const signature = JSON.stringify(selectedProducts);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedProducts);
+  }, [filteredRows, isMobile, onSelectionChange, selectedRows]);
 
   const toggleRow = (id: string) => {
     setSelectedRows((prev) =>
@@ -331,7 +349,7 @@ if (filters.perc) {
                 </div>
               </label>
             </th>
-            <th className="px-4 text-center  text-nowrap">Stock code</th>
+            <th className="px-4 text-center  text-nowrap">SKU</th>
             <th className="px-4 text-left">Product name</th>
             <th className="px-4  text-center">Q.sold</th>
             <th className="px-4 text-center">Q. in stock</th>

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import HandBug from "@/assets/Seller/handBug.png";
 import Empty from "@/assets/Seller/Empty.svg";
 import { ChevronRight } from "lucide-react";
@@ -20,9 +20,24 @@ const mockCustomers = [
   { id: 10, sn: "10", name: "Kenneth Young", orders: 25, spend: "₦25,000", date: "Aug 28, 2025", status: "Active" },
 ];
 
-export default function CustomersTable() {
+export default function CustomersTable({
+  onSelectionChange,
+}: {
+  onSelectionChange?: (rows: typeof mockCustomers) => void;
+}) {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const currentRows = mockCustomers;
+  const lastSelectionSignature = useRef("");
+
+  useEffect(() => {
+    const selectedCustomers = currentRows.filter((row) =>
+      selectedRows.includes(row.id),
+    );
+    const signature = JSON.stringify(selectedCustomers);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedCustomers);
+  }, [currentRows, onSelectionChange, selectedRows]);
 
   const toggleRow = (id: number) => {
     setSelectedRows((prev: number[]) =>

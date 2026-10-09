@@ -3,10 +3,11 @@ import Image from "next/image";
 import HandBug from "@/assets/Seller/handBug.png";
 import EyeIcon from "@/assets/icons/eye.png";
 import Empty from "@/assets/Seller/Empty.svg";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import TransactionDetailSideModal from "@/components/ui/Modals/seller/TransactionDetailSideModal";
 import type { Transaction } from "@/store/finance/transactionsSlice";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
 
 export type InventoryFullTableProps = {
   currentPage: number;
@@ -20,6 +21,7 @@ export type InventoryFullTableProps = {
     qty?: { min?: number; max?: number };
     search?: string;
   };
+  onSelectionChange?: (rows: any[]) => void;
 };
 
 function getStatusStyle(status: string | undefined): string {
@@ -57,6 +59,7 @@ export default function PayOutTable({
   filters = {},
   statusFilter: externalFilter = "all",
   onFilteredCountChange = () => {},
+  onSelectionChange,
 }: InventoryFullTableProps) {
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -75,7 +78,7 @@ export default function PayOutTable({
   }, [activeDropdownId]);
 
   // dataset
-  const allRows = Array.from({ length: 95 }, (_, i) => {
+  const allRows = useMemo(() => Array.from({ length: 95 }, (_, i) => {
     const sold = Math.floor(Math.random() * 50) + 1;
     const stock = Math.floor(Math.random() * 100) + 20;
     const perc = Math.floor((sold / stock) * 100);
@@ -102,7 +105,10 @@ export default function PayOutTable({
       sku: `SKU${i + 100}`,
       stock,
     };
-  });
+  }), []);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const isMobile = useMobileViewport();
+  const lastSelectionSignature = useRef("");
 
   // apply filters
   let filteredRows = allRows;
@@ -160,6 +166,19 @@ export default function PayOutTable({
   // pagination
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);
+  const allPageSelected =
+    currentRows.length > 0 &&
+    currentRows.every((row) => selectedRows.includes(row.id));
+
+  useEffect(() => {
+    const selectedPayouts = isMobile
+      ? filteredRows
+      : filteredRows.filter((row) => selectedRows.includes(row.id));
+    const signature = JSON.stringify(selectedPayouts);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedPayouts);
+  }, [filteredRows, isMobile, onSelectionChange, selectedRows]);
 
   const handleOpenDetails = (row: typeof allRows[0]) => {
     const tx: Transaction = {
@@ -266,6 +285,25 @@ export default function PayOutTable({
         <table className="w-full border-collapse">
           <thead className="text-white font-MontserratSemiBold text-c12 bg-947fff h-10">
             <tr className="h-10">
+              <th className="p-3 text-center">
+                <input
+                  type="checkbox"
+                  aria-label="Select all payouts on this page"
+                  checked={allPageSelected}
+                  onChange={() =>
+                    setSelectedRows((previous) =>
+                      allPageSelected
+                        ? previous.filter((id) => !currentRows.some((row) => row.id === id))
+                        : [
+                            ...previous,
+                            ...currentRows
+                              .map((row) => row.id)
+                              .filter((id) => !previous.includes(id)),
+                          ],
+                    )
+                  }
+                />
+              </th>
               <th className="p-3 text-left">Date & time</th>
               <th className="p-3 text-left">Transaction ID</th>
               <th className="p-3 text-left">Amount</th>
@@ -286,6 +324,20 @@ export default function PayOutTable({
                   key={row.id}
                   className="h-10 text-c12 font-MontserratSemiBold text-000000/60 hover:bg-gray-50/50"
                 >
+                  <td className="px-3 pt-3 pb-6">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select payout ${row.transactionid}`}
+                      checked={selectedRows.includes(row.id)}
+                      onChange={() =>
+                        setSelectedRows((previous) =>
+                          previous.includes(row.id)
+                            ? previous.filter((id) => id !== row.id)
+                            : [...previous, row.id],
+                        )
+                      }
+                    />
+                  </td>
                   <td className="px-3 pt-3 pb-6 text-left">{row.dateTime}</td>
                   <td className="px-3 pt-3 pb-6 text-left">{row.transactionid}</td>
                   <td className="px-3 pt-3 pb-6 text-left">{row.amount}</td>
@@ -353,5 +405,4 @@ export default function PayOutTable({
     </div>
   );
 }
-
 

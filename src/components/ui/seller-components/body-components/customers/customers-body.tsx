@@ -14,9 +14,12 @@ import { ChevronRight } from "lucide-react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
 import { SellerMobileHeader } from "../../header-components/SellerMobileHeader";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export default function CustomersBody() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCustomers, setSelectedCustomers] = useState<any[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const isIncomplete = useSelector(
     (state: any) =>
@@ -102,18 +105,24 @@ export default function CustomersBody() {
             <SellerSearch
               value={searchQuery}
               onChange={setSearchQuery}
+              onToggle={setIsSearchOpen}
               placeholder="Search customer..."
             />
 
-            <div className="flex gap-2 lg:gap-3 items-center">
+            <div className={`gap-2 lg:gap-3 items-center ${isSearchOpen ? "hidden lg:flex" : "flex"}`}>
               <FullFilterButton onOpenFilter={() => {}} />
               <FilterDropdown
                 options={filterOptions}
                 onChange={(value) => console.log("Selected:", value)}
               />
               <button
-                className="w-10 h-10 flex shrink-0 items-center justify-center bg-[#FF715B] rounded-c8 cursor-pointer shadow-sm hover:bg-opacity-90 animate-in fade-in zoom-in duration-300"
-                title="Export selected as PDF"
+                disabled={selectedCustomers.length === 0}
+                onClick={() => downloadTableRows(selectedCustomers, "customers")}
+                className={`w-10 h-10 flex shrink-0 items-center justify-center bg-[#FF715B] rounded-c8 shadow-sm hover:bg-opacity-90 ${
+                  selectedCustomers.length === 0 ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                }`}
+                title="Download selected customers"
+                aria-label="Download selected customers"
               >
                 <Image
                   src={downloadIcon}
@@ -127,7 +136,7 @@ export default function CustomersBody() {
 
           {/* Table Wrapper */}
           <div className="w-full pt-6 lg:pt-c32 px-3 lg:px-0">
-            <CustomersTable />
+            <CustomersTable onSelectionChange={setSelectedCustomers} />
           </div>
 
           {/* Unified Pagination matching MyOrders pattern */}

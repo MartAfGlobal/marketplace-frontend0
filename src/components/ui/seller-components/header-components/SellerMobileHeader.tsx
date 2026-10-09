@@ -48,7 +48,7 @@ export const SellerMobileHeader = ({
         </span>
       </div>
       {rightElement && (
-        <div className="flex items-center flex-1 justify-end ml-4">
+        <div className="flex items-center w-full max-w-138.5 flex-1 justify-end ml-4">
           {rightElement}
         </div>
       )}

@@ -21,6 +21,7 @@ import OrderTable from "../../tables/order-table";
 import Pagination from "../products/pignation-button";
 import FilterModal from "../../tables/Filters/filter-modal";
 import { useSelector } from "react-redux";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export default function OverviewOder() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
@@ -28,6 +29,8 @@ export default function OverviewOder() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedOrders, setSelectedOrders] = useState<any[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,11 +63,12 @@ export default function OverviewOder() {
           <SellerSearch 
             value={searchQuery}
             onChange={setSearchQuery}
+            onToggle={setIsSearchOpen}
             disabled={isIncomplete}
             placeholder="Search by ID, items, date..."
           />
 
-        <div className="flex gap-3 relative" ref={dropdownRef}>
+        <div className={`gap-3 relative ${isSearchOpen ? "hidden lg:flex" : "flex"}`} ref={dropdownRef}>
           <FullFilterButton
             onOpenFilter={() => setFilterOpen((prev) => !prev)}
             isOpen={filterOpen}
@@ -87,9 +91,13 @@ export default function OverviewOder() {
           />
 
           <button
-            disabled={isIncomplete}
+            disabled={isIncomplete || selectedOrders.length === 0}
+            onClick={() => downloadTableRows(selectedOrders, "orders")}
+            aria-label="Download selected orders"
             className={`w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8 ${
-              isIncomplete ? "cursor-not-allowed" : "cursor-pointer"
+              isIncomplete || selectedOrders.length === 0
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-pointer"
             }`}
           >
             <Image
@@ -155,6 +163,7 @@ export default function OverviewOder() {
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
         filters={filters}
+        onSelectionChange={setSelectedOrders}
       />
 
       {totalRows > 10 && (

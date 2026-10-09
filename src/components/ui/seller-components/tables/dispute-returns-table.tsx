@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
 import dotsIcon from "@/assets/icons/dots.png"; // Assuming there's a dots icon
@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import HandBug from "@/assets/Seller/handBug.png";
 import EyeIcon from "@/assets/icons/eye.png";
 import { ChevronRight } from "lucide-react";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
 
 const getStatusClass = (status: string) => {
   switch (status?.toLowerCase()) {
@@ -61,6 +62,7 @@ export type DisputeTableProps = {
     search?: string;
   };
   onFilteredCountChange: (count: number) => void;
+  onSelectionChange?: (rows: any[]) => void;
 };
 
 export default function DisputeTable({
@@ -69,6 +71,7 @@ export default function DisputeTable({
   data = [],
   filters = {},
   onFilteredCountChange,
+  onSelectionChange,
 }: DisputeTableProps) {
   const router = useRouter();
   const [activeRowId, setActiveRowId] = useState<string | number | null>(null);
@@ -109,6 +112,18 @@ export default function DisputeTable({
 
   // checkbox state
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const isMobile = useMobileViewport();
+  const lastSelectionSignature = useRef("");
+
+  useEffect(() => {
+    const selectedDisputes = isMobile
+      ? filteredRows
+      : filteredRows.filter((row) => selectedRows.includes(row.id));
+    const signature = JSON.stringify(selectedDisputes);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedDisputes);
+  }, [filteredRows, isMobile, onSelectionChange, selectedRows]);
 
   const toggleRow = (id: number) => {
     setSelectedRows((prev) =>

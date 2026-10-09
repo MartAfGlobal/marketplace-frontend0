@@ -7,9 +7,11 @@ import TableHeader from "../../tables/table-header";
 import PayOutTable from "../../tables/pay-out-table";
 import Pagination from "../products/pignation-button";
 import CalenderIcon from "@/assets/Seller/calender2.png";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export default function Payout() {
    const [filters, setFilters] = useState({});
+  const [selectedPayouts, setSelectedPayouts] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
   const totalRows = 95;
@@ -27,6 +29,8 @@ export default function Payout() {
           filters={filters}
           setFilters={setFilters} 
           placeholder="Search transactions, payout ID..."
+          downloadDisabled={selectedPayouts.length === 0}
+          onDownload={() => downloadTableRows(selectedPayouts, "payout-history")}
         />
       </motion.div>
 
@@ -50,7 +54,12 @@ export default function Payout() {
           </div>
         )} */}
 
-        <PayOutTable currentPage={currentPage} rowsPerPage={rowsPerPage} filters={filters}/>
+        <PayOutTable
+          currentPage={currentPage}
+          rowsPerPage={rowsPerPage}
+          filters={filters}
+          onSelectionChange={setSelectedPayouts}
+        />
 
         <AnimatePresence mode="wait">
           {totalRows > 10 && (
@@ -67,4 +76,3 @@ export default function Payout() {
     </div>
   );
 }
-

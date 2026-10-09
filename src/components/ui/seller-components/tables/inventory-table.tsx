@@ -5,12 +5,13 @@ import { useSelector } from "react-redux";
 import Empty from "@/assets/Seller/Empty.svg";
 import { RootState } from "@/store";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import EditIcon from "@/assets/icons/edit.svg";
 import DeleteIcon from "@/assets/icons/deleteREd.svg";
 import EyeIcon from "@/assets/icons/eye.png";
 import { ChevronRight } from "lucide-react";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
 export type InventoryTableProps = {
   currentPage: number;
   rowsPerPage: number;
@@ -22,6 +23,7 @@ export type InventoryTableProps = {
     qty?: { min?: number; max?: number };
   };
   onFilteredCount?: (count: number) => void;
+  onSelectionChange?: (rows: any[]) => void;
 };
 
 export default function InventoryTable({
@@ -30,6 +32,7 @@ export default function InventoryTable({
   filterValue = "all",
   filters = {},
   onFilteredCount,
+  onSelectionChange,
 }: InventoryTableProps) {
   // ✅ dataset simulation
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
@@ -38,6 +41,9 @@ export default function InventoryTable({
         (state: RootState) => state.sellerProduct.product,
       ) || [];
 const router = useRouter();
+const [selectedRows, setSelectedRows] = useState<string[]>([]);
+const isMobile = useMobileViewport();
+const lastSelectionSignature = useRef("");
  
   // ✅ apply filters
   let filteredRows = allRows;
@@ -83,6 +89,32 @@ const router = useRouter();
   // ✅ pagination
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);
+  const allPageSelected =
+    currentRows.length > 0 && currentRows.every((row) => selectedRows.includes(row.id));
+
+  useEffect(() => {
+    const selectedProducts = isMobile
+      ? filteredRows
+      : filteredRows.filter((row) => selectedRows.includes(row.id));
+    const signature = JSON.stringify(selectedProducts);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedProducts);
+  }, [filteredRows, isMobile, onSelectionChange, selectedRows]);
+
+  const togglePage = () => {
+    if (allPageSelected) {
+      setSelectedRows((previous) =>
+        previous.filter((id) => !currentRows.some((row) => row.id === id)),
+      );
+      return;
+    }
+
+    setSelectedRows((previous) => [
+      ...previous,
+      ...currentRows.map((row) => row.id).filter((id) => !previous.includes(id)),
+    ]);
+  };
 
   const handleViewDetails = (id: string) => {
     console.log("View details for product ID:", id);
@@ -129,7 +161,15 @@ const router = useRouter();
         {/* Table Head */}
         <thead className="text-ffffff font-MontserratSemiBold text-nowrap text-base bg-947fff h-12">
           <tr>
-            <th className="px-4 text-center">Stock code</th>
+            <th className="px-3 text-center">
+              <input
+                type="checkbox"
+                aria-label="Select all products on this page"
+                checked={allPageSelected}
+                onChange={togglePage}
+              />
+            </th>
+            <th className="px-4 text-center">SKU</th>
             <th className="px-4 text-left">Product name</th>
             <th className="px-4 text-center">Q.sold</th>
             <th className="px-4 text-center">Q. in stock</th>
@@ -146,6 +186,20 @@ const router = useRouter();
                 key={row.id}
                 className="h-c48 border-b border-b-000000/10 text-sm font-MontserratNormal"
               >
+                <td className="px-3 text-center">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${row.name}`}
+                    checked={selectedRows.includes(row.id)}
+                    onChange={() =>
+                      setSelectedRows((previous) =>
+                        previous.includes(row.id)
+                          ? previous.filter((id) => id !== row.id)
+                          : [...previous, row.id],
+                      )
+                    }
+                  />
+                </td>
                 <td className="px-4 ">{row.stockcode}</td>
                 <td className="px-4 text-left">{row.name}</td>
                 <td className="px-4 text-center">{row.sold}</td>
@@ -208,7 +262,7 @@ const router = useRouter();
             ))
           ) : (
             <tr className="h-64.5 ">
-              <td colSpan={6} className="text-center py-6 text-gray-500 text-sm">
+              <td colSpan={7} className="text-center py-6 text-gray-500 text-sm">
                 <div className="flex flex-col justify-center items-center gap-3">
                   <Image src={Empty} height={18} width={18} alt="empty" />
                   <p className="text-base font-MontserratNormal text-000000/10">No data available</p>

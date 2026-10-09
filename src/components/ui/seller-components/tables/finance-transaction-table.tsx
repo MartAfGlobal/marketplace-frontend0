@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useAppSelector } from "@/store/Provider";
 import type { Transaction } from "@/store/finance/transactionsSlice";
@@ -9,6 +9,7 @@ import EyeIcon from "@/assets/icons/eye.png";
 import { ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import TransactionDetailSideModal from "@/components/ui/Modals/seller/TransactionDetailSideModal";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
 
 export type FinanceTransactionsTableProps = {
   onPageChange?: (page: number) => void;
@@ -17,6 +18,7 @@ export type FinanceTransactionsTableProps = {
     search?: string;
     [key: string]: any;
   };
+  onSelectionChange?: (rows: Transaction[]) => void;
 };
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -73,12 +75,18 @@ function getStatusStyle(status: string | undefined): string {
 
 // ─── component ───────────────────────────────────────────────────────────────
 
-export default function FinanceTransactionsTable({ filters }: FinanceTransactionsTableProps) {
+export default function FinanceTransactionsTable({
+  filters,
+  onSelectionChange,
+}: FinanceTransactionsTableProps) {
   const { items, loading, error } = useAppSelector((state) => state.transactions);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const isMobile = useMobileViewport();
+  const lastSelectionSignature = useRef("");
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -115,6 +123,24 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
     }
     return result;
   }, [items, filters]);
+
+  useEffect(() => {
+    const selectedTransactions = isMobile
+      ? displayedItems
+      : displayedItems.filter((row) =>
+          selectedRows.includes(String(row.transaction_id || row.id)),
+        );
+    const signature = JSON.stringify(selectedTransactions);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedTransactions);
+  }, [displayedItems, isMobile, onSelectionChange, selectedRows]);
+
+  const allRowsSelected =
+    displayedItems.length > 0 &&
+    displayedItems.every((row) =>
+      selectedRows.includes(String(row.transaction_id || row.id)),
+    );
 
   const handleOpenDetails = (row: Transaction) => {
     setSelectedTransaction(row);
@@ -325,6 +351,22 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
       <table className="w-full border-collapse">
         <thead className="text-white font-MontserratSemiBold py-3 text-c12 bg-947fff h-12">
           <tr className="text-left">
+            <th className="px-3">
+              <input
+                type="checkbox"
+                aria-label="Select all transactions"
+                checked={allRowsSelected}
+                onChange={() =>
+                  setSelectedRows(
+                    allRowsSelected
+                      ? []
+                      : displayedItems.map((row) =>
+                          String(row.transaction_id || row.id),
+                        ),
+                  )
+                }
+              />
+            </th>
             <th className="px-3 whitespace-nowrap">Date &amp; time</th>
             <th className="px-3 whitespace-nowrap">Transaction ID</th>
             <th className="px-3 whitespace-nowrap">Amount</th>
@@ -336,7 +378,7 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
           </tr>
         </thead>
         <tbody>
-          <tr><td colSpan={8} className="h-1" /></tr>
+          <tr><td colSpan={9} className="h-1" /></tr>
           {displayedItems.map((row: Transaction) => {
             const rowId = String(row.transaction_id || row.id);
             const isDropdownOpen = activeDropdownId === rowId;
@@ -346,6 +388,20 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
                 key={row.transaction_id}
                 className="h-12 text-c12 font-MontserratSemiBold py-3 text-000000/60"
               >
+                <td className="px-3">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select transaction ${row.transaction_id || row.id}`}
+                    checked={selectedRows.includes(rowId)}
+                    onChange={() =>
+                      setSelectedRows((previous) =>
+                        previous.includes(rowId)
+                          ? previous.filter((id) => id !== rowId)
+                          : [...previous, rowId],
+                      )
+                    }
+                  />
+                </td>
                 <td className="px-3 max-w-[135px] truncate">
                   {formatDate((row.created_at || row.date) as string)}
                 </td>
@@ -410,7 +466,7 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
 
           {!loading && displayedItems.length === 0 && (
             <tr className="h-64">
-              <td colSpan={8} className="text-center py-10">
+              <td colSpan={9} className="text-center py-10">
                 <div className="flex flex-col justify-center items-center gap-3">
                   <Image src={Empty} height={48} width={48} alt="empty" />
                   <p className="text-base font-MontserratNormal text-000000/20">No transactions found</p>
@@ -431,4 +487,3 @@ export default function FinanceTransactionsTable({ filters }: FinanceTransaction
     </div>
   );
 }
-

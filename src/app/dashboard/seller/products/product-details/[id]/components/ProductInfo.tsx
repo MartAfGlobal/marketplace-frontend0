@@ -117,7 +117,7 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
             <p className="text-base font-MontserratMedium break-words">{productDetails?.category?.subcategory?.name || "Not set"}</p>
           </div>
           <div className="min-w-0 space-y-2">
-            <h1 className="text-[12px] font-MontserratNormal text-000000">Stock Code</h1>
+            <h1 className="text-[12px] font-MontserratNormal text-000000">SKU</h1>
             <p className="text-base font-MontserratMedium break-words">{productDetails?.stockcode || "Not set"}</p>
           </div>
         </div>

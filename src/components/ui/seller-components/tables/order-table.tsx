@@ -9,12 +9,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import EyeIcon from "@/assets/icons/eye.png";
 import downloadIcon from "@/assets/Seller/colourDownload.svg";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getSellerDetailedStatus,
   getSellerTableStatus,
   getSellerStatusClass as getStatusClass,
 } from "@/helpers/sellers/sellerOrderStatusHelper";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export type InventoryTableProps = {
   currentPage: number;
@@ -26,6 +28,7 @@ export type InventoryTableProps = {
     qty?: number;
     search?: string;
   };
+  onSelectionChange?: (rows: any[]) => void;
 };
 
 const getPayoutStatusClass = (status: string) => {
@@ -51,15 +54,18 @@ export default function OrderTable({
   currentPage,
   rowsPerPage,
   filters = {},
+  onSelectionChange,
 }: InventoryTableProps) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
   const ordersFromStore = useSelector((state: any) => state.orders.orders);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const router = useRouter();
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const isMobile = useMobileViewport();
+  const lastSelectionSignature = useRef("");
 
   const handleExport = (row: any) => {
-    localStorage.setItem("exported_order", JSON.stringify(row));
-    alert("Order exported to local storage");
+    downloadTableRows([row], `order-${row.orderId || row.id}`);
   };
 
   const handleViewDetails = (orderId: string) => {
@@ -93,12 +99,15 @@ export default function OrderTable({
   let filteredRows = allRows;
 
   if (filters.search) {
-    const term = filters.search.toLowerCase();
+    const term = filters.search.trim().toLowerCase();
     filteredRows = filteredRows.filter(
       (row: any) =>
-        row.orderId.toLowerCase().includes(term) ||
-        row.product.toLowerCase().includes(term) ||
-        row.date.toLowerCase().includes(term)
+        String(row.orderId ?? "").toLowerCase().includes(term) ||
+        String(row.product ?? "").toLowerCase().includes(term) ||
+        String(row.date ?? "").toLowerCase().includes(term) ||
+        String(row.tableStatus ?? "").toLowerCase().includes(term) ||
+        String(row.realStatus ?? "").toLowerCase().includes(term) ||
+        String(row.payment ?? "").toLowerCase().includes(term)
     );
   }
 
@@ -125,12 +134,46 @@ export default function OrderTable({
   // ✅ Pagination
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);
+  const allPageSelected =
+    currentRows.length > 0 &&
+    currentRows.every((row: any) => selectedRows.includes(row.id));
+
+  useEffect(() => {
+    const selectedOrders = isMobile
+      ? filteredRows
+      : filteredRows.filter((row: any) => selectedRows.includes(row.id));
+    const signature = JSON.stringify(selectedOrders);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedOrders);
+  }, [filteredRows, isMobile, onSelectionChange, selectedRows]);
+
+  const togglePage = () => {
+    if (allPageSelected) {
+      setSelectedRows((previous) =>
+        previous.filter((id) => !currentRows.some((row: any) => row.id === id)),
+      );
+      return;
+    }
+    setSelectedRows((previous) => [
+      ...previous,
+      ...currentRows.map((row: any) => row.id).filter((id: string) => !previous.includes(id)),
+    ]);
+  };
 
   return (
     <div className="mt-c32 w-full  text-wrap">
       <table className="w-full border-collapse">
         <thead className="text-ffffff font-MontserratSemiBold text-base bg-947fff w-full h-12">
           <tr>
+            <th className="hidden lg:table-cell px-3 text-center">
+              <input
+                type="checkbox"
+                aria-label="Select all orders on this page"
+                checked={allPageSelected}
+                onChange={togglePage}
+              />
+            </th>
             <th className="text-center max-w-21">ID</th>
             <th className="w-18">Date</th>
             <th className="w-24 hidden md:table-cell">Country</th>
@@ -147,6 +190,20 @@ export default function OrderTable({
                 key={i}
                 className="h-c48 border-b text-sm font-MontserratNormal text-nowrap border-b-000000/10"
               >
+                <td className="hidden lg:table-cell px-3 text-center">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select order ${order.orderId}`}
+                    checked={selectedRows.includes(order.id)}
+                    onChange={() =>
+                      setSelectedRows((previous) =>
+                        previous.includes(order.id)
+                          ? previous.filter((id) => id !== order.id)
+                          : [...previous, order.id],
+                      )
+                    }
+                  />
+                </td>
                 <td className="text-center max-w-40 px-4 text-wrap">{order.id}</td>
                 <td className="px-2 text-center">{order.date}</td>
                 <td className="px-2 text-center hidden md:table-cell">{order.country}</td>
@@ -241,7 +298,7 @@ export default function OrderTable({
           ) : (
              <tr className="h-64.5 ">
               <td
-                colSpan={6}
+                colSpan={8}
                 className="text-center py-6 text-gray-500 text-sm"
               >
                 <div className="flex flex-col justify-center items-center gap-3">

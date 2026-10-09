@@ -10,6 +10,7 @@ import SellerSearch from "./Filter-components/SellerSearch";
 import { useState } from "react";
 import CategoryRankingTable from "../../tables/category-ranking-table";
 import { useSelector } from "react-redux";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export default function CategoryRanking() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
@@ -17,6 +18,8 @@ export default function CategoryRanking() {
   const [resultsPerPage, setResultsPerPage] = useState(4);
   const [filterValue, setFilterValue] = useState("Weekly");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const timeFilterOptions = ["Weekly", "Monthly", "Yearly"];
 
@@ -36,12 +39,13 @@ export default function CategoryRanking() {
           <SellerSearch 
             value={searchQuery}
             onChange={setSearchQuery}
+            onToggle={setIsSearchOpen}
             disabled={isIncomplete}
             placeholder="Search category..."
           />
           
           <div 
-            className={` gap-2 lg:gap-3 transition-opacity duration-300 relative flex`}
+            className={`gap-2 lg:gap-3 relative ${isSearchOpen ? "hidden lg:flex" : "flex"}`}
           >
             <FilterDropdown
               options={timeFilterOptions}
@@ -49,9 +53,13 @@ export default function CategoryRanking() {
             />
 
             <button
-              disabled={isIncomplete}
+              disabled={isIncomplete || selectedCategories.length === 0}
+              onClick={() => downloadTableRows(selectedCategories, "category-ranking")}
+              aria-label="Download selected categories"
               className={`w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8 ${
-                isIncomplete ? "cursor-not-allowed" : "cursor-pointer"
+                isIncomplete || selectedCategories.length === 0
+                  ? "cursor-not-allowed opacity-50"
+                  : "cursor-pointer"
               }`}
             >
               <Image
@@ -95,6 +103,7 @@ export default function CategoryRanking() {
           currentPage={currentPage}
           onPageChange={setCurrentPage}
           totalCount={filteredDataCount}
+          onSelectionChange={setSelectedCategories}
         />
       </div>
     </div>

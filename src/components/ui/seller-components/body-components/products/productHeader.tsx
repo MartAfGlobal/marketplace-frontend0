@@ -10,27 +10,28 @@ export default function ProductHeader() {
 
   return (
     <>
-      <SellerMobileHeader 
+      <SellerMobileHeader
         title="Product Management"
+      showBorder={false}
         showBackButton={false}
         rightElement={
-          <div className="hidden md:block w-auto">
-            <SellerSearch 
+          <div className="hidden md:block w-full max-w-138.5 ">
+            <SellerSearch
               value={searchQuery}
               onChange={setSearchQuery}
-              placeholder="Search for anything" 
+              placeholder="Search for anything"
               alwaysOpen={true}
             />
           </div>
         }
       />
-      
-      <div className="md:hidden px-4 mt-4">
-        <SellerSearch 
+
+      <div className=" md:hidden px-4 mt-4 ">
+        <SellerSearch
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Search for anything" 
-          alwaysOpen={true}
+          placeholder="Search for anything"
+          alwaysOpen={false}
         />
       </div>
     </>

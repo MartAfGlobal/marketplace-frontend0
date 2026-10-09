@@ -3,6 +3,8 @@ import HandBug from "@/assets/Seller/handBug.png";
 import { useSelector } from "react-redux";
 import Empty from "@/assets/Seller/Empty.svg";
 import { ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
 
 const CATEGORY_DATA = [
   { sn: "0021", category: "Fashion & Shoes", quantity: 120 },
@@ -21,6 +23,7 @@ interface CategoryRankingTableProps {
   currentPage?: number;
   onPageChange?: (page: number) => void;
   totalCount?: number;
+  onSelectionChange?: (rows: (typeof CATEGORY_DATA)[number][]) => void;
 }
 
 export default function CategoryRankingTable({
@@ -29,8 +32,12 @@ export default function CategoryRankingTable({
   filterValue = "Weekly",
   currentPage = 1,
   onPageChange,
+  onSelectionChange,
 }: CategoryRankingTableProps) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const isMobile = useMobileViewport();
+  const lastSelectionSignature = useRef("");
 
   const filteredData = CATEGORY_DATA.filter((item) =>
     item.category.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -39,6 +46,32 @@ export default function CategoryRankingTable({
   // Apply results per page slicing based on current page
   const startIndex = (currentPage - 1) * resultsPerPage;
   const displayedData = filteredData.slice(startIndex, startIndex + resultsPerPage);
+  const allPageSelected =
+    displayedData.length > 0 &&
+    displayedData.every((row) => selectedRows.includes(row.sn));
+
+  useEffect(() => {
+    const selectedCategories = isMobile
+      ? filteredData
+      : filteredData.filter((row) => selectedRows.includes(row.sn));
+    const signature = JSON.stringify(selectedCategories);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedCategories);
+  }, [filteredData, isMobile, onSelectionChange, selectedRows]);
+
+  const togglePage = () => {
+    if (allPageSelected) {
+      setSelectedRows((previous) =>
+        previous.filter((id) => !displayedData.some((row) => row.sn === id)),
+      );
+      return;
+    }
+    setSelectedRows((previous) => [
+      ...previous,
+      ...displayedData.map((row) => row.sn).filter((id) => !previous.includes(id)),
+    ]);
+  };
 
   const handleNext = () => {
     if (currentPage * resultsPerPage < filteredData.length) {
@@ -111,6 +144,14 @@ export default function CategoryRankingTable({
       <table className="hidden lg:table w-full">
         <thead className="text-ffffff font-MontserratSemiBold text-base bg-947fff w-full h-12 md:text-nowrap">
           <tr>
+            <th className="px-3 text-center">
+              <input
+                type="checkbox"
+                aria-label="Select all categories on this page"
+                checked={allPageSelected}
+                onChange={togglePage}
+              />
+            </th>
             <th className="px-4 text-center w-21">s/n</th>
             <th className="px-4 w-66 text-left">Category</th>
             <th className="px-4 w-33.5">Q. in stock</th>
@@ -121,7 +162,7 @@ export default function CategoryRankingTable({
           <tbody>
             <tr className="h-64.5 ">
               <td
-                colSpan={6}
+                colSpan={5}
                 className="text-center py-6 text-gray-500 text-sm"
               >
                 <div className="flex flex-col justify-center items-center gap-3">
@@ -137,7 +178,7 @@ export default function CategoryRankingTable({
           <tbody>
             <tr className="h-c48">
               <td
-                colSpan={4}
+                colSpan={5}
                 className="text-center py-10 text-gray-400 font-MontserratNormal"
               >
                 No matching categories found
@@ -151,6 +192,20 @@ export default function CategoryRankingTable({
                 key={index}
                 className="h-c48 border-b text-sm font-MontserratNormal border-b-000000/10"
               >
+                <td className="px-3 text-center">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${item.category}`}
+                    checked={selectedRows.includes(item.sn)}
+                    onChange={() =>
+                      setSelectedRows((previous) =>
+                        previous.includes(item.sn)
+                          ? previous.filter((id) => id !== item.sn)
+                          : [...previous, item.sn],
+                      )
+                    }
+                  />
+                </td>
                 <td className="px-4 text-center">{item.sn}</td>
                 <td className="px-6">{item.category}</td>
                 <td className="px-4 text-center">{item.quantity}</td>

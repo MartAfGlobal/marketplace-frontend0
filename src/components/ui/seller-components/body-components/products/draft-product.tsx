@@ -22,6 +22,7 @@ import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 import ResultModal from "@/components/ui/forms/resultModal";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export default function DraftProduct() {
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -31,6 +32,8 @@ export default function DraftProduct() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [draftToDeleteId, setDraftToDeleteId] = useState<string | null>(null);
+  const [selectedDrafts, setSelectedDrafts] = useState<any[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   const draft = useSelector((state: RootState) =>state.draft.draft);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -97,10 +100,11 @@ export default function DraftProduct() {
                 setFilters((prev) => ({ ...prev, sku: val }));
                 setCurrentPage(1);
               }}
+              onToggle={setIsSearchOpen}
               placeholder="Search draft products..."
             />
           </div>
-          <div className="flex gap-3 relative" ref={dropdownRef}>
+          <div className={`gap-3 relative ${isSearchOpen ? "hidden lg:flex" : "flex"}`} ref={dropdownRef}>
             <FullFilterButton
               onOpenFilter={() => setFilterOpen((prev) => !prev)}
               isOpen={filterOpen}
@@ -121,7 +125,14 @@ export default function DraftProduct() {
               onChange={(value) => setFilters((prev) => ({ ...prev, timeFilter: value }))}
             />
 
-            <button className="w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8">
+            <button
+              disabled={selectedDrafts.length === 0}
+              onClick={() => downloadTableRows(selectedDrafts, "draft-products")}
+              aria-label="Download selected draft products"
+              className={`w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8 ${
+                selectedDrafts.length === 0 ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+              }`}
+            >
               <Image
                 src={downloadIcon}
                 alt="download"
@@ -214,6 +225,7 @@ export default function DraftProduct() {
           onFilteredCount={setFilteredCount}
           onDelete={handleDeleteDraft}
           deletingId={deletingId}
+          onSelectionChange={setSelectedDrafts}
         />
 
         <div className="w-full mt-c32">

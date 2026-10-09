@@ -21,6 +21,8 @@ interface TableProps {
   hideSearchOnMobile?: boolean;
   className?: string;
   image? : string;
+  downloadDisabled?: boolean;
+  onDownload?: () => void;
 }
 
 export default function TableHeader({ 
@@ -30,7 +32,9 @@ export default function TableHeader({
   showSearch = true, 
   hideSearchOnMobile = false,
   className ="bg-ff715b", 
-  image = downloadIcon 
+  image = downloadIcon,
+  downloadDisabled = false,
+  onDownload,
 }: TableProps) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,7 +95,12 @@ export default function TableHeader({
         )}
 
         {/* Filter + dropdowns */}
-        <div className="flex gap-3 relative" ref={dropdownRef}>
+        <div
+          className={`gap-3 relative ${
+            isSearchExpanded ? "hidden lg:flex" : "flex"
+          }`}
+          ref={dropdownRef}
+        >
           <FullFilterButton
             onOpenFilter={() => setFilterOpen((prev) => !prev)}
             isOpen={filterOpen}
@@ -111,7 +120,15 @@ export default function TableHeader({
             onChange={(value) => console.log("Selected:", value)}
           />
 
-          <button className={`w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8 ${className}`}>
+          <button
+            type="button"
+            onClick={onDownload}
+            disabled={downloadDisabled}
+            aria-label="Download selected table rows"
+            className={`w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8 ${className} ${
+              downloadDisabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+            }`}
+          >
             <Image
               src={image}
               alt="download"

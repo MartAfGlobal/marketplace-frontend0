@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import HandBug from "@/assets/Seller/handBug.png";
 import ProductImage from "@/assets/Seller/productImage.png";
@@ -17,6 +17,7 @@ import EyeIcon from "@/assets/icons/eye.png";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
+import { useMobileViewport } from "@/hooks/useMobileViewport";
 
 export type DraftProductDataTableProps = {
   currentPage: number;
@@ -29,6 +30,7 @@ export type DraftProductDataTableProps = {
     timeFilter?: string;
   };
   onFilteredCount?: (count: number) => void;
+  onSelectionChange?: (rows: any[]) => void;
   onDelete?: (id: string) => void;
   deletingId?: string | null;
 };
@@ -144,6 +146,7 @@ export default function DraftProductDataTable({
   rowsPerPage,
   filters = {},
   onFilteredCount,
+  onSelectionChange,
   onDelete,
   deletingId,
 }: DraftProductDataTableProps) {
@@ -154,6 +157,8 @@ export default function DraftProductDataTable({
 const router = useRouter()
   // ✅ selected row state (per table, not pagination)
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const isMobile = useMobileViewport();
+  const lastSelectionSignature = useRef("");
   const { fetchdDraft } = useFetchProducts();
   const token = useSelector((state: RootState) => state.token?.token);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
@@ -245,6 +250,16 @@ const router = useRouter()
   // ✅ pagination
   const startIndex = (currentPage - 1) * rowsPerPage;
   const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);
+
+  useEffect(() => {
+    const selectedDrafts = isMobile
+      ? filteredRows
+      : filteredRows.filter((row) => selectedRows.includes(row.id));
+    const signature = JSON.stringify(selectedDrafts);
+    if (signature === lastSelectionSignature.current) return;
+    lastSelectionSignature.current = signature;
+    onSelectionChange?.(selectedDrafts);
+  }, [filteredRows, isMobile, onSelectionChange, selectedRows]);
 
   // ✅ checkbox (select all on current page)
   const allPageSelected = currentRows.every((r) => selectedRows.includes(r.id));

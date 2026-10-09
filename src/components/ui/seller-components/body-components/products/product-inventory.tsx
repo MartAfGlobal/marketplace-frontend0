@@ -26,6 +26,7 @@ import { useFetchProducts } from "@/helpers/sellers/fetchProducts";
 import { resetForm } from "@/store/sellers/addProductSlice";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { ChevronRight, PackagePlus, FileText, Package, FileUp } from "lucide-react";
+import { downloadTableRows } from "@/utils/downloadTableRows";
 
 export default function ProductInventoryPage() {
   const [filters, setFilters] = useState<any>({});
@@ -33,6 +34,7 @@ export default function ProductInventoryPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const [description, setDescription] = useState("");
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [showToggleModal, setShowToggleModal] = useState(false);
@@ -323,7 +325,7 @@ export default function ProductInventoryPage() {
               />
             </div>
 
-            <div className={`flex gap-3 relative ${isSearchOpen ? "hidden md:flex" : "flex"}`} ref={dropdownRef}>
+            <div className={`gap-3 relative ${isSearchOpen ? "hidden lg:flex" : "flex"}`} ref={dropdownRef}>
               <FullFilterButton
                 onOpenFilter={() => setFilterOpen((prev: boolean) => !prev)}
                 isOpen={filterOpen}
@@ -339,7 +341,14 @@ export default function ProductInventoryPage() {
                 </div>
               )}
 
-              <button className="w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8">
+              <button
+                disabled={selectedProducts.length === 0}
+                onClick={() => downloadTableRows(selectedProducts, "products-inventory")}
+                className={`w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8 ${
+                  selectedProducts.length === 0 ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                }`}
+                aria-label="Download selected products"
+              >
                 <Image
                   src={downloadIcon}
                   alt="download"
@@ -376,6 +385,7 @@ export default function ProductInventoryPage() {
             rowsPerPage={resultsPerPage}
             filters={filters}
             onFilteredCount={setFilteredCount}
+            onSelectionChange={setSelectedProducts}
             onToggleActive={handleToggleActive}
             togglingId={togglingId}
           />
