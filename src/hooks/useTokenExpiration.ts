@@ -25,7 +25,7 @@ function isTokenExpired(token: string) {
     );
 
     const { exp } = JSON.parse(jsonPayload);
-    // Add a 5 minute buffer so we don't use tokens about to expire
+    // Treat near-expiry tokens as expired so protected requests are not started with a token about to lapse.
     const currentTime = Math.floor(Date.now() / 1000) + 300;
     return exp < currentTime;
   } catch {
@@ -67,7 +67,7 @@ export const useTokenExpiration = () => {
 
     if (!isProtectedPath) return;
 
-    // Check if token exists in localStorage/cookies as a fallback
+    // Redux is the primary source, but storage fallback supports a page reload before Redux rehydration completes.
     const storedToken =
       typeof window !== "undefined"
         ? localStorage.getItem("accessToken") ||
@@ -78,6 +78,7 @@ export const useTokenExpiration = () => {
     const effectiveToken = token || storedToken;
 
     if (!effectiveToken || isTokenExpired(effectiveToken)) {
+      // Clear all token copies before redirecting and preserve the attempted URL for post-login return.
       clearStoredAuthTokens();
       dispatch(tokenActions.deleteToken());
 

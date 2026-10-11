@@ -36,6 +36,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
   const dispatch = useDispatch()
 
 
+  // Email is captured and verified in the preceding registration step; this form completes the account credentials.
   const VerifiedEmail = useSelector((state: any) => state.registration.email);
   const [formData, setFormData] = useState<RegisterParams>({
     password: "",
@@ -98,6 +99,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
     }
     console.log("fcfc", token)
 
+    // Submit the verified email/token with the password and phone to finish registration.
     registerUserReq({
       successRes: registerUserRes,
       requestConfig: {

@@ -4,6 +4,7 @@ import type { AdminCategoryListItem } from "@/types/admin";
 // Re-export so existing imports from this slice continue to work
 export type { AdminCategoryListItem as AdminCategoryData };
 
+// Paginated category list for catalog configuration; selected category detail is stored separately.
 interface AdminCategoriesState {
   adminCategories: AdminCategoryListItem[];
   totalCount: number;

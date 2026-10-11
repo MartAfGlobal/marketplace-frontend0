@@ -47,7 +47,7 @@ export default function ResetPasswordForm({userType}: {userType: "seller" | "buy
 
   const { loading, sendHttpRequest: resetRequest } = useHttp();
 
-  // ✅ Detect mobile and redirect immediately
+  // Mobile users complete this step through the homepage auth flow; desktop users stay on the dedicated reset page.
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase();
     const isMobileDevice = /iphone|ipad|android|mobile|ipod|blackberry|iemobile|opera mini/.test(userAgent);
@@ -109,6 +109,7 @@ export default function ResetPasswordForm({userType}: {userType: "seller" | "buy
       return;
     }
 
+    // The account type selects the matching confirmation endpoint; both require the reset token and matching passwords.
     const url = userType==="buyer"? `/accounts/forgot-password/confirm/` : `/accounts/manufacturer/forgot-password/confirm/`
 
 

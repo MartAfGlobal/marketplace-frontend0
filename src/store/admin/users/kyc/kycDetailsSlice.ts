@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { KycVerificationData } from "@/types/global";
 
+// Paginated seller verification queue, with request status shared by its dashboard consumers.
 interface AdminKycState {
   adminKycDetails: KycVerificationData[]; // ✅ always an array
   totalCount: number;
@@ -20,6 +21,7 @@ const AdminKycDetailsSlice = createSlice({
   initialState,
   reducers: {
     setAdminKycData(state, action: PayloadAction<{ results: KycVerificationData[]; count: number }>) {
+      // Replace the current page and retain the backend count for the queue's pagination.
       state.adminKycDetails = action.payload.results;
       state.totalCount = action.payload.count;
       state.error = null;

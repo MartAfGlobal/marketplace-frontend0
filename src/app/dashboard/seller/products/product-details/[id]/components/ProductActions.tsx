@@ -4,17 +4,34 @@ import { Button } from "@/components/ui/Button/Button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Trash from "@/assets/icons/trashWhite.svg";
 
+/**
+ * Product action controls shared by the product detail page.
+ * The component decides which CTA buttons or status text should appear
+ * depending on whether the product is a draft or published item and on its
+ * approval/activation state.
+ */
 interface ProductActionsProps {
+  /** True when the product has already been published to the marketplace. */
   published: string | undefined;
+  /** Full product object from the parent page; this contains the state flags used for the action logic. */
   productDetails: any;
+  /** Product id used for routing to the edit form and for validation checks. */
   id: string;
+  /** Whether an activation/deactivation request is currently loading. */
   ActivatingLoading: boolean;
+  /** Whether the draft is submitting for review. */
   submiting: boolean;
+  /** Whether the draft delete request is running. */
   deleteLoading: boolean;
+  /** Stops users from submitting a draft if some required product information is still missing. */
   isDraftComplete?: boolean;
+  /** Opens the confirmation modal for activation/deactivation/cancel actions. */
   setConfirmAction: (val: "activate" | "deactivate" | "cancel activation" | "cancel deactivation" | null) => void;
+  /** Called when the user cancels an activation/deactivation request flow. */
   handleCancelRequest: () => void;
+  /** Submits a draft product to the review pipeline. */
   handleSubmitDraftProduct: () => void;
+  /** Deletes the current draft product. */
   handleDeleteDraft: () => void;
 }
 
@@ -31,12 +48,18 @@ export default function ProductActions({
   handleSubmitDraftProduct,
   handleDeleteDraft,
 }: ProductActionsProps) {
+  // `useRouter` lets us navigate to the edit-product form without passing props through multiple layers.
   const router = useRouter();
 
   return (
     <>
-      {/* --- MOBILE VIEW (Unchanged) --- */}
+      {/*
+        MOBILE VIEW
+        This area prioritizes compact stacked buttons for smaller screens.
+        The checks below render different actions depending on product lifecycle state.
+      */}
       <div className="w-full flex gap-2 items-center lg:hidden">
+        {/* Drafts can always be deleted before they are published. */}
         {!published && (
           <button
             onClick={handleDeleteDraft}
@@ -50,6 +73,10 @@ export default function ProductActions({
           </button>
         )}
 
+        {/*
+          Published products have different CTA states depending on whether they are
+          active, approved, or waiting for activation/deactivation approval.
+        */}
         {published &&
         productDetails.is_active &&
         productDetails.is_approved === "approved" &&
@@ -91,7 +118,7 @@ export default function ProductActions({
           >
             {ActivatingLoading ? <LoadingSpinner /> : "Cancel deactivation"}
           </Button>
-        ) 
+        )
         : published &&
           !productDetails.activation_requested &&
           !productDetails.deactivation_requested &&
@@ -128,6 +155,10 @@ export default function ProductActions({
           )
         )}
 
+        {/*
+          Users can edit a draft or a published item when edit permissions are available.
+          The route changes depending on whether the item is still a draft or has already been published.
+        */}
         {(
           (!published) ||
           (published &&
@@ -142,8 +173,13 @@ export default function ProductActions({
         )}
       </div>
 
-      {/* --- DESKTOP VIEW --- */}
+      {/*
+        DESKTOP VIEW
+        Same state logic as the mobile layout, but optimized for larger screens with a
+        wider action area and layout alignment.
+      */}
       <div className="hidden md:flex w-full  justify-end gap-3 items-center">
+        {/* Desktop delete button mirrors the mobile version for drafts. */}
         {!published && (
           <button
             onClick={handleDeleteDraft}
@@ -157,8 +193,7 @@ export default function ProductActions({
           </button>
         )}
 
-          
-
+        {/* Desktop version of the same published-state lifecycle actions. */}
         {published &&
         productDetails.is_active &&
         productDetails.is_approved === "approved" &&
@@ -232,9 +267,9 @@ export default function ProductActions({
               {submiting ? <LoadingSpinner /> : "Submit for review"}
             </Button>
           )
-          
         )}
 
+        {/* Desktop edit action uses the same route logic as the mobile version. */}
         {(
           (!published) ||
           (published &&

@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AdminSellerDetailsData } from "@/types/global";
 
+// Holds the selected seller record while an admin reviews or updates that account.
 interface AdminSellerByIdState {
   adminSellerById: AdminSellerDetailsData | null;
   loading: boolean;

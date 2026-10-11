@@ -36,6 +36,7 @@ export default function CheckoutSummary() {
     0
   );
 
+  // Prefer backend-formatted checkout amounts, with the item subtotal as a fallback for incomplete responses.
   const formatAmount = (val: any, fallback: number = 0): string => {
     if (val === undefined || val === null || val === "") {
       return fallback.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -64,6 +65,7 @@ export default function CheckoutSummary() {
   useEffect(() => {
     if (!token) return;
 
+    // Refresh saved addresses and preserve the current choice when it still exists; otherwise use the default.
     const refreshAddresses = async () => {
       try {
         const response = await axios.get("/shipping/shipping-addresses/", {
@@ -131,6 +133,7 @@ export default function CheckoutSummary() {
     const formData = checkoutSummary?.guest_address;
     console.log("checking formdata", formData);
 
+    // Guest checkout submits contact/address data and the selected line items without an authenticated token.
     const items = checkoutItems.map((item:any) => ({
       product_id: item.id,
       variation_id: item.variation_id || null,
@@ -157,6 +160,7 @@ export default function CheckoutSummary() {
   };
 
   const handleCheckout = () => {
+    // The selected shipping method and address are submitted with the backend-calculated discount.
     const shipping_method_id = checkoutSummary?.shipping_methods?.[0]?.id || "";
     const addressIdNum = (selectedAddressId);
 

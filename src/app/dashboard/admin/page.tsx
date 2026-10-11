@@ -20,6 +20,7 @@ import pendingFile from "@/assets/icons/admin/pendingFile.svg";
 export default function AdminOverviewPage() {
   const [timeFilter, setTimeFilter] = useState("Today");
 
+  // This overview currently uses presentation fixtures; these values are not fetched from the admin reporting APIs.
   // Mock data for tickets
   const mockTickets = [
     {

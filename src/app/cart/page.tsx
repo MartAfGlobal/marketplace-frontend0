@@ -97,6 +97,7 @@ export default function CartPage() {
   const hasSyncedGuestCart = useRef(false);
 
   const persistLocalCart = (items: any[]) => {
+    // Guest carts are persisted in the browser; authenticated carts are authoritative on the server.
     try {
       if (!token) {
         localStorage.setItem("cart", JSON.stringify(items || []));
@@ -168,6 +169,7 @@ export default function CartPage() {
   };
 
   useEffect(() => {
+    // Restore a guest cart locally or merge any pre-login guest cart into the account cart before displaying it.
     const init = async () => {
       setHydratingCart(true);
 
@@ -306,7 +308,7 @@ export default function CartPage() {
   const syncGuestCartAndFetch = async () => {
     if (!token) return;
 
-    // 1️⃣ Sync guest cart if any was stored while logged out
+    // Sync any cart created before sign-in, then replace the local snapshot with the backend cart.
     const stored = JSON.parse(localStorage.getItem("cart") || "[]");
     // CRITICAL: Immediately remove from localStorage so it NEVER syncs again!
     localStorage.removeItem("cart");
@@ -345,6 +347,7 @@ export default function CartPage() {
 
     const newChecked = !selectedItems[id];
 
+    // Update the UI immediately; roll back the optimistic selection if the server rejects it.
     applyCheckedToLocal(item.variation_id || item.id, newChecked);
 
     if (!token) {
@@ -585,6 +588,7 @@ export default function CartPage() {
     }
 
     try {
+      // Ask the backend to price the selected cart lines against the chosen address before opening checkout.
       const summaryPayload = {
         shipping_address_id: addrId,
         discount_amount: "0.00",
@@ -687,6 +691,7 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
+    // Freeze the selected cart lines as the checkout snapshot before address and pricing checks begin.
     dispatch(setCheckoutItems(checkoutItems));
 
     if (!token) {

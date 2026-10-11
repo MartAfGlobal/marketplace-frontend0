@@ -6,6 +6,7 @@ import { useOtpTimer } from "@/hooks/useOtpTimer";
 const FIRST_RESEND_DELAY = 2 * 60;
 const LATER_RESEND_DELAY = 6 * 60;
 
+// Track password-reset send throttling per account type and normalized email for the current browser session.
 export function usePasswordResetCooldown(
   userType: "buyer" | "seller",
   email: string,
@@ -18,6 +19,7 @@ export function usePasswordResetCooldown(
   });
 
   const recordSuccessfulSend = useCallback(() => {
+    // The first successful send has a shorter wait; later sends use the longer cooldown.
     const attemptsKey = `password_reset_send_count_${encodeURIComponent(identifier)}`;
     let successfulSendCount = 0;
 

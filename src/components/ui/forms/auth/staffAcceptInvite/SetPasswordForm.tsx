@@ -38,6 +38,7 @@ export default function SetPasswordForm() {
   const passValidation = validatePassword(newPassword);
   const isFormValid = !!temporaryPassword && !!newPassword && !!confirmPassword;
 
+  // Step one validates the invitation and temporary password, then requests a new password and sends the invitee to OTP verification.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);

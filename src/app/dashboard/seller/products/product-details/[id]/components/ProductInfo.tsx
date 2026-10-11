@@ -1,5 +1,12 @@
+/**
+ * Renders the product summary and descriptive content for the seller detail page.
+ * The component is intentionally split into mobile and desktop layouts so the same
+ * information can be displayed in a compact stacked format or a wider read-only dashboard.
+ */
 interface ProductInfoProps {
+  /** Product payload fetched by the parent page. */
   productDetails: any;
+  /** Comes from the URL query string and indicates whether the item is a draft or published product. */
   published: string | undefined;
 }
 
@@ -8,7 +15,11 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
 
   return (
     <>
-      {/* --- MOBILE VIEW (Unchanged) --- */}
+      {/*
+        MOBILE VIEW
+        This version prioritizes quick scanning on smaller screens, stacking the core
+        product information vertically and keeping the overview readable on narrow widths.
+      */}
       <div className="lg:hidden">
         <div className="space-y-2 mt-6">
           <h1 className="text-[clamp(10px,1vw,14px) text-nowrap font-MontserratNormal text-gray-400">Product name</h1>
@@ -77,7 +88,11 @@ export default function ProductInfo({ productDetails, published }: ProductInfoPr
         </div>
       </div>
 
-      {/* --- DESKTOP VIEW --- */}
+      {/*
+        DESKTOP VIEW
+        The larger layout uses a more structured dashboard card style with a higher-readability
+        grid for metadata and a slightly more formal presentation of text blocks.
+      */}
       <div className="hidden lg:block mt-8">
         <div className="flex gap-12">
           <div className="space-y-2">

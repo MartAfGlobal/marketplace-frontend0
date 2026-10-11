@@ -18,24 +18,34 @@ interface LayoutWrapperProps {
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
+  // Every protected or app-shell page should validate whether current auth tokens are still valid.
+  // This is a global safety net; route-level screens can rely on this hook instead of repeating
+  // logic in each page.
   useTokenExpiration();
   const dispatch = useDispatch();
   const resultModal = useSelector((state: RootState) => state.ui?.resultModal);
 
-    const [loading, setLoading] = useState(true);
-  
-      useEffect(() => {
-      setLoading(false);
-    }, []);
-  
-    if (loading) return <WireframeLoader/>;
+  // The initial loader exists to prevent a flash of stale content during route transitions or early
+  // auth checks. In practice this keeps the app shell from rendering partial content before the
+  // client has finished the first hydration pass.
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    setLoading(false);
+  }, []);
+
+  if (loading) return <WireframeLoader />;
+
+  // Certain route families intentionally do not render the public app shell (header/footer) because
+  // they already provide their own dashboard or auth layout. This avoids duplicate navigation chrome.
   const hideLayout = ["/auth", "/dashboard/seller", "/dashboard/admin", "/informative", "/info"].some((path) =>
     pathname?.includes(path)
   );
 
-
-const productPage = ["/product", "/cart", "/dashboard"].some(path => pathname?.startsWith(path));
+  // Product and cart routes use a slightly different footer treatment on larger screens. The intent
+  // appears to be a cleaner single-column product experience with the footer hidden on mobile for some
+  // views, even though the logic is centralized here.
+  const productPage = ["/product", "/cart", "/dashboard"].some(path => pathname?.startsWith(path));
 
   return (
     <>
@@ -47,18 +57,16 @@ const productPage = ["/product", "/cart", "/dashboard"].some(path => pathname?.s
         onCancel={() => dispatch(closeGlobalResultModal())}
       />
       {!hideLayout && <Header />}
-     
-       {children}
-     
+
+      {children}
+
       {!hideLayout &&
         (productPage ? (
           <div className="hidden md:block">
             <FooterPage />
           </div>
         ) : (
-          
           <FooterPage />
-          
         ))}
     </>
   );

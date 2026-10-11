@@ -16,9 +16,8 @@ const toQueryString = (query: Query = {}) => {
 };
 
 /**
- * Admin Finance endpoints. Callback-based on purpose: every Finance screen
- * owns its own data (filters differ per screen and nothing is shared between
- * them), so nothing here needs to live in the redux store.
+ * Admin finance API facade. Callback-based by design: each finance screen owns
+ * its filtered results locally, while this helper centralizes endpoint and auth configuration.
  */
 export const FinanceDetails = () => {
   const token = useSelector((state: RootState) => state.token?.token);

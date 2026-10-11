@@ -5,6 +5,7 @@ interface RegistrationState {
   token: string | null;
 }
 
+// Registration verification spans multiple routes, so its email/token are restored after a page navigation or reload.
 const getInitialState = (): RegistrationState => {
   if (typeof window !== "undefined") {
     return {

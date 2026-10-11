@@ -78,7 +78,7 @@ function Verify2faContent() {
     }
   };
 
-  // ── Verify ──────────────────────────────────────────────────────────────────
+  // Exchange the email OTP and pending user identity for a session token, then route by account type.
   const handleVerifyOtp = (otpString = otp.join("")) => {
     if (otpString.length < 6) {
       setErrorMsg("Please enter a valid 6-digit OTP");
@@ -157,7 +157,7 @@ function Verify2faContent() {
     if (pasted.length === 6) handleVerifyOtp(pasted);
   };
 
-  // ── Resend — uses backend retry_after ──────────────────────────────────────
+  // Resend is gated by the server-provided cooldown and resets the timer to the returned retry interval.
   const handleResendOtp = () => {
     if (!canResend) return;
     setOtp(["", "", "", "", "", ""]);

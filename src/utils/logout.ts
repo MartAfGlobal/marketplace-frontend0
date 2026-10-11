@@ -7,7 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { clearStoredAuthTokens } from "@/utils/authStorage";
 import axios from "@/lib/axios";
 
-// ✅ Plain logout function (no hooks here)
+// Shared logout routine for role-aware redirects, callable from both React components and the hook wrapper below.
 export const logout = async (
   dispatch: AppDispatch,
   router: any,
@@ -18,7 +18,7 @@ export const logout = async (
 ) => {
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  // Fire-and-forget the server-side logout — don't block on it
+  // Notify the API when possible, but always clear local credentials even if the network request fails.
   if (token) {
     try {
       await axios.post(
@@ -47,7 +47,7 @@ export const logout = async (
       localStorage.removeItem("sellerRedirectUrl");
     }
 
-    // Redirect based on role
+    // Return each account type to its own sign-in entry point; preserve the cart route for buyer checkout.
     if (isAdmin) {
       router.replace("/auth/admin/login");
     } else if (isSeller) {
@@ -66,7 +66,7 @@ export const logout = async (
   }
 };
 
-// ✅ Hook wrapper for React components
+// Bind the shared logout routine to the current route and Next.js router for component use.
 export const useLogout = (dispatch: AppDispatch) => {
   const router = useRouter();
   const pathname = usePathname();

@@ -6,6 +6,7 @@ import type {
   AdminStaffActivityLogItem,
 } from "@/types/admin";
 
+// Staff directory state can also retain list-level summaries and activity data returned by the same dashboard request.
 interface AdminStaffState {
   adminStaff: AdminStaffListItem[];
   totalCount: number;
@@ -42,6 +43,7 @@ const adminStaffSlice = createSlice({
     ) {
       state.adminStaff = action.payload.results;
       state.totalCount = action.payload.count;
+      // These fields are optional so independent refreshes of the table do not clear existing dashboard context.
       if (action.payload.summary) state.summary = action.payload.summary;
       if (action.payload.staffByRole) state.staffByRole = action.payload.staffByRole;
       if (action.payload.recentActivity) state.recentActivity = action.payload.recentActivity;

@@ -1,6 +1,10 @@
 import { BuyerDispute, DisputePayload, OrderItem, OrderShippingAddress } from "@/types/global";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+/**
+ * Redux slice for buyer/seller order state.
+ * It keeps the raw backend order payloads and normalizes them into the UI-friendly structure used across the app.
+ */
 interface OrderState {
   orders: OrderItem[];
   shippingAddress: OrderShippingAddress | null;
@@ -10,6 +14,7 @@ interface OrderState {
   error: string | null;
 }
 
+// Default state keeps the order dashboard empty until data is fetched from the backend.
 const initialState: OrderState = {
   orders: [],
   disputeDetails: null,
@@ -19,6 +24,7 @@ const initialState: OrderState = {
   error: null,
 };
 
+// The slice centralizes order loading, order mapping, dispute data, and shipping metadata.
 const orderSlice = createSlice({
   name: "orders",
   initialState,
@@ -28,11 +34,13 @@ const orderSlice = createSlice({
       state.error = null;
     },
 
+    // Replace the current order list with a fresh normalized payload from the backend.
     fetchOrdersSuccess(state, action: PayloadAction<OrderItem[]>) {
       state.loading = false;
       const rawOrders = Array.isArray(action.payload) ? action.payload : [];
       state.orders = rawOrders.map((order: any) => {
         const rawItems = order.order_items || order.items || [];
+        // Normalize each order item so UI components can safely read the same fields regardless of API response drift.
         const mappedItems = (Array.isArray(rawItems) ? rawItems : []).map((item: any) => ({
           ...item,
           id: item.id || item.product_id || item.product,
@@ -81,6 +89,7 @@ const orderSlice = createSlice({
       state.error = action.payload;
     },
 
+    // Append new orders without duplicating ones already in state; used for incremental fetches like awaiting-payment queues.
     addOrdersSuccess(state, action: PayloadAction<OrderItem[]>) {
       state.loading = false;
       const rawOrders = Array.isArray(action.payload) ? action.payload : [];
@@ -155,6 +164,7 @@ const orderSlice = createSlice({
       state.shippingAddress = action.payload;
     },
 
+    // Used when user logs out or leaves the order flow so stale order data does not leak across screens.
     clearOrders(state) {
       state.shippingAddress = null;
       state.orders = [];

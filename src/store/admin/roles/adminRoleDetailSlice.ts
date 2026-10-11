@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { AdminRoleDetail } from "@/types/admin";
 
+// Keeps the selected role and its permission configuration available to the role editor.
 interface AdminRoleDetailState {
   adminRoleDetail: AdminRoleDetail | null;
   loading: boolean;

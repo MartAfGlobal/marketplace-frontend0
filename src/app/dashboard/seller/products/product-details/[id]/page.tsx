@@ -19,6 +19,11 @@ import ProductActions from "./components/ProductActions";
 import ProductVariants from "./components/ProductVariants";
 import Image from "next/image";
 
+/**
+ * Seller product detail page.
+ * This screen handles loading a draft or published product, rendering the gallery and metadata,
+ * and offering actions like publish, delete, activate, deactivate, and cancel pending requests.
+ */
 export default function SellerProductDetailsPage() {
   /* ------------------------- CORE HOOKS ------------------------- */
   const dispatch = useDispatch();
@@ -31,6 +36,7 @@ export default function SellerProductDetailsPage() {
   const token = useSelector((state: RootState) => state.token?.token);
 
   /* ------------------------- LOCAL STATE ------------------------- */
+  // Product data is kept in local state so the page can refresh after activation, deletion, or submission actions.
   const [productDetails, setProductDetails] =
     useState<SellerProductDetails | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
@@ -69,6 +75,7 @@ export default function SellerProductDetailsPage() {
   } = useHttp();
 
   /* ------------------------- CUSTOM HOOK ------------------------- */
+  // `useFetchProducts` encapsulates activation/deactivation actions and their success/error state.
   const {
     activateProduct,
     loading: ActivatingLoading,
@@ -118,6 +125,7 @@ export default function SellerProductDetailsPage() {
   const [activeTab, setActiveTab] = useState<"main" | "variants">("main");
 
   /* ------------------------- EFFECTS ------------------------- */
+  // Fetch the product from the API when the route id or auth token changes.
   useEffect(() => {
     if (!id || !token) return;
 
@@ -171,6 +179,7 @@ export default function SellerProductDetailsPage() {
   }, [images]);
 
   /* ------------------------- HANDLERS ------------------------- */
+  // Dispatch the activate/deactivate action using the custom seller product hook.
   const handleActivateToggle = () => {
     activateProduct();
   };
@@ -187,6 +196,7 @@ export default function SellerProductDetailsPage() {
     setShowDeleteDraftConfirm(true);
   };
 
+  // Confirmed delete action sends the DELETE request for a draft product.
   const confirmDeleteDraft = () => {
     if (!token) return;
     setShowDeleteDraftConfirm(false);
@@ -205,6 +215,10 @@ export default function SellerProductDetailsPage() {
     });
   };
 
+  /**
+   * Validates whether a draft contains all required fields before it can be submitted.
+   * This protects the backend from incomplete product submissions and gives the seller a clear reason why the action is blocked.
+   */
   const isDraftComplete = () => {
     if (!productDetails) return false;
     const pd = productDetails as any;
@@ -316,6 +330,7 @@ export default function SellerProductDetailsPage() {
     );
   };
 
+  // Submitting the draft only proceeds if the completeness guard passes; otherwise the seller is sent to the incomplete draft modal.
   const handleSubmitDraftProduct = () => {
     if (!token || !id) return;
 
@@ -344,6 +359,7 @@ export default function SellerProductDetailsPage() {
   }
 
   /* ------------------------- UI ------------------------- */
+  // The page renders a responsive layout: mobile shows stacked sections, desktop keeps the gallery and metadata in a side-by-side layout.
   return (
     <div>
       <SellerMobileHeader  showBorder ={false}  showBackButton={true}

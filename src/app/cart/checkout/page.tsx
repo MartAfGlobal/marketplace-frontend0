@@ -70,6 +70,7 @@ export default function CheckoutPage() {
         userType: "buyer",
       },
       successRes: (responseData: any) => {
+        // The summary endpoint returns authoritative line totals and shipping/pricing metadata for this address.
         const backendCart = responseData?.data?.data || responseData?.data;
         if (backendCart) {
           const mappedItems = (backendCart.items || []).map((item: any) => ({

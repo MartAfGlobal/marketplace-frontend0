@@ -1,5 +1,6 @@
 import { OrderItem } from "@/types/global";
 
+// Keep date formatting consistent across buyer order cards and detail views.
 const formatOrderDate = (date?: string | null) => {
   if (!date) return "";
 
@@ -20,6 +21,7 @@ export const isReturnedBuyerOrder = (order: OrderItem) => {
   );
 };
 
+// Translate API lifecycle statuses into the buyer-facing labels used in order history.
 export const getBuyerOrderStatusLabel = (order: OrderItem) => {
   if (isReturnedBuyerOrder(order)) return "Returned";
 

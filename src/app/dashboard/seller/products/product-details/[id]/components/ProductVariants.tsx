@@ -7,7 +7,13 @@ import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
 import { toast } from "sonner";
 
+/**
+ * Shows every product variant in a card layout and supports quick stock adjustments.
+ * The component keeps a local stock map so inventory can be updated optimistically before the
+ * API responds, while still reverting to the last known value if the request fails.
+ */
 interface ProductVariantsProps {
+  /** Product variations returned by the parent page. */
   variations: any[];
 }
 
@@ -15,6 +21,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
   const token = useSelector((state: RootState) => state.token?.token);
   const { sendHttpRequest } = useHttp();
 
+  // Local stock state is used so each variant can update without a full page refresh.
   const [stockMap, setStockMap] = useState<Record<string, number>>({});
   const [loadingVariationId, setLoadingVariationId] = useState<string | null>(null);
 
@@ -31,6 +38,11 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
 
   if (!variations || variations.length === 0) return null;
 
+  /**
+   * Increases or decreases stock for a single variant.
+   * The button press updates the UI immediately, then calls the API;
+   * if the request fails, the stock value is rolled back to the previous amount.
+   */
   const handleAdjustStock = async (variationId: string, adjustment: number) => {
     if (!variationId || !token) {
       if (!token) toast.error("Please login to adjust inventory");
@@ -42,7 +54,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
 
     if (adjustment < 0 && currentStock <= 0) return;
 
-    // Optimistically update stock count in UI
+    // Optimistically update stock count in UI.
     setStockMap((prev) => ({
       ...prev,
       [variationId]: newStock,
@@ -75,7 +87,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
           );
         },
         errorRes: (err: any) => {
-          // Revert optimistic update
+          // Revert optimistic update.
           setStockMap((prev) => ({
             ...prev,
             [variationId]: currentStock,
@@ -84,7 +96,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
         },
       });
     } catch (err: any) {
-      // Revert optimistic update
+      // Revert optimistic update.
       setStockMap((prev) => ({
         ...prev,
         [variationId]: currentStock,
@@ -108,7 +120,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
             <div key={vId} className="min-w-0 pb-8 border-b border-gray-100 last:border-0">
               {/* --- MOBILE VIEW --- */}
               <div className="flex flex-col gap-6 lg:hidden">
-                {/* Top Section: Image and Core Details */}
+                {/* Top section shows thumbnail, variant name, quantity controls, and price in a compact stacked format. */}
                 <div className="flex gap-4">
                   <div className="w-24 h-24 flex-shrink-0 relative">
                     <Image
@@ -119,7 +131,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
                       className="object-cover rounded-md"
                     />
                   </div>
-                  
+
                   <div className="flex-1 flex flex-col justify-between">
                     <div className="flex justify-between items-start gap-2">
                       <div className="space-y-1">
@@ -158,7 +170,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
                   </div>
                 </div>
 
-                {/* Bottom Section: Attributes Grid */}
+                {/* Attribute summary appears under the main variant info, allowing quick comparison across options like size or color. */}
                 {variant.attribute_summary && Object.keys(variant.attribute_summary).length > 0 && (
                   <div className="flex gap-4 flex-wrap">
                     {Object.entries(variant.attribute_summary).map(([attribute, value]) => (
@@ -179,7 +191,7 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
 
               {/* --- DESKTOP VIEW --- */}
               <div className="hidden lg:flex flex-row gap-6">
-                {/* Left Column: Image and details stacked vertically */}
+                {/* On desktop, the left column is narrower and focuses on the image plus direct inventory controls. */}
                 <div className="flex flex-col gap-4 w-[120px] flex-shrink-0">
                   <div className="w-[120px] h-[120px] relative">
                     <Image
@@ -190,12 +202,12 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
                       className="object-cover rounded-md"
                     />
                   </div>
-                  
+
                   <div className="space-y-1 mt-2">
                     <h1 className="text-xs text-gray-500 font-MontserratNormal">Variant name</h1>
                     <p className="text-sm font-MontserratMedium text-gray-800">{variant.name}</p>
                   </div>
-                  
+
                   <div className="space-y-1">
                     <h1 className="text-xs text-gray-500 font-MontserratNormal">Quantity</h1>
                     <div className="flex items-center gap-2 pt-0.5">
@@ -220,14 +232,14 @@ export default function ProductVariants({ variations }: ProductVariantsProps) {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-1">
                     <h1 className="text-xs text-gray-500 font-MontserratNormal">Price</h1>
                     <p className="text-sm font-MontserratSemiBold text-gray-900">₦{Number(variant.base_price || variant.price || 0).toLocaleString()}</p>
                   </div>
                 </div>
 
-                {/* Right Column: Attributes Grid */}
+                {/* The right side renders the variant metadata in a grid so attribute values are easier to scan at larger screen sizes. */}
                 <div className="flex-1 min-w-0">
                   {variant.attribute_summary && Object.keys(variant.attribute_summary).length > 0 && (
                     <div className="flex gap-x-8 gap-y-6 flex-wrap">

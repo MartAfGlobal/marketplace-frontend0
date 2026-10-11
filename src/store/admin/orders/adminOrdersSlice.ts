@@ -5,6 +5,7 @@ export interface AdminOrderItem {
   [key: string]: any;
 }
 
+// Paginated admin order queue with request state used by the order-management screens.
 interface AdminOrdersState {
   adminOrders: AdminOrderItem[];
   totalCount: number;
@@ -27,6 +28,7 @@ const AdminOrdersSlice = createSlice({
       state,
       action: PayloadAction<{ results: AdminOrderItem[]; count: number }>
     ) {
+      // Store current page rows and API-wide count together for consistent pagination.
       state.adminOrders = action.payload.results;
       state.totalCount = action.payload.count;
       state.error = null;

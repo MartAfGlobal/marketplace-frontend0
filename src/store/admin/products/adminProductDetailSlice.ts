@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AdminProductDetail } from "@/types/global";
 
+// Detail state for the currently selected admin product review/moderation screen.
 interface AdminProductDetailState {
   product: AdminProductDetail | null;
   loading: boolean;

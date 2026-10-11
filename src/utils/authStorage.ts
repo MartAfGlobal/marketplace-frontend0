@@ -12,6 +12,7 @@ const authStorageKeys = [
 
 const authCookieKeys = ["accessToken", "token", "refreshToken", "userAuthId"];
 
+// Clear every supported storage location so logout cannot be undone by a stale token or persisted Redux state.
 export const clearStoredAuthTokens = () => {
   if (typeof window === "undefined") return;
 

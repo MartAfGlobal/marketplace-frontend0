@@ -28,16 +28,23 @@ import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
 import ResultModal from "@/components/ui/forms/resultModal";
 
+/**
+ * Step 1 of the add-product flow.
+ * This page gathers the basic product information: name, category, price, description, and product images.
+ * The data is then stored in the Redux slice and optionally saved as a draft before moving to the next step.
+ */
 export default function AddProductStep1Page() {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  // `category` and `subCategory` drive downstream product metadata and attribute selection.
   const [category, setCategory] = useState<Category | undefined>();
   const [basePrice, setBasePrice] = useState<number | string | undefined>();
   const [subCategory, setSubCategory] = useState<SubCategory | undefined>();
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
 
+  // Up to four images can be attached to a product in the first step.
   const [images, setImages] = useState<(File | null)[]>([
     null,
     null,
@@ -83,6 +90,7 @@ export default function AddProductStep1Page() {
 
   const token = useSelector((state: RootState) => state.token?.token);
 
+  // Request hooks are separated by action type: save-as-draft, fetch current draft, and update draft when continuing.
   const { sendHttpRequest: savingToDraftReq, loading: savingDraft, error: saveDraftError, setError: setSaveDraftError } = useHttp();
   const { sendHttpRequest, loading: fetchingDraftDetails, error: fetchDraftError, setError: setFetchDraftError } = useHttp();
   const { sendHttpRequest: updatingDraft, loading: updating, error: updateDraftError, setError: setUpdateDraftError } = useHttp();
@@ -161,6 +169,7 @@ export default function AddProductStep1Page() {
   //   });
   // }, [token, draftId, step1Data.step1.id]);
 
+  // The endpoint differs depending on whether the user is creating a new draft or editing an existing one.
   const url =
     draftId === "" || step1Data.step1.id === ""
       ? "/products/manufacturer/drafts/"
@@ -180,6 +189,7 @@ export default function AddProductStep1Page() {
 
   const getValidFiles = () => images.filter((i): i is File => i !== null);
 
+  // `handleNext` validates the current form and persists it before redirecting to Step 2.
   const handleNext = () => {
     if (!isNextEnabled || !token) return;
 
@@ -238,6 +248,7 @@ export default function AddProductStep1Page() {
     });
   };
 
+  // Save draft is lighter than the full Next flow and is used to preserve the current product progress without leaving the form.
   const handleSaveDraft = () => {
     if (!isSaveEnabled || !token) return;
 

@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+// Flexible detail shape accepts backend category fields used across category and subcategory screens.
 export interface AdminCategoryDetail {
   id: string | number;
   name?: string;
@@ -32,6 +33,7 @@ export interface AdminCategoryDetail {
 }
 
 interface AdminCategoryDetailState {
+  // Null until a detail request succeeds or after the record is explicitly cleared.
   category: AdminCategoryDetail | null;
   loading: boolean;
   error: string | null;

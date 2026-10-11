@@ -173,6 +173,7 @@ export default function AdminLayout({
   const router = useRouter();
   const dispatch = useDispatch();
   useTokenExpiration();
+  // Load the server-managed role permissions once for this admin session before exposing restricted navigation.
   useLoadAdminAccess();
   const { loaded: accessLoaded, can } = useAdminAccess();
   const logout = useLogout(dispatch);
@@ -183,7 +184,7 @@ export default function AdminLayout({
     Record<string, boolean | undefined>
   >({});
 
-  // Automatically detect the role based on the route path
+  // Dashboard subsections select role-specific navigation from their route prefix.
   const getRoleFromPath = (path: string): AdminRole => {
     if (path.includes("/dashboard/admin/operational")) return "Operational";
     if (path.includes("/dashboard/admin/it")) return "IT";
@@ -376,7 +377,7 @@ export default function AdminLayout({
     },
   ];
 
-  // Filter sidebar items dynamically based on selected role
+  // Show only menu entries allowed both by the dashboard role and the server permission matrix.
   const activeRoleItems = roleNavigation[currentRole] || [];
   // Then only what this person's role actually allows. Until the server has answered
   // nothing restricted is shown (fail closed), so a menu never flashes and vanishes.
@@ -753,6 +754,7 @@ export default function AdminLayout({
           {(() => {
             const needed = requiredCategory(pathname);
             if (!needed) return children;
+            // Wait for the permission matrix before rendering protected routes, then show an explicit no-access state when denied.
             if (!accessLoaded) {
               return (
                 <div className="flex justify-center py-24">

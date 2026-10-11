@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AdminSellerData } from "@/types/global";
 
+// Stores the paginated seller directory used by admin account-management screens.
 interface AdminSellerState {
   adminSellerDetails: AdminSellerData[]; // ✅ always an array
   totalCount: number;
@@ -20,6 +21,7 @@ const AdminSellerDetailsSlice = createSlice({
   initialState,
   reducers: {
     setAdminSellerData(state, action: PayloadAction<{ results: AdminSellerData[]; count: number }>) {
+      // Keep the API's full result count so pagination controls can calculate the available pages.
       state.adminSellerDetails = action.payload.results;
       state.totalCount = action.payload.count;
       state.error = null;

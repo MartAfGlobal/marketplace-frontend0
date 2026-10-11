@@ -5,6 +5,7 @@ const tokenInitialState: TokenSliceParams = {
   token: null,
 };
 
+// Redux holds the active access token for authenticated requests; clearing it returns auth state to its signed-out baseline.
 const tokenSlice = createSlice({
   name: "token",
   initialState: tokenInitialState,

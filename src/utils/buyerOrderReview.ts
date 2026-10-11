@@ -8,6 +8,7 @@ export interface BuyerOrderReviewSource extends BuyerOrderReviewItem {
   items?: BuyerOrderReviewItem[] | null;
 }
 
+// Derive review actions from either order-level or per-item review metadata returned by the API.
 export function getOrderReviewState(order: BuyerOrderReviewSource | null | undefined) {
   if (!order) {
     return { hasReviewableItems: false, canReview: false, allReviewed: false };

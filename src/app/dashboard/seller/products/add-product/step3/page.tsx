@@ -17,6 +17,11 @@ import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+/**
+ * Step 3 of the add-product flow.
+ * This final step captures product specifications, allows the seller to save the current draft,
+ * or immediately publish the product to review after all previous steps have been validated.
+ */
 export default function AddProductStep1Page() {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -24,6 +29,7 @@ export default function AddProductStep1Page() {
   const [specificationsText, setSpecificationsText] = useState("");
   const [successful, setSuccessful] = useState(false);
 
+  // Optional file slots are currently not used in this step, but kept in the state shape for compatibility with the form flow.
   const [images, setImages] = useState<(File | null)[]>([
     null,
     null,
@@ -36,6 +42,7 @@ export default function AddProductStep1Page() {
   const token = useSelector((state: RootState) => state.token?.token);
   const step1Data = useSelector((state: RootState) => state.addProduct.step1);
 
+  // At least one non-empty specification block is required before the product can be added for review.
   const hasValidSpecifications =
     specificationsText
       .replace(/<[^>]*>/g, "")
@@ -44,6 +51,7 @@ export default function AddProductStep1Page() {
 
   const isNextEnabled = hasValidSpecifications && Boolean(step1Data?.id);
 
+  // Each action type uses its own `useHttp` instance so save-draft and publish states stay isolated and predictable.
   const { sendHttpRequest: savingToDraftReq, loading: savingDraft, error: saveDraftError, setError: setSaveDraftError } = useHttp();
   const { sendHttpRequest, loading: fetchingDraftDetails, error: fetchDraftError, setError: setFetchDraftError } = useHttp();
   const { sendHttpRequest: updatingDraft, loading: updating, error: updateDraftError, setError: setUpdateDraftError } = useHttp();
@@ -97,6 +105,7 @@ export default function AddProductStep1Page() {
     console.log("unknow", step1Data);
   }, [step1Data]);
 
+  // Final payload only needs the specification text in this step before it is published for approval.
   const buildSpecificationsFormData = () => {
     const payload = new FormData();
     const normalizedText = specificationsText.trim();
@@ -114,6 +123,7 @@ export default function AddProductStep1Page() {
     dispatch(resetForm());
   };
 
+  // Publish the product after the final specification text is saved to the draft, then trigger the publish endpoint.
   const handleNext = () => {
     if (!isNextEnabled || !token || !step1Data.id) return;
 
@@ -151,6 +161,7 @@ export default function AddProductStep1Page() {
     });
   };
 
+  // Save the current specification as a draft without creating a public listing yet.
   const handleSaveDraft = () => {
     if (!token) return;
     console.log("saving draft", step1Data);

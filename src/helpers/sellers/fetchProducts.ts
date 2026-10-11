@@ -23,11 +23,15 @@ import {
 import { useState } from "react";
 import { RequestType } from "@/types/global";
 
-
+/**
+ * Central hook for seller-side product, order, and finance operations.
+ * It groups repeated HTTP calls together so product screens and dashboards can re-use the same request logic.
+ */
 export const useFetchProducts = (id?: string) => {
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.token?.token);
   const { sendHttpRequest, loading, error, setError } = useHttp();
+  // Local state tracks activation status and any server success message returned from cancellation flows.
   const [success, setsuccess] = useState(false);
   const [activated, setActivated]= useState(false)
   const [isActive, setIsActive] = useState(false);
@@ -43,6 +47,7 @@ const [request, setRequest] = useState<RequestType>({
 
 
  
+  // Fetch the seller's product list and store it in the Redux slice for dashboard rendering.
   const fetchProducts = () => {
     if (!token) return;
 

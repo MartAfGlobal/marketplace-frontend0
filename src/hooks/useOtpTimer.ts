@@ -11,6 +11,7 @@ interface UseOtpTimerOptions {
   initialSeconds?: number;
 }
 
+// Normalize backend expiry messages so OTP forms can consistently invalidate their resend countdown.
 /** Check whether an error response from the backend indicates that the OTP has expired */
 export function isOtpExpiredError(err: any): boolean {
   if (!err) return false;
@@ -24,11 +25,11 @@ export function useOtpTimer({
   identifier = "default",
   initialSeconds = 60,
 }: UseOtpTimerOptions) {
-  // Normalize identifier to avoid invalid characters in storage key
+  // Scope persisted expiry timestamps by flow and identity, so separate accounts/OTP tasks never share cooldowns.
   const safeIdentifier = encodeURIComponent(identifier || "default");
   const storageKey = `otp_expiry_${scope}_${safeIdentifier}`;
 
-  // Helper to read remaining seconds based on the stored absolute timestamp
+  // Store an absolute expiry time rather than a decrementing count so the timer survives refreshes accurately.
   const getRemainingFromStorage = useCallback((): number => {
     if (typeof window === "undefined") return initialSeconds;
     try {
@@ -64,7 +65,7 @@ export function useOtpTimer({
     }
   });
 
-  // Re-sync timer if identifier or initialSeconds changes
+  // Reinitialize from storage whenever this component switches to a different OTP scope or identity.
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {

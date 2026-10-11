@@ -26,7 +26,7 @@ export default function LoginForm({ userType }: RegProps) {
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
 
-  // Get the previous page if passed
+  // Keep role-specific sign-in behavior and return the user to the page that initiated authentication when provided.
   const fromPage = searchParams.get("from");
 
   const rememberKey = `rememberLogin_${userType ?? "buyer"}`;
@@ -39,7 +39,7 @@ export default function LoginForm({ userType }: RegProps) {
 
   const { loading, sendHttpRequest: loginRequest } = useHttp();
 
-  // Load saved credentials for this specific user type only
+  // Restore this role's remembered sign-in form values without mixing buyer, seller, and admin sessions.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -97,7 +97,7 @@ export default function LoginForm({ userType }: RegProps) {
 
     dispatch(tokenActions.setToken(accessToken));
 
-    // ⭐ Admin redirect
+    // Route successful login by role first, then honor an eligible return URL.
     if (userType === "admin") {
       if (fromPage && fromPage !== "/auth/admin/login") {
         router.push(fromPage);
@@ -139,6 +139,7 @@ export default function LoginForm({ userType }: RegProps) {
   };
 
   const handleTwoFactorRedirect = (data: any) => {
+    // Carry the server-issued identity and resend cooldown context into the separate 2FA step.
     saveRememberMe();
 
     const userId = data?.user_id || data?.userId || data?.id || data?.user?.id;
@@ -183,7 +184,7 @@ export default function LoginForm({ userType }: RegProps) {
   const loginSuccess = (res: any) => {
     const data = res?.data?.data ?? res?.data;
 
-    // Check if response indicates 2FA is required
+    // A successful credential check may still require 2FA before an access token is issued.
     if (is2FaRequired(data)) {
       handleTwoFactorRedirect(data);
       return;
@@ -225,6 +226,7 @@ export default function LoginForm({ userType }: RegProps) {
       return;
     }
 
+    // Suppress the shared request hook's generic error so this form can distinguish 2FA from invalid credentials.
     loginRequest({
       requestConfig: {
         url: url,

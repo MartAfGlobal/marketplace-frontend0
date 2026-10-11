@@ -24,6 +24,11 @@ import { useHttp } from "@/hooks/use-http";
 import { useRouter } from "next/navigation";
 import ResultModal from "@/components/ui/forms/resultModal";
 
+/**
+ * Step 2 of the add-product flow.
+ * This page creates product variants, assigns each variant its attributes, price, stock, and image set,
+ * and then it sends the assembled payload to the draft endpoint before moving forward.
+ */
 export interface VariantForm {
   id: string;
   name: string;
@@ -39,6 +44,7 @@ export default function AddProductStep1Page() {
   const token = useSelector((state: RootState) => state.token?.token);
   const router = useRouter();
 
+  // Save and next actions use separate HTTP hooks so the UI can show the correct loading state without conflict.
   const { sendHttpRequest: savingToDraftReq, loading: savingDraft, error: saveDraftError, setError: setSaveDraftError } = useHttp();
   const { sendHttpRequest, loading: nexting, error: nextingError, setError: setNextingError } = useHttp();
 
@@ -48,12 +54,7 @@ export default function AddProductStep1Page() {
     setNextingError(null);
   };
 
-  // const [category, setCategory] = useState<Category | undefined>();
-  // const [subCategory, setSubCategory] = useState<SubCategory | undefined>();
-  // const [productName, setProductName] = useState("");
-  // const [description, setDescription] = useState("");
-  // const [basePrice, setBasePrice] = useState<number | undefined>();
-  // const [images, setImages] = useState<(File | null)[]>([null, null, null, null]);
+  // The form starts with one default variant. Sellers can add more as needed for different sizes, colors, or attribute combinations.
   const [variants, setVariants] = useState<VariantForm[]>([
     {
       id: crypto.randomUUID(),
@@ -69,6 +70,7 @@ export default function AddProductStep1Page() {
 
   console.log("step1Data in step2", step1Data);
   /* ---------------- ATTRIBUTE DISPLAY ---------------- */
+  // Maps an attribute value back to a human-friendly label for the variant name.
   const getAttributeDisplayName = (attributeSlug: string, value: string) => {
     const attribute = step1Data.step1.attributes?.find(
       (attr) => attr.attribute_slug === attributeSlug,
@@ -109,6 +111,7 @@ export default function AddProductStep1Page() {
     );
   };
 
+  // Add a blank variant using the same attribute structure as the initial variant.
   const handleAddVariant = () => {
     const initialValues: Record<string, string> = {};
     if (step1Data?.step1.attributes?.length) {
@@ -145,6 +148,10 @@ export default function AddProductStep1Page() {
     );
   };
 
+  /**
+   * Validates a single variant before it can be saved or advanced.
+   * A variant must include an image, the required attribute values, a positive price, and a positive stock count.
+   */
   const isVariantValid = (v: VariantForm) => {
     const hasImage = v.images.some((img) => img !== null);
 
@@ -206,6 +213,7 @@ export default function AddProductStep1Page() {
   //     images: v.images.filter((i): i is File => i !== null),
   //   }));
 
+  // Build the multipart payload for the server. It contains JSON metadata for each variation plus any uploaded image files.
   const buildFormData = () => {
     const formData = new FormData();
 
@@ -253,6 +261,7 @@ export default function AddProductStep1Page() {
 
     return attributesFilled && hasImage && hasPrice && hasStock;
   })();
+  // Save the current variant set back into the draft without proceeding to the next step.
   const handleSaveDraft = () => {
     if (!token) return;
 
@@ -284,6 +293,7 @@ export default function AddProductStep1Page() {
     });
   };
 
+  // `handleNext` persists the validated variant list and advances to the final step of the setup flow.
   const handleNext = () => {
     if (!areAllVariantsValid || !token) return;
 

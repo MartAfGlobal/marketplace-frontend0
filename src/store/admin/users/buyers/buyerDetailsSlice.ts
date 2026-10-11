@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AdminBuyerData } from "@/types/global";
 
+// Stores the paginated buyer directory; buyer stats and individual records live in their own slices.
 interface AdminBuyerState {
   adminBuyerDetails: AdminBuyerData[]; // ✅ always an array
   totalCount: number;
@@ -20,6 +21,7 @@ const AdminBuyerDetailsSlice = createSlice({
   initialState,
   reducers: {
     setAdminBuyerData(state, action: PayloadAction<{ results: AdminBuyerData[]; count: number }>) {
+      // `count` is the backend-wide total, not just the number of rows on this page.
       state.adminBuyerDetails = action.payload.results;
       state.totalCount = action.payload.count;
       state.error = null;

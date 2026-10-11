@@ -136,6 +136,7 @@ export default function AddNewAddreess() {
 
   const { loading, sendHttpRequest: saveRequest } = useHttp();
 
+  // Validate the required street address, then request a guest checkout summary before moving to payment review.
   const handleCheckout = (e?: React.FormEvent) => {
     e?.preventDefault();
 
@@ -190,7 +191,7 @@ export default function AddNewAddreess() {
   };
 
   const handleChange = (field: string, value: string | undefined) => {
-    // map dropdown fields to form structure
+    // Map shared form controls into the nested guest shipping-address payload.
     if (field === "guest_country") {
       setFormData((prev) => ({
         ...prev,

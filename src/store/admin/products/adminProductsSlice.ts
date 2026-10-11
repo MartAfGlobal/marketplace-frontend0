@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AdminProductData } from "@/types/global";
 
+// Holds the current page of products in the admin catalog and moderation queues.
 interface AdminProductsState {
   adminProducts: AdminProductData[];
   totalCount: number;
@@ -23,6 +24,7 @@ const AdminProductsSlice = createSlice({
       state,
       action: PayloadAction<{ results: AdminProductData[]; count: number }>
     ) {
+      // The page rows and total count are updated together from the paginated API response.
       state.adminProducts = action.payload.results;
       state.totalCount = action.payload.count;
       state.error = null;

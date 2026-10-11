@@ -7,6 +7,7 @@ export interface AdminBuyerStats {
   suspended_customers: number;
 }
 
+// Dashboard aggregate metrics are kept separate from the buyer table's paginated result.
 interface AdminBuyerStatsState {
   stats: AdminBuyerStats | null;
   loading: boolean;

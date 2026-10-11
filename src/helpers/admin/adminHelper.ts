@@ -27,6 +27,10 @@ import { setAdminStaffData } from "@/store/admin/staff/adminStaffSlice";
 import { setAdminStaffDetail } from "@/store/admin/staff/adminStaffDetailSlice";
 import type { PermissionMatrix } from "@/types/admin";
 
+/**
+ * Shared admin API facade. List/detail reads dispatch data into their Redux slices,
+ * while action endpoints accept callbacks so each dashboard page can refresh its own view.
+ */
 export const AdminDetails = (id?: string) => {
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.token?.token);
@@ -39,8 +43,7 @@ export const AdminDetails = (id?: string) => {
     requestType: null,
   });
 
-  // fetching all orders
-
+  // Buyer and seller administration: paginated lists, detail records, profile/status changes, and account actions.
   const fetchAdminBuyers = (page: number = 1) => {
     if (!token) return;
 
@@ -316,7 +319,7 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
-  //  kyc verification
+  // Seller verification queue and review decisions.
 
   const fetchAdminSellersKycList = (page: number = 1) => {
     if (!token) return;
@@ -365,7 +368,7 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
-  //products management
+  // Product moderation: category-filtered listings, review checklists, approval, rejection, and status changes.
 
   const fetchAdminSellersProductsList = (page: number = 1) => {
     if (!token) return;
@@ -633,6 +636,7 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  // Category and attribute configuration used to organize marketplace listings.
   const fetchAdminCategoryStats = (callback?: (data: any) => void) => {
     if (!token) return;
 
@@ -1049,7 +1053,7 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
-  //order management Api
+  // Order operations cover order queues, cancellation requests, dispute/refund resolution, and delivery tracking.
 
   const fetchOrdersList = (
     page: number = 1,

@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { AdminRoleListItem, AdminRolesSummary } from "@/types/admin";
 
+// Role table state includes optional summary metrics returned alongside list results.
 interface AdminRolesState {
   adminRoles: AdminRoleListItem[];
   totalCount: number;
@@ -29,6 +30,7 @@ const adminRolesSlice = createSlice({
         summary?: AdminRolesSummary;
       }>,
     ) {
+      // Summary is optional because some list requests return only the current page.
       state.adminRoles = action.payload.results;
       state.totalCount = action.payload.count;
       if (action.payload.summary) state.summary = action.payload.summary;

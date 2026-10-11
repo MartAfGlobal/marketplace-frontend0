@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { StaticImageData } from "next/image";
 
+// Cart state is shared by the cart page and checkout flow; guest items persist locally while authenticated items live on the API.
 // --------------------------------------
 // Types
 // --------------------------------------
@@ -84,8 +85,11 @@ const saveCartToLocalStorage = (items: CartItem[]) => {
 // --------------------------------------
 
 interface CartState {
+  // All current cart lines; selection is tracked per item through `checked`.
   items: CartItem[];
+  // Snapshot of the selected lines carried into checkout.
   checkoutItems: CartItem[];
+  // Server-calculated pricing/address data displayed and submitted at checkout.
   checkoutSummary: {
     all_addresses?: any[];
     applied_coupon?: string | null;
@@ -257,6 +261,7 @@ const cartSlice = createSlice({
     setOrderDetails: (state, action: PayloadAction<any>) => {},
 
     removeCheckedOutItems: (state) => {
+      // Preserve unchecked cart lines after a successful order and discard the completed checkout snapshot.
       state.items = state.items.filter((item) => !item.checked);
       state.checkoutItems = [];
       state.checkoutSummary = null;

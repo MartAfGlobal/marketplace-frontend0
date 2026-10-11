@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { AdminStaffDetail } from "@/types/admin";
 
+// Current staff record used by profile, role reassignment, and account-management views.
 interface AdminStaffDetailState {
   adminStaffDetail: AdminStaffDetail | null;
   loading: boolean;

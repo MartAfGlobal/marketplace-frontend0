@@ -24,6 +24,7 @@ export interface AdminCategoryStats {
   [key: string]: any;
 }
 
+// Dashboard metrics are kept separate from the category list so either view can refresh independently.
 interface AdminCategoryStatsState {
   stats: AdminCategoryStats | null;
   loading: boolean;

@@ -27,6 +27,10 @@ type OrderItemForCart = {
 type SendHttpRequest = (args: any) => Promise<unknown>;
 type Dispatch = (action: any) => void;
 
+/**
+ * Re-add a previously ordered line (or every line in an order) to the buyer's cart.
+ * The API cart is re-fetched after each successful add so Redux reflects the server's final state.
+ */
 export const addOrderItemToCart = async (
   sendHttpRequest: SendHttpRequest,
   token: string | null | undefined,
@@ -36,6 +40,7 @@ export const addOrderItemToCart = async (
 ): Promise<boolean> => {
   const orderItems = item.order_items || item.items;
   if (orderItems) {
+    // Process order-level input recursively while showing the success message only once.
     let added = false;
     let shouldShowSuccessMessage = showSuccessMessage;
     for (const orderItem of orderItems) {

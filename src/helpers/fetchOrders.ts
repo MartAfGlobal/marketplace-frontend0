@@ -11,12 +11,16 @@ import { useHttp } from "@/hooks/use-http";
 import { useDispatch, useSelector } from "react-redux";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 
+/**
+ * Buyer-order helper: centralizes calls used by the order dashboard, purchase history, dispute flow, and address data.
+ * This keeps API logic out of page components and makes the UI easier to reason about.
+ */
 export const useFetchOrders = (id?: string) => {
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.token?.token);
   const { sendHttpRequest, loading } = useHttp();
 
-  // fetching awaiting payment orders
+  // Orders that are still pending payment are kept in a separate queue and merged into the main order list.
   const fetchAwaitingPayments = () => {
     if (!token) return;
 
@@ -102,7 +106,7 @@ export const useFetchOrders = (id?: string) => {
     });
   };
 
-  // fetching all orders
+  // Fetch the main buyer order list and normalize backend field names to the structure the app expects in the UI.
   const fetchOrders = () => {
     if (!token) return;
 
@@ -144,8 +148,7 @@ export const useFetchOrders = (id?: string) => {
     });
   };
 
-  //fetching disput lists
-
+  // Disputes are fetched separately so the buyer can open the dispute list without heavy order state churn.
   const fetchDisputeList = () => {
     if (!token) return;
 
@@ -164,6 +167,7 @@ export const useFetchOrders = (id?: string) => {
       },
     });
   };
+  // Single-order view requires the shipping snapshot for delivery and fulfillment details.
   const fetchOrderDetails = () => {
     if (!token) return;
 
@@ -183,6 +187,7 @@ export const useFetchOrders = (id?: string) => {
       },
     });
   };
+  // Fetch the full dispute detail payload used by the “dispute details” page.
   const fetchDisputerDetails = () => {
    
     if (!token) return;
@@ -201,6 +206,7 @@ export const useFetchOrders = (id?: string) => {
       },
     });
   };
+  // Notification log requests are mostly for audit/debug panels and are kept separate from active order data.
   const fetchLogs = () => {
     
    
@@ -227,6 +233,7 @@ export const useFetchOrders = (id?: string) => {
 
 
 
+  // Buyer shipping addresses are stored in Redux so address selection forms can render instantly without a second fetch.
   const fetchAddress = useCallback(() => {
     if (!token) return;
 

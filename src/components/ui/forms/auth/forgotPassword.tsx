@@ -25,6 +25,7 @@ export default function ForgotPassword({userType}: {userType: "seller" | "buyer"
 
   const { loading, sendHttpRequest: UseremailingReq } = useHttp();
 
+  // Start the resend cooldown only after the request succeeds, then direct to the role-specific confirmation screen.
   const registerUserRes = (res: any) => {
     recordSuccessfulSend();
     router.push(
