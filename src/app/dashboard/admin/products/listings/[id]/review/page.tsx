@@ -112,7 +112,7 @@ export default function ProductReviewPage({
 
   // Product images come only from the API response.
   const galleryUrls: string[] = []; product?.images?.forEach((img: any) => {
-    const url = typeof img === "string" ? img : img.thumbnail  || img.large || "";
+    const url = typeof img === "string" ? img : img.large || img.medium || img.url || img.image || img.thumbnail || "";
     if (url && !galleryUrls.includes(url)) galleryUrls.push(url);
   });
   const images = galleryUrls;

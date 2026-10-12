@@ -27,6 +27,10 @@ interface CancellationReason {
   requires_additional_info?: boolean;
 }
 
+// Admin-side cancellation flow for orders. This modal is more than a simple confirm; it allows the
+// admin to choose a cancellation reason and optionally restrict the cancellation to a subset of order items.
+// The backend supports both full-order and partial cancellation, so the UI exposes a `isPartial` toggle
+// to keep the workflow aligned with the server contract.
 export default function AdminCancelOrderModal({
   isOpen,
   orderId,
@@ -46,7 +50,9 @@ export default function AdminCancelOrderModal({
   const [isPartial, setIsPartial] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
-  // Fetch admin cancellation reasons when modal opens
+  // Cancellation reasons are loaded only when the admin opens the modal. This keeps the modal self-
+  // contained and avoids fetching reason metadata for every order list row. When the backend rejects or
+  // returns no payload, we fall back to a local static list so the flow still works in degraded cases.
   useEffect(() => {
     if (!isOpen || !token) return;
 

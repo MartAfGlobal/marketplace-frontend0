@@ -27,6 +27,9 @@ const PICKUP_REASONS = [
   { value: "restock", label: "Restock" },
 ];
 
+// Logistics pickup request modal used when a seller or admin needs to trigger a pickup from a warehouse.
+// It centralizes the small form used for delivery coordination: choose a pickup reason, optionally add notes,
+// and trigger the callback or backend flow without having to duplicate this UI across screens.
 export default function RequestPickupModal({
   isOpen,
   onClose,
@@ -40,6 +43,7 @@ export default function RequestPickupModal({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Reset local form fields when the modal is closed so the next time it opens it starts in a clean state.
   useEffect(() => {
     if (!isOpen) {
       setSelectedReason("order_delivery");

@@ -28,6 +28,9 @@ interface AdminListHeaderProps {
   hidePeriod?: boolean;
 }
 
+// Shared header for admin list screens. This component handles the common pattern across dashboards:
+// search, filter chips, period selection, and export actions. By centralizing it, tables can stay
+// readable while each screen only passes the subset of controls it needs.
 export default function AdminListHeader({
   searchVal,
   setSearchVal,

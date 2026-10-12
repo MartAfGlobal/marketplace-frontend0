@@ -8,6 +8,10 @@ import { ConfirmModalProps } from "@/types/global";
 import { Button } from "../Button/Button";
 import { LoadingSpinner } from "../loading-spinner";
 
+// Reusable confirmation dialog for destructive or high-impact actions. This is the app's standard
+// "Are you sure?" pattern and is intentionally simpler than the side drawer pattern used for forms.
+// Most screens pass a callback pair (`onYes`, `onNo`) and a short explanation so the modal remains
+// a consistent user-safe wrapper around irreversible actions.
 export default function ConfirmModal({
   success,
   isOpen,
@@ -21,6 +25,9 @@ export default function ConfirmModal({
   className = "",
   loading,
 }: ConfirmModalProps) {
+  // The modal closes itself when the parent reports an operation success. This pattern means callers
+  // can keep their state machine simple: the request resolves, success flips to true, and the modal
+  // dismisses without needing duplicate close logic in each page.
   useEffect(() => {
     if (success === true && isOpen) {
       onClose();
@@ -53,18 +60,23 @@ export default function ConfirmModal({
                   <X className="w-5 h-5 text-000000" />
                 </button>
 
-                {/* ✅ Title */}
+                {/* Modal title should stay short and action-oriented so the user understands exactly
+                what outcome is being confirmed before they click the primary CTA. */}
                 <h2 className="text-c16 font-MontserratSemiBold mb-2 text-000000">
                   {title}
                 </h2>
               </div>
 
-              {/* ✅ Description */}
+              {/* The description should explain the consequence in plain language. The neutral wording
+              keeps the pattern reusable for delete, cancellation, and approval flows without needing
+              a bespoke component for each case. */}
               <p className="text-c12 font-MontserratMedium text-000000 mb-6 text-center">
                 {description}
               </p>
 
-              {/* ✅ Actions */}
+              {/* Primary actions are intentionally symmetric: the secondary button acts as a cancel,
+              and the primary button calls the destructive/confirming action. Both buttons share the
+              same loading state to prevent duplicate requests from double-submit clicks. */}
               <div className="w-full flex gap-4 font-MontserratSemiBold text-sm justify-center">
                 <Button
                   onClick={() => {
