@@ -20,7 +20,7 @@ export default function Navbar({ onJoinWaitlist }: NavbarProps) {
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8 text-c18 font-MontserratNormal text-000000">
           <Link href="#" className="hover:text-6a0dad transition-colors">Home</Link>
-          <Link href="#" className="hover:text-6a0dad transition-colors">Shop</Link>
+          <Link href="#products" className="hover:text-6a0dad transition-colors">Shop</Link>
           <Link href="#" className="hover:text-6a0dad transition-colors">About us</Link>
         </div>
 
@@ -59,7 +59,7 @@ export default function Navbar({ onJoinWaitlist }: NavbarProps) {
               
               <div className="flex flex-col gap-6 text-xl font-MontserratMedium text-000000">
                 <Link href="#" onClick={() => setIsMenuOpen(false)} className="hover:text-6a0dad transition-colors">Home</Link>
-                <Link href="#" onClick={() => setIsMenuOpen(false)} className="hover:text-6a0dad transition-colors">Shop</Link>
+                <Link href="#products" onClick={() => setIsMenuOpen(false)} className="hover:text-6a0dad transition-colors">Shop</Link>
                 <Link href="#" onClick={() => setIsMenuOpen(false)} className="hover:text-6a0dad transition-colors">About us</Link>
                 
                 <div className="mt-8 pt-8 border-t border-efefef space-y-4">

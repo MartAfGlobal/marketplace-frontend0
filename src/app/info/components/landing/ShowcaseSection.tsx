@@ -33,7 +33,7 @@ export default function ShowcaseSection() {
   }, []);
 
   return (
-    <section className="my-20 md:my-52 ">
+    <section id="products" className="my-20 md:my-52 scroll-mt-16">
       <div className="w-full ">
         <div className="flex flex-col md:flex-row items-center md:items-end px-6 md:px-18 lg:px-34.5 justify-between mb-16 gap-8 text-center md:text-left">
           <div className="max-w-full md:max-w-207.25 flex flex-col gap-10">

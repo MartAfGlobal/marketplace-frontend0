@@ -24,7 +24,7 @@ export default function AfricaToTheWorldClient() {
       <Navbar onJoinWaitlist={openWaitlist} />
 
       {/* Hero Section */}
-      <HeroSection onJoinWaitlist={openWaitlist} />
+      <HeroSection />
 
       {/* Showcase Section (Infinite Marquee) */}
       <ShowcaseSection />

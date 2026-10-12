@@ -6,11 +6,7 @@ import { motion } from "framer-motion";
 import ArrowRightUp from "@/assets/icons/ArrowUpRight.svg";
 import CartonBox from "@/assets/icons/carton.svg";
 
-interface HeroSectionProps {
-  onJoinWaitlist: () => void;
-}
-
-export default function HeroSection({ onJoinWaitlist }: HeroSectionProps) {
+export default function HeroSection() {
   return (
     <section className="mt-28 mb-8.25 text-center overflow-hidden">
       <motion.div
@@ -39,8 +35,8 @@ export default function HeroSection({ onJoinWaitlist }: HeroSectionProps) {
         </div>
 
         <div>
-          <button
-            onClick={onJoinWaitlist}
+          <a
+            href="#products"
             className="flex w-full max-w-52 items-center gap-2 bg-6a0dad text-white px-2 py-4 rounded-c8 font-MontserratSemiBold justify-center mx-auto hover:scale-105 transition-all shadow-lg active:scale-95 cursor-pointer"
           >
             <span className="text-base font-MontserratNormal">
@@ -52,7 +48,7 @@ export default function HeroSection({ onJoinWaitlist }: HeroSectionProps) {
               width={24}
               height={24}
             />
-          </button>
+          </a>
         </div>
       </motion.div>
 
