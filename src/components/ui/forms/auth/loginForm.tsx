@@ -18,6 +18,7 @@ import { useDispatch } from "react-redux";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { RegProps } from "./verify-email";
 import ResultModal from "@/components/ui/forms/resultModal";
+import { setStoredAccountType } from "@/utils/authStorage";
 
 export default function LoginForm({ userType }: RegProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -93,6 +94,7 @@ export default function LoginForm({ userType }: RegProps) {
 
     saveRememberMe();
 
+    setStoredAccountType(userType ?? "buyer");
     localStorage.setItem("accessToken", accessToken);
 
     dispatch(tokenActions.setToken(accessToken));
@@ -141,6 +143,7 @@ export default function LoginForm({ userType }: RegProps) {
   const handleTwoFactorRedirect = (data: any) => {
     // Carry the server-issued identity and resend cooldown context into the separate 2FA step.
     saveRememberMe();
+    setStoredAccountType(userType ?? "buyer");
 
     const userId = data?.user_id || data?.userId || data?.id || data?.user?.id;
     const params = new URLSearchParams();

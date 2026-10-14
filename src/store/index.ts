@@ -91,7 +91,7 @@ const sellerPersistConfig = {
 
 // Cart is intentionally NOT persisted via redux-persist.
 // For logged-in users the backend is the sole source of truth; the cart is
-// fetched fresh on every cart-page mount via syncGuestCartAndFetch().
+// fetched after buyer login and refreshed on cart-page mounts.
 // For guests, cartSlice.ts manages its own localStorage["cart"] key directly.
 
 const orderSlicePersistConfig = {

@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import store, { persistor } from "@/store";
 import AuthInitializer from "./AuthInitializer";
+import BuyerCartInitializer from "./BuyerCartInitializer";
 
 export default function ClientProvider({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function ClientProvider({ children }: { children: React.ReactNode
       {/* PersistGate handles timing automatically */}
       <PersistGate loading={null} persistor={persistor}>
         <AuthInitializer />
+        <BuyerCartInitializer />
         {children}
       </PersistGate>
     </Provider>

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import AuthenticationLayout from "@/components/ui/LayoutWrappers/AuthenticationLayout";
 import { useHttp } from "@/hooks/use-http";
 import { tokenActions } from "@/store/token/token-slice";
+import { setStoredAccountType } from "@/utils/authStorage";
 import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -101,6 +102,9 @@ function Verify2faContent() {
         const accessToken =
           res?.data?.access || res?.data?.token || res?.data?.accessToken;
         if (accessToken) {
+          const accountType =
+            userType === "admin" || userType === "seller" ? userType : "buyer";
+          setStoredAccountType(accountType);
           localStorage.setItem("accessToken", accessToken);
           dispatch(tokenActions.setToken(accessToken));
           toast.success("Login successful!");

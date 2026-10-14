@@ -49,6 +49,7 @@ import { stat } from "fs";
 import AddressModal from "@/components/ui/Modals/new-address-modal";
 import { buyerActions } from "@/store/user-data/buyer/buyer-slice";
 import { useFetchOrders } from "@/helpers/fetchOrders";
+import { mapBackendCartItems } from "@/utils/cart";
 
 export default function CartPage() {
   const [selectedItems, setSelectedItems] = useState<{
@@ -94,8 +95,6 @@ export default function CartPage() {
     if (newQty < 1) return;
     setLocalQty(newQty);
   };
-  const hasSyncedGuestCart = useRef(false);
-
   const persistLocalCart = (items: any[]) => {
     // Guest carts are persisted in the browser; authenticated carts are authoritative on the server.
     try {
@@ -118,28 +117,7 @@ export default function CartPage() {
     return selected;
   };
 
-  const [guestCart, setGuestCart] = useState([]);
   const products = useSelector((state: RootState) => state.products.items);
-
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("cart") || "[]");
-      setGuestCart(stored);
-    } catch {
-      setGuestCart([]);
-    }
-  }, []);
-
-  console.log("Guest cart items:", guestCart);
-
-  const mapGuestCartForSync = (items: any[]) =>
-    items
-      .filter((item) => item.variation_id && item.id) // only valid
-      .map((item) => ({
-        variation_id: item.variation_id,
-        product_id: item.id,
-        quantity: item.quantity || 1,
-      }));
 
   console.log("products items in Redux:", products);
 
@@ -169,7 +147,7 @@ export default function CartPage() {
   };
 
   useEffect(() => {
-    // Restore a guest cart locally or merge any pre-login guest cart into the account cart before displaying it.
+    // Restore guest carts locally; logged-in buyers use the server cart.
     const init = async () => {
       setHydratingCart(true);
 
@@ -180,8 +158,8 @@ export default function CartPage() {
           dispatch(setCartItems(local));
           setSelectedItems(hydrateSelectionFromItems(local));
         } else {
-          // Logged in
-          await syncGuestCartAndFetch();
+          // The backend cart is authoritative for logged-in buyers.
+          await fetchBackendCart();
         }
       } catch (err) {
         console.error("Cart hydration failed", err);
@@ -243,53 +221,12 @@ export default function CartPage() {
         },
         successRes: async (res: any) => {
           const backendItems = res?.data?.items || [];
-          console.log("🟩 Backend cart items:", backendItems);
+          const mappedBackend = mapBackendCartItems(backendItems);
 
-          const mappedBackend: CartItem[] = backendItems.map(
-            (item: any) => {
-              return {
-                id: item.id || item.product_id || "",
-                product_id: item.product_id || item.id || "",
-                variation_id: item.variation_id || null,
-                product_name: item.product_name || item.name || "",
-                price: item.price || item.unit_price || 0,
-                price_at_purchase: item.price_at_purchase || item.price || item.unit_price || 0,
-                quantity: item.quantity ?? 1,
-                product_slug: item.product_slug || "",
-                variation_display: (
-                  item.variation_display || item.variation_name || ""
-                ).toLowerCase(),
-
-                product_image: item.product_image || item.image || "/placeholder.png",
-                checked:
-                  typeof item.checked === "boolean" ? item.checked : true,
-              };
-            },
-          );
-
-          console.log("cartItems local:", cartItems);
-
-          const mapKey = (item: CartItem) =>
-            `${item.product_id || item.id || "prod"}-${item.variation_id || "novar"}`;
-
-          const mergedMap: Record<string, CartItem> = {};
-          for (const item of mappedBackend) {
-            const key = mapKey(item);
-            mergedMap[key] = { ...item };
-          }
-
-          const merged = Object.values(mergedMap);
-          console.log("✅ Final merged cart:", merged);
-
-          dispatch(setCartItems(merged));
-          if (!token) {
-            persistLocalCart(merged);
-          } else {
-            localStorage.removeItem("cart");
-          }
+          dispatch(setCartItems(mappedBackend));
 
           const newSelected: Record<string, boolean> = {};
-          merged.forEach((mi) => {
+          mappedBackend.forEach((mi) => {
             newSelected[mi.variation_id || mi.id] =
               typeof mi.checked === "boolean" ? mi.checked : true;
           });
@@ -303,43 +240,6 @@ export default function CartPage() {
       toast.error("Failed to sync cart with server");
       setSyncingCart(false);
     }
-  };
-
-  const syncGuestCartAndFetch = async () => {
-    if (!token) return;
-
-    // Sync any cart created before sign-in, then replace the local snapshot with the backend cart.
-    const stored = JSON.parse(localStorage.getItem("cart") || "[]");
-    // CRITICAL: Immediately remove from localStorage so it NEVER syncs again!
-    localStorage.removeItem("cart");
-    setGuestCart([]);
-
-    const payload = mapGuestCartForSync(stored);
-
-    if (payload.length > 0 && !hasSyncedGuestCart.current) {
-      hasSyncedGuestCart.current = true;
-      try {
-        await sendHttpRequest({
-          requestConfig: {
-            url: "/cart/bulk_add/",
-            method: "POST",
-            token,
-            isAuth: true,
-            userType: "buyer",
-            body: { items: payload },
-          },
-          successRes: () => {
-            localStorage.removeItem("cart");
-            setGuestCart([]);
-          },
-        });
-      } catch (err) {
-        console.error("Failed to sync guest cart:", err);
-      }
-    }
-
-    // 2️⃣ Fetch final backend cart
-    await fetchBackendCart();
   };
 
   const handleToggleItem = async (item: any) => {

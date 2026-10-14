@@ -11,6 +11,7 @@ import Image from "next/image";
 import Mail from "@/assets/FormIcon/email.svg";
 import { LoadingSpinner } from "../../loading-spinner";
 import ResultModal from "@/components/ui/forms/resultModal";
+import { setStoredAccountType } from "@/utils/authStorage";
 
 export default function MobileLogin({ onClose, setStep, userType = "buyer" }: MobileLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -155,6 +156,9 @@ export default function MobileLogin({ onClose, setStep, userType = "buyer" }: Mo
       localStorage.removeItem("rememberPassword");
     }
 
+    setStoredAccountType(userType);
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("token", accessToken);
     dispatch(tokenActions.setToken(accessToken));
     toast.success("Login successful!");
     onClose();
