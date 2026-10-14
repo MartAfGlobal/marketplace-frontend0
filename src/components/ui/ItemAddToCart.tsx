@@ -515,7 +515,7 @@ export default function ItemAddToCart({
               onClick={handleAddToCart}
               disabled={loading || addingToCart || isOutOfStock}
             >
-              {loading || addingToCart ? <LoadingSpinner /> : "Add to cart"}
+              {loading || addingToCart ? <LoadingSpinner color="ff715b" /> : "Add to cart"}
             </Button>
           )}
 
