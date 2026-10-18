@@ -19,6 +19,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { registrationActions } from "@/store/auth/registration-slice";
 import { useDispatch } from "react-redux";
 import ResultModal from "@/components/ui/forms/resultModal";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 export interface RegProps {
   userType: "seller" | "buyer" | "admin";
@@ -40,6 +41,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
   };
 
   const router = useRouter();
+  const { handleGoogleAuth, loading: googleLoading } = useGoogleAuth();
 
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
   const email = formData.email;
@@ -163,7 +165,12 @@ export default function VerifyEmail({ userType, token }: RegProps) {
           <p className="h-c1 w-full bg-efefef"></p>
         </div>
         <div>
-          <button className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8">
+          <button
+            type="button"
+            onClick={handleGoogleAuth}
+            disabled={googleLoading}
+            className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8 hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+          >
             <Image
               src={Google}
               width={24}
@@ -171,7 +178,7 @@ export default function VerifyEmail({ userType, token }: RegProps) {
               alt="google sign in"
               className="md:h-c24 md:w-24 h-c32 w-c32"
             />
-            Sign in with Google
+            {googleLoading ? "Signing up with Google..." : "Sign up with Google"}
           </button>
         </div>
         <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">

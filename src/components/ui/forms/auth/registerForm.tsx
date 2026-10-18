@@ -19,6 +19,7 @@ import { useHttp } from "@/hooks/use-http";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { tokenActions } from "@/store/token/token-slice";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 
 
@@ -52,6 +53,13 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
   };
 
   const router = useRouter();
+
+  const { handleGoogleAuth, loading: googleLoading } = useGoogleAuth({
+    onSuccess: () => {
+      setIsOpen(true);
+      if (onSuccess) onSuccess();
+    },
+  });
 
   const { loading, error, sendHttpRequest: registerUserReq } = useHttp();
 
@@ -231,7 +239,12 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
                 <p className="h-c1 w-full bg-efefef"></p>
               </div>
               <div>
-                <button className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8">
+                <button
+                  type="button"
+                  onClick={handleGoogleAuth}
+                  disabled={googleLoading}
+                  className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8 hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+                >
                   <Image
                     src={Google}
                     width={20}
@@ -239,7 +252,7 @@ export default function RegisterForm({ userType, token, onSuccess }: RegProps) {
                     alt="google sign up"
                     className="h-c20 w-c20"
                   />
-                  Sign up with Google
+                  {googleLoading ? "Signing up with Google..." : "Sign up with Google"}
                 </button>
               </div>
               <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">

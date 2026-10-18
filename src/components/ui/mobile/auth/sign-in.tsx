@@ -12,11 +12,18 @@ import Mail from "@/assets/FormIcon/email.svg";
 import { LoadingSpinner } from "../../loading-spinner";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { setStoredAccountType } from "@/utils/authStorage";
+import FcGoogle from "@/assets/mobile/google_symbol.svg.png";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 
 export default function MobileLogin({ onClose, setStep, userType = "buyer" }: MobileLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showInvalidCredentialsModal, setShowInvalidCredentialsModal] = useState(false);
   const router = useRouter();
+  const { handleGoogleAuth, loading: googleLoading } = useGoogleAuth({
+    onSuccess: () => {
+      onClose();
+    },
+  });
 
   const rememberKey = `rememberLogin_${userType}`;
 
@@ -293,10 +300,30 @@ export default function MobileLogin({ onClose, setStep, userType = "buyer" }: Mo
 
         <button
           disabled={logingLoading || !isFormValid}
-          className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center"
+          className="w-full bg-ff715b text-white h-c48 rounded-lg text-c12 font-MontserratSemiBold flex items-center justify-center cursor-pointer"
         >
           {logingLoading ? <LoadingSpinner /> : "Sign In"}
         </button>
+
+        {userType === "buyer" && (
+          <>
+            <div className="flex items-center gap-2 text-gray-400 text-sm">
+              <div className="flex-1 h-px bg-black" />
+              <span>or</span>
+              <div className="flex-1 h-px bg-black" />
+            </div>
+
+            <button
+              type="button"
+              disabled={googleLoading}
+              onClick={handleGoogleAuth}
+              className="w-full h-c56 rounded-lg font-medium flex justify-center items-center gap-4 circle-shadow hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <Image src={FcGoogle} alt="Google" width={24} height={24} />
+              {googleLoading ? "Signing in with Google..." : "Sign in with Google"}
+            </button>
+          </>
+        )}
 
         <button
           onClick={() => setStep("forgot")}

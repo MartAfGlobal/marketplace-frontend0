@@ -530,7 +530,7 @@ export default function ItemAddToCart({
       {!isModal && (
         <div className="flex flex-col gap-6">
           {existingCartItem && (
-            <div className="md:flex hidden gap-4 flex-col mt-6">
+            <div className="md:flex hidden gap-4 flex-col mt-6 ">
               <p className="font-MontserratSemiBold text-c12">Quantity</p>
               <QuantitySelector
                 quantity={localQty}
@@ -550,9 +550,9 @@ export default function ItemAddToCart({
               <Button
                 className="w-full"
                 variant="secondary"
-                onClick={() => router.push("/car")}
+                onClick={() => router.push("/cart")}
               >
-                View to cart
+                View cart
               </Button>
             ) : (
               <Button
@@ -561,7 +561,7 @@ export default function ItemAddToCart({
                 onClick={handleAddToCart}
                 disabled={loading || addingToCart || isOutOfStock}
               >
-                {loading || addingToCart ? <LoadingSpinner /> : "Add to cart"}
+                {loading || addingToCart ? <LoadingSpinner color="ff715b" /> : "Add to cart"}
               </Button>
             )}
 
