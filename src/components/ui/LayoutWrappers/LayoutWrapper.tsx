@@ -38,7 +38,7 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
 
   // Certain route families intentionally do not render the public app shell (header/footer) because
   // they already provide their own dashboard or auth layout. This avoids duplicate navigation chrome.
-  const hideLayout = ["/auth", "/dashboard/seller", "/dashboard/admin", "/informative", "/info"].some((path) =>
+  const hideLayout = ["/auth", "/dashboard/seller", "/dashboard/admin", "/informative", "/info", "/search"].some((path) =>
     pathname?.includes(path)
   );
 

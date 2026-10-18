@@ -12,6 +12,7 @@ import Cart from "@/assets/headerIcon/cart.svg";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import OtherSearchInput from "../../others/Search";
+import { Search } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import DropdownModal from "../../mobile/modal/header-drop-modal";
@@ -195,7 +196,7 @@ export default function Header() {
           {changeSearch ? (
             <OtherSearchInput />
           ) : (
-            <SearchInput className=" md:max-w-80 xl:max-w-116" />
+            <SearchInput className=" md:max-w-80 xl:max-w-116" showDropdown={true} />
           )}
           <div className="flex gap-8 items-center">
             <div className="flex items-center gap-2">
@@ -284,6 +285,14 @@ export default function Header() {
           </div>
 
           <div className="flex gap-3 items-center">
+            <Link
+              href="/search"
+              aria-label="Search products"
+              className="p-1.5 text-white hover:opacity-80 flex items-center justify-center"
+            >
+              <Search className="w-5 h-5 text-white" />
+            </Link>
+
             <div className="w-fit h-fit relative">
               <CartButton />
             </div>
