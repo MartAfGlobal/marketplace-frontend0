@@ -46,6 +46,9 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: "select_account",
+});
 
 // Initialize Firebase Messaging only when the browser supports it.
 export async function getFirebaseMessaging(): Promise<Messaging | null> {

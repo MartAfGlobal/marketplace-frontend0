@@ -9,16 +9,5 @@ export default function GoogleOAuthWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  if (!GOOGLE_CLIENT_ID) {
-    console.warn(
-      "NEXT_PUBLIC_GOOGLE_CLIENT_ID is not set. Google Sign-In will not work."
-    );
-    return <>{children}</>;
-  }
-
-  return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      {children}
-    </GoogleOAuthProvider>
-  );
+  return <>{children}</>;
 }
