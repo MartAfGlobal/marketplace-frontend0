@@ -238,11 +238,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         
         whileHover={{ scale: 1.03, boxShadow: "0 8px 20px rgba(0,0,0,0.15)" }}
         whileTap={{ scale: 0.98 }}
-        className="rounded-lg shadow-custom w-full min-w-0 h-[264.69px] pb-4 bg-ffffff overflow-hidden cursor-pointer"
+        className="rounded-lg shadow-custom  w-full min-w-0 h-[264.69px] pb-4 bg-ffffff overflow-hidden cursor-pointer"
       >
         {/* Product Image */}
         <div onClick={handleClick} className="relative h-[168.69px] w-full">
@@ -289,8 +289,8 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="flex items-end justify-between p-4 h-[96px] w-full 5">
-          <div className="flex flex-col gap-1 max-w-[91.56px] ">
-            <p className="font-MontserratMedium  text-[12px] w-full max-w-[91.56px] truncate text-[#161616]">
+          <div className="flex flex-col gap-1 w-full md:max-w-[91.56px] ">
+            <p className="font-MontserratMedium  text-[12px] w-full md:max-w-[91.56px] truncate text-[#161616]">
               {product.name || "Product name"}
             </p>
 

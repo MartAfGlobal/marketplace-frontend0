@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import InstallButton from "@/components/ui/InstallButton";
 import ClientFcmWrapper from "@/components/ClientFcmWrapper";
 import AxiosInterceptor from "@/components/auth/AxiosInterceptor";
+import GoogleOAuthWrapper from "@/components/auth/GoogleOAuthWrapper";
 
 
 export const metadata: Metadata = {
@@ -81,14 +82,16 @@ export default function RootLayout({
       </head>
       <body>
         <ClientProvider>
-          <AxiosInterceptor>
-            <LayoutWrapper>
-              {/* <InstallButton /> */}
-              <Toaster richColors position="top-right" duration={2000} />
-              {children}
-              <ClientFcmWrapper />
-            </LayoutWrapper>
-          </AxiosInterceptor>
+          <GoogleOAuthWrapper>
+            <AxiosInterceptor>
+              <LayoutWrapper>
+                {/* <InstallButton /> */}
+                <Toaster richColors position="top-right" duration={2000} />
+                {children}
+                <ClientFcmWrapper />
+              </LayoutWrapper>
+            </AxiosInterceptor>
+          </GoogleOAuthWrapper>
         </ClientProvider>
       </body>
     </html>

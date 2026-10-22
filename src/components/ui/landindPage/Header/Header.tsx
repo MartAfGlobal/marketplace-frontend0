@@ -7,10 +7,15 @@ import Link from "next/link";
 import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
 import NigeriaFlag from "@/assets/headerIcon/Nigeria.svg";
 import DropIcon from "@/assets/headerIcon/CaretDown.svg";
-import User from "@/assets/headerIcon/User.png";
+import User from "@/assets/headerIcon/User.svg";
+
+import LogOutIcon from "@/assets/headerIcon/logoutIcon.svg";
+import HoverLogOutIcon from "@/assets/headerIcon/hoverlogoutIcon.svg";
+import MyaccountIcon from "@/assets/headerIcon/myAcountIcon.svg";
+import HoverMyaccountIcon from "@/assets/headerIcon/hovermyAcountIcon.svg";
 import Cart from "@/assets/headerIcon/cart.svg";
 import { AnimatePresence, motion } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import OtherSearchInput from "../../others/Search";
 import { Search } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
@@ -39,7 +44,8 @@ export default function Header() {
   const searchParams = useSearchParams();
   const showLogin = searchParams.get("showLogin");
   const resetToken = searchParams.get("resetToken");
-  const authUserType = searchParams.get("authUserType") === "seller" ? "seller" : "buyer";
+  const authUserType =
+    searchParams.get("authUserType") === "seller" ? "seller" : "buyer";
   const authEmail = searchParams.get("email") || "";
   // const  {fetchLogs} = useFetchOrders()
 
@@ -48,6 +54,8 @@ export default function Header() {
   const dispatch = useDispatch();
   const logout = useLogout(dispatch);
   const { sendHttpRequest, loading } = useHttp();
+
+  const router = useRouter();
 
   // const [openDropdown, setOpenDropdown] = useState(false);
 
@@ -59,6 +67,8 @@ export default function Header() {
 
   const [userOpen, setUserOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [accountHover, setAccountHover] = useState(false);
+  const [logoutHover, setLogoutHover] = useState(false);
 
   useEffect(() => {
     if (resetToken) {
@@ -188,6 +198,7 @@ export default function Header() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="w-full bg-6a0dad hidden h-20 px-8 justify-center lg:px-14 py-4 lg:flex gap-4 items-center lg:justify-between"
         >
+          {/* logo area */}
           <Link href="/" className="flex items-center gap-3">
             <Image src={Logo} alt="Logo" width={40} height={32.59} />
             <h1 className="font-MontserratBold text-2xl text-ffffff">MARTAF</h1>
@@ -196,10 +207,13 @@ export default function Header() {
           {changeSearch ? (
             <OtherSearchInput />
           ) : (
-            <SearchInput className=" md:max-w-80 xl:max-w-116" showDropdown={true} />
+            <SearchInput
+              className=" md:max-w-80 xl:max-w-116"
+              showDropdown={true}
+            />
           )}
-          <div className="flex gap-8 items-center">
-            <div className="flex items-center gap-2">
+          <div className="flex gap-6 items-center">
+            {/* <div className="flex items-center gap-2">
               <div className="flex items-center gap-1">
                 <h1 className="text-ffffff font-MontserratMedium text-[18px]">
                   EN
@@ -215,50 +229,47 @@ export default function Header() {
               <button>
                 <Image src={DropIcon} alt="DropIcon" width={16.5} height={9} />
               </button>
-            </div>
+            </div> */}
 
             <div className="flex gap-4 items-center">
-              <NotificationButton />
+              {token && <NotificationButton size={22} />}
               <CartButton />
             </div>
+            {!token && (
+              <button
+                onClick={() => router.push("/auth/login")}
+                className="text-ffffff font-MontserratNormal border border-ffffff rounded-c8 px-8 py-2 text-sm hover:bg-ffffff h-10 flex items-center justify-center hover:text-6a0dad transition-colors  "
+              >
+                Login
+              </button>
+            )}
 
-            <button
-              onClick={() => setUserOpen((prev) => !prev)}
-              className="flex items-center gap-2"
-            >
-              {token ? (
-                <div className="h-7.5 w-7.5 border-1 border-ffffff rounded-full flex justify-center items-center overflow-hidden">
+            {token && (
+              <button
+                onClick={() => setUserOpen((prev) => !prev)}
+                className="flex items-center gap-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Image src={User} alt="loging user" width={25} height={32} />
+                  <span className="lg:text-base md:text-sm font-MontserratSemiBold hidden text-nowrap lg:flex  text-ffffff">
+                    Hi,{" "}
+                    {`${
+                      buyer?.first_name
+                        ? buyer.first_name.charAt(0).toUpperCase() +
+                          buyer.first_name.slice(1)
+                        : "User"
+                    }`}
+                  </span>
                   <Image
-                    src={getProfileImage(buyer)}
-                    alt="User"
-                    width={30}
-                    height={30}
-                    className="object-cover w-full h-full"
+                    src={DropIcon}
+                    alt="Dropdown"
+                    width={16}
+                    height={16}
+                    className={`w-4 h-4 ${userOpen ? "rotate-180" : "rotate-0"}`}
                   />
                 </div>
-              ) : (
-                <Image src={User} alt="User" width={30} height={30} />
-              )}
-
-              {token && (
-                <span className="lg:text-base md:text-sm font-MontserratSemiBold hidden text-nowrap lg:flex  text-ffffff">
-                  Hi,{" "}
-                  {`${
-                    buyer?.first_name
-                      ? buyer.first_name.charAt(0).toUpperCase() +
-                        buyer.first_name.slice(1)
-                      : "User"
-                  }`}
-                </span>
-              )}
-              <Image
-                src={DropIcon}
-                alt="Dropdown"
-                width={16}
-                height={16}
-                className={`w-4 h-4 ${userOpen ? "rotate-180" : "rotate-0"}`}
-              />
-            </button>
+              </button>
+            )}
           </div>
         </motion.header>
 
@@ -285,33 +296,34 @@ export default function Header() {
           </div>
 
           <div className="flex gap-3 items-center">
-            <Link
-              href="/search"
-              aria-label="Search products"
-              className="p-1.5 text-white hover:opacity-80 flex items-center justify-center"
-            >
-              <Search className="w-5 h-5 text-white" />
-            </Link>
-
             <div className="w-fit h-fit relative">
-              <CartButton />
+              <CartButton size={18} />
             </div>
 
             {token ? (
               <button
-                type="button"
                 onClick={() => setUserOpen((prev) => !prev)}
-                aria-label="Open account menu"
-                aria-expanded={userOpen}
-                className="h-7 w-7 border-1 border-ffffff rounded-full flex justify-center items-center overflow-hidden cursor-pointer"
+                className="flex items-center gap-2"
               >
-                <Image
-                  src={getProfileImage(buyer)}
-                  alt="User"
-                  width={28}
-                  height={28}
-                  className="object-cover w-full h-full"
-                />
+                <div className="flex items-center gap-2">
+                  <Image src={User} alt="loging user" width={25} height={32} />
+                  <span className="lg:text-base md:text-sm font-MontserratSemiBold hidden text-nowrap lg:flex  text-ffffff">
+                    Hi,{" "}
+                    {`${
+                      buyer?.first_name
+                        ? buyer.first_name.charAt(0).toUpperCase() +
+                          buyer.first_name.slice(1)
+                        : "User"
+                    }`}
+                  </span>
+                  <Image
+                    src={DropIcon}
+                    alt="Dropdown"
+                    width={16}
+                    height={16}
+                    className={`w-4 h-4 ${userOpen ? "rotate-180" : "rotate-0"}`}
+                  />
+                </div>
               </button>
             ) : (
               <button
@@ -321,19 +333,19 @@ export default function Header() {
                 aria-expanded={userOpen}
                 className="flex items-center gap-2"
               >
-                <Image src={User} alt="User" width={19.52} height={18.77} />
+                <Image src={User} alt="User" width={18} height={18} />
               </button>
             )}
 
-            <div className="flex items-center gap-1">
+            {/* <div className="flex items-center gap-1">
               <h1 className="text-ffffff font-MontserratMedium text-c14">EN</h1>
               <Image
                 src={NigeriaFlag}
                 alt="NigeriaFlag"
-                width={20}
-                height={20}
+                width={18}
+                height={18}
               />
-            </div>
+            </div> */}
           </div>
         </motion.header>
         {/* <div className="w-full px-3.75">
@@ -352,18 +364,27 @@ export default function Header() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="absolute right-3 lg:right-12.75 w-38.75 top-15.25 py-3 font-normal text-c12 rounded-c8 z-40 custom-shadow bg-white border h-20.5 "
+              className="absolute right-3 lg:right-12.75 w-40 top-16 py-3 font-MontserratNormal text-c12 rounded-c8 z-40 custom-shadow bg-white border  "
             >
-              <ul className="  text-gray-700 flex flex-col gap-2.5">
+              <ul className="  text-000000 flex flex-col gap-2.5">
                 <li>
                   {token ? (
                     <Link
                       href="/dashboard/buyer"
                       onClick={() => setUserOpen(false)}
-                      className="gap-2.5 items-baseline-last text-ff715b px-4 h-6 flex "
+                      onMouseEnter={() => setAccountHover(true)}
+                      onMouseLeave={() => setAccountHover(false)}
+                      className={`gap-2.5 px-4 h-6 flex items-center  transition-colors hover:text-ff715b ${
+                        accountHover ? "text-ff715b" : "text-000000/50"
+                      }`}
                     >
-                      <Image src={Gear} alt="gear" width={12} height={12} />
-                      Settings
+                      <Image
+                        src={accountHover ? HoverMyaccountIcon : MyaccountIcon}
+                        alt="My account"
+                        width={12}
+                        height={12}
+                      />
+                      My account
                     </Link>
                   ) : (
                     <>
@@ -395,9 +416,18 @@ export default function Header() {
                         setUserOpen(false);
                         setLogoutModalOpen(true);
                       }}
-                      className="gap-2.5 items-baseline-last text-000000/50 px-4 py-2 flex"
+                      onMouseEnter={() => setLogoutHover(true)}
+                      onMouseLeave={() => setLogoutHover(false)}
+                      className={`gap-2.5 px-4 py-2 flex items-center w-full  transition-colors hover:text-ff715b ${
+                        logoutHover ? "text-ff715b" : "text-000000/50"
+                      }`}
                     >
-                      <Image src={LogOut} alt="gear" width={12} height={12} />
+                      <Image
+                        src={logoutHover ? HoverLogOutIcon : LogOutIcon}
+                        alt="Log out"
+                        width={12}
+                        height={12}
+                      />
                       Log out
                     </button>
                   ) : (
@@ -405,7 +435,7 @@ export default function Header() {
                       <Link
                         href="/auth/register"
                         onClick={() => setUserOpen(false)}
-                        className="hidden lg:block px-4 py-2 hover:bg-gray-100"
+                        className="hidden lg:block px-4 py-2 "
                       >
                         Sign Up
                       </Link>
@@ -416,7 +446,7 @@ export default function Header() {
                           setAuthStep("signup");
                           setAuthOpen(true);
                         }}
-                        className="lg:hidden block px-4 py-2 hover:bg-gray-100"
+                        className="lg:hidden block px-4 py-2 "
                       >
                         Sign Up
                       </button>

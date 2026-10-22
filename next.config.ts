@@ -2,6 +2,21 @@ import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
+  // Allow Firebase signInWithPopup to poll the popup window
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
+          },
+        ],
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {
@@ -40,7 +55,6 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // Required to silence Turbopack/webpack conflict in Next.js 16
   turbopack: {},
 
 };

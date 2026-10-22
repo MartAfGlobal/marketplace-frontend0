@@ -13,7 +13,7 @@ interface CartButtonProps {
 }
 
 export default function CartButton({
-  size = 25.32,
+  size = 25,
   image = DefaultCart,
   showBadge = true,
 }: CartButtonProps) {

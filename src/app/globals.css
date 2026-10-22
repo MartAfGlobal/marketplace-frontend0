@@ -32,6 +32,33 @@
   background-clip: padding-box;
 }
 
+/* admincustom-scroll — global scrollbar (no rail, no buttons) */
+.admincustom-scroll::-webkit-scrollbar {
+  width: 5px;
+  background: transparent;
+}
+.admincustom-scroll::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.admincustom-scroll::-webkit-scrollbar-track,
+.admincustom-scroll::-webkit-scrollbar-track-piece {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.admincustom-scroll::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: #947FFF;
+}
+.admincustom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #7B61FF;
+}
+.admincustom-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 @font-face {
   font-family: "Montserrat-Regular";
   src: url("/assets/fonts/Montserrat-VariableFont_wght.ttf") format("opentype");
@@ -388,27 +415,14 @@ select option {
     scroll-margin-top: 7rem;
   }
   .custom-scroll::-webkit-scrollbar {
-    width: 8px;
+    width: 3px;
   }
-  .admincustom-scroll::-webkit-scrollbar {
-    width: 6px;
-  }
-  /* adminXcustom-scroll moved to global scope above @layer utilities */
-  .admincustom-scroll::-webkit-scrollbar-thumb {
-    border-radius: 64px;
-    background: linear-gradient(0deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.76)),
-      linear-gradient(0deg, #947FFF, #947FFF);
-  }
-  .admincustom-scroll::-webkit-scrollbar-thumb {
-    border-radius: 64px;
-    background: linear-gradient(0deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.76)),
-      linear-gradient(0deg, #947FFF, #947FFF);
-  }
-  .custom-scrollrailes::-webkit-scrollbar {
-    width: 4px;
+  /* admincustom-scroll moved to global scope above @layer utilities */
+  .custom-scrollrailes::-webkit-scrollbar{
+    width: 3px;
   }
   .custom-scrollrailes::-webkit-scrollbar-track {
-    width: 4px;
+    width: 3px;
     background: transparent;
   }
   .custom-scrollrailes::-webkit-scrollbar-thumb {
@@ -418,10 +432,7 @@ select option {
   .hcustom-scroll::-webkit-scrollbar {
     height: 8px;
   }
-  .custom-scroll::-webkit-scrollbar {
-    width: 8px;
-  }
-
+  
   .custom-scroll::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.1); /* darker thumb */
     border-radius: 9px;

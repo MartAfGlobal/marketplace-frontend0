@@ -155,7 +155,7 @@ export default function SearchInput({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="absolute top-full left-0 w-full min-w-[340px] md:min-w-[420px] max-w-[560px] mt-2 p-5 bg-white rounded-c8  circle-shadow z-50 text-left"
+            className="absolute top-full left-0 w-full min-w-[340px] md:min-w-[420px] max-w-[560px] mt-2 p-5 bg-ffffff rounded-c8 circle-shadow z-50 text-left max-h-[420px] overflow-y-auto  admincustom-scroll"
           >
             {searchValue.trim() === "" ? (
               <div>
@@ -261,7 +261,7 @@ export default function SearchInput({
               </div>
             ) : (
               /* Suggestions List */
-              <div className="flex flex-col max-h-[380px] overflow-y-auto">
+              <div className="flex flex-col">
                 {suggestions.map((item, idx) => (
                   <div
                     key={`${item}-${idx}`}

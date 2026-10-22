@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React from "react";
 import { useSelector } from "react-redux";
 import CategoryRanking from "./category-ranking";
@@ -18,48 +18,81 @@ import { useHttp } from "@/hooks/use-http";
 export default function OverviewBody() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [period, setPeriod] = useState<"month" | "year">("month");
-  const [overviewAnalytics, setOverviewAnalytics] = useState<any>(null);
+  const [overviewAnalytics, setOverviewAnalytics] = useState<unknown>(null);
   const token = useSelector((state: RootState) => state.token?.token);
-  
-       const { fetchProducts, fetchdDraft, fetchBalance, loading } = useFetchProducts();
-       const product = useSelector((state:RootState)=>state.sellerProduct.product)
-       const { sendHttpRequest: fetchOverviewAnalytics } = useHttp();
-    
-        useEffect(() => {
-          fetchdDraft();
-          fetchProducts();
-          fetchBalance();
-          const timer = setTimeout(() => setInitialLoading(false), 800);
-          return () => clearTimeout(timer);
-        }, []);
 
-        useEffect(() => {
-          if (!token) return;
+  const {
+    fetchProducts,
+    fetchdDraft,
+    fetchBalance,
+    fetchOrders,
+    fetchTransactions,
+    loading,
+  } = useFetchProducts();
+  const product = useSelector(
+    (state: RootState) => state.sellerProduct.product,
+  );
+  const { sendHttpRequest: fetchOverviewAnalytics } = useHttp();
 
-          fetchOverviewAnalytics({
-            requestConfig: {
-              url: `/orders/manufacturer/analytics?period=${period}`,
-              method: "GET",
-              token,
-              isAuth: true,
-              userType: "seller",
-            },
-            successRes: (response: any) => {
-              setOverviewAnalytics(response?.data?.data ?? response?.data ?? {});
-            },
-            errorRes: (error: any) => {
-              console.warn("Seller overview analytics unavailable:", error?.message || error);
-              setOverviewAnalytics(null);
-            },
-          });
-        }, [fetchOverviewAnalytics, period, token]);
- 
-  if (initialLoading || (loading && (!product || product.length === 0))) return <OverviewSkeleton />;
- 
+  useEffect(() => {
+    if (token) {
+      fetchdDraft();
+      fetchProducts();
+      fetchBalance();
+      fetchOrders();
+      fetchTransactions();
+    }
+    const timer = setTimeout(() => setInitialLoading(false), 800);
+    return () => clearTimeout(timer);
+    // These hook methods are recreated every render; fetching is keyed to the auth token.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    fetchOverviewAnalytics({
+      requestConfig: {
+        url: `/orders/manufacturer/analytics?period=${period}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+      },
+      successRes: (response: unknown) => {
+        const responseData =
+          typeof response === "object" &&
+          response !== null &&
+          "data" in response
+            ? response.data
+            : response;
+        const analytics =
+          typeof responseData === "object" &&
+          responseData !== null &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        setOverviewAnalytics(analytics ?? {});
+      },
+      errorRes: (error: unknown) => {
+        console.warn(
+          "Seller overview analytics unavailable:",
+          error instanceof Error ? error.message : error,
+        );
+        setOverviewAnalytics(null);
+      },
+    });
+  }, [fetchOverviewAnalytics, period, token]);
+
+  if (initialLoading || (loading && (!product || product.length === 0)))
+    return <OverviewSkeleton />;
+
   return (
     <div className="space-y-6 pb-c32 ">
-      
-      <OverviewHeader period={period} onPeriodChange={setPeriod} />
+      <div className ="w-full">
+        <OverviewHeader period={period} onPeriodChange={setPeriod} />
+      </div>
+
       <div>
         <OverviewCards analytics={overviewAnalytics} />
       </div>

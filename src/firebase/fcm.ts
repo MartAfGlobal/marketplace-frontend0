@@ -1,5 +1,5 @@
 // src/firebase/fcm.ts
-import { messaging } from "./firebase";
+import { getFirebaseMessaging } from "./firebase";
 import { getToken, onMessage, MessagePayload } from "firebase/messaging";
 
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -13,10 +13,18 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
 export async function generateFcmToken(vapidKey: string): Promise<string | null> {
   try {
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    const token = await getToken(messaging, { 
+    const messaging = await getFirebaseMessaging();
+    if (!messaging) {
+      console.warn("Firebase Messaging is not supported in this environment");
+      return null;
+    }
+
+    const registration = await navigator.serviceWorker.register(
+      "/firebase-messaging-sw.js"
+    );
+    const token = await getToken(messaging, {
       vapidKey,
-      serviceWorkerRegistration: registration 
+      serviceWorkerRegistration: registration,
     });
     if (!token) {
       console.warn("No FCM token received");
@@ -29,7 +37,15 @@ export async function generateFcmToken(vapidKey: string): Promise<string | null>
   }
 }
 
-export function listenForForegroundMessages(callback: (payload: MessagePayload) => void) {
+export async function listenForForegroundMessages(
+  callback: (payload: MessagePayload) => void
+): Promise<void> {
+  const messaging = await getFirebaseMessaging();
+  if (!messaging) {
+    console.warn("Firebase Messaging is not supported in this environment");
+    return;
+  }
+
   onMessage(messaging, (payload) => {
     console.log("Foreground message received:", payload);
     callback(payload);

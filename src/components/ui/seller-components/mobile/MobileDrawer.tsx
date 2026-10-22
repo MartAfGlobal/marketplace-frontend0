@@ -40,7 +40,7 @@ const navItems = [
   { id: "products", label: "Products", icon: ProductIcon, href: "/dashboard/seller/products" },
   { id: "orders", label: "Orders", icon: OrderIcon, href: "/dashboard/seller/orders" },
   { id: "finance", label: "Finance", icon: FinanceIcon, href: "/dashboard/seller/finance" },
-  { id: "customers", label: "Customers", icon: CustomerIcon, href: "/dashboard/seller/customers" },
+  // { id: "customers", label: "Customers", icon: CustomerIcon, href: "/dashboard/seller/customers" },
 ];
 
 const settingsItems = [

@@ -66,7 +66,7 @@ export default function FcmInit({ isLoggedIn }) { // pass this from your auth st
           return;
         }
 
-        listenForForegroundMessages((payload) => {
+        await listenForForegroundMessages((payload) => {
           alert(`New Notification: ${payload.notification?.title}`);
         });
       } catch (err) {

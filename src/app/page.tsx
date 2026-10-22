@@ -9,16 +9,19 @@ import JoinUsPage from "@/components/ui/landindPage/JoinUs/JoinUs";
 import WireframeLoader from "@/components/ui/WireframeLoader";
 import { useHttp } from "@/hooks/use-http";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setProducts } from "@/store/user-data/products/product-slice";
 import { transformApiProduct } from "@/utils/transformApiProduct";
 
 import { usePathname } from "next/navigation";
+import { RootState } from "@/store";
 export default function Home() {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const { sendHttpRequest } = useHttp();
   const [loading, setLoading] = useState(true);
+
+ const token = useSelector((state: RootState) => state.token?.token);
 
   useEffect(() => {
     const id = window.location.hash.replace("#", "");
@@ -76,9 +79,9 @@ export default function Home() {
           <ProductListPage  />
         </section> 
 
-        <AboutPage /> 
+       {!token && <AboutPage /> }
       </div>
-      <JoinUsPage /> 
+      {!token && <JoinUsPage /> }
     </main>
   );
 }
