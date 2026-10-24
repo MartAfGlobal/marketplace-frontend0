@@ -30,7 +30,9 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { useLogout } from "@/utils/logout";
 import { useTokenExpiration } from "@/hooks/useTokenExpiration";
 import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
@@ -179,7 +181,38 @@ export default function AdminLayout({
   const logout = useLogout(dispatch);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+
+  const {
+    fetchAdminNotifications,
+    fetchAdminNotificationUnreadCount,
+    markAdminNotificationRead,
+    markAllAdminNotificationsRead,
+    clearAdminNotifications,
+  } = AdminDetails();
+  const { notifications, unreadCount } = useSelector(
+    (state: RootState) => state.adminNotifications,
+  );
+
+  useEffect(() => {
+    fetchAdminNotificationUnreadCount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleNotifOpen = () => {
+    setNotifOpen((prev) => {
+      const next = !prev;
+      if (next) fetchAdminNotifications(1);
+      return next;
+    });
+  };
+
+  const handleNotifItemClick = (notif: { id: string; is_read: boolean; link: string | null }) => {
+    if (!notif.is_read) markAdminNotificationRead(notif.id);
+    setNotifOpen(false);
+    if (notif.link) router.push(notif.link);
+  };
   const [expandedItems, setExpandedItems] = useState<
     Record<string, boolean | undefined>
   >({});
@@ -672,18 +705,94 @@ export default function AdminLayout({
         {/* Right Header Actions exactly matching Image 2 */}
         <div className="flex items-center gap-3 text-gray-600">
           {/* Notifications Bell */}
-          <button className="relative bg-ffffff rounded-full transition-colors h-12 w-12 flex items-center justify-center hover:bg-gray-50">
-            <Image
-              src={DefaultNofication}
-              alt="Notification"
-              width={18}
-              height={19.5}
-            />
-            {/* <Bell className="w-6 h-6 text-000000" /> */}
-            <span className="absolute -top-2 right-0 w-5 h-5 bg-ca0202 text-white rounded-full flex items-center justify-center text-c10 font-MontserratSemiBold">
-              1
-            </span>
-          </button>
+          <div className="relative">
+            <button
+              onClick={handleNotifOpen}
+              className="relative bg-ffffff rounded-full transition-colors h-12 w-12 flex items-center justify-center hover:bg-gray-50"
+            >
+              <Image
+                src={DefaultNofication}
+                alt="Notification"
+                width={18}
+                height={19.5}
+              />
+              {unreadCount > 0 && (
+                <span className="absolute -top-2 right-0 w-5 h-5 bg-ca0202 text-white rounded-full flex items-center justify-center text-c10 font-MontserratSemiBold">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {notifOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 top-14 w-96 max-w-[90vw] rounded-lg z-50 shadow-lg bg-white border border-gray-100 overflow-hidden"
+                >
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <span className="font-MontserratSemiBold text-sm text-000000">Notifications</span>
+                    <button
+                      onClick={() => setNotifOpen(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-8">No notifications yet.</p>
+                    ) : (
+                      notifications.map((notif) => (
+                        <button
+                          key={notif.id}
+                          onClick={() => handleNotifItemClick(notif)}
+                          className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
+                            notif.is_read ? "" : "bg-purple-50/40"
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            {!notif.is_read && (
+                              <span className="mt-1.5 w-2 h-2 rounded-full bg-6a0dad flex-shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-MontserratSemiBold text-c13 text-000000 truncate">
+                                {notif.title}
+                              </p>
+                              <p className="text-c12 text-gray-500 line-clamp-2">{notif.message}</p>
+                              {notif.link && (
+                                <span className="text-c11 text-6a0dad font-MontserratSemiBold">
+                                  {notif.requires_action ? "Action needed" : "View"}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-100 text-c12">
+                    <button
+                      onClick={() => markAllAdminNotificationsRead()}
+                      className="text-6a0dad hover:underline font-MontserratSemiBold"
+                    >
+                      Mark all as read
+                    </button>
+                    <button
+                      onClick={() => clearAdminNotifications()}
+                      className="text-gray-400 hover:text-red-500 hover:underline"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* User Profile Outline Dropdown */}
           <div className="relative">
