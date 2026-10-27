@@ -2,9 +2,10 @@
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-const GOOGLE_CLIENT_ID =
+const GOOGLE_CLIENT_ID = (
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-  "706836279877-6c02iar3unr4r3k3m6umv50herh079v6.apps.googleusercontent.com";
+  "706836279877-6c02iar3unr4r3k3m6umv50herh079v6.apps.googleusercontent.com"
+).trim();
 
 export default function GoogleOAuthWrapper({
   children,
