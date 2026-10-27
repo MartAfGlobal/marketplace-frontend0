@@ -6,12 +6,12 @@ importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js
 importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
 
 firebase.initializeApp({
-  apiKey: "AIzaSyC7cZ-VJ1s9XDZ67j_Rin21I_qS9OUmpEg",
-  authDomain: "martaf-ca7e6.firebaseapp.com",
-  projectId: "martaf-ca7e6",
-  storageBucket: "martaf-ca7e6.appspot.com",
-  messagingSenderId: "90196099652",
-  appId: "1:90196099652:web:bb3cf96b4ad58cc92db211",
+  apiKey: "AIzaSyCbJBvPuLPLOPtIfQs8-KS_A9csKdomjtA",
+  authDomain: "martaf-marketplace-7665e.firebaseapp.com",
+  projectId: "martaf-marketplace-7665e",
+  storageBucket: "martaf-marketplace-7665e.firebasestorage.app",
+  messagingSenderId: "335627618741",
+  appId: "1:335627618741:web:22e9b997c267cfda9271fc",
 });
 
 const messaging = firebase.messaging();
@@ -26,4 +26,4 @@ messaging.onBackgroundMessage((payload) => {
       icon: "/logo.png",
     }
   );
-}); 
+});

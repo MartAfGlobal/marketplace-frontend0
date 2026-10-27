@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth, googleProvider } from "@/firebase/firebase";
+import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+import { auth } from "@/firebase/firebase";
 import Axios from "axios";
 import { useDispatch } from "react-redux";
 import { tokenActions } from "@/store/token/token-slice";
@@ -16,34 +16,57 @@ interface UseGoogleAuthOptions {
   fromPage?: string | null;
 }
 
+function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const base64Url = token.split(".")[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(
+      decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      )
+    );
+  } catch {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      return JSON.parse(atob(base64));
+    } catch {
+      return null;
+    }
+  }
+}
+
 export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const handleGoogleAuth = async () => {
+  const handleGoogleCredential = async (idToken: string) => {
+    if (!idToken) {
+      toast.error("No Google token received. Please try again.");
+      return;
+    }
+
     setLoading(true);
     try {
-      // 1. Open Google Sign-In Popup using Firebase
-      const result = await signInWithPopup(auth, googleProvider);
-
-      // 2. Extract Google ID token (JWT format with 3 segments expected by backend)
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const googleIdToken = credential?.idToken;
-      const firebaseIdToken = await result.user.getIdToken();
-
-      const tokenToSend = googleIdToken || firebaseIdToken;
-
-      if (!tokenToSend) {
-        throw new Error("Unable to retrieve Google authentication token.");
+      // 1. Authenticate Firebase with the Google credential
+      try {
+        const credential = GoogleAuthProvider.credential(idToken);
+        await signInWithCredential(auth, credential);
+      } catch (firebaseErr: any) {
+        console.warn("Firebase sign-in with credential warning:", firebaseErr);
       }
 
-      // 3. Send token to backend
+      // 2. Send the Google ID Token directly to the backend
       const res = await Axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/accounts/auth/google/`,
         {
-          token: tokenToSend,
-          id_token: tokenToSend,
+          token: idToken,
+          id_token: idToken,
           user_type: "buyer",
         },
         {
@@ -62,7 +85,7 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
         throw new Error("No access token received from authentication server.");
       }
 
-      // 4. Store tokens
+      // 3. Store tokens
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("token", accessToken);
       if (refreshToken) {
@@ -71,30 +94,33 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
 
       dispatch(tokenActions.setToken(accessToken));
 
-      // 5. Populate buyer data in Redux
-      const displayName = result.user.displayName || "";
-      const nameParts = displayName.trim().split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
-
+      // 4. Populate Redux
+      const googlePayload = decodeJwtPayload(idToken) || {};
       const user = data?.buyerDetails || data?.user || data;
+      const firstName = user?.first_name ?? googlePayload?.given_name ?? "";
+      const lastName = user?.last_name ?? googlePayload?.family_name ?? "";
+      const displayName =
+        user?.name ??
+        googlePayload?.name ??
+        `${firstName} ${lastName}`.trim();
+
       dispatch(
         buyerActions.updateBuyerData({
           ...buyerInitialData,
-          id: user?.id ? String(user.id) : result.user.uid,
-          email: user?.email ?? result.user.email ?? "",
-          first_name: user?.first_name ?? firstName,
-          last_name: user?.last_name ?? lastName,
+          id: user?.id ? String(user.id) : googlePayload?.sub ?? "",
+          email: user?.email ?? googlePayload?.email ?? "",
+          first_name: firstName,
+          last_name: lastName,
           is_google_user: true,
           account_status: user?.account_status ?? "active",
           profile: {
             ...buyerInitialData.profile,
             id: user?.profile?.id ?? 0,
             profile_picture:
-              result.user.photoURL ?? user?.profile?.profile_picture ?? null,
-            first_name: user?.first_name ?? firstName,
-            last_name: user?.last_name ?? lastName,
-            name: user?.profile?.name ?? displayName ?? "",
+              user?.profile?.profile_picture ?? googlePayload?.picture ?? null,
+            first_name: firstName,
+            last_name: lastName,
+            name: displayName,
           },
         })
       );
@@ -114,43 +140,7 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
         router.push(destination);
       }
     } catch (err: any) {
-      if (
-        err?.code === "auth/popup-closed-by-user" ||
-        err?.code === "auth/cancelled-popup-request"
-      ) {
-        // User closed popup — exit silently
-        return;
-      }
-
-      if (err?.code === "auth/popup-blocked") {
-        toast.error(
-          "Popup was blocked by your browser. Please allow popups for this site."
-        );
-        return;
-      }
-
-      if (err?.code === "auth/unauthorized-domain") {
-        toast.error(
-          "This domain is not authorized in Firebase Console. Please add it to Authorized Domains."
-        );
-        return;
-      }
-
-      if (err?.code === "auth/configuration-not-found") {
-        toast.error(
-          "Google Sign-In is not enabled in Firebase Console. Please enable it under Authentication > Sign-in method."
-        );
-        return;
-      }
-
       console.error("Google Auth error:", err);
-      if (err?.response) {
-        console.error("Backend response status:", err.response.status);
-        console.error(
-          "Backend response data:",
-          JSON.stringify(err.response.data, null, 2)
-        );
-      }
       const errorMsg =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
@@ -165,5 +155,5 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
     }
   };
 
-  return { handleGoogleAuth, loading };
+  return { handleGoogleCredential, loading };
 }

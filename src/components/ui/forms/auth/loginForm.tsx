@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Google from "@/assets/socialIcons/Google.svg";
 import Email from "@/assets/FormIcon/email.svg";
 import { LoginParams } from "@/types/global";
 import { toast } from "sonner";
@@ -19,7 +18,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { RegProps } from "./verify-email";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { setStoredAccountType } from "@/utils/authStorage";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function LoginForm({ userType }: RegProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +30,7 @@ export default function LoginForm({ userType }: RegProps) {
   // Keep role-specific sign-in behavior and return the user to the page that initiated authentication when provided.
   const fromPage = searchParams.get("from");
 
-  const { handleGoogleAuth, loading: googleLoading } = useGoogleAuth({ fromPage });
+
 
   const rememberKey = `rememberLogin_${userType ?? "buyer"}`;
 
@@ -356,21 +355,7 @@ export default function LoginForm({ userType }: RegProps) {
           </div>
 
           <div>
-            <button
-              type="button"
-              onClick={handleGoogleAuth}
-              disabled={googleLoading}
-              className="w-full border flex items-center justify-center h-c48 font-MontserratSemiBold text-base gap-2 border-161616 rounded-c8 hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              <Image
-                src={Google}
-                width={24}
-                height={24}
-                alt="google sign in"
-                className="md:h-c24 md:w-24 h-c32 w-c32"
-              />
-              {googleLoading ? "Signing in with Google..." : "Sign in with Google"}
-            </button>
+            <GoogleSignInButton fromPage={fromPage} label="Sign in with Google" />
           </div>
 
           <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">

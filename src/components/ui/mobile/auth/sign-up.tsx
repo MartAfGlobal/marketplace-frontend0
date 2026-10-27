@@ -20,7 +20,7 @@ import { useOtpTimer, isOtpExpiredError } from "@/hooks/useOtpTimer";
 
 import MobileLogin from "./sign-in";
 import { AuthStep } from "@/types/global";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 import ResetVerify from "./reset-verifyModal";
 import ForgotPasswordModal from "./forgot-password";
@@ -55,11 +55,6 @@ export default function AuthModal({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { loading, sendHttpRequest: registerUserReq } = useHttp();
-  const { handleGoogleAuth, loading: googleLoading } = useGoogleAuth({
-    onSuccess: () => {
-      onClose();
-    },
-  });
 
 function extractRetryAfter(data: any): number | null {
   const raw =
@@ -389,20 +384,7 @@ const DEFAULT_RESEND_TIMEOUT = 120;
                       </div>
 
                       {/* Google */}
-                      <button
-                        type="button"
-                        disabled={googleLoading}
-                        className="w-full h-c56 rounded-lg font-medium flex justify-center items-center gap-4 circle-shadow hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
-                        onClick={handleGoogleAuth}
-                      >
-                        <Image
-                          src={FcGoogle}
-                          alt="Google"
-                          width={24}
-                          height={24}
-                        />
-                        {googleLoading ? "Signing up with Google..." : "Sign up with Google"}
-                      </button>
+                        <GoogleSignInButton onSuccess={() => onClose()} label="Sign up with Google" />
                     </form>
 
                     <p className="text-sm text-center font-MontserratNormal">

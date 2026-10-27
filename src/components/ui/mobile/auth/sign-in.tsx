@@ -13,17 +13,12 @@ import { LoadingSpinner } from "../../loading-spinner";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { setStoredAccountType } from "@/utils/authStorage";
 import FcGoogle from "@/assets/mobile/google_symbol.svg.png";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function MobileLogin({ onClose, setStep, userType = "buyer" }: MobileLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showInvalidCredentialsModal, setShowInvalidCredentialsModal] = useState(false);
   const router = useRouter();
-  const { handleGoogleAuth, loading: googleLoading } = useGoogleAuth({
-    onSuccess: () => {
-      onClose();
-    },
-  });
 
   const rememberKey = `rememberLogin_${userType}`;
 
@@ -313,15 +308,7 @@ export default function MobileLogin({ onClose, setStep, userType = "buyer" }: Mo
               <div className="flex-1 h-px bg-black" />
             </div>
 
-            <button
-              type="button"
-              disabled={googleLoading}
-              onClick={handleGoogleAuth}
-              className="w-full h-c56 rounded-lg font-medium flex justify-center items-center gap-4 circle-shadow hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              <Image src={FcGoogle} alt="Google" width={24} height={24} />
-              {googleLoading ? "Signing in with Google..." : "Sign in with Google"}
-            </button>
+              <GoogleSignInButton onSuccess={() => onClose()} label="Sign in with Google" />
           </>
         )}
 
