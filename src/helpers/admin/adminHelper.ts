@@ -25,6 +25,13 @@ import { setAdminRolesData } from "@/store/admin/roles/adminRolesSlice";
 import { setAdminRoleDetail } from "@/store/admin/roles/adminRoleDetailSlice";
 import { setAdminStaffData } from "@/store/admin/staff/adminStaffSlice";
 import { setAdminStaffDetail } from "@/store/admin/staff/adminStaffDetailSlice";
+import {
+  setAdminNotificationsData,
+  setAdminNotificationsUnreadCount,
+  markAdminNotificationReadInState,
+  markAllAdminNotificationsReadInState,
+  clearAdminNotificationsData,
+} from "@/store/admin/notifications/adminNotificationsSlice";
 import type { PermissionMatrix } from "@/types/admin";
 
 /**
@@ -1083,6 +1090,130 @@ export const AdminDetails = (id?: string) => {
         console.log("Admin orders fetched:", results, "Total:", totalCount);
         dispatch(setAdminOrdersData({ results, count: totalCount }));
         if (callback) callback({ results, totalCount });
+      },
+    });
+  };
+
+  // Admin notification bell/dropdown: list (filtered server-side by the
+  // viewing admin's own permissions -- see notifications/admin_notify.py),
+  // unread count, mark-one-read, mark-all-read, clear-all.
+  const fetchAdminNotifications = (
+    page: number = 1,
+    options?: { category?: string; unreadOnly?: boolean },
+    callback?: (data: any) => void,
+  ) => {
+    if (!token) return;
+
+    const categoryParam = options?.category ? `&category=${options.category}` : "";
+    const unreadParam = options?.unreadOnly ? `&unread_only=true` : "";
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/notifications/admin/?page=${page}${categoryParam}${unreadParam}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const results = responseData?.data?.results ?? [];
+        const totalCount = responseData?.data?.count ?? results.length;
+        dispatch(setAdminNotificationsData({ results, count: totalCount }));
+        if (callback) callback({ results, totalCount });
+      },
+    });
+  };
+
+  const fetchAdminNotificationUnreadCount = (callback?: (count: number) => void) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/notifications/admin/unread-count/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        const count = responseData?.data?.unread_count ?? 0;
+        dispatch(setAdminNotificationsUnreadCount(count));
+        if (callback) callback(count);
+      },
+    });
+  };
+
+  const markAdminNotificationRead = (
+    notificationId: string,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token || !notificationId) return;
+
+    dispatch(markAdminNotificationReadInState(notificationId));
+    sendHttpRequest({
+      requestConfig: {
+        url: `/notifications/admin/${notificationId}/read/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const markAllAdminNotificationsRead = (
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+
+    dispatch(markAllAdminNotificationsReadInState());
+    sendHttpRequest({
+      requestConfig: {
+        url: `/notifications/admin/read-all/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {},
+      },
+      successRes: (responseData: any) => {
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
+      },
+    });
+  };
+
+  const clearAdminNotifications = (
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/notifications/admin/clear/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: any) => {
+        dispatch(clearAdminNotificationsData());
+        if (callback) callback(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => {
+        if (errorCallback) errorCallback(err);
       },
     });
   };
@@ -3112,6 +3243,13 @@ export const AdminDetails = (id?: string) => {
     securityLogoutAdminStaffBulk,
     fetchAdminStaffActivityLogs,
     fetchAdminStaffTickets,
+
+    // Notifications
+    fetchAdminNotifications,
+    fetchAdminNotificationUnreadCount,
+    markAdminNotificationRead,
+    markAllAdminNotificationsRead,
+    clearAdminNotifications,
 
     success,
     setSuccess: setsuccess,
