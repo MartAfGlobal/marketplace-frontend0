@@ -36,6 +36,7 @@ import { AdminDetails } from "@/helpers/admin/adminHelper";
 import { useLogout } from "@/utils/logout";
 import { useTokenExpiration } from "@/hooks/useTokenExpiration";
 import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
+import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import Image from "next/image";
 import LogoPurple from "@/assets/images/logo-purple.svg";
 import SearchInput from "@/components/ui/landindPage/Header/SearchInput";
@@ -196,6 +197,8 @@ export default function AdminLayout({
   const [userOpen, setUserOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [clearNotifsModalOpen, setClearNotifsModalOpen] = useState(false);
+  const [clearingNotifs, setClearingNotifs] = useState(false);
 
   const {
     fetchAdminNotifications,
@@ -233,6 +236,17 @@ export default function AdminLayout({
   const toggleNotifExpand = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleClearAllConfirm = () => {
+    setClearingNotifs(true);
+    clearAdminNotifications(
+      () => {
+        setClearingNotifs(false);
+        setClearNotifsModalOpen(false);
+      },
+      () => setClearingNotifs(false),
+    );
   };
 
   // Dashboard subsections select role-specific navigation from their route prefix.
@@ -786,10 +800,10 @@ export default function AdminLayout({
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
-                                  <p className="font-MontserratSemiBold text-c13 text-000000 truncate">
+                                  <p className="font-MontserratSemiBold text-c14 text-000000 truncate">
                                     {notif.title}
                                   </p>
-                                  <span className="text-c11 text-gray-400 flex-shrink-0 whitespace-nowrap">
+                                  <span className="text-c10 text-gray-400 flex-shrink-0 whitespace-nowrap">
                                     {formatNotifTime(notif.created_at)}
                                   </span>
                                 </div>
@@ -804,13 +818,13 @@ export default function AdminLayout({
                                   {isLongMessage && (
                                     <button
                                       onClick={(e) => toggleNotifExpand(notif.id, e)}
-                                      className="text-c11 text-gray-400 hover:text-6a0dad hover:underline font-MontserratSemiBold"
+                                      className="text-c10 text-gray-400 hover:text-6a0dad hover:underline font-MontserratSemiBold"
                                     >
                                       {isExpanded ? "Show less" : "Read more"}
                                     </button>
                                   )}
                                   {notif.link && (
-                                    <span className="text-c11 text-6a0dad font-MontserratSemiBold">
+                                    <span className="text-c10 text-6a0dad font-MontserratSemiBold">
                                       {notif.requires_action ? "Action needed" : "View"}
                                     </span>
                                   )}
@@ -831,7 +845,7 @@ export default function AdminLayout({
                       Mark all as read
                     </button>
                     <button
-                      onClick={() => clearAdminNotifications()}
+                      onClick={() => setClearNotifsModalOpen(true)}
                       className="text-gray-400 hover:text-red-500 hover:underline"
                     >
                       Clear all
@@ -969,6 +983,19 @@ export default function AdminLayout({
         isOpen={logoutModalOpen}
         onConfirm={() => { setLogoutModalOpen(false); logout(); }}
         onCancel={() => setLogoutModalOpen(false)}
+      />
+
+      {/* Clear All Notifications Confirmation Modal */}
+      <ConfirmModal
+        isOpen={clearNotifsModalOpen}
+        onClose={() => setClearNotifsModalOpen(false)}
+        title="Clear all notifications?"
+        description="All your notifications will be permanently removed. This can't be undone."
+        onYes={handleClearAllConfirm}
+        onNo={() => setClearNotifsModalOpen(false)}
+        yesText="Clear all"
+        noText="Cancel"
+        loading={clearingNotifs}
       />
     </div>
   );
