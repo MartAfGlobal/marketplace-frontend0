@@ -165,6 +165,19 @@ const renderSidebarIcon = (
 
 type AdminRole = "Super Admin" | "Operational" | "IT" | "Support" | "Finance";
 
+function formatNotifTime(iso: string) {
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "";
+  const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default function AdminLayout({
   children,
 }: {
@@ -216,6 +229,11 @@ export default function AdminLayout({
   const [expandedItems, setExpandedItems] = useState<
     Record<string, boolean | undefined>
   >({});
+
+  const toggleNotifExpand = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Dashboard subsections select role-specific navigation from their route prefix.
   const getRoleFromPath = (path: string): AdminRole => {
@@ -746,32 +764,62 @@ export default function AdminLayout({
                     {notifications.length === 0 ? (
                       <p className="text-sm text-gray-400 text-center py-8">No notifications yet.</p>
                     ) : (
-                      notifications.map((notif) => (
-                        <button
-                          key={notif.id}
-                          onClick={() => handleNotifItemClick(notif)}
-                          className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors ${
-                            notif.is_read ? "" : "bg-purple-50/40"
-                          }`}
-                        >
-                          <div className="flex items-start gap-2">
-                            {!notif.is_read && (
-                              <span className="mt-1.5 w-2 h-2 rounded-full bg-6a0dad flex-shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-MontserratSemiBold text-c13 text-000000 truncate">
-                                {notif.title}
-                              </p>
-                              <p className="text-c12 text-gray-500 line-clamp-2">{notif.message}</p>
-                              {notif.link && (
-                                <span className="text-c11 text-6a0dad font-MontserratSemiBold">
-                                  {notif.requires_action ? "Action needed" : "View"}
-                                </span>
+                      notifications.map((notif) => {
+                        const isExpanded = !!expandedItems[notif.id];
+                        const isLongMessage = notif.message.length > 100;
+                        return (
+                          <div
+                            key={notif.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => handleNotifItemClick(notif)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") handleNotifItemClick(notif);
+                            }}
+                            className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${
+                              notif.is_read ? "" : "bg-purple-50/40"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              {!notif.is_read && (
+                                <span className="mt-1.5 w-2 h-2 rounded-full bg-6a0dad flex-shrink-0" />
                               )}
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="font-MontserratSemiBold text-c13 text-000000 truncate">
+                                    {notif.title}
+                                  </p>
+                                  <span className="text-c11 text-gray-400 flex-shrink-0 whitespace-nowrap">
+                                    {formatNotifTime(notif.created_at)}
+                                  </span>
+                                </div>
+                                <p
+                                  className={`text-c12 text-gray-500 whitespace-pre-wrap break-words ${
+                                    isExpanded ? "" : "line-clamp-2"
+                                  }`}
+                                >
+                                  {notif.message}
+                                </p>
+                                <div className="flex items-center gap-3 mt-0.5">
+                                  {isLongMessage && (
+                                    <button
+                                      onClick={(e) => toggleNotifExpand(notif.id, e)}
+                                      className="text-c11 text-gray-400 hover:text-6a0dad hover:underline font-MontserratSemiBold"
+                                    >
+                                      {isExpanded ? "Show less" : "Read more"}
+                                    </button>
+                                  )}
+                                  {notif.link && (
+                                    <span className="text-c11 text-6a0dad font-MontserratSemiBold">
+                                      {notif.requires_action ? "Action needed" : "View"}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </button>
-                      ))
+                        );
+                      })
                     )}
                   </div>
 
