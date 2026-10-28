@@ -28,20 +28,23 @@ const clearHeader = (headersObj: any, headerName: string) => {
 });
 
 let isRefreshing = false;
+let refreshPromise: Promise<string> | null = null;
 let failedQueue: Array<{
   resolve: (token: string) => void;
   reject: (error: any) => void;
 }> = [];
 
 const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
+  const queue = [...failedQueue];
+  failedQueue = [];
+
+  queue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else if (token) {
       prom.resolve(token);
     }
   });
-  failedQueue = [];
 };
 
 export const refreshAccessToken = async (): Promise<string> => {
@@ -153,23 +156,25 @@ axios.interceptors.response.use(
       !originalRequest._retry &&
       !isAuthRequest
     ) {
-      if (isRefreshing) {
+      if (isRefreshing && refreshPromise) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((newToken) => {
-            originalRequest.headers = originalRequest.headers || {};
-            originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-            return axios(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
+          failedQueue.push({
+            resolve: (newToken) => {
+              originalRequest.headers = originalRequest.headers || {};
+              originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+              resolve(axios(originalRequest));
+            },
+            reject,
+          });
+        });
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
+      refreshPromise = refreshAccessToken();
 
       try {
-        const newAccessToken = await refreshAccessToken();
+        const newAccessToken = await refreshPromise;
         processQueue(null, newAccessToken);
         originalRequest.headers = originalRequest.headers || {};
         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
@@ -179,6 +184,7 @@ axios.interceptors.response.use(
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
+        refreshPromise = null;
       }
     }
 

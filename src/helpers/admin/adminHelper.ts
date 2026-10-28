@@ -3138,6 +3138,67 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminSupportTickets = (
+    page: number = 1,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/?page=${page}`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const createAdminSupportTicket = (
+    payload: FormData | Record<string, unknown>,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
   return {
     fetchOrdersList,
     fetchCancellationRequests,
@@ -3243,6 +3304,8 @@ export const AdminDetails = (id?: string) => {
     securityLogoutAdminStaffBulk,
     fetchAdminStaffActivityLogs,
     fetchAdminStaffTickets,
+    fetchAdminSupportTickets,
+    createAdminSupportTicket,
 
     // Notifications
     fetchAdminNotifications,

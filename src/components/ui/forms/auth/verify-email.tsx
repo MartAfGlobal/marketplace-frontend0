@@ -163,7 +163,10 @@ export default function VerifyEmail({ userType, token }: RegProps) {
           <p className="h-c1 w-full bg-efefef"></p>
         </div>
         <div>
-          <GoogleSignInButton label="Sign up with Google" />
+          <GoogleSignInButton
+            userType={userType === "seller" ? "seller" : "buyer"}
+            label="Sign up with Google"
+          />
         </div>
         <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
           <p className="text-161616"> have an account?</p>

@@ -8,6 +8,7 @@ import Google from "@/assets/socialIcons/Google.svg";
 
 interface GoogleSignInButtonProps {
   fromPage?: string | null;
+  userType?: "buyer" | "seller";
   onSuccess?: (data: any) => void;
   onError?: (error: any) => void;
   label?: string;
@@ -16,6 +17,7 @@ interface GoogleSignInButtonProps {
 
 export default function GoogleSignInButton({
   fromPage,
+  userType = "buyer",
   onSuccess,
   onError,
   label = "Sign in with Google",
@@ -23,6 +25,7 @@ export default function GoogleSignInButton({
 }: GoogleSignInButtonProps) {
   const { handleGoogleCredential, loading } = useGoogleAuth({
     fromPage,
+    userType,
     onSuccess,
     onError,
   });

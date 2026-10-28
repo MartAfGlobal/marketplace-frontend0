@@ -355,7 +355,11 @@ export default function LoginForm({ userType }: RegProps) {
           </div>
 
           <div>
-            <GoogleSignInButton fromPage={fromPage} label="Sign in with Google" />
+            <GoogleSignInButton
+              fromPage={fromPage}
+              userType={userType === "seller" ? "seller" : "buyer"}
+              label="Sign in with Google"
+            />
           </div>
 
           <div className="font-MontserratMedium text-c12 flex gap-1 items-center justify-center mt-4">
