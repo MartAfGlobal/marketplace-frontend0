@@ -3,6 +3,7 @@
 
 import { AppDispatch } from "@/store";
 import { tokenActions } from "@/store/token/token-slice";
+import { clearAdminInfo } from "@/store/admin/adminInfoSlice";
 import { useRouter, usePathname } from "next/navigation";
 import { clearStoredAuthTokens } from "@/utils/authStorage";
 import axios from "@/lib/axios";
@@ -41,6 +42,7 @@ export const logout = async (
 
     // Clear redux token
     dispatch(tokenActions.deleteToken());
+    dispatch(clearAdminInfo());
 
     // Clear redirect URL on manual logout so next login goes to overview
     if (typeof window !== "undefined") {

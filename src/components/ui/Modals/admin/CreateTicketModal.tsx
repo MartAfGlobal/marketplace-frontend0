@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
 import { Button } from "@/components/ui/Button/Button";
 import { toast } from "sonner";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
 import Image from "next/image";
 
@@ -23,7 +21,7 @@ interface CreateTicketModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  availableStaff?: { name: string; id?: string }[];
+  canAssignStaff?: boolean;
 }
 
 const CATEGORY_OPTIONS = [
@@ -158,7 +156,7 @@ export default function CreateTicketModal({
   isOpen,
   onClose,
   onSuccess,
-  availableStaff = [],
+  canAssignStaff = false,
 }: CreateTicketModalProps) {
   const [subject, setSubject] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -170,12 +168,12 @@ export default function CreateTicketModal({
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
   const [staffList, setStaffList] = useState<StaffOption[]>([]);
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const token = useSelector((state: RootState) => state.token?.token);
-  const { fetchAdminStaffList, createAdminSupportTicket } = AdminDetails();
+  const { fetchAdminSupportAgents, createAdminSupportTicket } = AdminDetails();
 
   // Lock body scroll while modal is open
   useEffect(() => {
@@ -196,56 +194,111 @@ export default function CreateTicketModal({
     };
   }, [isOpen]);
 
-  // Load staff members for assignment
+  // Support agents are fetched from their dedicated endpoint, not staff management.
   useEffect(() => {
     if (!isOpen) return;
 
-    if (fetchAdminStaffList && token) {
-      fetchAdminStaffList(
-        { page: 1 },
-        (data: any) => {
-          const results = data?.results || [];
-          const mapped: StaffOption[] = results.map((item: any) => ({
-            id: String(item.user_id || item.id || item.staff_ref),
-            name:
-              item.full_name ||
-              `${item.first_name || ""} ${item.last_name || ""}`.trim() ||
-              item.email ||
-              "Staff member",
-            email: item.email,
-            avatar: item.profile_image || item.avatar,
-          }));
-
-          // Merge with any availableStaff passed from the parent page
-          if (availableStaff.length > 0) {
-            for (const s of availableStaff) {
-              if (s.name && !mapped.some((m) => m.name.toLowerCase() === s.name.toLowerCase())) {
-                mapped.push({
-                  id: s.id || s.name,
-                  name: s.name,
-                });
-              }
-            }
-          }
-
-          setStaffList(mapped);
-          if (mapped.length > 0 && !assignedStaffId) {
-            setAssignedStaffId(mapped[0].id);
-          }
-        },
-      );
-    } else if (availableStaff.length > 0) {
-      const mapped = availableStaff.map((s, idx) => ({
-        id: s.id || String(idx + 1),
-        name: s.name,
-      }));
-      setStaffList(mapped);
-      if (mapped.length > 0 && !assignedStaffId) {
-        setAssignedStaffId(mapped[0].id);
-      }
+    if (!canAssignStaff) {
+      setStaffList([]);
+      setAssignedStaffId("");
+      setIsLoadingStaff(false);
+      return;
     }
+
+    let active = true;
+    setIsLoadingStaff(true);
+    fetchAdminSupportAgents(
+      (data: unknown) => {
+        if (!active) return;
+
+        const body =
+          data !== null && typeof data === "object"
+            ? (data as Record<string, unknown>)
+            : null;
+        const nestedBody =
+          body?.data !== null && typeof body?.data === "object"
+            ? (body.data as Record<string, unknown>)
+            : null;
+        const rows: unknown[] | null = Array.isArray(data)
+          ? data
+          : ([
+              body?.results,
+              body?.agents,
+              body?.support_agents,
+              body?.staff,
+              nestedBody?.results,
+              nestedBody?.agents,
+              nestedBody?.support_agents,
+              nestedBody?.staff,
+            ].find(Array.isArray) as unknown[] | undefined) ?? null;
+        if (!Array.isArray(rows)) {
+          setStaffList([]);
+          setAssignedStaffId("");
+          setIsLoadingStaff(false);
+          toast.error("The support agents response could not be read.");
+          return;
+        }
+
+        const mapped = rows.flatMap((row): StaffOption[] => {
+          if (row === null || typeof row !== "object" || Array.isArray(row)) {
+            return [];
+          }
+          const staff = row as Record<string, unknown>;
+          const id =
+            staff.user_id ?? staff.id ?? staff.staff_id ?? staff.agent_id;
+          const fullName =
+            staff.full_name ??
+            staff.name ??
+            [staff.first_name, staff.last_name]
+              .filter((part): part is string => typeof part === "string")
+              .join(" ");
+          const name =
+            typeof fullName === "string" && fullName.trim()
+              ? fullName.trim()
+              : typeof staff.email === "string"
+                ? staff.email
+                : "";
+          if (id === undefined || id === null || !name) return [];
+
+          return [
+            {
+              id: String(id),
+              name,
+              email: typeof staff.email === "string" ? staff.email : undefined,
+              avatar:
+                typeof staff.profile_image === "string"
+                  ? staff.profile_image
+                  : typeof staff.avatar === "string"
+                    ? staff.avatar
+                    : undefined,
+            },
+          ];
+        });
+
+        setStaffList(mapped);
+        setAssignedStaffId((currentId) =>
+          mapped.some((staff) => staff.id === currentId)
+            ? currentId
+            : mapped[0]?.id || "",
+        );
+        setIsLoadingStaff(false);
+      },
+      (error: unknown) => {
+        if (!active) return;
+        setStaffList([]);
+        setAssignedStaffId("");
+        setIsLoadingStaff(false);
+        console.error("Failed to load support agents:", error);
+        toast.error("Could not load support agents. Please try again.");
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+    // AdminDetails returns fresh helper functions per render; requests depend on modal access.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, token]);
+  }, [isOpen, canAssignStaff]);
 
   const selectedStaff = staffList.find((s) => s.id === assignedStaffId) || null;
 
@@ -494,56 +547,63 @@ export default function CreateTicketModal({
                 </div>
               </div>
 
-              {/* Assign to */}
-              <div>
-                <Label className="">
-                  Assign to
-                </Label>
-                <CustomSelect
-                  placeholder="Select staff"
-                  options={staffList.map((s) => ({
-                    label: s.name,
-                    value: s.id,
-                  }))}
-                  value={assignedStaffId}
-                  onChange={setAssignedStaffId}
-                  disabled={isSubmitting}
-                />
-              </div>
-
-              {/* Assigned to card */}
-              {selectedStaff && (
-                <div className="bg-ff715b/12 border border-ff715b rounded-c8 py-3 px-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4 min-w-0">
-                    {selectedStaff.avatar ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <Image
-                      width={36} height={36}
-                        src={selectedStaff.avatar}
-                        alt={selectedStaff.name}
-                        className="w-9 h-9 rounded-full object-cover shrink-0"
-                      />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-[#ff715b]/20 text-[#ff715b] flex items-center justify-center font-MontserratBold text-xs shrink-0">
-                        {selectedStaff.name
-                          .split(" ")
-                          .map((p) => p[0])
-                          .join("")
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </div>
-                    )}
-                    <div className="min-w-0 space-y-1">
-                      <p className="text-[10px] text-000000/68 leading-4 tracking-[2%] font-MontserratNormal">
-                        Assigned to
-                      </p>
-                      <p className="text-xs font-MontserratMedium text-000000 leading-[20px] tracking-[2%] truncate">
-                        {selectedStaff.name}
-                      </p>
-                    </div>
+              {canAssignStaff && (
+                <>
+                  <div>
+                    <Label className="">Assign to</Label>
+                    <CustomSelect
+                      placeholder={
+                        isLoadingStaff
+                          ? "Loading support agents..."
+                          : staffList.length
+                            ? "Select staff"
+                            : "No support agents available"
+                      }
+                      options={staffList.map((staff) => ({
+                        label: staff.name,
+                        value: staff.id,
+                      }))}
+                      value={assignedStaffId}
+                      onChange={setAssignedStaffId}
+                      disabled={isSubmitting || isLoadingStaff || !staffList.length}
+                    />
                   </div>
-                  <Check className="w-5 h-5 text-[#ff715b] shrink-0 ml-2" />
-                </div>
+
+                  {selectedStaff && (
+                    <div className="bg-ff715b/12 border border-ff715b rounded-c8 py-3 px-4 flex items-center justify-between">
+                      <div className="flex min-w-0 items-center gap-4">
+                        {selectedStaff.avatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <Image
+                            width={36}
+                            height={36}
+                            src={selectedStaff.avatar}
+                            alt={selectedStaff.name}
+                            className="h-9 w-9 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#ff715b]/20 text-xs font-MontserratBold text-[#ff715b]">
+                            {selectedStaff.name
+                              .split(" ")
+                              .map((part) => part[0])
+                              .join("")
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0 space-y-1">
+                          <p className="text-[10px] font-MontserratNormal leading-4 tracking-[2%] text-000000/68">
+                            Assigned to
+                          </p>
+                          <p className="truncate text-xs font-MontserratMedium leading-[20px] tracking-[2%] text-000000">
+                            {selectedStaff.name}
+                          </p>
+                        </div>
+                      </div>
+                      <Check className="ml-2 h-5 w-5 shrink-0 text-[#ff715b]" />
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

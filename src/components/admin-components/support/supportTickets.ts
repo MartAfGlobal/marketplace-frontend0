@@ -7,6 +7,8 @@ export type SupportTicket = {
   priority: string;
   assignee: string;
   createdAt: string;
+  firstResponseAt: string;
+  resolvedAt: string;
 };
 
 export type SupportStaffRow = {
@@ -76,6 +78,16 @@ function mapSupportTicket(value: unknown): SupportTicket {
       displayName(ticket.assigned_to ?? ticket.assignee) ||
       "—",
     createdAt: textValue(ticket.created_at, ticket.created, ticket.date),
+    firstResponseAt: textValue(
+      ticket.first_response_at,
+      ticket.first_responded_at,
+      ticket.first_reply_at,
+    ),
+    resolvedAt: textValue(
+      ticket.resolved_at,
+      ticket.closed_at,
+      ticket.completed_at,
+    ),
   };
 }
 

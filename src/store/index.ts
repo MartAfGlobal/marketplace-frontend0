@@ -27,6 +27,7 @@ import AdminRolesReducer from "@/store/admin/roles/adminRolesSlice"
 import AdminRoleDetailReducer from "@/store/admin/roles/adminRoleDetailSlice"
 import AdminStaffReducer from "@/store/admin/staff/adminStaffSlice"
 import AdminAccessReducer from "@/store/admin/access/adminAccessSlice"
+import adminInfoReducer from "@/store/admin/adminInfoSlice"
 import AdminStaffDetailReducer from "@/store/admin/staff/adminStaffDetailSlice"
 import AdminNotificationsReducer from "@/store/admin/notifications/adminNotificationsSlice"
 
@@ -135,6 +136,10 @@ const financePersistConfig = {
   key: "finance",
   storage,
 };
+const adminInfoPersistConfig = {
+  key: "adminInfo",
+  storage,
+};
 const AdminBuyerDetailsPersistConfig = {
   key: "adminBuyerDetails",
   storage,
@@ -216,6 +221,7 @@ const rootReducer = combineReducers({
  adminRoleDetail:persistReducer(AdminRoleDetailPersistConfig, AdminRoleDetailReducer),
  adminStaff:persistReducer(AdminStaffPersistConfig, AdminStaffReducer),
  adminAccess: AdminAccessReducer,
+ adminInfo: persistReducer(adminInfoPersistConfig, adminInfoReducer),
  adminNotifications: AdminNotificationsReducer,
  adminStaffDetail:persistReducer(AdminStaffDetailPersistConfig, AdminStaffDetailReducer),
   sellerProduct: persistReducer(SellerPersistConfig, SellerProductReducer),

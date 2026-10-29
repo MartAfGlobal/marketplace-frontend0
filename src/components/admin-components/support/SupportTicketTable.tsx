@@ -32,6 +32,7 @@ interface SupportTicketTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   showPagination: boolean;
+  isSupportAgent?: boolean;
 }
 
 export default function SupportTicketTable({
@@ -49,7 +50,20 @@ export default function SupportTicketTable({
   totalPages,
   onPageChange,
   showPagination,
+  isSupportAgent = false,
 }: SupportTicketTableProps) {
+  const headings = [
+    "Date",
+    "Ticket ID",
+    "Ticket subject",
+    "Category",
+    "Status",
+    "Priority",
+    ...(!isSupportAgent ? ["Assigned to"] : []),
+    "",
+  ];
+  const columnCount = headings.length;
+
   return (
     <>
       <AdminListHeader
@@ -66,19 +80,14 @@ export default function SupportTicketTable({
         onExportClick={onExport}
       />
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[820px] border-collapse text-left">
+        <table
+          className={`w-full ${
+            isSupportAgent ? "min-w-[650px]" : "min-w-[820px]"
+          } border-collapse text-left`}
+        >
           <thead>
             <tr className="h-10 bg-[#947fff] text-white">
-              {[
-                "Date",
-                "Ticket ID",
-                "Ticket subject",
-                "Category",
-                "Status",
-                "Priority",
-                "Assigned to",
-                "",
-              ].map((heading) => (
+              {headings.map((heading) => (
                 <th
                   key={heading || "actions"}
                   className="whitespace-nowrap px-3 py-2 text-[10px] font-MontserratMedium"
@@ -91,7 +100,7 @@ export default function SupportTicketTable({
           <tbody className="text-[11px] font-MontserratNormal text-[#666]">
             {loading ? (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-[#999]">
+                <td colSpan={columnCount} className="p-8 text-center text-[#999]">
                   Loading support tickets...
                 </td>
               </tr>
@@ -130,9 +139,11 @@ export default function SupportTicketTable({
                   >
                     {ticket.priority}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2">
-                    {ticket.assignee}
-                  </td>
+                  {!isSupportAgent && (
+                    <td className="whitespace-nowrap px-3 py-2">
+                      {ticket.assignee}
+                    </td>
+                  )}
                   <td className="px-3 py-2">
                     <button
                       type="button"
@@ -148,7 +159,7 @@ export default function SupportTicketTable({
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="p-8 text-center text-[#999]">
+                <td colSpan={columnCount} className="p-8 text-center text-[#999]">
                   No support tickets found.
                 </td>
               </tr>

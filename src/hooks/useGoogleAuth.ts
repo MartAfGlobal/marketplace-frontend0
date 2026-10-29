@@ -97,6 +97,11 @@ export function useGoogleAuth(options: UseGoogleAuthOptions = {}) {
       if (refreshToken) {
         localStorage.setItem("refreshToken", refreshToken);
       }
+      console.info("Google authentication succeeded", {
+        hasAccessToken: true,
+        hasRefreshToken: Boolean(refreshToken),
+        responseFields: Object.keys(data ?? {}),
+      });
 
       setStoredAccountType(options.userType ?? "buyer");
       dispatch(tokenActions.setToken(accessToken));

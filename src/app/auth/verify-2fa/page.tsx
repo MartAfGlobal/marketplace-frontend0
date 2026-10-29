@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import AuthenticationLayout from "@/components/ui/LayoutWrappers/AuthenticationLayout";
 import { useHttp } from "@/hooks/use-http";
 import { tokenActions } from "@/store/token/token-slice";
+import { clearAdminInfo, setAdminInfo } from "@/store/admin/adminInfoSlice";
 import { setStoredAccountType } from "@/utils/authStorage";
 import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
@@ -99,14 +100,20 @@ function Verify2faContent() {
       },
       successRes: (res: any) => {
         setVerifying(false);
+        const loginData = res?.data?.data ?? res?.data;
         const accessToken =
-          res?.data?.access || res?.data?.token || res?.data?.accessToken;
+          loginData?.access || loginData?.token || loginData?.accessToken;
         if (accessToken) {
           const accountType =
             userType === "admin" || userType === "seller" ? userType : "buyer";
           setStoredAccountType(accountType);
           localStorage.setItem("accessToken", accessToken);
           dispatch(tokenActions.setToken(accessToken));
+          if (accountType === "admin") {
+            dispatch(setAdminInfo(loginData));
+          } else {
+            dispatch(clearAdminInfo());
+          }
           toast.success("Login successful!");
           if (userType === "admin") {
             router.push("/info/manager/update");

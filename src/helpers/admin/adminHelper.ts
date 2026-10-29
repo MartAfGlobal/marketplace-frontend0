@@ -3168,6 +3168,35 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminSupportAgents = (
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/support/agents/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
   const createAdminSupportTicket = (
     payload: FormData | Record<string, unknown>,
     callback?: (data: unknown) => void,
@@ -3305,6 +3334,7 @@ export const AdminDetails = (id?: string) => {
     fetchAdminStaffActivityLogs,
     fetchAdminStaffTickets,
     fetchAdminSupportTickets,
+    fetchAdminSupportAgents,
     createAdminSupportTicket,
 
     // Notifications

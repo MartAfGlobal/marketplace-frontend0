@@ -32,6 +32,10 @@ const nextConfig: NextConfig = {
         hostname: "flagcdn.com",
       },
       {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
         protocol: "http",
         hostname: "localhost",
         port: "3000",

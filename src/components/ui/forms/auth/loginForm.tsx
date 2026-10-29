@@ -19,6 +19,7 @@ import { RegProps } from "./verify-email";
 import ResultModal from "@/components/ui/forms/resultModal";
 import { setStoredAccountType } from "@/utils/authStorage";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import { clearAdminInfo, setAdminInfo } from "@/store/admin/adminInfoSlice";
 
 export default function LoginForm({ userType }: RegProps) {
   const [showPassword, setShowPassword] = useState(false);
@@ -91,7 +92,7 @@ export default function LoginForm({ userType }: RegProps) {
     }
   };
 
-  const handleLoginSuccess = (accessToken: string) => {
+  const handleLoginSuccess = (accessToken: string, loginData: Record<string, unknown>) => {
     if (typeof window === "undefined") return;
 
     saveRememberMe();
@@ -100,6 +101,11 @@ export default function LoginForm({ userType }: RegProps) {
     localStorage.setItem("accessToken", accessToken);
 
     dispatch(tokenActions.setToken(accessToken));
+    if (userType === "admin") {
+      dispatch(setAdminInfo(loginData));
+    } else {
+      dispatch(clearAdminInfo());
+    }
 
     // Route successful login by role first, then honor an eligible return URL.
     if (userType === "admin") {
@@ -188,6 +194,7 @@ export default function LoginForm({ userType }: RegProps) {
 
   const loginSuccess = (res: any) => {
     const data = res?.data?.data ?? res?.data;
+    console.log("Login response data:", data);
 
     // A successful credential check may still require 2FA before an access token is issued.
     if (is2FaRequired(data)) {
@@ -209,7 +216,7 @@ export default function LoginForm({ userType }: RegProps) {
     }
 
     toast.success("Login successful!");
-    handleLoginSuccess(accessToken);
+    handleLoginSuccess(accessToken, data);
   };
 
   const url =
