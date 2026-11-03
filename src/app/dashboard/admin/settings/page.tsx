@@ -85,15 +85,24 @@ const FINANCE_FIELDS: SettingsFieldSchema[] = [
   { key: "commission_min_rate", label: "Minimum commission rate", type: "decimal", step: "0.0001" },
   { key: "commission_max_rate", label: "Maximum commission rate", type: "decimal", step: "0.0001" },
   {
-    key: "gateway_charge_payer",
-    label: "Who pays gateway charges",
+    key: "gateway_charge_payer_purchase",
+    label: "Who pays the gateway charge on a purchase",
     type: "select",
     options: [
       { value: "buyer", label: "Buyer" },
       { value: "seller", label: "Seller" },
-      { value: "split", label: "Split" },
     ],
     helpText: "Not yet wired to the payment flow.",
+  },
+  {
+    key: "gateway_charge_payer_withdrawal",
+    label: "Who pays the gateway charge on a withdrawal",
+    type: "select",
+    options: [
+      { value: "buyer", label: "Buyer" },
+      { value: "seller", label: "Seller" },
+    ],
+    helpText: "Not yet wired to the payout flow. Refund gateway charges are always borne by the platform and aren't configurable.",
   },
   { key: "transaction_fee_amount", label: "Transaction fee (₦)", type: "decimal", nullable: true },
   { key: "service_charge", label: "Service charge (₦)", type: "decimal", nullable: true },

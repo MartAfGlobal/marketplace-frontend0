@@ -103,7 +103,12 @@ export default function ChecklistEditor() {
                         <button onClick={() => startEdit(item)} className="text-000000/40 hover:text-6a0dad">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <ToggleSwitch checked={item.is_active} onChange={() => toggleActive(item)} />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-c10 text-000000/40 w-10 text-right">
+                            {item.is_active ? "Active" : "Inactive"}
+                          </span>
+                          <ToggleSwitch checked={item.is_active} onChange={() => toggleActive(item)} />
+                        </div>
                       </div>
                     )}
                   </div>

@@ -18,9 +18,16 @@ interface Reason {
   title: string;
   category: string;
   category_display: string;
+  user_type: string;
   is_active: boolean;
   requires_additional_info: boolean;
 }
+
+const USER_TYPE_OPTIONS = [
+  { value: "buyer", label: "Buyer" },
+  { value: "seller", label: "Seller" },
+  { value: "admin", label: "Admin" },
+];
 
 type ReasonGroup = "cancellation" | "account" | "product" | "verification" | "refund";
 
@@ -65,6 +72,7 @@ export default function ReasonsEditor() {
   const [newCode, setNewCode] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState("");
+  const [newUserType, setNewUserType] = useState("buyer");
 
   const group = GROUPS.find((g) => g.key === activeGroup);
   const canModify = group ? can(group.category, "modify") : false;
@@ -129,6 +137,7 @@ export default function ReasonsEditor() {
       title: newTitle.trim(),
     };
     if (group?.categoryOptions) payload.category = newCategory;
+    if (activeGroup === "cancellation") payload.user_type = newUserType;
     createReason(activeGroup as any, payload, () => {
       setNewCode("");
       setNewTitle("");
@@ -209,7 +218,12 @@ export default function ReasonsEditor() {
                         <button onClick={() => setDeleteTarget(r)} className="text-000000/40 hover:text-[#CA0202]">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                        <ToggleSwitch checked={r.is_active} onChange={() => toggleActive(r)} />
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-c10 text-000000/40 w-10 text-right">
+                            {r.is_active ? "Active" : "Inactive"}
+                          </span>
+                          <ToggleSwitch checked={r.is_active} onChange={() => toggleActive(r)} />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -251,9 +265,32 @@ export default function ReasonsEditor() {
                   </select>
                 </div>
               )}
+              {activeGroup === "cancellation" && (
+                <div className="w-full sm:w-36">
+                  <label className="text-c10 text-000000/50 mb-1 block">Applies to</label>
+                  <select
+                    value={newUserType}
+                    onChange={(e) => setNewUserType(e.target.value)}
+                    className="h-11 px-3 w-full rounded-c8 border border-efefef text-c14 outline-none"
+                  >
+                    {USER_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="flex-1 min-w-[160px]">
                 <label className="text-c10 text-000000/50 mb-1 block">Code</label>
-                <Input value={newCode} onChange={(e) => setNewCode(e.target.value)} placeholder="e.g. WRONG_SIZE" />
+                <Input
+                  value={newCode}
+                  onChange={(e) => setNewCode(e.target.value)}
+                  placeholder={activeGroup === "cancellation" ? "e.g. BUYER_CHANGED_MIND" : "e.g. WRONG_SIZE"}
+                />
+                {activeGroup === "cancellation" && (
+                  <p className="text-c10 text-000000/35 mt-1">Must start with BUYER_, SELLER_ or ADMIN_.</p>
+                )}
               </div>
               <div className="flex-1 min-w-[200px]">
                 <label className="text-c10 text-000000/50 mb-1 block">Title</label>
