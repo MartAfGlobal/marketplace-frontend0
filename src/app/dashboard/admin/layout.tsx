@@ -28,6 +28,7 @@ import {
   History,
   HeartPulse,
   ClipboardCheck,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
@@ -263,6 +264,11 @@ export default function AdminLayout({
   const currentRole = getRoleFromPath(pathname);
 
   // Define sidebar navigation configuration for each role
+  // Settings is in every role's nav, same as Overview -- it has no single
+  // ITEM_CATEGORY (it spans USERS/ORDERS/PRODUCTS/FINANCES/STAFF/SUPPORT/
+  // VERIFICATIONS), so the page itself shows only the sections the
+  // viewer's own permissions cover, rather than gating the whole page
+  // behind one category.
   const roleNavigation: Record<AdminRole, string[]> = {
     "Super Admin": [
       "Overview",
@@ -274,11 +280,12 @@ export default function AdminLayout({
       "Finances",
       "Reports",
       "Staff",
+      "Settings",
     ],
-    Operational: ["Overview", "Users", "Verifications", "Products", "Orders"],
-    IT: ["Overview", "Support", "Staff"],
-    Support: ["Overview", "Users", "Support"],
-    Finance: ["Overview", "Orders", "Finances", "Reports"],
+    Operational: ["Overview", "Users", "Verifications", "Products", "Orders", "Settings"],
+    IT: ["Overview", "Support", "Staff", "Settings"],
+    Support: ["Overview", "Users", "Support", "Settings"],
+    Finance: ["Overview", "Orders", "Finances", "Reports", "Settings"],
   };
 
   const sidebarItems: SidebarItem[] = [
@@ -439,6 +446,11 @@ export default function AdminLayout({
           activeIcon: ActiveCategories,
         },
       ],
+    },
+    {
+      name: "Settings",
+      icon: SettingsIcon,
+      path: "/dashboard/admin/settings",
     },
   ];
 
