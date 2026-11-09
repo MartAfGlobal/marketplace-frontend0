@@ -130,15 +130,16 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                 </p>
                 
                 {!isSuccess && (
-                  <div className="mt-6 md:mt-10 flex w-full md:w-fit overflow-x-auto no-scrollbar p-1.5 bg-fafafa rounded-2xl border border-efefef">
+                  <div className="mt-6 md:mt-10 flex w-full items-center gap-2 overflow-x-auto border-b border-000000/8">
                     {tabs.map((tab) => (
                       <button
+                        type="button"
                         key={tab}
                         onClick={() => setSelectedType(tab)}
-                        className={`flex-1 md:flex-none px-4 md:px-8 py-2 md:py-3 rounded-xl font-MontserratBold text-[10px] md:text-xs uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${
+                        className={`flex-1 whitespace-nowrap px-1 pb-4 h-12 text-c12 font-MontserratSemiBold transition-colors relative ${
                           selectedType === tab
-                            ? "bg-white text-6a0dad shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-efefef"
-                            : "text-gray-400 hover:text-gray-600"
+                            ? "text-6a0dad border-b-2 border-b-6a0dad"
+                            : "text-000000/68 hover:text-6a0dad border-b-2 border-b-transparent"
                         }`}
                       >
                         {tab}

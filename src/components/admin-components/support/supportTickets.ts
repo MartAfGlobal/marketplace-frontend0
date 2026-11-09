@@ -12,8 +12,18 @@ export type SupportTicket = {
 };
 
 export type SupportStaffRow = {
+  id: string;
+  date: string;
+  email: string;
+
   name: string;
-  assignedTickets: number;
+  avatar?: string;
+  joinedAt: string;
+  lastActive: string;
+  assignedTickets: number | null;
+  inProgressTickets: number | null;
+  closedTickets: number | null;
+  status: string;
 };
 
 const PAGE_SIZE = 10;
@@ -47,6 +57,56 @@ function displayName(value: unknown): string {
   );
 }
 
+function supportStaffName(staff: Record<string, unknown>): string {
+  return textValue(
+    staff.staff_name,
+    staff.full_name,
+    staff.name,
+    staff.display_name,
+    `${textValue(staff.first_name)} ${textValue(staff.last_name)}`.trim(),
+  );
+}
+
+function countValue(...values: unknown[]): number | null {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+      const count = Number(value);
+      if (Number.isFinite(count)) return count;
+    }
+  }
+  return null;
+}
+
+function supportAgentStatus(staff: Record<string, unknown>): string {
+  const rawStatus = textValue(
+    staff.availability_status,
+    staff.availability,
+    staff.status_display,
+    staff.status,
+  ).toLowerCase();
+  const availableFlag = staff.is_available ?? staff.available;
+
+  if (availableFlag === true) return "Available";
+  if (availableFlag === false) return "Inactive";
+  if (rawStatus.includes("busy")) return "Busy";
+  if (
+    rawStatus.includes("inactive") ||
+    rawStatus.includes("unavailable") ||
+    rawStatus.includes("offline")
+  ) {
+    return "Inactive";
+  }
+  if (
+    rawStatus.includes("available") ||
+    rawStatus.includes("active") ||
+    rawStatus.includes("online")
+  ) {
+    return "Available";
+  }
+  return rawStatus ? normalizeLabel(rawStatus) : "Inactive";
+}
+
 function normalizeLabel(value: string) {
   return value
     .toLowerCase()
@@ -62,20 +122,35 @@ function mapSupportTicket(value: unknown): SupportTicket {
 
   return {
     id: id || "—",
-    reference: textValue(ticket.ticket_ref, ticket.ticket_id, ticket.id) || "—",
-    subject: textValue(ticket.subject, ticket.title, ticket.ticket_subject) || "—",
+    reference:
+      textValue(
+        ticket.reference,
+        ticket.ticket_ref,
+        ticket.ticket_id,
+        ticket.id,
+      ) ||
+      "—",
+    subject:
+      textValue(ticket.subject, ticket.title, ticket.ticket_subject) || "—",
     category:
       textValue(
         ticket.category_display,
         ticket.category_name,
+        asRecord(ticket.category)?.name,
         ticket.category,
         ticket.ticket_type,
       ) || "—",
     status: rawStatus ? normalizeLabel(rawStatus) : "—",
     priority: rawPriority ? normalizeLabel(rawPriority) : "—",
     assignee:
-      textValue(ticket.assigned_to_name, ticket.assignee_name) ||
-      displayName(ticket.assigned_to ?? ticket.assignee) ||
+      textValue(
+        ticket.assigned_to_name,
+        ticket.assignee_name,
+        ticket.assigned_agent_name,
+      ) ||
+      displayName(
+        ticket.assigned_agent ?? ticket.assigned_to ?? ticket.assignee,
+      ) ||
       "—",
     createdAt: textValue(ticket.created_at, ticket.created, ticket.date),
     firstResponseAt: textValue(
@@ -106,7 +181,7 @@ export function parseSupportTicketResponse(data: unknown): {
   const page = asRecord(payload);
   const rawTickets = Array.isArray(payload)
     ? payload
-    : page?.results ?? page?.tickets ?? page?.items;
+    : (page?.results ?? page?.tickets ?? page?.items);
   if (!Array.isArray(rawTickets)) return null;
 
   const countValue = page?.count ?? page?.total_count ?? page?.total;
@@ -121,10 +196,78 @@ export function parseSupportTicketResponse(data: unknown): {
   };
 }
 
+export function parseSupportAgentResponse(
+  data: unknown,
+): SupportStaffRow[] | null {
+  let payload: unknown = data;
+  for (let depth = 0; depth < 3; depth += 1) {
+    const body = asRecord(payload);
+    if (!body || body.data === undefined) break;
+    payload = body.data;
+  }
+
+  const body = asRecord(payload);
+  const rawStaff = Array.isArray(payload)
+    ? payload
+    : (body?.results ??
+      body?.agents ??
+      body?.support_agents ??
+      body?.staff ??
+      body?.items);
+  if (!Array.isArray(rawStaff)) return null;
+
+  return rawStaff.flatMap((value): SupportStaffRow[] => {
+    const staff = asRecord(value);
+    if (!staff) return [];
+    const name = supportStaffName(staff);
+    if (!name) return [];
+
+    return [
+      {
+        id: textValue(staff.user_id, staff.id, staff.staff_id, staff.agent_id),
+        date: textValue(staff.date),
+        name,
+        avatar: textValue(staff.profile_image, staff.avatar),
+        email: textValue(staff.email, staff.user_email),
+        joinedAt: textValue(
+          staff.created_at,
+          staff.date_joined,
+          staff.joined_at,
+          staff.date,
+        ),
+        lastActive: textValue(
+          staff.last_active,
+          staff.last_active_at,
+          staff.last_seen,
+        ),
+        assignedTickets: countValue(
+          staff.assigned_tickets,
+          staff.tickets_assigned,
+          staff.assigned_count,
+          staff.assigned,
+        ),
+        inProgressTickets: countValue(
+          staff.in_progress_tickets,
+          staff.tickets_in_progress,
+          staff.in_progress_count,
+        ),
+        closedTickets: countValue(
+          staff.closed_tickets,
+          staff.tickets_closed,
+          staff.closed_count,
+        ),
+        status: supportAgentStatus(staff),
+      },
+    ];
+  });
+}
+
 export function formatSupportDate(value: string) {
   if (!value) return "—";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("en-GB");
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString("en-GB");
 }
 
 export function getSupportStatusStyle(status: string) {
@@ -143,7 +286,8 @@ export function getSupportStatusStyle(status: string) {
 
 export function getSupportPriorityStyle(priority: string) {
   const value = priority.toLowerCase();
-  if (value.includes("high") || value.includes("urgent")) return "text-[#2ea37d]";
+  if (value.includes("high") || value.includes("urgent"))
+    return "text-[#2ea37d]";
   if (value.includes("medium")) return "text-[#e7a22a]";
   if (value.includes("low")) return "text-[#ff715b]";
   return "text-[#777777]";

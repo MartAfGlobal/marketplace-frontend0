@@ -3154,6 +3154,10 @@ export const AdminDetails = (id?: string) => {
         userType: "admin",
       },
       successRes: (responseData: unknown) => {
+
+        console.log("Admin support tickets fetched:", responseData);
+
+        
         const data =
           responseData !== null &&
           typeof responseData === "object" &&
@@ -3190,6 +3194,8 @@ export const AdminDetails = (id?: string) => {
             ? responseData.data
             : responseData;
         if (callback) callback(data);
+
+        console.log("Admin support agents fetched:", data);
       },
       errorRes: (error: unknown) => {
         if (errorCallback) errorCallback(error);
@@ -3229,7 +3235,66 @@ export const AdminDetails = (id?: string) => {
   };
 
   return {
+    // Buyers
+    fetchAdminBuyers,
+    fetchAdminBuyerStats,
+    fetchAdminBuyerById,
+    toggleAdminBuyerStatus,
+    deleteAdminBuyer,
+    updateAdminBuyer,
+
+    // Sellers and verification
+    fetchAdminSellers,
+    fetchAdminSellerById,
+    toggleAdminSellerStatus,
+    deleteAdminSeller,
+    fetchAdminSellersKycList,
+    verifyAdminSeller,
+    rejectAdminSeller,
+
+    // Product moderation
+    fetchAdminSellersProductsList,
+    fetchAdminProductsByCategory,
+    fetchAdminSellersProductDetails,
+    updateAdminProductReviewChecklist,
+    approveAdminProduct,
+    approveAdminProductUpdate,
+    rejectAdminProductUpdate,
+    suspendAdminProduct,
+    reactivateAdminProduct,
+
+    // Categories and attributes
+    fetchAdminCategoryStats,
+    fetchAdminCategories,
+    fetchAdminParentCategories,
+    fetchAdminCategoryById,
+    fetchAdminSubcategories,
+    createAdminCategory,
+    updateAdminCategory,
+    deleteAdminCategory,
+    createAdminAttribute,
+    fetchAdminAttributes,
+    fetchAdminAttributeById,
+    fetchAdminAttributeCategories,
+    updateAdminAttribute,
+    deleteAdminAttribute,
+    hideAdminAttribute,
+
+    // Orders and fulfillment
     fetchOrdersList,
+    fetchOrdersSummary,
+    fetchAdminOrderDetail,
+    updateAdminOrderStatus,
+    fetchOrderTracking,
+    searchAdminOrder,
+    createOrderTrackingUpdate,
+    confirmTracking,
+    receiveAtHub,
+    requestItemPickup,
+    shipSellerOrder,
+    ConfirmItemDelivered,
+
+    // Cancellations, disputes, and refunds
     fetchCancellationRequests,
     approveCancellationRequest,
     rejectCancellationRequest,
@@ -3243,64 +3308,13 @@ export const AdminDetails = (id?: string) => {
     processAdminDisputeRefund,
     rejectAdminDispute,
     markAdminReturnReceived,
-    createAdminRefund,
-    processAdminRefund,
-    rejectAdminRefund,
-    fetchOrdersSummary,
-    fetchAdminOrderDetail,
-    fetchOrderTracking,
-    searchAdminOrder,
-    createOrderTrackingUpdate,
-    updateAdminOrderStatus,
-    confirmTracking,
-    receiveAtHub,
-    requestItemPickup,
-    shipSellerOrder,
-    ConfirmItemDelivered,
-    fetchAdminSellersProductDetails,
-    updateAdminProductReviewChecklist,
-    approveAdminProduct,
-    approveAdminProductUpdate,
-    rejectAdminProductUpdate,
-    suspendAdminProduct,
-    reactivateAdminProduct,
-    fetchAdminSellersProductsList,
-    fetchAdminProductsByCategory,
-    fetchAdminSellers,
-    fetchAdminSellerById,
-    toggleAdminSellerStatus,
-    deleteAdminSeller,
-    setIsActive,
-    fetchAdminSellersKycList,
-    fetchAdminBuyers,
-    fetchAdminBuyerById,
-    fetchAdminBuyerStats,
-    fetchAdminCategoryStats,
-    fetchAdminCategories,
-    fetchAdminParentCategories,
-    fetchAdminCategoryById,
-    createAdminCategory,
-    updateAdminCategory,
-    deleteAdminCategory,
-    createAdminAttribute,
-    fetchAdminAttributes,
-    fetchAdminAttributeById,
-    fetchAdminAttributeCategories,
-    updateAdminAttribute,
-    deleteAdminAttribute,
-    hideAdminAttribute,
-    fetchAdminSubcategories,
-    toggleAdminBuyerStatus,
-    deleteAdminBuyer,
-    updateAdminBuyer,
-    verifyAdminSeller,
-    rejectAdminSeller,
-
     DisputeReviewConfirm,
     resolveAdminDispute,
     confirmReturnShippedToSeller,
     closeAdminDispute,
-
+    createAdminRefund,
+    processAdminRefund,
+    rejectAdminRefund,
 
     // Roles & Permissions
     fetchAdminPermissionCategories,
@@ -3314,6 +3328,7 @@ export const AdminDetails = (id?: string) => {
     reactivateAdminRole,
     duplicateAdminRole,
     fetchAdminRoleStaffAssigned,
+    exportAdminRoles,
 
     // Staff Management
     fetchAdminStaffList,
@@ -3325,17 +3340,18 @@ export const AdminDetails = (id?: string) => {
     reassignAdminStaffRole,
     suspendAdminStaff,
     deleteAdminStaff,
-    exportAdminRoles,
     exportAdminStaff,
     reactivateAdminStaff,
     deactivateAdminStaff,
     securityLogoutAdminStaff,
     securityLogoutAdminStaffBulk,
     fetchAdminStaffActivityLogs,
-    fetchAdminStaffTickets,
+
+    // Support Tickets
     fetchAdminSupportTickets,
     fetchAdminSupportAgents,
     createAdminSupportTicket,
+    fetchAdminStaffTickets,
 
     // Notifications
     fetchAdminNotifications,
@@ -3344,6 +3360,8 @@ export const AdminDetails = (id?: string) => {
     markAllAdminNotificationsRead,
     clearAdminNotifications,
 
+    // Shared state
+    setIsActive,
     success,
     setSuccess: setsuccess,
     request,

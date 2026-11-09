@@ -16,6 +16,7 @@ import SupportTabs, {
 import SupportTicketTable from "@/components/admin-components/support/SupportTicketTable";
 import {
   formatSupportDate,
+  parseSupportAgentResponse,
   parseSupportTicketResponse,
   type SupportStaffRow,
   type SupportTicket,
@@ -28,13 +29,17 @@ import {
   CircleOff,
   Headphones,
 } from "lucide-react";
+import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
 
 const PAGE_SIZE = 10;
 
 export default function SupportDepartmentPage() {
   const token = useSelector((state: RootState) => state.token?.token);
-  const { fetchAdminSupportTickets } = AdminDetails();
+  const { can } = useAdminAccess();
+  const { fetchAdminSupportAgents, fetchAdminSupportTickets } = AdminDetails();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [supportAgents, setSupportAgents] = useState<SupportStaffRow[]>([]);
+  const [staffLoading, setStaffLoading] = useState(false);
   const [count, setCount] = useState(0);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [page, setPage] = useState(1);
@@ -44,15 +49,21 @@ export default function SupportDepartmentPage() {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState("This month");
   const [isCreateTicketOpen, setIsCreateTicketOpen] = useState(false);
+  const [initialAssignedStaffId, setInitialAssignedStaffId] = useState("");
   const [availability, setAvailability] = useState<"Available" | "Inactive">(
     "Available",
   );
   const [isAvailabilityMenuOpen, setIsAvailabilityMenuOpen] = useState(false);
-  const adminInfo = useSelector((state: RootState) => state.adminInfo.data);
 
-  const role = adminInfo?.admin?.access?.role?.trim().toLowerCase();
-  const isSupportAgent = role === "support";
-  const canAssignStaff = role === "support supervisor";
+  const canViewSupport = can("SUPPORT");
+  const canViewStaff = can("STAFF");
+  const canCreateTicket = can("SUPPORT", "create");
+  const isSupportAgent = canViewSupport && !canViewStaff;
+  const canAssignStaff = canViewStaff;
+
+  useEffect(() => {
+    if (!canViewStaff) setActiveTab("tickets");
+  }, [canViewStaff]);
   const loadTickets = useCallback(
     (targetPage: number = page) => {
       if (!token) return;
@@ -88,6 +99,43 @@ export default function SupportDepartmentPage() {
   useEffect(() => {
     loadTickets(page);
   }, [loadTickets, page]);
+
+  useEffect(() => {
+    if (!token || !canViewStaff) {
+      setSupportAgents([]);
+      setStaffLoading(false);
+      return;
+    }
+
+    let active = true;
+    setStaffLoading(true);
+    fetchAdminSupportAgents(
+      (data: unknown) => {
+        if (!active) return;
+        const agents = parseSupportAgentResponse(data);
+
+        if (!agents) {
+          setSupportAgents([]);
+          toast.error("The support agents response could not be read.");
+        } else {
+          setSupportAgents(agents);
+        }
+        setStaffLoading(false);
+      },
+      () => {
+        if (!active) return;
+        setSupportAgents([]);
+        setStaffLoading(false);
+        toast.error("Could not load support staff. Please try again.");
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+    // AdminDetails returns fresh helper functions per render; requests depend on auth.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, canViewStaff]);
 
   const filteredTickets = useMemo(() => {
     const search = searchVal.trim().toLowerCase();
@@ -126,17 +174,35 @@ export default function SupportDepartmentPage() {
   }, [tickets, searchVal, selectedStatuses, selectedMonth]);
 
   const staffRows = useMemo<SupportStaffRow[]>(() => {
-    const totals = new Map<string, number>();
-    filteredTickets.forEach((ticket) => {
-      if (ticket.assignee !== "—") {
-        totals.set(ticket.assignee, (totals.get(ticket.assignee) ?? 0) + 1);
-      }
-    });
-    return Array.from(totals, ([name, assignedTickets]) => ({
-      name,
-      assignedTickets,
+    return supportAgents.map((staff) => ({
+      ...staff,
+      assignedTickets:
+        staff.assignedTickets ??
+        filteredTickets.filter(
+          (ticket) => ticket.assignee.toLowerCase() === staff.name.toLowerCase(),
+        ).length,
+      inProgressTickets:
+        staff.inProgressTickets ??
+        filteredTickets.filter(
+          (ticket) =>
+            ticket.assignee.toLowerCase() === staff.name.toLowerCase() &&
+            ticket.status.toLowerCase().includes("progress"),
+        ).length,
+      closedTickets:
+        staff.closedTickets ??
+        filteredTickets.filter(
+          (ticket) =>
+            ticket.assignee.toLowerCase() === staff.name.toLowerCase() &&
+            (ticket.status.toLowerCase().includes("closed") ||
+              ticket.status.toLowerCase().includes("resolved")),
+        ).length,
     }));
-  }, [filteredTickets]);
+  }, [supportAgents, filteredTickets]);
+
+  const openAssignTicket = (staff: SupportStaffRow) => {
+    setInitialAssignedStaffId(staff.id);
+    setIsCreateTicketOpen(true);
+  };
 
   const handleExport = () => {
     downloadTableRows(
@@ -224,14 +290,16 @@ export default function SupportDepartmentPage() {
               )}
             </div>
           )}
-          <Button
-            type="button"
-            onClick={() => setIsCreateTicketOpen(true)}
-            className="max-w-[167.15px] gap-3 flex items-center justify-center"
-          >
-            Create ticket
-            <Image src={DropIcon} alt="drop" width={16.61} height={9.06} />
-          </Button>
+          {canCreateTicket && (
+            <Button
+              type="button"
+              onClick={() => setIsCreateTicketOpen(true)}
+              className="max-w-[167.15px] gap-3 flex items-center justify-center"
+            >
+              Create ticket
+              <Image src={DropIcon} alt="drop" width={16.61} height={9.06} />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -242,9 +310,13 @@ export default function SupportDepartmentPage() {
       />
 
       <section className="rounded-2xl border border-000000/4 bg-white p-4 md:p-6 mt-2">
-        <SupportTabs activeTab={activeTab} onChange={setActiveTab} />
+        <SupportTabs
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          canViewStaff={canViewStaff}
+        />
 
-        {activeTab === "tickets" ? (
+        {activeTab !== "staff" || !canViewStaff ? (
           <SupportTicketTable
             tickets={filteredTickets}
             loading={loading}
@@ -260,25 +332,30 @@ export default function SupportDepartmentPage() {
             totalPages={totalPages}
             onPageChange={setPage}
             showPagination={showPagination}
-            isSupportAgent={isSupportAgent}
+            canViewStaff={canViewStaff}
           />
         ) : (
           <SupportStaffTable
             rows={staffRows}
-            loading={loading}
-            page={page}
-            totalPages={totalPages}
+            loading={staffLoading}
+            page={1}
+            totalPages={1}
             onPageChange={setPage}
-            showPagination={showPagination}
+            showPagination={false}
+            onAssignTicket={canAssignStaff ? openAssignTicket : undefined}
           />
         )}
       </section>
 
       <CreateTicketModal
         isOpen={isCreateTicketOpen}
-        onClose={() => setIsCreateTicketOpen(false)}
+        onClose={() => {
+          setIsCreateTicketOpen(false);
+          setInitialAssignedStaffId("");
+        }}
         onSuccess={() => loadTickets(page)}
         canAssignStaff={canAssignStaff}
+        initialAssignedStaffId={initialAssignedStaffId}
       />
     </div>
   );

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { toast } from "sonner";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
 import Image from "next/image";
+import { parseSupportAgentResponse } from "@/components/admin-components/support/supportTickets";
 
 interface StaffOption {
   id: string;
@@ -22,6 +23,7 @@ interface CreateTicketModalProps {
   onClose: () => void;
   onSuccess?: () => void;
   canAssignStaff?: boolean;
+  initialAssignedStaffId?: string;
 }
 
 const CATEGORY_OPTIONS = [
@@ -34,14 +36,14 @@ const CATEGORY_OPTIONS = [
   "General inquiry",
 ];
 
-const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"];
+const PRIORITY_OPTIONS = ["Low", "Medium", "High"];
 
 const SOURCE_OPTIONS = [
-  "Phone call",
-  "Email",
-  "Live chat",
-  "Web form",
-  "Social media",
+  { label: "Phone call", value: "phone" },
+  { label: "Email", value: "email" },
+  { label: "Live chat", value: "chat" },
+  { label: "Web form", value: "web" },
+  { label: "Text message", value: "sms" },
 ];
 
 interface CustomSelectProps {
@@ -136,7 +138,7 @@ function CustomSelect({
                   }}
                   className={`w-full text-left px-3.5 py-2.5 text-xs font-MontserratNormal flex items-center justify-between transition-colors ${
                     isSelected
-                      ? "bg-ff715b text-[#ff715b] font-MontserratMedium"
+                      ? "bg-ff715b text-ffffff font-MontserratMedium"
                       : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
@@ -157,13 +159,14 @@ export default function CreateTicketModal({
   onClose,
   onSuccess,
   canAssignStaff = false,
+  initialAssignedStaffId = "",
 }: CreateTicketModalProps) {
   const [subject, setSubject] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [details, setDetails] = useState("");
   const [category, setCategory] = useState("Order issues");
   const [priority, setPriority] = useState("Medium");
-  const [source, setSource] = useState("Phone call");
+  const [source, setSource] = useState("phone");
   const [assignedStaffId, setAssignedStaffId] = useState("");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
@@ -211,27 +214,8 @@ export default function CreateTicketModal({
       (data: unknown) => {
         if (!active) return;
 
-        const body =
-          data !== null && typeof data === "object"
-            ? (data as Record<string, unknown>)
-            : null;
-        const nestedBody =
-          body?.data !== null && typeof body?.data === "object"
-            ? (body.data as Record<string, unknown>)
-            : null;
-        const rows: unknown[] | null = Array.isArray(data)
-          ? data
-          : ([
-              body?.results,
-              body?.agents,
-              body?.support_agents,
-              body?.staff,
-              nestedBody?.results,
-              nestedBody?.agents,
-              nestedBody?.support_agents,
-              nestedBody?.staff,
-            ].find(Array.isArray) as unknown[] | undefined) ?? null;
-        if (!Array.isArray(rows)) {
+        const rows = parseSupportAgentResponse(data);
+        if (!rows) {
           setStaffList([]);
           setAssignedStaffId("");
           setIsLoadingStaff(false);
@@ -239,46 +223,19 @@ export default function CreateTicketModal({
           return;
         }
 
-        const mapped = rows.flatMap((row): StaffOption[] => {
-          if (row === null || typeof row !== "object" || Array.isArray(row)) {
-            return [];
-          }
-          const staff = row as Record<string, unknown>;
-          const id =
-            staff.user_id ?? staff.id ?? staff.staff_id ?? staff.agent_id;
-          const fullName =
-            staff.full_name ??
-            staff.name ??
-            [staff.first_name, staff.last_name]
-              .filter((part): part is string => typeof part === "string")
-              .join(" ");
-          const name =
-            typeof fullName === "string" && fullName.trim()
-              ? fullName.trim()
-              : typeof staff.email === "string"
-                ? staff.email
-                : "";
-          if (id === undefined || id === null || !name) return [];
-
-          return [
-            {
-              id: String(id),
-              name,
-              email: typeof staff.email === "string" ? staff.email : undefined,
-              avatar:
-                typeof staff.profile_image === "string"
-                  ? staff.profile_image
-                  : typeof staff.avatar === "string"
-                    ? staff.avatar
-                    : undefined,
-            },
-          ];
-        });
+        const mapped: StaffOption[] = rows
+          .filter((staff) => staff.id)
+          .map((staff) => ({
+            id: staff.id,
+            name: staff.name,
+            email: staff.email || undefined,
+            avatar: staff.avatar || undefined,
+          }));
 
         setStaffList(mapped);
-        setAssignedStaffId((currentId) =>
-          mapped.some((staff) => staff.id === currentId)
-            ? currentId
+        setAssignedStaffId(
+          mapped.some((staff) => staff.id === initialAssignedStaffId)
+            ? initialAssignedStaffId
             : mapped[0]?.id || "",
         );
         setIsLoadingStaff(false);
@@ -298,7 +255,7 @@ export default function CreateTicketModal({
     };
     // AdminDetails returns fresh helper functions per render; requests depend on modal access.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, canAssignStaff]);
+  }, [isOpen, canAssignStaff, initialAssignedStaffId]);
 
   const selectedStaff = staffList.find((s) => s.id === assignedStaffId) || null;
 
@@ -308,8 +265,12 @@ export default function CreateTicketModal({
     setDetails("");
     setCategory("Order issues");
     setPriority("Medium");
-    setSource("Phone call");
-    setAssignedStaffId(staffList[0]?.id || "");
+    setSource("phone");
+    setAssignedStaffId(
+      staffList.some((staff) => staff.id === initialAssignedStaffId)
+        ? initialAssignedStaffId
+        : staffList[0]?.id || "",
+    );
     setAttachmentFile(null);
     setIsSubmitting(false);
   };
@@ -350,27 +311,18 @@ export default function CreateTicketModal({
 
     const formData = new FormData();
     formData.append("subject", subject.trim());
-    formData.append("title", subject.trim());
     formData.append("customer_name", customerName.trim());
-    formData.append("customer", customerName.trim());
     formData.append("description", details.trim());
-    formData.append("details", details.trim());
     formData.append("category", category);
     formData.append("priority", priority.toLowerCase());
     formData.append("source", source);
-    formData.append("ticket_source", source);
 
-    if (assignedStaffId) {
-      formData.append("assigned_to", assignedStaffId);
-      if (selectedStaff?.name) {
-        formData.append("assigned_to_name", selectedStaff.name);
-      }
+    if (canAssignStaff && assignedStaffId) {
+      formData.append("initial_assignee", assignedStaffId);
     }
 
     if (attachmentFile) {
       formData.append("attachment", attachmentFile);
-      formData.append("attachments", attachmentFile);
-      formData.append("file", attachmentFile);
     }
 
     createAdminSupportTicket(

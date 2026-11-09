@@ -32,7 +32,7 @@ interface SupportTicketTableProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   showPagination: boolean;
-  isSupportAgent?: boolean;
+  canViewStaff?: boolean;
 }
 
 export default function SupportTicketTable({
@@ -50,7 +50,7 @@ export default function SupportTicketTable({
   totalPages,
   onPageChange,
   showPagination,
-  isSupportAgent = false,
+  canViewStaff = true,
 }: SupportTicketTableProps) {
   const headings = [
     "Date",
@@ -59,7 +59,7 @@ export default function SupportTicketTable({
     "Category",
     "Status",
     "Priority",
-    ...(!isSupportAgent ? ["Assigned to"] : []),
+    ...(canViewStaff ? ["Assigned to"] : []),
     "",
   ];
   const columnCount = headings.length;
@@ -82,7 +82,7 @@ export default function SupportTicketTable({
       <div className="overflow-x-auto">
         <table
           className={`w-full ${
-            isSupportAgent ? "min-w-[650px]" : "min-w-[820px]"
+            canViewStaff ? "min-w-[820px]" : "min-w-[650px]"
           } border-collapse text-left`}
         >
           <thead>
@@ -139,7 +139,7 @@ export default function SupportTicketTable({
                   >
                     {ticket.priority}
                   </td>
-                  {!isSupportAgent && (
+                  {canViewStaff && (
                     <td className="whitespace-nowrap px-3 py-2">
                       {ticket.assignee}
                     </td>

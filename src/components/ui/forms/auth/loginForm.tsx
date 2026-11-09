@@ -194,8 +194,7 @@ export default function LoginForm({ userType }: RegProps) {
 
   const loginSuccess = (res: any) => {
     const data = res?.data?.data ?? res?.data;
-    console.log("Login response data:", data);
-
+    console.log("Login successful:", res);
     // A successful credential check may still require 2FA before an access token is issued.
     if (is2FaRequired(data)) {
       handleTwoFactorRedirect(data);

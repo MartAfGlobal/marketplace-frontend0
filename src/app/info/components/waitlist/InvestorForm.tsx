@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/forms/Label";
 
 interface InvestorFormProps {
   onSuccess: () => void;
@@ -72,44 +73,44 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Full Name</label>
+          <Label className="">Full Name</Label>
           <Input 
             required 
             placeholder="Michael Obi" 
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white" 
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Work Email</label>
+          <Label className="">Work Email</Label>
           <Input 
             required 
             type="email" 
             placeholder="michael@fund.com" 
             value={formData.workEmail}
             onChange={(e) => setFormData({ ...formData, workEmail: e.target.value })}
-            className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white" 
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Organization Name</label>
+          <Label className="">Organization Name</Label>
           <Input 
             required 
             placeholder="Pan-Africa Capital" 
             value={formData.organisationName}
             onChange={(e) => setFormData({ ...formData, organisationName: e.target.value })}
-            className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white" 
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Investor Type</label>
+          <Label className="">Investor Type</Label>
           <DropdownInput
             placeholder="Select type"
             options={["Angel Investor", "VC Fund", "Family Office", "Corporate Investor", "Other"]}
@@ -118,7 +119,7 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Country</label>
+          <Label className="">Country</Label>
           <DropdownInput
             placeholder="Select country"
             options={countries.map(c => c.name)}
@@ -133,19 +134,19 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Your Interest</label>
+        <Label className="">Your Interest</Label>
         <Input 
           placeholder="e.g. Excited by the African e-commerce opportunity." 
           value={formData.interest}
           onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
-          className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white" 
+          className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
         />
       </div>
 
       <Button 
         type="submit" 
         disabled={isLoading || !formData.countryId} 
-        className="w-full h-14 rounded-xl bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
+        className="w-full h-14  bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
       >
         {isLoading ? "Processing..." : "Complete Waitlist Signup"}
       </Button>

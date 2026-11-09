@@ -503,7 +503,7 @@ export default function AdminLayout({
                 <div>
                   <button
                     onClick={() => toggleExpand(item.name)}
-                    className={`w-full flex items-center  truncate justify-between text-sm px-6 py-3.5 text-nowrap  hover:bg-6a0dad/20 bg-ffffff rounded-c24 transition-all font-MontserratSemiBold ${
+                    className={`group w-full flex items-center truncate justify-between text-sm px-6 py-3.5 text-nowrap hover:bg-[#6A0DAD] hover:text-white bg-ffffff rounded-c24 transition-all font-MontserratSemiBold ${
                       active ? "  " : "text-000000/68   "
                     }`}
                   >
@@ -512,14 +512,14 @@ export default function AdminLayout({
                         {renderSidebarIcon(
                           item.icon,
                           `${item.name} Icon`,
-                          "w-4.5 h-4.5",
+                          "w-4.5 h-4.5 group-hover:brightness-0 group-hover:invert",
                         )}
                       </div>
 
                       <span className="">{item.name}</span>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-black transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                      className={`w-3.5 h-3.5 text-black group-hover:text-white transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                     />
                   </button>
 
@@ -604,12 +604,12 @@ export default function AdminLayout({
                           <Link
                             key={sub.name}
                             href={sub.path}
-                            className={`w-full flex items-center text-nowrap  gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all ${
+                            className={`group w-full flex items-center text-nowrap gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all ${
                               sub.icon ? "" : "justify-center"
                             } ${
                               isSubActive
                                 ? "text-white bg-[#6A0DAD] font-MontserratBold shadow-md shadow-[#6A0DAD]/15"
-                                : "text-gray-600 bg-ffffff hover:bg-6a0dad/20"
+                                : "text-000000/68 bg-ffffff hover:bg-[#6A0DAD]/12 hover:text-white"
                             }`}
                           >
                             {isSubActive ? (
@@ -618,7 +618,7 @@ export default function AdminLayout({
                                   renderSidebarIcon(
                                     sub.activeIcon || sub.icon,
                                     sub.name,
-                                    "w-4.5 h-4.5 flex-shrink-0",
+                                    "w-4.5 h-4.5 flex-shrink-0 brightness-0 invert",
                                   )}
                               </div>
                             ) : (
@@ -627,7 +627,7 @@ export default function AdminLayout({
                                   renderSidebarIcon(
                                     sub.icon,
                                     sub.name,
-                                    "w-4.5 h-4.5 flex-shrink-0",
+                                    "w-4.5 h-4.5 flex-shrink-0 group-hover:brightness-0 group-hover:invert",
                                   )}
                               </div>
                             )}
@@ -642,10 +642,10 @@ export default function AdminLayout({
               ) : (
                 <Link
                   href={item.path}
-                  className={`flex items-center justify-between px-6 py-3.5 rounded-c24 text-nowrap transition-all text-sm font-MontserratSemiBold ${
+                  className={`group flex items-center justify-between px-6 py-3.5 rounded-c24 text-nowrap transition-all text-sm font-MontserratSemiBold ${
                     active
                       ? "bg-[#6A0DAD] text-white shadow-md shadow-[#6A0DAD]/15"
-                      : "text-gray-600  bg-ffffff"
+                      : "text-gray-600 bg-ffffff hover:bg-[#6A0DAD] hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
@@ -655,26 +655,26 @@ export default function AdminLayout({
                           ? renderSidebarIcon(
                               item.activeIcon,
                               `${item.name} Active Icon`,
-                              "w-4.5 h-4.5 text-white",
+                              "w-4.5 h-4.5 text-white brightness-0 invert",
                             )
                           : renderSidebarIcon(
                               item.icon,
                               `${item.name} Icon`,
-                              "w-4.5 h-4.5 text-white",
+                              "w-4.5 h-4.5 text-white brightness-0 invert",
                             )}
                       </div>
                     ) : (
                       renderSidebarIcon(
                         item.icon,
                         `${item.name} Icon`,
-                        "w-4.5 h-4.5 text-gray-400",
+                        "w-4.5 h-4.5 text-gray-400 group-hover:brightness-0 group-hover:invert",
                       )
                     )}
 
                     <span>{item.name}</span>
                   </div>
                   <ChevronDown
-                    className={`w-3.5 h-3.5 ${active ? "text-white" : "text-gray-400"}`}
+                    className={`w-3.5 h-3.5 ${active ? "text-white" : "text-gray-400 group-hover:text-white"}`}
                   />
                 </Link>
               )}

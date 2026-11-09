@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/forms/Label";
 
 interface SellerFormProps {
   onSuccess: () => void;
@@ -83,31 +84,31 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Full Name</label>
+          <Label className="">Full Name</Label>
           <Input
             required
             placeholder="Jane Doe"
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white"
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Email Address</label>
+          <Label className="">Email Address</Label>
           <Input
             required
             type="email"
             placeholder="jane@example.com"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white"
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Country</label>
+          <Label className="">Country</Label>
           <DropdownInput
             placeholder="Select country"
             options={countries.map(c => c.name)}
@@ -120,7 +121,7 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Product Category</label>
+          <Label className="">Product Category</Label>
           <DropdownInput
             placeholder="Select category"
             options={managedCategories.map(c => c.name)}
@@ -136,7 +137,7 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Business Stage</label>
+          <Label className="">Business Stage</Label>
           <DropdownInput
             placeholder="Select stage"
             options={["Idea Phase", "Early Stage", "Growth Stage", "Established"]}
@@ -145,7 +146,7 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Primary Sales Channel</label>
+          <Label className="">Primary Sales Channel</Label>
           <DropdownInput
             placeholder="Select channel"
             options={["Instagram", "Website", "Physical Store", "Marketplace", "Other"]}
@@ -156,7 +157,7 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
       </div>
 
       <div className="space-y-4">
-        <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Business Type</label>
+        <Label className="">Business Type</Label>
         <div className="flex flex-wrap gap-3">
           {[
             { label: "Registered Company", value: "registered_company" },
@@ -166,7 +167,7 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
               key={type.value}
               type="button"
               onClick={() => setFormData({ ...formData, businessType: type.value })}
-              className={`px-6 py-2.5 rounded-xl text-xs font-MontserratSemiBold transition-all border ${
+              className={`px-6 py-2.5  text-xs font-MontserratSemiBold transition-all border ${
                 formData.businessType === type.value
                   ? "bg-6a0dad text-white border-6a0dad shadow-md"
                   : "bg-fafafa text-gray-400 border-efefef hover:border-gray-200"
@@ -179,19 +180,19 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Your Purpose</label>
+        <Label className="">Your Purpose</Label>
         <Input
           placeholder="e.g. Expand my reach across Africa."
           value={formData.purpose}
           onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-          className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white"
+          className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
         />
       </div>
 
       <Button
         type="submit"
         disabled={isLoading || !formData.countryId || !formData.categoryId}
-        className="w-full h-14 rounded-xl bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
+        className="w-full h-14  bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
       >
         {isLoading ? "Processing..." : "Complete Waitlist Signup"}
       </Button>

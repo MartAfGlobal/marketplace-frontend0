@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/forms/Label";
 
 interface BuyerFormProps {
   onSuccess: () => void;
@@ -83,31 +84,31 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
     <form onSubmit={handleSubmit} className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Full Name</label>
+          <Label className="">Full Name</Label>
           <Input 
             required 
             placeholder="John Smith" 
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white" 
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Email Address</label>
+          <Label className="">Email Address</Label>
           <Input 
             required 
             type="email" 
             placeholder="john@example.com" 
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white" 
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Country</label>
+          <Label className="">Country</Label>
           <DropdownInput
             placeholder="Select country"
             options={countries.map(c => c.name)}
@@ -120,7 +121,7 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Preferred Category</label>
+          <Label className="">Preferred Category</Label>
           <DropdownInput
             placeholder="Select category"
             options={categories.map(c => c.name)}
@@ -136,7 +137,7 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Shopping Frequency</label>
+          <Label className="">Shopping Frequency</Label>
           <DropdownInput
             placeholder="Select frequency"
             options={["Weekly", "Monthly", "Quarterly", "Yearly"]}
@@ -145,30 +146,30 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">What are you looking for?</label>
+          <Label className="">What are you looking for?</Label>
           <Input 
             placeholder="e.g. Handmade Clothes" 
             value={formData.lookingToBuy}
             onChange={(e) => setFormData({ ...formData, lookingToBuy: e.target.value })}
-            className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white" 
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-MontserratBold text-6a0dad uppercase tracking-widest">Your Purpose</label>
+        <Label className="">Your Purpose</Label>
         <Input 
           placeholder="e.g. Discover unique African designs" 
           value={formData.purpose}
           onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-          className="h-12 rounded-xl border-efefef bg-fafafa focus:bg-white" 
+          className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
         />
       </div>
 
       <Button 
         type="submit" 
         disabled={isLoading || !formData.countryId || !formData.categoryId} 
-        className="w-full h-14 rounded-xl bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
+        className="w-full h-14  bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
       >
         {isLoading ? "Processing..." : "Complete Waitlist Signup"}
       </Button>
