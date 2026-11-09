@@ -75,7 +75,6 @@ const WAITLIST_CONFIG: Record<WaitlistType, WaitlistConfig> = {
       { label: "Organization", keys: ["organisation_name", "organization_name"] },
       { label: "Investor type", keys: ["investor_type"] },
       { label: "Country", keys: ["country_name", "country"] },
-      { label: "Interest", keys: ["interest"] },
     ],
   },
 };
