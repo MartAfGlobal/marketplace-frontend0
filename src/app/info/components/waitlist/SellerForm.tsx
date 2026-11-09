@@ -25,6 +25,9 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    companyAddress: "",
+    phoneNumber: "",
+    businessDescription: "",
     countryId: "",
     categoryId: "",
     businessType: "registered_company",
@@ -60,6 +63,9 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
     const payload = {
       full_name: formData.fullName,
       email: formData.email,
+      company_address: formData.companyAddress,
+      phone_number: formData.phoneNumber,
+      business_description: formData.businessDescription,
       country: formData.countryId,
       business_type: formData.businessType,
       product_category: formData.categoryId,
@@ -104,6 +110,39 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
             className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-2">
+          <Label className="">Company Address</Label>
+          <Input
+            placeholder="Enter your company address"
+            value={formData.companyAddress}
+            onChange={(e) => setFormData({ ...formData, companyAddress: e.target.value })}
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label className="">Phone Number</Label>
+          <Input
+            required
+            type="tel"
+            placeholder="Enter your phone number"
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label className="">Business Description</Label>
+        <textarea
+          placeholder="Describe your business"
+          value={formData.businessDescription}
+          onChange={(e) => setFormData({ ...formData, businessDescription: e.target.value })}
+          className="min-h-28 w-full rounded-c8 border border-efefef bg-fafafa px-3.5 py-3 text-sm text-gray-700 outline-none focus:border-[#6a0dad] focus:ring-1 focus:ring-[#6a0dad]"
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -191,7 +230,7 @@ export default function SellerForm({ onSuccess }: SellerFormProps) {
 
       <Button
         type="submit"
-        disabled={isLoading || !formData.countryId || !formData.categoryId}
+        disabled={isLoading || !formData.phoneNumber.trim() || !formData.countryId || !formData.categoryId}
         className="w-full h-14  bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
       >
         {isLoading ? "Processing..." : "Complete Waitlist Signup"}

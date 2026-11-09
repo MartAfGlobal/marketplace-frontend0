@@ -25,6 +25,8 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    address: "",
+    phoneNumber: "",
     countryId: "",
     categoryId: "",
     lookingToBuy: "Clothes",
@@ -60,6 +62,8 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
     const payload = {
       full_name: formData.fullName,
       email: formData.email,
+      address: formData.address,
+      phone_number: formData.phoneNumber,
       country: formData.countryId,
       looking_to_buy: formData.lookingToBuy,
       looking_to_buy_other: "",
@@ -101,6 +105,29 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
             placeholder="john@example.com" 
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-2">
+          <Label className="">Address</Label>
+          <Input
+            placeholder="Enter your address"
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label className="">Phone Number</Label>
+          <Input
+            required
+            type="tel"
+            placeholder="Enter your phone number"
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
             className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
           />
         </div>
@@ -168,7 +195,12 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
 
       <Button 
         type="submit" 
-        disabled={isLoading || !formData.countryId || !formData.categoryId} 
+        disabled={
+          isLoading ||
+          !formData.phoneNumber.trim() ||
+          !formData.countryId ||
+          !formData.categoryId
+        }
         className="w-full h-14  bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
       >
         {isLoading ? "Processing..." : "Complete Waitlist Signup"}

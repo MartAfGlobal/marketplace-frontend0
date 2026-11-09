@@ -46,8 +46,6 @@ const WAITLIST_CONFIG: Record<WaitlistType, WaitlistConfig> = {
       { label: "Email", keys: ["email", "work_email"] },
       { label: "Country", keys: ["country_name", "country"] },
       { label: "Preferred category", keys: ["preferred_categories", "category"] },
-      { label: "Looking to buy", keys: ["looking_to_buy"] },
-      { label: "Shopping frequency", keys: ["shopping_frequency", "frequency"] },
       { label: "Purpose", keys: ["purpose"] },
     ],
   },
@@ -212,6 +210,7 @@ export default function AdminWaitlistPage() {
       const response = await axios.get(
         `${config.endpoint}${encodeURIComponent(String(id))}/`,
       );
+      console.log(`${config.title} waitlist detail response`, response.data);
       const responseData = response.data;
       const data = isWaitlistEntry(responseData) ? responseData : {};
       const nestedEntry = isWaitlistEntry(data.data)
@@ -225,7 +224,6 @@ export default function AdminWaitlistPage() {
         ? requestError.response?.status
         : undefined;
       console.error(`Failed to load ${config.title.toLowerCase()} waitlist details`, {
-        endpoint: `${config.endpoint}${String(id)}/`,
         status,
       });
       setDetailError(
@@ -259,6 +257,7 @@ export default function AdminWaitlistPage() {
           ...(search ? { search } : {}),
         },
       });
+      console.log(`${config.title} waitlist response`, response.data);
       const result = getEntryList(response.data);
       setRows(result.rows);
       setTotalCount(result.totalCount);
@@ -268,7 +267,6 @@ export default function AdminWaitlistPage() {
         ? requestError.response?.status
         : undefined;
       console.error(`Failed to load ${config.title.toLowerCase()} waitlist`, {
-        endpoint: config.endpoint,
         status,
       });
       setError(
@@ -388,7 +386,7 @@ export default function AdminWaitlistPage() {
                   return (
                     <tr
                       key={rowKey}
-                      className="h-10.5 border-b border-000000/5 transition-colors"
+                      className="h-10.5 transition-colors"
                     >
                       {config.columns.map((column) => (
                         <td key={column.label} className="max-w-[240px] p-3">

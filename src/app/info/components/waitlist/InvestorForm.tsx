@@ -25,7 +25,10 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
     fullName: "",
     workEmail: "",
     organisationName: "",
+    phoneNumber: "",
+    officeAddress: "",
     investorType: "Angel Investor",
+    investorTypeOther: "",
     countryId: "",
     interest: ""
   });
@@ -51,10 +54,12 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
       full_name: formData.fullName,
       work_email: formData.workEmail,
       organisation_name: formData.organisationName,
+      phone_number: formData.phoneNumber,
+      office_address: formData.officeAddress,
       investor_type: formData.investorType,
-      investor_type_other: "",
+      investor_type_other: formData.investorType === "Other" ? formData.investorTypeOther : "",
       country: formData.countryId,
-      interest: formData.interest || "Excited by the African e-commerce opportunity."
+      interest: formData.interest
     };
 
     try {
@@ -110,12 +115,35 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
+          <Label className="">Phone Number</Label>
+          <Input
+            required
+            type="tel"
+            placeholder="Enter your phone number"
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label className="">Office Address</Label>
+          <Input
+            placeholder="Enter your office address"
+            value={formData.officeAddress}
+            onChange={(e) => setFormData({ ...formData, officeAddress: e.target.value })}
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-2">
           <Label className="">Investor Type</Label>
           <DropdownInput
             placeholder="Select type"
             options={["Angel Investor", "VC Fund", "Family Office", "Corporate Investor", "Other"]}
             value={formData.investorType}
-            onChange={(val) => setFormData({ ...formData, investorType: val })}
+            onChange={(val) => setFormData({ ...formData, investorType: val, investorTypeOther: val === "Other" ? formData.investorTypeOther : "" })}
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -133,10 +161,24 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
         </div>
       </div>
 
+      {formData.investorType === "Other" && (
+        <div className="flex flex-col gap-2">
+          <Label className="">Other Investor Type</Label>
+          <Input
+            required
+            placeholder="Enter investor type"
+            value={formData.investorTypeOther}
+            onChange={(e) => setFormData({ ...formData, investorTypeOther: e.target.value })}
+            className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
+          />
+        </div>
+      )}
+
       <div className="flex flex-col gap-2">
         <Label className="">Your Interest</Label>
         <Input 
           placeholder="e.g. Excited by the African e-commerce opportunity." 
+          maxLength={200}
           value={formData.interest}
           onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
           className="h-12 border-efefef bg-fafafa focus:bg-white focus:ring-[#6a0dad] focus:border-[#6a0dad]"
@@ -145,7 +187,12 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
 
       <Button 
         type="submit" 
-        disabled={isLoading || !formData.countryId} 
+        disabled={
+          isLoading ||
+          !formData.phoneNumber.trim() ||
+          !formData.countryId ||
+          (formData.investorType === "Other" && !formData.investorTypeOther.trim())
+        }
         className="w-full h-14  bg-6a0dad hover:bg-[#5a0dad] text-white font-MontserratBold text-base shadow-lg shadow-6a0dad/20 transition-all active:scale-[0.98]"
       >
         {isLoading ? "Processing..." : "Complete Waitlist Signup"}
