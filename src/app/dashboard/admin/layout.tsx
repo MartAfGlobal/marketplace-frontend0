@@ -107,6 +107,7 @@ const ITEM_CATEGORY: Record<string, PermissionCategoryKey> = {
   Finances: "FINANCES",
   Reports: "REPORTS",
   Staff: "STAFF",
+  Waitlist: "USERS",
 };
 
 // URL prefix -> category, for a staff member who types a restricted URL directly.
@@ -123,6 +124,7 @@ const PATH_CATEGORY: [string, PermissionCategoryKey][] = [
   ["/dashboard/admin/finance", "FINANCES"],
   ["/dashboard/admin/reports", "REPORTS"],
   ["/dashboard/admin/staff", "STAFF"],
+  ["/dashboard/admin/waitlist", "USERS"],
 ];
 
 const requiredCategory = (path: string) =>
@@ -281,10 +283,11 @@ export default function AdminLayout({
       "Reports",
       "Staff",
       "Settings",
+      "Waitlist",
     ],
-    Operational: ["Overview", "Users", "Verifications", "Products", "Orders", "Settings"],
+    Operational: ["Overview", "Users", "Verifications", "Products", "Orders", "Settings", "Waitlist"],
     IT: ["Overview", "Support", "Staff", "Settings"],
-    Support: ["Overview", "Users", "Support", "Settings"],
+    Support: ["Overview", "Users", "Support", "Settings", "Waitlist"],
     Finance: ["Overview", "Orders", "Finances", "Reports", "Settings"],
   };
 
@@ -452,6 +455,30 @@ export default function AdminLayout({
       icon: SettingsIcon,
       path: "/dashboard/admin/settings",
     },
+    {
+      name: "Waitlist",
+      icon: LayoutGrid,
+      path: "/dashboard/admin/waitlist",
+      subItems: [
+        {
+          name: "Buyers",
+          path: "/dashboard/admin/waitlist/buyers",
+          icon: InactiveBuyerIcon,
+          activeIcon: BuyerIcon,
+        },
+        {
+          name: "Sellers",
+          path: "/dashboard/admin/waitlist/sellers",
+          icon: SellerIcon,
+          activeIcon: activeSellerIcon,
+        },
+        {
+          name: "Investors",
+          path: "/dashboard/admin/waitlist/investors",
+          icon: UserSquare2,
+        },
+      ],
+    },
   ];
 
   // Show only menu entries allowed both by the dashboard role and the server permission matrix.
@@ -609,6 +636,8 @@ export default function AdminLayout({
                         } else if (pathname.startsWith("/dashboard/admin/reports")) {
                           // Each of the 11 report sections is its own route
                           // (separate pages, not one page's query-string tab).
+                          isSubActive = pathname.startsWith(sub.path);
+                        } else if (pathname.startsWith("/dashboard/admin/waitlist")) {
                           isSubActive = pathname.startsWith(sub.path);
                         }
 
