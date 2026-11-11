@@ -167,8 +167,6 @@ const renderSidebarIcon = (
   );
 };
 
-type AdminRole = "Super Admin" | "Operational" | "IT" | "Support" | "Finance";
-
 function formatNotifTime(iso: string) {
   const date = new Date(iso);
   if (isNaN(date.getTime())) return "";
@@ -194,7 +192,7 @@ export default function AdminLayout({
   useTokenExpiration();
   // Load the server-managed role permissions once for this admin session before exposing restricted navigation.
   useLoadAdminAccess();
-  const { loaded: accessLoaded, can } = useAdminAccess();
+  const { loaded: accessLoaded, can, isFullAccess } = useAdminAccess();
   const logout = useLogout(dispatch);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -250,45 +248,6 @@ export default function AdminLayout({
       },
       () => setClearingNotifs(false),
     );
-  };
-
-  // Dashboard subsections select role-specific navigation from their route prefix.
-  const getRoleFromPath = (path: string): AdminRole => {
-    if (path.includes("/dashboard/admin/operational")) return "Operational";
-    if (path.includes("/dashboard/admin/it")) return "IT";
-    if (path.includes("/dashboard/admin/support-department")) return "Support";
-    // Exact match/prefix with a trailing slash: "/finances/*" (the Finances
-    // section every admin sees) must not be mistaken for the Finance role.
-    if (path === "/dashboard/admin/finance" || path.startsWith("/dashboard/admin/finance/")) return "Finance";
-    return "Super Admin";
-  };
-
-  const currentRole = getRoleFromPath(pathname);
-
-  // Define sidebar navigation configuration for each role
-  // Settings is in every role's nav, same as Overview -- it has no single
-  // ITEM_CATEGORY (it spans USERS/ORDERS/PRODUCTS/FINANCES/STAFF/SUPPORT/
-  // VERIFICATIONS), so the page itself shows only the sections the
-  // viewer's own permissions cover, rather than gating the whole page
-  // behind one category.
-  const roleNavigation: Record<AdminRole, string[]> = {
-    "Super Admin": [
-      "Overview",
-      "Users",
-      "Verifications",
-      "Products",
-      "Orders",
-      "Support",
-      "Finances",
-      "Reports",
-      "Staff",
-      "Settings",
-      "Waitlist",
-    ],
-    Operational: ["Overview", "Users", "Verifications", "Products", "Orders", "Settings", "Waitlist"],
-    IT: ["Overview", "Support", "Staff", "Settings"],
-    Support: ["Overview", "Users", "Support", "Settings", "Waitlist"],
-    Finance: ["Overview", "Orders", "Finances", "Reports", "Settings"],
   };
 
   const sidebarItems: SidebarItem[] = [
@@ -481,13 +440,11 @@ export default function AdminLayout({
     },
   ];
 
-  // Show only menu entries allowed both by the dashboard role and the server permission matrix.
-  const activeRoleItems = roleNavigation[currentRole] || [];
-  // Then only what this person's role actually allows. Until the server has answered
-  // nothing restricted is shown (fail closed), so a menu never flashes and vanishes.
+  // Show every section granted by the server matrix, regardless of the current route.
+  // Keep the waitlist restricted to full-access admins and fail closed until access loads.
   const filteredSidebarItems = sidebarItems.filter(
     (item) =>
-      activeRoleItems.includes(item.name) &&
+      (item.name !== "Waitlist" || isFullAccess) &&
       (!ITEM_CATEGORY[item.name] || can(ITEM_CATEGORY[item.name])),
   );
 
@@ -973,6 +930,9 @@ export default function AdminLayout({
                   <LoadingSpinner size={32} color="border-ff715b" />
                 </div>
               );
+            }
+            if (pathname.startsWith("/dashboard/admin/waitlist")) {
+              return isFullAccess ? children : <NoAccess />;
             }
             return can(needed) ? children : <NoAccess />;
           })()}

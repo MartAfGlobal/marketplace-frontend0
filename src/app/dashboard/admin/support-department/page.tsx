@@ -16,6 +16,7 @@ import SupportTabs, {
 import SupportTicketTable from "@/components/admin-components/support/SupportTicketTable";
 import {
   formatSupportDate,
+  getSupportStatusLabel,
   parseSupportAgentResponse,
   parseSupportTicketResponse,
   type SupportStaffRow,
@@ -156,7 +157,7 @@ export default function SupportDepartmentPage() {
         ].some((value) => value.toLowerCase().includes(search));
       const matchesStatus =
         selectedStatuses.length === 0 ||
-        selectedStatuses.includes(ticket.status);
+        selectedStatuses.includes(getSupportStatusLabel(ticket.status));
       const date = ticket.createdAt ? new Date(ticket.createdAt) : null;
       const matchesPeriod =
         selectedMonth === "All time" ||
@@ -211,7 +212,7 @@ export default function SupportDepartmentPage() {
         ticket_id: ticket.reference,
         subject: ticket.subject,
         category: ticket.category,
-        status: ticket.status,
+        status: getSupportStatusLabel(ticket.status),
         priority: ticket.priority,
         assigned_to: ticket.assignee,
       })),

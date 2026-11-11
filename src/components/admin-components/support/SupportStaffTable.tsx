@@ -141,7 +141,11 @@ export default function SupportStaffTable({
                             onClick={() => {
                               setActiveRowId(null);
                               if (staff.id) {
-                                router.push(`/dashboard/admin/staff/${staff.id}`);
+                                router.push(
+                                  `/dashboard/admin/support-department/staff-management/${encodeURIComponent(
+                                    staff.id,
+                                  )}`,
+                                );
                               }
                             }}
                             className="flex w-full items-center gap-5 py-3 text-left text-base font-MontserratNormal text-[#999] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"

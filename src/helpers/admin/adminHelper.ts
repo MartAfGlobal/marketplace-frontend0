@@ -3098,6 +3098,7 @@ export const AdminDetails = (id?: string) => {
     userId: string,
     page: number = 1,
     callback?: (data: any) => void,
+    errorCallback?: (error: unknown) => void,
   ) => {
     if (!token || !userId) return;
 
@@ -3113,6 +3114,9 @@ export const AdminDetails = (id?: string) => {
         const data = responseData?.data ?? responseData;
         if (callback) callback(data);
       },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
     });
   };
 
@@ -3120,6 +3124,7 @@ export const AdminDetails = (id?: string) => {
     userId: string,
     page: number = 1,
     callback?: (data: any) => void,
+    errorCallback?: (error: unknown) => void,
   ) => {
     if (!token || !userId) return;
 
@@ -3134,6 +3139,9 @@ export const AdminDetails = (id?: string) => {
       successRes: (responseData: any) => {
         const data = responseData?.data ?? responseData;
         if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
       },
     });
   };
@@ -3172,6 +3180,242 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminSupportTicketDetail = (
+    ticketId: string,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token || !ticketId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/${encodeURIComponent(ticketId)}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: unknown) => {
+        console.log("Admin support ticket detail fetched:", responseData);
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const createAdminSupportTicketNote = (
+    ticketId: string,
+    message: string,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token || !ticketId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/${encodeURIComponent(ticketId)}/notes/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { body: message },
+      },
+      successRes: (responseData: unknown) => {
+        console.log("Admin support ticket note created:", responseData);
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const uploadAdminSupportTicketAttachment = (
+    ticketId: string,
+    file: File,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token || !ticketId) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/${encodeURIComponent(ticketId)}/attachments/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: formData,
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const updateAdminSupportTicketStatus = (
+    ticketId: string,
+    status: "open" | "in_progress" | "waiting_customer" | "waiting_internal" | "under_review",
+    description: string,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token || !ticketId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/${encodeURIComponent(ticketId)}/status/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { status, description },
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const resolveAdminSupportTicket = (
+    ticketId: string,
+    resolutionType:
+      | "resolved_during_contact"
+      | "resolved_after_follow_up"
+      | "resolved_by_escalation",
+    resolutionSummary: string,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token || !ticketId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/${encodeURIComponent(ticketId)}/resolve/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: {
+          resolution_type: resolutionType,
+          resolution_summary: resolutionSummary,
+        },
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const closeAdminSupportTicket = (
+    ticketId: string,
+    description: string,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token || !ticketId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/${encodeURIComponent(ticketId)}/close/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { description },
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const reassignAdminSupportTicket = (
+    ticketId: string,
+    agentId: string,
+    assignmentNotes: string,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token || !ticketId || !agentId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/tickets/${encodeURIComponent(ticketId)}/reassign/`,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { agent: agentId, assignment_notes: assignmentNotes },
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
   const fetchAdminSupportAgents = (
     callback?: (data: unknown) => void,
     errorCallback?: (error: unknown) => void,
@@ -3196,6 +3440,36 @@ export const AdminDetails = (id?: string) => {
         if (callback) callback(data);
 
         console.log("Admin support agents fetched:", data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const fetchAdminSupportAgentDetail = (
+    userId: string,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token || !userId) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/support/staff/${encodeURIComponent(userId)}/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
       },
       errorRes: (error: unknown) => {
         if (errorCallback) errorCallback(error);
@@ -3349,7 +3623,15 @@ export const AdminDetails = (id?: string) => {
 
     // Support Tickets
     fetchAdminSupportTickets,
+    fetchAdminSupportTicketDetail,
+    createAdminSupportTicketNote,
+    uploadAdminSupportTicketAttachment,
+    updateAdminSupportTicketStatus,
+    resolveAdminSupportTicket,
+    closeAdminSupportTicket,
+    reassignAdminSupportTicket,
     fetchAdminSupportAgents,
+    fetchAdminSupportAgentDetail,
     createAdminSupportTicket,
     fetchAdminStaffTickets,
 

@@ -15,7 +15,6 @@ export type SupportStaffRow = {
   id: string;
   date: string;
   email: string;
-
   name: string;
   avatar?: string;
   joinedAt: string;
@@ -24,6 +23,39 @@ export type SupportStaffRow = {
   inProgressTickets: number | null;
   closedTickets: number | null;
   status: string;
+  staff_status: string;
+};
+
+export type SupportTicketActivity = {
+  id: string;
+  authorId: string;
+  authorEmail: string;
+  author: string;
+  authorRole: string;
+  authorAvatar: string;
+  createdAt: string;
+  content: string;
+  oldValue: string;
+  newValue: string;
+};
+
+export type SupportTicketAttachment = {
+  id: string;
+  name: string;
+  url: string;
+  uploadedAt: string;
+};
+
+export type SupportTicketDetail = SupportTicket & {
+  description: string;
+  customerName: string;
+  customerEmail: string;
+  source: string;
+  assigneeEmail: string;
+  assigneeAvatar: string;
+  attachments: SupportTicketAttachment[];
+  comments: SupportTicketActivity[];
+  history: SupportTicketActivity[];
 };
 
 const PAGE_SIZE = 10;
@@ -80,6 +112,7 @@ function countValue(...values: unknown[]): number | null {
 
 function supportAgentStatus(staff: Record<string, unknown>): string {
   const rawStatus = textValue(
+    staff.staff_status,
     staff.availability_status,
     staff.availability,
     staff.status_display,
@@ -196,6 +229,111 @@ export function parseSupportTicketResponse(data: unknown): {
   };
 }
 
+function unwrapSupportData(data: unknown): unknown {
+  let payload = data;
+  for (let depth = 0; depth < 3; depth += 1) {
+    const body = asRecord(payload);
+    if (!body || body.data === undefined) break;
+    payload = body.data;
+  }
+  return payload;
+}
+
+function mapSupportActivity(value: unknown, index: number): SupportTicketActivity | null {
+  const activity = asRecord(value);
+  if (!activity) return null;
+
+  const author = activity.author ?? activity.user ?? activity.created_by;
+  const authorRecord = asRecord(author);
+  return {
+    id: textValue(activity.id, activity.activity_id, activity.note_id) || String(index),
+    authorId: textValue(activity.author_id, activity.user_id, authorRecord?.id),
+    authorEmail: textValue(activity.author_email, authorRecord?.email),
+    author: displayName(author) || textValue(activity.author_name, activity.name) || "—",
+    authorRole: textValue(activity.author_role, activity.role, authorRecord?.role),
+    authorAvatar: textValue(
+      activity.author_avatar,
+      authorRecord?.profile_image,
+      authorRecord?.avatar,
+    ),
+    createdAt: textValue(activity.created_at, activity.timestamp, activity.date),
+    content: textValue(
+      activity.body,
+      activity.message,
+      activity.content,
+      activity.comment,
+      activity.note,
+    ),
+    oldValue: textValue(activity.old_value, activity.from_value),
+    newValue: textValue(activity.new_value, activity.to_value),
+  };
+}
+
+function mapSupportActivities(value: unknown): SupportTicketActivity[] {
+  return Array.isArray(value)
+    ? value.flatMap((item, index) => {
+        const activity = mapSupportActivity(item, index);
+        return activity ? [activity] : [];
+      })
+    : [];
+}
+
+export function parseSupportTicketDetailResponse(
+  data: unknown,
+): SupportTicketDetail | null {
+  const payload = unwrapSupportData(data);
+  const body = asRecord(payload);
+  if (!body) return null;
+
+  const ticket =
+    asRecord(body.ticket) ??
+    asRecord(body.result) ??
+    body;
+  const assignedAgent =
+    ticket.assigned_agent ?? ticket.assigned_to ?? ticket.assignee;
+  const assignedRecord = asRecord(assignedAgent);
+  const attachments = ticket.attachments;
+
+  return {
+    ...mapSupportTicket(ticket),
+    description: textValue(ticket.description, ticket.details),
+    customerName:
+      textValue(ticket.customer_name, ticket.requester_name) ||
+      displayName(ticket.customer ?? ticket.requester),
+    customerEmail:
+      textValue(ticket.customer_email, ticket.requester_email) ||
+      textValue(asRecord(ticket.customer)?.email, asRecord(ticket.requester)?.email),
+    source: textValue(ticket.source_display, ticket.source, ticket.channel) || "—",
+    assigneeEmail:
+      textValue(ticket.assignee_email, ticket.assigned_to_email) ||
+      textValue(assignedRecord?.email),
+    assigneeAvatar:
+      textValue(ticket.assignee_avatar, ticket.assigned_to_avatar) ||
+      textValue(assignedRecord?.profile_image, assignedRecord?.avatar),
+    attachments: Array.isArray(attachments)
+      ? attachments.flatMap((value, index): SupportTicketAttachment[] => {
+          const attachment = asRecord(value);
+          if (!attachment) return [];
+          const url = textValue(
+            attachment.url,
+            attachment.file_url,
+            attachment.attachment,
+          );
+          return [{
+            id: textValue(attachment.id, attachment.attachment_id) || `${index}`,
+            name: textValue(attachment.name, attachment.filename, attachment.file_name) || url,
+            url,
+            uploadedAt: textValue(attachment.uploaded_at, attachment.created_at),
+          }];
+        })
+      : [],
+    comments: mapSupportActivities(ticket.comments ?? ticket.notes),
+    history: mapSupportActivities(
+      ticket.history ?? ticket.status_history ?? ticket.events,
+    ),
+  };
+}
+
 export function parseSupportAgentResponse(
   data: unknown,
 ): SupportStaffRow[] | null {
@@ -221,13 +359,14 @@ export function parseSupportAgentResponse(
     if (!staff) return [];
     const name = supportStaffName(staff);
     if (!name) return [];
+    const status = supportAgentStatus(staff);
 
     return [
       {
         id: textValue(staff.user_id, staff.id, staff.staff_id, staff.agent_id),
         date: textValue(staff.date),
         name,
-        avatar: textValue(staff.profile_image, staff.avatar),
+        avatar: textValue(staff.profile_picture, staff.profile_image, staff.avatar),
         email: textValue(staff.email, staff.user_email),
         joinedAt: textValue(
           staff.created_at,
@@ -256,10 +395,39 @@ export function parseSupportAgentResponse(
           staff.tickets_closed,
           staff.closed_count,
         ),
-        status: supportAgentStatus(staff),
+        status,
+        staff_status: status,
       },
     ];
   });
+}
+
+export function parseSupportAgentDetailResponse(
+  data: unknown,
+): SupportStaffRow | null {
+  const payload = unwrapSupportData(data);
+  const body = asRecord(payload);
+  if (!body) return null;
+  const staff =
+    asRecord(body.agent) ??
+    asRecord(body.support_agent) ??
+    asRecord(body.staff) ??
+    asRecord(body.result) ??
+    body;
+  return parseSupportAgentResponse([staff])?.[0] ?? null;
+}
+
+export function getSupportStatusLabel(status: string) {
+  const normalized = status.trim().toLowerCase().replace(/[_-]+/g, " ");
+  if (!normalized) return "—";
+  if (normalized === "open" || normalized === "todo" || normalized === "to do") {
+    return "To Do";
+  }
+  if (normalized === "in progress") return "In progress";
+  if (normalized === "under review" || normalized === "resolved") {
+    return "Under review";
+  }
+  return normalizeLabel(normalized);
 }
 
 export function formatSupportDate(value: string) {

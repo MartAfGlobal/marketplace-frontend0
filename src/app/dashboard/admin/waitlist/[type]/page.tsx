@@ -9,6 +9,7 @@ import { BriefcaseBusiness, Store, Users, X } from "lucide-react";
 import { isAxiosError } from "axios";
 import axios from "@/lib/axios";
 import { RootState } from "@/store";
+import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
 import AdminListHeader from "@/components/ui/admin-components/AdminListHeader";
 import StatusFrame from "@/components/admin-components/users/status-frame";
 import Pagination from "@/components/ui/seller-components/body-components/products/pignation-button";
@@ -172,6 +173,7 @@ export default function AdminWaitlistPage() {
   const type = isWaitlistType(params.type) ? params.type : null;
   const config = type ? WAITLIST_CONFIG[type] : null;
   const token = useSelector((state: RootState) => state.token?.token);
+  const { loaded: accessLoaded, isFullAccess } = useAdminAccess();
 
   const [rows, setRows] = useState<WaitlistEntry[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -192,7 +194,7 @@ export default function AdminWaitlistPage() {
     row.id ?? row.uuid ?? row.buyer_uuid ?? row.seller_uuid ?? row.investor_uuid;
 
   const openEntryDetails = async (row: WaitlistEntry) => {
-    if (!config) return;
+    if (!config || !isFullAccess) return;
     const id = getEntryId(row);
     if (id === undefined || id === null || id === "") {
       setDetailEntry(null);
@@ -245,7 +247,7 @@ export default function AdminWaitlistPage() {
   }, [searchValue]);
 
   const fetchWaitlist = useCallback(async () => {
-    if (!token || !config) return;
+    if (!token || !config || !accessLoaded || !isFullAccess) return;
 
     setLoading(true);
     setError("");
@@ -279,7 +281,7 @@ export default function AdminWaitlistPage() {
     } finally {
       setLoading(false);
     }
-  }, [config, page, search, token]);
+  }, [accessLoaded, config, isFullAccess, page, search, token]);
 
   useEffect(() => {
     if (!type) {
@@ -287,9 +289,9 @@ export default function AdminWaitlistPage() {
       setError("This waitlist section does not exist.");
       return;
     }
-    if (!token) return;
+    if (!token || !accessLoaded || !isFullAccess) return;
     void fetchWaitlist();
-  }, [fetchWaitlist, token, type, retry]);
+  }, [accessLoaded, fetchWaitlist, isFullAccess, token, type, retry]);
 
   const matchingRows = useMemo(() => {
     if (serverPaginated || !search) return rows;
@@ -313,6 +315,23 @@ export default function AdminWaitlistPage() {
     return (
       <div className="rounded-c16 bg-white p-6 text-sm font-MontserratNormal text-000000/68">
         This waitlist section does not exist.
+      </div>
+    );
+  }
+
+  // Keep the waitlist data and controls unavailable until full-admin access is confirmed.
+  if (!accessLoaded) {
+    return (
+      <div className="flex justify-center py-24">
+        <LoadingSpinner size={32} color="border-ff715b" />
+      </div>
+    );
+  }
+
+  if (!isFullAccess) {
+    return (
+      <div className="rounded-c16 bg-white p-6 text-sm font-MontserratNormal text-000000/68">
+        You do not have permission to view the waitlist.
       </div>
     );
   }

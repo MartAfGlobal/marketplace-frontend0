@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown, Paperclip, Check } from "lucide-react";
+import { X, Paperclip, Check } from "lucide-react";
 import { Input } from "@/components/ui/forms/Input";
 import { Label } from "@/components/ui/forms/Label";
 import { Button } from "@/components/ui/Button/Button";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { toast } from "sonner";
 import { AdminDetails } from "@/helpers/admin/adminHelper";
 import Image from "next/image";
@@ -45,114 +46,6 @@ const SOURCE_OPTIONS = [
   { label: "Web form", value: "web" },
   { label: "Text message", value: "sms" },
 ];
-
-interface CustomSelectProps {
-  label?: string;
-  value: string;
-  placeholder: string;
-  options: { label: string; value: string }[] | string[];
-  onChange: (value: string) => void;
-  disabled?: boolean;
-}
-
-function CustomSelect({
-  value,
-  placeholder,
-  options,
-  onChange,
-  disabled = false,
-}: CustomSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const selectedLabel = React.useMemo(() => {
-    if (!value) return "";
-    for (const opt of options) {
-      if (typeof opt === "string") {
-        if (opt === value) return opt;
-      } else if (opt.value === value) {
-        return opt.label;
-      }
-    }
-    return value;
-  }, [value, options]);
-
-  return (
-    <div ref={containerRef} className="relative w-full">
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={`w-full h-12 px-3.5 rounded-c8 border border-efefef bg-white text-left flex items-center justify-between text-sm font-MontserratNormal transition-all ${
-          isOpen ? "border-ff715b ring-1 ring-ff715b" : "hover:border-gray-300"
-        } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
-      >
-        <span
-          className={`truncate ${
-            selectedLabel ? "text-[#161616]" : "text-gray-400"
-          }`}
-        >
-          {selectedLabel || placeholder}
-        </span>
-        <ChevronDown
-          className={`w-4 h-4 text-gray-400 shrink-0 ml-2 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="absolute left-0 top-full mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-52 overflow-y-auto z-50 py-1"
-          >
-            {options.map((opt, idx) => {
-              const optVal = typeof opt === "string" ? opt : opt.value;
-              const optLabel = typeof opt === "string" ? opt : opt.label;
-              const isSelected = optVal === value;
-
-              return (
-                <button
-                  key={`${optVal}-${idx}`}
-                  type="button"
-                  onClick={() => {
-                    onChange(optVal);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left px-3.5 py-2.5 text-xs font-MontserratNormal flex items-center justify-between transition-colors ${
-                    isSelected
-                      ? "bg-ff715b text-ffffff font-MontserratMedium"
-                      : "text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  <span className="truncate">{optLabel}</span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-[#ff715b] shrink-0" />}
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 export default function CreateTicketModal({
   isOpen,
