@@ -16,6 +16,7 @@ import LogOut from "@/assets/icons/ArrowBendDownRight.svg";
 import { useLogout } from "@/utils/logout";
 import LogoutConfirmModal from "@/components/ui/Modals/LogoutConfirmModal";
 import AuthModal from "@/components/ui/mobile/auth/sign-up";
+import NotificationButton from "@/components/ui/Button/notificationButton";
 import { AuthStep } from "@/types/global";
 
 export default function EndNav() {
@@ -67,12 +68,11 @@ export default function EndNav() {
         </button>
       </div>
       <div className="md:flex items-center gap-3 hidden">
-        <button className="w-fit h-fit flex-shrink-0 relative text-ffffff">
-          <Image src={Notification} alt="notification" width={24} height={24} />
-          <span className="absolute h-4 flex items-center justify-center font-MontserratSemiBold text-c8 w-4 -top-2.25 z-10 flex-shrink-0 -right-0.25 rounded-full bg-ff715b">
-            2
-          </span>
-        </button>
+        <NotificationButton
+          size={24}
+          image={Notification}
+          userType="seller"
+        />
         <button className="w-fit h-fit flex-shrink-0 relative text-ffffff">
           <Image src={Message} alt="message" width={24} height={24} />
           <span className="absolute h-4 flex items-center justify-center font-MontserratSemiBold text-c8 w-4 -top-3 z-10 flex-shrink-0 -right-2 rounded-full bg-ca0202">

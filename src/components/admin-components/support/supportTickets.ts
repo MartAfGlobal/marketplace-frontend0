@@ -243,16 +243,41 @@ function mapSupportActivity(value: unknown, index: number): SupportTicketActivit
   const activity = asRecord(value);
   if (!activity) return null;
 
-  const author = activity.author ?? activity.user ?? activity.created_by;
+  const author =
+    activity.author ??
+    activity.sender ??
+    activity.actor ??
+    activity.user ??
+    activity.created_by;
   const authorRecord = asRecord(author);
+  const metadata = asRecord(activity.metadata);
   return {
     id: textValue(activity.id, activity.activity_id, activity.note_id) || String(index),
-    authorId: textValue(activity.author_id, activity.user_id, authorRecord?.id),
-    authorEmail: textValue(activity.author_email, authorRecord?.email),
-    author: displayName(author) || textValue(activity.author_name, activity.name) || "—",
-    authorRole: textValue(activity.author_role, activity.role, authorRecord?.role),
+    authorId: textValue(
+      activity.author_id,
+      activity.sender_id,
+      activity.actor_id,
+      activity.user_id,
+      authorRecord?.id,
+    ),
+    authorEmail: textValue(
+      activity.author_email,
+      activity.sender_email,
+      authorRecord?.email,
+    ),
+    author:
+      displayName(author) ||
+      textValue(activity.author_name, activity.sender_name, activity.name) ||
+      "—",
+    authorRole: textValue(
+      activity.author_role,
+      activity.role,
+      activity.is_internal === true ? "Internal note" : activity.message_type,
+      authorRecord?.role,
+    ),
     authorAvatar: textValue(
       activity.author_avatar,
+      authorRecord?.profile_picture,
       authorRecord?.profile_image,
       authorRecord?.avatar,
     ),
@@ -263,9 +288,22 @@ function mapSupportActivity(value: unknown, index: number): SupportTicketActivit
       activity.content,
       activity.comment,
       activity.note,
+      activity.description,
     ),
-    oldValue: textValue(activity.old_value, activity.from_value),
-    newValue: textValue(activity.new_value, activity.to_value),
+    oldValue: textValue(
+      activity.old_value,
+      activity.from_value,
+      metadata?.old_value,
+      metadata?.old_status,
+      metadata?.previous_status,
+    ),
+    newValue: textValue(
+      activity.new_value,
+      activity.to_value,
+      metadata?.new_value,
+      metadata?.new_status,
+      metadata?.current_status,
+    ),
   };
 }
 
@@ -317,19 +355,31 @@ export function parseSupportTicketDetailResponse(
           const url = textValue(
             attachment.url,
             attachment.file_url,
+            attachment.download_url,
+            attachment.file,
             attachment.attachment,
           );
           return [{
             id: textValue(attachment.id, attachment.attachment_id) || `${index}`,
-            name: textValue(attachment.name, attachment.filename, attachment.file_name) || url,
+            name: textValue(
+              attachment.name,
+              attachment.filename,
+              attachment.file_name,
+              attachment.original_name,
+            ) || url,
             url,
             uploadedAt: textValue(attachment.uploaded_at, attachment.created_at),
           }];
         })
       : [],
-    comments: mapSupportActivities(ticket.comments ?? ticket.notes),
+    comments: mapSupportActivities(
+      ticket.messages ??
+        ticket.comments ??
+        ticket.notes ??
+        ticket.communications,
+    ),
     history: mapSupportActivities(
-      ticket.history ?? ticket.status_history ?? ticket.events,
+      ticket.events ?? ticket.history ?? ticket.status_history,
     ),
   };
 }

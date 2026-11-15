@@ -95,6 +95,34 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminUserStats = (
+    callback?: (data: unknown) => void,
+    errorCallback?: (err: unknown) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: `/accounts/admin/stats/users/`,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: unknown) => {
+        const response =
+          responseData !== null && typeof responseData === "object"
+            ? (responseData as Record<string, unknown>)
+            : null;
+        callback?.(response?.data ?? responseData);
+      },
+      errorRes: (err: unknown) => {
+        console.error("Admin user stats error:", err);
+        errorCallback?.(err);
+      },
+    });
+  };
+
   const fetchAdminBuyerById = (
     customerId: string,
     callback?: (data: any) => void,
@@ -3111,6 +3139,7 @@ export const AdminDetails = (id?: string) => {
         userType: "admin",
       },
       successRes: (responseData: any) => {
+        console.log("Support staff activity logs response:", responseData);
         const data = responseData?.data ?? responseData;
         if (callback) callback(data);
       },
@@ -3447,6 +3476,66 @@ export const AdminDetails = (id?: string) => {
     });
   };
 
+  const fetchAdminSupportAgentAvailability = (
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/support/agent/me/availability/",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
+  const updateAdminSupportAgentAvailability = (
+    isAvailable: boolean,
+    callback?: (data: unknown) => void,
+    errorCallback?: (error: unknown) => void,
+  ) => {
+    if (!token) return;
+
+    sendHttpRequest({
+      requestConfig: {
+        url: "/support/agent/me/availability/",
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { is_available: isAvailable },
+      },
+      successRes: (responseData: unknown) => {
+        const data =
+          responseData !== null &&
+          typeof responseData === "object" &&
+          "data" in responseData
+            ? responseData.data
+            : responseData;
+        if (callback) callback(data);
+      },
+      errorRes: (error: unknown) => {
+        if (errorCallback) errorCallback(error);
+      },
+    });
+  };
+
   const fetchAdminSupportAgentDetail = (
     userId: string,
     callback?: (data: unknown) => void,
@@ -3512,6 +3601,7 @@ export const AdminDetails = (id?: string) => {
     // Buyers
     fetchAdminBuyers,
     fetchAdminBuyerStats,
+    fetchAdminUserStats,
     fetchAdminBuyerById,
     toggleAdminBuyerStatus,
     deleteAdminBuyer,
@@ -3631,6 +3721,8 @@ export const AdminDetails = (id?: string) => {
     closeAdminSupportTicket,
     reassignAdminSupportTicket,
     fetchAdminSupportAgents,
+    fetchAdminSupportAgentAvailability,
+    updateAdminSupportAgentAvailability,
     fetchAdminSupportAgentDetail,
     createAdminSupportTicket,
     fetchAdminStaffTickets,

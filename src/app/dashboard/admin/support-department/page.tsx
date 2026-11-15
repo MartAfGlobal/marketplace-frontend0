@@ -34,10 +34,41 @@ import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
 
 const PAGE_SIZE = 10;
 
+function parseAvailability(data: unknown): boolean | null {
+  let payload = data;
+  for (let depth = 0; depth < 2; depth += 1) {
+    if (
+      payload === null ||
+      typeof payload !== "object" ||
+      Array.isArray(payload) ||
+      !("data" in payload)
+    ) {
+      break;
+    }
+    payload = payload.data;
+  }
+
+  if (
+    payload !== null &&
+    typeof payload === "object" &&
+    !Array.isArray(payload) &&
+    "is_available" in payload &&
+    typeof payload.is_available === "boolean"
+  ) {
+    return payload.is_available;
+  }
+  return null;
+}
+
 export default function SupportDepartmentPage() {
   const token = useSelector((state: RootState) => state.token?.token);
   const { can } = useAdminAccess();
-  const { fetchAdminSupportAgents, fetchAdminSupportTickets } = AdminDetails();
+  const {
+    fetchAdminSupportAgents,
+    fetchAdminSupportAgentAvailability,
+    updateAdminSupportAgentAvailability,
+    fetchAdminSupportTickets,
+  } = AdminDetails();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [supportAgents, setSupportAgents] = useState<SupportStaffRow[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
@@ -54,6 +85,7 @@ export default function SupportDepartmentPage() {
   const [availability, setAvailability] = useState<"Available" | "Inactive">(
     "Available",
   );
+  const [availabilitySaving, setAvailabilitySaving] = useState(false);
   const [isAvailabilityMenuOpen, setIsAvailabilityMenuOpen] = useState(false);
 
   const canViewSupport = can("SUPPORT");
@@ -137,6 +169,58 @@ export default function SupportDepartmentPage() {
     // AdminDetails returns fresh helper functions per render; requests depend on auth.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, canViewStaff]);
+
+  useEffect(() => {
+    if (!token || !isSupportAgent) return;
+
+    let active = true;
+    fetchAdminSupportAgentAvailability(
+      (data: unknown) => {
+        if (!active) return;
+        const isAvailable = parseAvailability(data);
+        if (isAvailable === null) {
+          toast.error("The support availability response could not be read.");
+          return;
+        }
+        setAvailability(isAvailable ? "Available" : "Inactive");
+      },
+      () => {
+        if (active) {
+          toast.error("Could not load your support availability.");
+        }
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+    // AdminDetails returns fresh helper functions per render; requests depend on auth and role.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, isSupportAgent]);
+
+  const handleAvailabilityChange = (option: "Available" | "Inactive") => {
+    if (availability === option) {
+      setIsAvailabilityMenuOpen(false);
+      return;
+    }
+
+    setAvailabilitySaving(true);
+    updateAdminSupportAgentAvailability(
+      option === "Available",
+      (data: unknown) => {
+        const isAvailable = parseAvailability(data);
+        setAvailability(
+          (isAvailable ?? option === "Available") ? "Available" : "Inactive",
+        );
+        setIsAvailabilityMenuOpen(false);
+        setAvailabilitySaving(false);
+      },
+      () => {
+        setAvailabilitySaving(false);
+        toast.error("Could not update your support availability.");
+      },
+    );
+  };
 
   const filteredTickets = useMemo(() => {
     const search = searchVal.trim().toLowerCase();
@@ -244,6 +328,7 @@ export default function SupportDepartmentPage() {
                 type="button"
                 aria-haspopup="listbox"
                 aria-expanded={isAvailabilityMenuOpen}
+                aria-busy={availabilitySaving}
                 onClick={() =>
                   setIsAvailabilityMenuOpen((isOpen) => !isOpen)
                 }
@@ -264,11 +349,9 @@ export default function SupportDepartmentPage() {
                       key={option}
                       type="button"
                       role="option"
+                      disabled={availabilitySaving}
                       aria-selected={availability === option}
-                      onClick={() => {
-                        setAvailability(option);
-                        setIsAvailabilityMenuOpen(false);
-                      }}
+                      onClick={() => handleAvailabilityChange(option)}
                       className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-xs hover:bg-gray-50"
                     >
                       {option === "Available" ? (

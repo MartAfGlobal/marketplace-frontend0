@@ -82,11 +82,13 @@ import ProductListin from "@/assets/admin/productlistings.svg";
 import Categories from "@/assets/admin/Prodcategories.svg";
 import ActiveCategories from "@/assets/admin/activeProductCategory.svg";
 import { LayoutGrid } from "lucide-react";
+import NotificationTray from "@/components/ui/notifications/NotificationTray";
+import type { NotificationTrayItem } from "@/components/ui/notifications/NotificationTray";
 
 interface SidebarItem {
   name: string;
   activeIcon?: React.ComponentType<any> | StaticImageData;
-  icon: React.ComponentType<any> | StaticImageData;
+  icon?: React.ComponentType<any> | StaticImageData;
   path: string;
   subItems?: {
     name: string;
@@ -167,19 +169,6 @@ const renderSidebarIcon = (
   );
 };
 
-function formatNotifTime(iso: string) {
-  const date = new Date(iso);
-  if (isNaN(date.getTime())) return "";
-  const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
-  if (diffMin < 1) return "Just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
-  const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 7) return `${diffDay}d ago`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
 export default function AdminLayout({
   children,
 }: {
@@ -225,7 +214,9 @@ export default function AdminLayout({
     });
   };
 
-  const handleNotifItemClick = (notif: { id: string; is_read: boolean; link: string | null }) => {
+  const handleNotifItemClick = (
+    notif: Pick<NotificationTrayItem, "id" | "is_read" | "link">,
+  ) => {
     if (!notif.is_read) markAdminNotificationRead(notif.id);
     setNotifOpen(false);
     if (notif.link) router.push(notif.link);
@@ -233,11 +224,6 @@ export default function AdminLayout({
   const [expandedItems, setExpandedItems] = useState<
     Record<string, boolean | undefined>
   >({});
-
-  const toggleNotifExpand = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const handleClearAllConfirm = () => {
     setClearingNotifs(true);
@@ -398,14 +384,10 @@ export default function AdminLayout({
         {
           name: "Staff management",
           path: "/dashboard/admin/staff",
-          icon: InactiveBuyerIcon,
-          activeIcon: BuyerIcon,
         },
         {
           name: "Roles & permissions",
           path: "/dashboard/admin/staff/roles-permissions",
-          icon: Categories,
-          activeIcon: ActiveCategories,
         },
       ],
     },
@@ -492,6 +474,9 @@ export default function AdminLayout({
           const active = isItemActive(item);
           const isExpanded = expandedItems[item.name];
           const isOpen = isExpanded ?? active;
+          const sidebarIcon = active
+            ? item.activeIcon ?? item.icon
+            : item.icon ?? item.activeIcon;
 
           return (
             <div key={item.name} className="space-y-1 ">
@@ -504,15 +489,17 @@ export default function AdminLayout({
                     }`}
                   >
                     <div className="flex items-center gap-3.5">
-                      <div className="w-6 h-6 flex-shrink-0">
-                        {renderSidebarIcon(
-                          item.icon,
-                          `${item.name} Icon`,
-                          "w-4.5 h-4.5 group-hover:brightness-0 group-hover:invert",
-                        )}
-                      </div>
+                      {item.icon && (
+                        <div className="w-6 h-6 flex-shrink-0">
+                          {renderSidebarIcon(
+                            item.icon,
+                            `${item.name} Icon`,
+                            "w-4.5 h-4.5 group-hover:brightness-0 group-hover:invert",
+                          )}
+                        </div>
+                      )}
 
-                      <span className="">{item.name}</span>
+                      <span>{item.name}</span>
                     </div>
                     <ChevronDown
                       className={`w-3.5 h-3.5 text-black group-hover:text-white transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -597,36 +584,29 @@ export default function AdminLayout({
                         } else if (pathname.startsWith("/dashboard/admin/waitlist")) {
                           isSubActive = pathname.startsWith(sub.path);
                         }
+                        const subIcon = isSubActive
+                          ? sub.activeIcon ?? sub.icon
+                          : sub.icon ?? sub.activeIcon;
 
                         return (
                           <Link
                             key={sub.name}
                             href={sub.path}
-                            className={`group w-full flex items-center text-nowrap gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all ${
-                              sub.icon ? "" : "justify-center"
-                            } ${
+                            className={`group w-full flex items-center text-nowrap gap-2 px-6 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all ${
                               isSubActive
                                 ? "text-white bg-[#6A0DAD] font-MontserratBold shadow-md shadow-[#6A0DAD]/15"
                                 : "text-000000/68 bg-ffffff hover:bg-[#6A0DAD]/12 hover:text-white"
                             }`}
                           >
-                            {isSubActive ? (
+                            {subIcon && (
                               <div className="h-6 w-6 flex-shrink-0 flex justify-center items-center">
-                                {sub.icon &&
-                                  renderSidebarIcon(
-                                    sub.activeIcon || sub.icon,
-                                    sub.name,
-                                    "w-4.5 h-4.5 flex-shrink-0 brightness-0 invert",
-                                  )}
-                              </div>
-                            ) : (
-                              <div className="h-6 w-6 flex-shrink-0 flex justify-center items-center">
-                                {sub.icon &&
-                                  renderSidebarIcon(
-                                    sub.icon,
-                                    sub.name,
-                                    "w-4.5 h-4.5 flex-shrink-0 group-hover:brightness-0 group-hover:invert",
-                                  )}
+                                {renderSidebarIcon(
+                                  subIcon,
+                                  sub.name,
+                                  isSubActive
+                                    ? "w-4.5 h-4.5 flex-shrink-0 brightness-0 invert"
+                                    : "w-4.5 h-4.5 flex-shrink-0 group-hover:brightness-0 group-hover:invert",
+                                )}
                               </div>
                             )}
 
@@ -647,33 +627,20 @@ export default function AdminLayout({
                   }`}
                 >
                   <div className="flex items-center gap-3.5">
-                    {active ? (
-                      <div>
-                        {item.activeIcon
-                          ? renderSidebarIcon(
-                              item.activeIcon,
-                              `${item.name} Active Icon`,
-                              "w-4.5 h-4.5 text-white brightness-0 invert",
-                            )
-                          : renderSidebarIcon(
-                              item.icon,
-                              `${item.name} Icon`,
-                              "w-4.5 h-4.5 text-white brightness-0 invert",
-                            )}
+                    {sidebarIcon && (
+                      <div className="w-6 h-6 flex-shrink-0">
+                        {renderSidebarIcon(
+                          sidebarIcon,
+                          `${item.name} Icon`,
+                          active
+                            ? "w-4.5 h-4.5 text-white brightness-0 invert"
+                            : "w-4.5 h-4.5 text-gray-400 group-hover:brightness-0 group-hover:invert",
+                        )}
                       </div>
-                    ) : (
-                      renderSidebarIcon(
-                        item.icon,
-                        `${item.name} Icon`,
-                        "w-4.5 h-4.5 text-gray-400 group-hover:brightness-0 group-hover:invert",
-                      )
                     )}
 
                     <span>{item.name}</span>
                   </div>
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 ${active ? "text-white" : "text-gray-400 group-hover:text-white"}`}
-                  />
                 </Link>
               )}
             </div>
@@ -753,105 +720,14 @@ export default function AdminLayout({
               )}
             </button>
 
-            <AnimatePresence>
-              {notifOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 top-14 w-96 max-w-[90vw] rounded-lg z-50 shadow-lg bg-white border border-gray-100 overflow-hidden"
-                >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                    <span className="font-MontserratSemiBold text-sm text-000000">Notifications</span>
-                    <button
-                      onClick={() => setNotifOpen(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="max-h-96 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-8">No notifications yet.</p>
-                    ) : (
-                      notifications.map((notif) => {
-                        const isExpanded = !!expandedItems[notif.id];
-                        const isLongMessage = notif.message.length > 100;
-                        return (
-                          <div
-                            key={notif.id}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => handleNotifItemClick(notif)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") handleNotifItemClick(notif);
-                            }}
-                            className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${
-                              notif.is_read ? "" : "bg-purple-50/40"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              {!notif.is_read && (
-                                <span className="mt-1.5 w-2 h-2 rounded-full bg-6a0dad flex-shrink-0" />
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-start justify-between gap-2">
-                                  <p className="font-MontserratSemiBold text-c14 text-000000 truncate">
-                                    {notif.title}
-                                  </p>
-                                  <span className="text-c10 text-gray-400 flex-shrink-0 whitespace-nowrap">
-                                    {formatNotifTime(notif.created_at)}
-                                  </span>
-                                </div>
-                                <p
-                                  className={`text-c12 text-gray-500 whitespace-pre-wrap break-words ${
-                                    isExpanded ? "" : "line-clamp-2"
-                                  }`}
-                                >
-                                  {notif.message}
-                                </p>
-                                <div className="flex items-center gap-3 mt-0.5">
-                                  {isLongMessage && (
-                                    <button
-                                      onClick={(e) => toggleNotifExpand(notif.id, e)}
-                                      className="text-c10 text-gray-400 hover:text-6a0dad hover:underline font-MontserratSemiBold"
-                                    >
-                                      {isExpanded ? "Show less" : "Read more"}
-                                    </button>
-                                  )}
-                                  {notif.link && (
-                                    <span className="text-c10 text-6a0dad font-MontserratSemiBold">
-                                      {notif.requires_action ? "Action needed" : "View"}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-100 text-c12">
-                    <button
-                      onClick={() => markAllAdminNotificationsRead()}
-                      className="text-6a0dad hover:underline font-MontserratSemiBold"
-                    >
-                      Mark all as read
-                    </button>
-                    <button
-                      onClick={() => setClearNotifsModalOpen(true)}
-                      className="text-gray-400 hover:text-red-500 hover:underline"
-                    >
-                      Clear all
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <NotificationTray
+              isOpen={notifOpen}
+              notifications={notifications}
+              onClose={() => setNotifOpen(false)}
+              onNotificationClick={handleNotifItemClick}
+              onMarkAllRead={() => markAllAdminNotificationsRead()}
+              onClearAll={() => setClearNotifsModalOpen(true)}
+            />
           </div>
 
           {/* User Profile Outline Dropdown */}

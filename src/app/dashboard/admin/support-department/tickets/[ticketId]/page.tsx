@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/Button/Button";
 import { Textarea } from "@/components/ui/forms/auth/text-area";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import DrawerWrapper from "@/components/ui/Modals/DrawerWrapper";
 import { Label } from "@/components/ui/forms/Label";
 import CustomSelect from "@/components/ui/CustomSelect";
@@ -504,8 +505,8 @@ export default function SupportTicketDetailPage() {
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-white p-8 text-center text-sm text-[#999]">
-        Loading ticket details...
+      <div className="flex min-h-[240px] items-center justify-center rounded-2xl bg-white">
+        <LoadingSpinner size={36} color="border-ff715b" />
       </div>
     );
   }

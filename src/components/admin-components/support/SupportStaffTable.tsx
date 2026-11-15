@@ -66,7 +66,7 @@ export default function SupportStaffTable({
                 (heading, index) => (
                   <th
                     key={heading || `actions-${index}`}
-                    className="whitespace-nowrap px-3 py-2 text-[10px] font-MontserratMedium"
+                    className="whitespace-nowrap px-3 py-2 font-MontserratNormal text-sm"
                   >
                     {heading}
                   </th>
@@ -74,7 +74,7 @@ export default function SupportStaffTable({
               )}
             </tr>
           </thead>
-          <tbody className="text-[11px] font-MontserratNormal text-[#666]">
+          <tbody className="text-sm font-MontserratNormal leading-[21px] text-[#666]">
             {loading ? (
               <tr>
                 <td colSpan={8} className="p-8 text-center text-[#999]">
@@ -90,8 +90,22 @@ export default function SupportStaffTable({
                   <td className="whitespace-nowrap px-3 py-2">
                     {formatSupportDate(staff.date)}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2">{formatLastActive(staff.lastActive)}</td>
-                  <td className="whitespace-nowrap px-3 py-2">{staff.name || staff.email}</td>
+                  <td className="whitespace-nowrap px-3 py-2">
+                    <span
+                      className="block max-w-[150px] truncate"
+                      title={formatLastActive(staff.lastActive)}
+                    >
+                      {formatLastActive(staff.lastActive)}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span
+                      className="block max-w-[190px] truncate"
+                      title={staff.name || staff.email}
+                    >
+                      {staff.name || staff.email}
+                    </span>
+                  </td>
                   <td className="px-3 py-2">{staff.assignedTickets ?? 0}</td>
                   <td className="px-3 py-2">{staff.inProgressTickets ?? 0}</td>
                   <td className="px-3 py-2">{staff.closedTickets ?? 0}</td>

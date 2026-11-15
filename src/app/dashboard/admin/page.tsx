@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ChevronDown,
   Plane,
@@ -17,60 +17,349 @@ import UsersIcon from "@/assets/icons/admin/usersIcon.svg";
 import Image from "next/image";
 import HelpIcon from "@/assets/icons/admin/helpcenter.svg";
 import pendingFile from "@/assets/icons/admin/pendingFile.svg";
+import { AdminDetails } from "@/helpers/admin/adminHelper";
+import {
+  formatSupportDate,
+  parseSupportTicketResponse,
+} from "@/components/admin-components/support/supportTickets";
+import type { SupportTicket } from "@/components/admin-components/support/supportTickets";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
+
+type SummaryMetric = {
+  count?: number | string;
+  amount?: number | string;
+  formatted_amount?: string;
+};
+
+type OrdersSummary = {
+  totalOrders: SummaryMetric | null;
+  completed: SummaryMetric | null;
+  ongoing: SummaryMetric | null;
+  pending: SummaryMetric | null;
+  returned: SummaryMetric | null;
+  countries: Record<string, unknown>;
+};
+
+type UsersSummary = {
+  activeUsers: number | string | null;
+  buyers: number | string | null;
+  sellers: number | string | null;
+  weeklyUsers: number[] | null;
+};
+
+const userChartDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function parseUserCount(value: unknown): number | string | null {
+  if (typeof value === "number" || typeof value === "string") return value;
+  const record = asRecord(value);
+  if (!record) return null;
+  const count = record.count ?? record.total;
+  return typeof count === "number" || typeof count === "string" ? count : null;
+}
+
+function parseWeeklyUsers(value: unknown): number[] | null {
+  const counts = Array<number>(7).fill(0);
+  const dayIndexes: Record<string, number> = {
+    mon: 0,
+    monday: 0,
+    tue: 1,
+    tues: 1,
+    tuesday: 1,
+    wed: 2,
+    wednesday: 2,
+    thu: 3,
+    thur: 3,
+    thurs: 3,
+    thursday: 3,
+    fri: 4,
+    friday: 4,
+    sat: 5,
+    saturday: 5,
+    sun: 6,
+    sunday: 6,
+  };
+  let hasCounts = false;
+
+  if (Array.isArray(value)) {
+    value.slice(0, 7).forEach((item, index) => {
+      const record = asRecord(item);
+      const count = parseUserCount(
+        record?.count ??
+          record?.users ??
+          record?.user_count ??
+          record?.total ??
+          item,
+      );
+      if (count === null || !Number.isFinite(Number(count))) return;
+      const day = record?.day ?? record?.weekday ?? record?.label;
+      const dayIndex =
+        typeof day === "string"
+          ? dayIndexes[day.trim().toLowerCase()]
+          : index;
+      if (dayIndex === undefined) return;
+      counts[dayIndex] = Number(count);
+      hasCounts = true;
+    });
+  } else {
+    const record = asRecord(value);
+    if (!record) return null;
+    Object.entries(record).forEach(([day, value]) => {
+      const dayIndex = dayIndexes[day.trim().toLowerCase()];
+      const count = parseUserCount(value);
+      if (
+        dayIndex === undefined ||
+        count === null ||
+        !Number.isFinite(Number(count))
+      ) {
+        return;
+      }
+      counts[dayIndex] = Number(count);
+      hasCounts = true;
+    });
+  }
+
+  return hasCounts ? counts : null;
+}
+
+function parseUsersSummary(data: unknown): UsersSummary | null {
+  let payload = data;
+  for (let depth = 0; depth < 2; depth += 1) {
+    const envelope = asRecord(payload);
+    if (!envelope || envelope.data === undefined) break;
+    payload = envelope.data;
+  }
+
+  const response = asRecord(payload);
+  if (!response) return null;
+  const stats = asRecord(response.stats) ?? asRecord(response.summary) ?? response;
+  const getCount = (...keys: string[]) => {
+    for (const key of keys) {
+      const count = parseUserCount(stats[key]);
+      if (count !== null) return count;
+    }
+    return null;
+  };
+  const trendKeys = [
+    "weekly",
+    "weekly_users",
+    "weekly_user_stats",
+    "weekly_breakdown",
+    "users_weekly",
+    "weekly_trend",
+    "weekly_data",
+    "weekly_stats",
+    "daily_users",
+    "daily_stats",
+    "users_by_day",
+    "user_trend",
+  ];
+  const weeklyUsers = parseWeeklyUsers(
+    trendKeys.map((key) => stats[key] ?? response[key]).find((value) => value !== undefined),
+  );
+
+  return {
+    activeUsers: getCount("active_users", "active_users_count", "active_user_count", "total_active_users", "active"),
+    buyers: getCount("buyers", "total_buyers", "buyers_count", "buyer_count"),
+    sellers: getCount("sellers", "total_sellers", "sellers_count", "seller_count"),
+    weeklyUsers,
+  };
+}
+
+function parseSummaryMetric(value: unknown): SummaryMetric | null {
+  if (typeof value === "number" || typeof value === "string") {
+    return { count: value };
+  }
+  const record = asRecord(value);
+  if (!record) return null;
+
+  return {
+    count:
+      typeof record.count === "number" || typeof record.count === "string"
+        ? record.count
+        : undefined,
+    amount:
+      typeof record.amount === "number" || typeof record.amount === "string"
+        ? record.amount
+        : undefined,
+    formatted_amount:
+      typeof record.formatted_amount === "string"
+        ? record.formatted_amount
+        : undefined,
+  };
+}
+
+function parseOrdersSummary(data: unknown): OrdersSummary | null {
+  let payload = data;
+  for (let depth = 0; depth < 2; depth += 1) {
+    const envelope = asRecord(payload);
+    if (!envelope || envelope.data === undefined) break;
+    payload = envelope.data;
+  }
+
+  const response = asRecord(payload);
+  if (!response) return null;
+  const summary = asRecord(response.summary) ?? response;
+  const countries =
+    asRecord(response.country_breakdown) ??
+    asRecord(summary.country_breakdown) ??
+    {};
+
+  return {
+    totalOrders: parseSummaryMetric(summary.total_orders),
+    completed: parseSummaryMetric(summary.completed),
+    ongoing: parseSummaryMetric(summary.ongoing),
+    pending: parseSummaryMetric(summary.pending),
+    returned: parseSummaryMetric(summary.returned),
+    countries,
+  };
+}
+
+function formatSummaryCount(value: unknown): string {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toLocaleString();
+  }
+  if (typeof value === "string" && value.trim()) {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue)
+      ? numericValue.toLocaleString()
+      : value;
+  }
+  return "—";
+}
+
+function formatSummaryAmount(metric: SummaryMetric | null | undefined): string {
+  if (!metric) return "—";
+  if (metric.formatted_amount) return metric.formatted_amount;
+  if (metric.amount !== undefined) {
+    const amount = Number(metric.amount);
+    return Number.isFinite(amount)
+      ? `₦${amount.toLocaleString()}`
+      : String(metric.amount);
+  }
+  return "—";
+}
+
+function getCountryCount(
+  countries: Record<string, unknown> | undefined,
+  countryCode: string,
+): string {
+  if (!countries) return "—";
+  const value = countries[countryCode];
+  const country = asRecord(value);
+  return formatSummaryCount(country?.count ?? value);
+}
+
 export default function AdminOverviewPage() {
   const [timeFilter, setTimeFilter] = useState("Today");
+  const [ordersSummary, setOrdersSummary] = useState<OrdersSummary | null>(null);
+  const [usersSummary, setUsersSummary] = useState<UsersSummary | null>(null);
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
+  const [totalSupportTickets, setTotalSupportTickets] = useState(0);
+  const [pendingSupportTicketCount, setPendingSupportTicketCount] = useState(0);
+  const token = useSelector((state: RootState) => state.token?.token);
+  const kycDetails = useSelector(
+    (state: RootState) => state.adminKycDetails?.adminKycDetails ?? [],
+  );
+  const totalVerifications = useSelector(
+    (state: RootState) => state.adminKycDetails?.totalCount ?? 0,
+  );
+  const {
+    fetchOrdersSummary,
+    fetchAdminUserStats,
+    fetchAdminSellersKycList,
+    fetchAdminSupportTickets,
+  } = AdminDetails();
 
-  // This overview currently uses presentation fixtures; these values are not fetched from the admin reporting APIs.
-  // Mock data for tickets
-  const mockTickets = [
-    {
-      id: "TCK-2025-00423",
-      subject: "Order is still hanging",
-      priority: "High",
-      status: "Open",
-      date: "18/9/2016",
-    },
-    {
-      id: "TCK-2025-00423",
-      subject: "Order is still hanging",
-      priority: "High",
-      status: "Open",
-      date: "18/9/2016",
-    },
-    {
-      id: "TCK-2025-00423",
-      subject: "Order is still hanging",
-      priority: "High",
-      status: "Open",
-      date: "18/9/2016",
-    },
-    {
-      id: "TCK-2025-00423",
-      subject: "Order is still hanging",
-      priority: "High",
-      status: "Open",
-      date: "18/9/2016",
-    },
-  ];
+  const getRangeParam = (range: string) => {
+    switch (range) {
+      case "This Week":
+        return "this_week";
+      case "This Year":
+        return "this_year";
+      case "This Month":
+      default:
+        return "this_month";
+    }
+  };
 
-  // Mock data for Pending KYBs
-  const mockKYBs = [
-    { name: "Chisco", type: "Individual", country: "Nigeria" },
-    { name: "Irem ipsumhege", type: "Cooperate", country: "Nigeria" },
-    { name: "Irem ipsumhege", type: "Cooperate", country: "Ghana" },
-    { name: "Irem ipsumhegeujiegw", type: "Cooperate", country: "Uganda" },
-  ];
+  const loadOrdersSummary = (range: string) => {
+    setOrdersSummary(null);
+    fetchOrdersSummary(
+      range,
+      (data: unknown) => {
+        console.log("Admin overview orders summary response:", data);
+        const summary = parseOrdersSummary(data);
+        if (!summary) {
+          console.error("Admin overview received an unreadable orders summary.");
+          return;
+        }
+        setOrdersSummary(summary);
+      },
+      (error: unknown) => {
+        console.error("Failed to fetch admin overview orders summary:", error);
+      },
+    );
+  };
 
-  // CSS bar heights for User Trend Chart
-  const chartBars = [
-    { day: "Mon", height: "70%" },
-    { day: "Tue", height: "50%" },
-    { day: "Wed", height: "85%" },
-    { day: "Thu", height: "35%" },
-    { day: "Fri", height: "55%" },
-    { day: "Sat", height: "45%" },
-    { day: "Sun", height: "90%" },
-  ];
+  useEffect(() => {
+    if (!token) return;
+    loadOrdersSummary("this_month");
+    fetchAdminSellersKycList(1);
+    fetchAdminSupportTickets(
+      1,
+      (data: unknown) => {
+        const response = parseSupportTicketResponse(data);
+        if (!response) {
+          console.error("Admin overview received an unreadable support tickets response.");
+          return;
+        }
+        setSupportTickets(response.tickets);
+        setTotalSupportTickets(response.count);
+        setPendingSupportTicketCount(
+          response.tickets.filter(
+            (ticket) => ticket.status.toLowerCase() === "pending",
+          ).length,
+        );
+      },
+      (error: unknown) => {
+        console.error("Failed to fetch admin overview support tickets:", error);
+      },
+    );
+    fetchAdminUserStats(
+      (data: unknown) => {
+        const summary = parseUsersSummary(data);
+        if (!summary) {
+          console.error("Admin overview received unreadable user stats.");
+          return;
+        }
+        setUsersSummary(summary);
+      },
+      (error: unknown) => {
+        console.error("Failed to fetch admin overview user stats:", error);
+      },
+    );
+    // AdminDetails returns fresh helper functions per render; requests depend on authentication.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  const pendingKYBs = kycDetails
+    .filter((kyb) => kyb.status.toUpperCase() === "PENDING")
+    .slice(-4);
+  const pendingKYBCount = kycDetails.filter(
+    (kyb) => kyb.status.toUpperCase() === "PENDING",
+  ).length;
+
+  const chartBars = userChartDays.map((day, index) => ({
+    day,
+    height: `${Math.min(((usersSummary?.weeklyUsers?.[index] ?? 0) / 500) * 100, 100)}%`,
+  }));
 
   return (
     <div className="space-y-6">
@@ -113,6 +402,7 @@ export default function AdminOverviewPage() {
             <FilterDropdown
               options={["This Week", "This Month", "This Year"]}
               defaultValue="This Month"
+              onChange={(range) => loadOrdersSummary(getRangeParam(range))}
               className="border border-ff715b !rounded-lg !h-fit !py-1.5 !px-3 !gap-1.5 !shadow-none"
             />
           </div>
@@ -127,16 +417,16 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="">
                   <p className="text-xl md:text-c28 font-MontserratSemiBold ">
-                    1,500,000
+                    {formatSummaryCount(ordersSummary?.totalOrders?.count)}
                   </p>
                   <p className="text-c12 text-000000/44 font-MontserratMedium">
-                    N55M
+                    {formatSummaryAmount(ordersSummary?.totalOrders)}
                   </p>
                 </div>{" "}
               </div>
 
               <div className="col-span-1 md:col-span-2 flex flex-wrap gap-x-4 gap-y-2">
-                {["NG", "US", "GH", "CN"].map((c, i) => (
+                {["NG", "US", "GH", "CN"].map((c) => (
                   <div
                     key={c}
                     className="text-left flex  flex-col items-start gap-2"
@@ -145,7 +435,7 @@ export default function AdminOverviewPage() {
                       {c}{" "}
                     </span>
                     <span className="text-c12 text-000000/44 font-MontserratMedium">
-                      {i === 0 ? "150,000" : "500"}
+                      {getCountryCount(ordersSummary?.countries, c)}
                     </span>
                   </div>
                 ))}
@@ -158,10 +448,10 @@ export default function AdminOverviewPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-c18 font-MontserratSemiBold">
-                      1,500,000
+                      {formatSummaryCount(ordersSummary?.completed?.count)}
                     </p>
                     <p className="text-c12 text-000000/44 font-MontserratMedium">
-                      N54,000
+                      {formatSummaryAmount(ordersSummary?.completed)}
                     </p>
                     <span className="text-[10px] font-MontserratBold bg-[#28A745]/12 text-[#4DBEA7]  px-2 py-0.5 rounded-c4 leading-[16px] h-5">
                       Completed
@@ -170,9 +460,11 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-c18 font-MontserratSemiBold">1000</p>
+                    <p className="text-c18 font-MontserratSemiBold">
+                      {formatSummaryCount(ordersSummary?.ongoing?.count)}
+                    </p>
                     <p className="text-c12 text-000000/44 font-MontserratMedium">
-                      N55,000
+                      {formatSummaryAmount(ordersSummary?.ongoing)}
                     </p>
                     <span className="text-[10px] font-MontserratBold bg-[#FFAC06]/12 text-[#FFAC06]  px-2 py-0.5 rounded-c4 leading-[16px] h-5">
                       Ongoing
@@ -183,9 +475,11 @@ export default function AdminOverviewPage() {
               <div className=" flex items-center justify-between gap-6 ">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-c18 font-MontserratSemiBold">750</p>
+                    <p className="text-c18 font-MontserratSemiBold">
+                      {formatSummaryCount(ordersSummary?.pending?.count)}
+                    </p>
                     <p className="text-c12 text-000000/44 font-MontserratMedium">
-                      N55,000
+                      {formatSummaryAmount(ordersSummary?.pending)}
                     </p>
                     <span className="text-[10px] font-MontserratBold bg-[#0070E9]/12 text-[#0070E9]  px-2 py-0.5 rounded-c4 leading-[16px] h-5">
                       Pending
@@ -194,9 +488,11 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-c18 font-MontserratSemiBold">350,000</p>
+                    <p className="text-c18 font-MontserratSemiBold">
+                      {formatSummaryCount(ordersSummary?.returned?.count)}
+                    </p>
                     <p className="text-c12 text-000000/44 font-MontserratMedium">
-                      N55,000
+                      {formatSummaryAmount(ordersSummary?.returned)}
                     </p>
                     <span className="text-[10px] font-MontserratBold bg-[#CC0000]/12 text-[#CA0202]  px-2 py-0.5 rounded-c4 leading-[16px] h-5">
                       Returned
@@ -240,7 +536,7 @@ export default function AdminOverviewPage() {
                 </div>
                 <div>
                   <p className="text-xl md:text-c28 font-MontserratSemiBold ">
-                    1,500,000
+                    {formatSummaryCount(usersSummary?.activeUsers)}
                   </p>
                   <p className="text-[12px] text-000000/44 font-MontserratMedium">
                     Active
@@ -250,7 +546,7 @@ export default function AdminOverviewPage() {
               <div className=" flex  gap-4">
                 <div className=" justify-start">
                   <p className="text-base md:text-lg font-MontserratSemiBold text-000000">
-                    500
+                    {formatSummaryCount(usersSummary?.buyers)}
                   </p>
                   <span className="text-c10 text-[#947FFF] font-MontserratMedium py-0.5 px-2 bg-947fff/10 rounded-c4 mt-1">
                     Buyers
@@ -258,7 +554,7 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="">
                   <p className="text-base md:text-lg font-MontserratSemiBold text-000000">
-                    250,000
+                    {formatSummaryCount(usersSummary?.sellers)}
                   </p>
                   <span className="text-c10 text-[#947FFF] font-MontserratMedium py-0.5 px-2 bg-947fff/10 rounded-c4 mt-1">
                     Sellers
@@ -326,10 +622,12 @@ export default function AdminOverviewPage() {
               <div className="w-14 h-14 rounded-full bg-000000/4 flex items-center justify-center text-gray-400">
                 <Image src={HelpIcon} alt="Help" width={26} height={28} />
               </div>
-              <p className="text-c28 font-MontserratSemiBold">1500</p>
+              <p className="text-c28 font-MontserratSemiBold">
+                {totalSupportTickets}
+              </p>
             </div>
             <span className="text-sm font-MontserratNormal text-[#FFAC06] bg-[#FFAC06]/12 px-3 py-2">
-              Total pending: 320
+              Total pending: {pendingSupportTicketCount}
             </span>
           </div>
 
@@ -346,15 +644,22 @@ export default function AdminOverviewPage() {
                 </tr>
               </thead>
               <tbody className="space-x-4 text-sm font-MontserratMedium">
-                {mockTickets.map((ticket, i) => (
-                  <tr key={i} className=" transition-colors">
-                    <td className="pb-6 ">{ticket.id}</td>
-                    <td className="pb-6 ">{ticket.subject}</td>
+                {supportTickets.slice(0, 4).map((ticket) => (
+                  <tr key={ticket.id} className=" transition-colors">
+                    <td className="pb-6 ">{ticket.reference}</td>
+                    <td
+                      className="max-w-[140px] truncate pb-6"
+                      title={ticket.subject}
+                    >
+                      {ticket.subject}
+                    </td>
                     <td className="pb-6">
                       <span className="pb-6">{ticket.priority}</span>
                     </td>
                     <td className="pb-6">{ticket.status}</td>
-                    <td className="pb-6">{ticket.date}</td>
+                    <td className="pb-6">
+                      {formatSupportDate(ticket.createdAt)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -388,10 +693,12 @@ export default function AdminOverviewPage() {
                   height={26}
                 />
               </div>
-              <p className="text-c28 font-MontserratSemiBold">250</p>
+              <p className="text-c28 font-MontserratSemiBold">
+                {totalVerifications}
+              </p>
             </div>
             <span className="text-sm font-MontserratNormal text-[#FFAC06] bg-[#FFAC06]/12 px-3 py-2">
-              Total pending: 150
+              Total pending: {pendingKYBCount}
             </span>
           </div>
 
@@ -406,11 +713,11 @@ export default function AdminOverviewPage() {
                 </tr>
               </thead>
               <tbody className="space-x-4 text-sm font-MontserratMedium">
-                {mockKYBs.map((kyb, i) => (
-                  <tr key={i} className="pb-6">
-                    <td className="pb-6">{kyb.name}</td>
-                    <td className="pb-6">{kyb.type}</td>
-                    <td className="pb-6 ">{kyb.country}</td>
+                {pendingKYBs.map((kyb) => (
+                  <tr key={kyb.user_id} className="pb-6">
+                    <td className="pb-6">{kyb.business_name ?? ""}</td>
+                    <td className="pb-6">{kyb.business_type}</td>
+                    <td className="pb-6 ">{kyb.business_location ?? ""}</td>
                   </tr>
                 ))}
               </tbody>
