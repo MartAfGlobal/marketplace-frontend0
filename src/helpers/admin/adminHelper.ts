@@ -3484,7 +3484,7 @@ export const AdminDetails = (id?: string) => {
 
     sendHttpRequest({
       requestConfig: {
-        url: "/support/agent/me/availability/",
+        url: "/support/agents/me/availability/",
         method: "GET",
         token,
         isAuth: true,
@@ -3514,7 +3514,7 @@ export const AdminDetails = (id?: string) => {
 
     sendHttpRequest({
       requestConfig: {
-        url: "/support/agent/me/availability/",
+        url: "/support/agents/me/availability/",
         method: "POST",
         token,
         isAuth: true,

@@ -520,14 +520,14 @@ export default function SupportTicketDetailView({
                   disabled={isSubmittingComment}
                   className="h-22.5 min-w-0 flex-1 "
                 />
-                {/* <button
+                <button
                   type="submit"
                   aria-label="Submit comment"
                   disabled={!comment.trim() || isSubmittingComment}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#7544bf] transition-colors hover:bg-[#f0edff] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Send className="h-4 w-4" aria-hidden="true" />
-                </button> */}
+                </button>
               </form>
             )}
             {activities.length > 0 ? (

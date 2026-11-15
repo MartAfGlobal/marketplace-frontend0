@@ -14,6 +14,8 @@ import SupportTabs, {
   type SupportTabKey,
 } from "@/components/admin-components/support/SupportTabs";
 import SupportTicketTable from "@/components/admin-components/support/SupportTicketTable";
+import ActiveSupportAgent from "@/assets/admin/support-available.png";
+import InactiveSupportAgent from "@/assets/admin/support-inactive.png";
 import {
   formatSupportDate,
   getSupportStatusLabel,
@@ -25,9 +27,7 @@ import {
 import { Button } from "@/components/ui/Button/Button";
 import Image from "next/image";
 import {
-  CheckCircle2,
   ChevronDown,
-  CircleOff,
   Headphones,
 } from "lucide-react";
 import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
@@ -332,9 +332,26 @@ export default function SupportDepartmentPage() {
                 onClick={() =>
                   setIsAvailabilityMenuOpen((isOpen) => !isOpen)
                 }
-                className="flex h-10 items-center gap-2 rounded-full border border-[#8cbba9] px-3 text-xs text-[#578b77] transition-colors hover:bg-[#f5faf8]"
+                className={`flex h-10 items-center gap-2 rounded-[64px] border px-4 py-3 text-sm font-MontserratNormal transition-colors ${
+                  availability === "Inactive"
+                    ? "border-[#e96b61] text-[#e96b61] hover:bg-[#e96b61]/5"
+                    : "border-[#2D7565] text-[#2D7565] hover:bg-[#f5faf8]"
+                }`}
               >
-                <Headphones className="h-3.5 w-3.5" />
+                {availability === "Available" ? (
+                  <Headphones
+                    className="h-3.5 w-3.5 text-[#2D7565]"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Image
+                    src={InactiveSupportAgent}
+                    alt=""
+                    width={14}
+                    height={16}
+                    className="shrink-0"
+                  />
+                )}
                 {availability}
                 <ChevronDown className="h-3.5 w-3.5" />
               </button>
@@ -342,7 +359,7 @@ export default function SupportDepartmentPage() {
                 <div
                   role="listbox"
                   aria-label="Availability"
-                  className="absolute right-0 top-full z-20 mt-2 min-w-32 rounded-md border border-[#ded7ff] bg-white p-1 shadow-lg"
+                  className="absolute right-0 top-full z-20 mt-2 min-w-32 h-[96px] w-[184px] rounded-c8 border border-000000/4 bg-white py-1 font-MontserratNormal shadow-lg"
                 >
                   {(["Available", "Inactive"] as const).map((option) => (
                     <button
@@ -352,17 +369,23 @@ export default function SupportDepartmentPage() {
                       disabled={availabilitySaving}
                       aria-selected={availability === option}
                       onClick={() => handleAvailabilityChange(option)}
-                      className="flex w-full items-center gap-2 rounded px-2 py-2 text-left text-xs hover:bg-gray-50"
+                      className="flex w-full items-center gap-2 rounded py-3 px-6 text-left text-xs hover:bg-gray-50"
                     >
-                      {option === "Available" ? (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-[#2ea37d]" />
-                      ) : (
-                        <CircleOff className="h-3.5 w-3.5 text-[#e96b61]" />
-                      )}
+                      <Image
+                        src={
+                          option === "Available"
+                            ? ActiveSupportAgent
+                            : InactiveSupportAgent
+                        }
+                        alt=""
+                        width={14}
+                        height={16}
+                        className="shrink-0"
+                      />
                       <span
                         className={
                           option === "Available"
-                            ? "text-[#2ea37d]"
+                            ? "text-[#00BE5C]"
                             : "text-[#e96b61]"
                         }
                       >
@@ -377,6 +400,7 @@ export default function SupportDepartmentPage() {
           {canCreateTicket && (
             <Button
               type="button"
+              disabled={isSupportAgent && availability === "Inactive"}
               onClick={() => setIsCreateTicketOpen(true)}
               className="max-w-[167.15px] gap-3 flex items-center justify-center"
             >
