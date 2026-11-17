@@ -1,14 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { use } from "react";
 
 import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import { OrderDetails, OrderItem, TrackOrders } from "@/types/global";
-import { Button } from "@/components/ui/Button/Button";
 import Link from "next/link";
 import ProductCard from "@/components/ui/cards/ProductCard";
 import Copy from "@/assets/icons/Copy.png";
@@ -18,7 +17,6 @@ import Cookies from "js-cookie";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useHttp } from "@/hooks/use-http";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import OrderEditAddressModal from "@/components/ui/Modals/orders/edit-address-order-modal";
 
 import { useFetchOrders } from "@/helpers/fetchOrders";
@@ -34,6 +32,15 @@ import {
   getBuyerOrderStatusLabel,
 } from "@/utils/buyerOrderDisplay";
 import { getOrderReviewState } from "@/utils/buyerOrderReview";
+import OrdersListView from "./shared/OrdersListView";
+import {
+  AllOrderDesktopActions,
+  AllOrderMobileActions,
+} from "./all-orders-actions";
+import OrderLineItemSummary from "./shared/OrderLineItemSummary";
+import OrderItemsGridSummary, {
+  OrderPreviewItem,
+} from "./shared/OrderItemsGridSummary";
 
 interface OrdersProps {
   searchTerm: string;
@@ -270,51 +277,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
 
   return (
     <div className="space-y-c24   w-full px-6 ">
-      <div className="w-full ">
-        <div className="w-full space-y-c24 mt-7 md:mt-c32 ">
-          <AnimatePresence mode="wait">
-            {orders.length === 0 ? (
-              <motion.div
-                key="empty-orders"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="w-full flex flex-col items-center gap-c32 justify-center h-75.5"
-              >
-                <p className="text-center text-000000/60 font-MontserratMedium text-c18">
-                  You haven’t made any orders yet
-                </p>
-                <Button className="w-51">Start shopping</Button>
-              </motion.div>
-            ) : filteredOrders.length === 0 ? (
-              <motion.div
-                key="no-search-results"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="w-full flex flex-col items-center justify-center h-60"
-              >
-                <p className="text-c16 font-MontserratMedium text-000000/60">
-                  No matching orders found
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="orders-list"
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.1 },
-                  },
-                }}
-                className="space-y-c24"
-              >
-                {filteredOrders.map((item: OrderItem) => {
+      <OrdersListView
+        hasOrders={orders.length > 0}
+        hasResults={filteredOrders.length > 0}
+        emptyMessage="You haven’t made any orders yet"
+        noResultsMessage="No matching orders found"
+        contentClassName="w-full space-y-c24 mt-7 md:mt-c32"
+      >
+        {filteredOrders.map((item: OrderItem) => {
                   const orderItems =
                     item.order_items || (item as any).items || [];
                   const reviewState = getOrderReviewState(item);
@@ -355,113 +325,31 @@ export default function Orders({ searchTerm }: OrdersProps) {
                       ? `${(item as any).sellers_count} Store${(item as any).sellers_count > 1 ? "s" : ""}`
                       : "MartAf Order");
 
-                  const MobileActions = (
-                    <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
-                      {(item.buyer_status?.toLowerCase() === "shipped" ||
-                        item.buyer_status?.toLowerCase() ===
-                          "shipped_to_buyer" ||
-                        item.buyer_status?.toLowerCase() ===
-                          "out_for_delivery") && (
-                        <>
-                          <Button onClick={() => handleClick(item.id)}>
-                            Confirm delivery
-                          </Button>
-                          <Button variant="secondary" onClick={() => handleTrackOrder(item.id)}>
-                            Track order
-                          </Button>
-                        </>
-                      )}
-                      {(item.buyer_status === "Completed" ||
-                        item.buyer_status === "delivered" ||
-                        item.buyer_status === "Cancelled") && (
-                        <>
-                          <div></div>
-                          <Button
-                            className=""
-                            onClick={() => handleAddOrderItemToCart(item)}
-                          >
-                            Add to cart
-                          </Button>
-                        </>
-                      )}
-                      {item.buyer_status === "Delivered"  &&  (
-                        <>
-                          <Button
-                            onClick={() => handleAddOrderItemToCart(item)}
-                          >
-                            Add to cart
-                          </Button>
-                          {reviewState.hasReviewableItems && (
-                            <Button
-                              disabled={!reviewState.canReview}
-                              variant="secondary"
-                              onClick={() => handleReview(item.id)}
-                            >
-                              {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
-                            </Button>
-                          )}
-                        </>
-                      )}
-                      {item.buyer_status === "RECEIVED_AT_HUB" && (
-                        <>
-                          <div className="w-full"></div>
-                          <Button
-                            variant="secondary"
-                            onClick={() => handleTrackOrder(item.id)}
-                          >
-                            Track order
-                          </Button>
-                        </>
-                      )}
-                      {item.buyer_status === "PENDING" && item.can_cancel && (
-                        <>
-                          <Button onClick={() => handleEditAddress(item.id)}>
-                            Edit address
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => {
-                              setSelectedOrderId(item.id);
-                              setOpenCancelModal(true);
-                            }}
-                          >
-                            Cancel order
-                          </Button>
-                        </>
-                      )}
-                      {item.buyer_status === "Processing" &&
-                        item.can_cancel && (
-                          <Button
-                            onClick={() => {
-                              setSelectedOrderId(item.id);
-                              setOpenCancelModal(true);
-                            }}
-                            variant="primary"
-                          >
-                            Cancel order
-                          </Button>
-                        )}
-                      {item.buyer_status === "AWAITING_PAYMENT" && (
-                        <>
-                          <Button
-                            disabled={repaying}
-                            onClick={() => handleRepay(item.id, totalPrice)}
-                          >
-                            {selectedId === item.id && repaying ? (
-                              <LoadingSpinner />
-                            ) : (
-                              "Confirm & pay"
-                            )}
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => handleEditAddress(item.id)}
-                          >
-                            Edit address
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                  const actionProps = {
+                    item,
+                    totalPrice,
+                    repaying,
+                    selectedId,
+                    reviewState,
+                    onConfirmDelivery: () => handleClick(item.id),
+                    onTrackOrder: () => handleTrackOrder(item.id),
+                    onAddToCart: () => handleAddOrderItemToCart(item),
+                    onReview: () => handleReview(item.id),
+                    onEditAddress: () => handleEditAddress(item.id),
+                    onCancel: () => {
+                      setSelectedOrderId(item.id);
+                      setOpenCancelModal(true);
+                    },
+                    onRepay: (expectedAmount: number) =>
+                      handleRepay(item.id, expectedAmount),
+                  };
+                  const previewItems: OrderPreviewItem[] = orderItems.map(
+                    (prod: any) => ({
+                      id: prod.id,
+                      productName: prod.product_name,
+                      productImage: prod.product_image || "/placeholder.png",
+                      quantity: prod.fulfilled_quantity ?? prod.quantity,
+                    }),
                   );
 
                   return (
@@ -558,7 +446,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                 </div>
                               </div>
                             </Link>
-                            {MobileActions}
+                            <AllOrderMobileActions {...actionProps} />
                           </>
                         ) : isSingleItemOrder ? (
                           <>
@@ -567,32 +455,26 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
                               {orderItems.map((prod: any) => (
-                                <div
+                                <OrderLineItemSummary
                                   key={prod.id}
-                                  className="flex gap-4 items-start  w-full"
-                                >
-                                  <Image
-                                    src={
-                                      prod?.product_image || "/placeholder.png"
-                                    }
-                                    alt={prod.product_name || "Product Image"}
-                                    width={96}
-                                    height={96}
-                                    className="h-24 w-24 object-cover rounded-lg"
-                                  />
-                                  <div className="w-full">
-                                    <p className="font-MontserratSemiBold text-base mb-1">
-                                      {prod.product_name}
-                                    </p>
-                                    <p className=" text-c12 font-MontserratMedium mb-3">
-                                      {item.manufacturer || item.seller_name}
-                                    </p>
-                                    <p className="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center ">
+                                  image={
+                                    prod?.product_image || "/placeholder.png"
+                                  }
+                                  imageAlt={
+                                    prod.product_name || "Product Image"
+                                  }
+                                  productName={prod.product_name}
+                                  sellerName={
+                                    item.manufacturer || item.seller_name
+                                  }
+                                  details={
+                                    <>
                                       {prod.fulfilled_quantity ?? prod.quantity}
-                                      Pc,
-                                      {prod.variation_name || prod.product_name}
-                                    </p>
-                                    <p className="font-MontserratSemiBold text-c16 pt-3">
+                                      Pc, {prod.variation_name || prod.product_name}
+                                    </>
+                                  }
+                                  price={
+                                    <>
                                       ₦
                                       {(
                                         (prod.price_at_purchase || 0) *
@@ -600,12 +482,14 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                           prod.quantity ??
                                           1)
                                       ).toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
+                                    </>
+                                  }
+                                  imageClassName="h-24 w-24 object-cover rounded-lg"
+                                  detailsClassName="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center "
+                                />
                               ))}
                             </Link>
-                            {MobileActions}
+                            <AllOrderMobileActions {...actionProps} />
                           </>
                         ) : (
                           <>
@@ -613,265 +497,24 @@ export default function Orders({ searchTerm }: OrdersProps) {
                               href={`/dashboard/buyer/orders/${item.id}?mode=${buyerStatus}`}
                               className="flex gap-4 w-full"
                             >
-                              <div className="hidden sm:flex gap-4">
-                                <div
-                                  className={`grid gap-4 ${
-                                    orderItems.length === 1
-                                      ? "grid-cols-1"
-                                      : orderItems.length === 2
-                                        ? "grid-cols-2"
-                                        : "grid-cols-3"
-                                  }`}
-                                >
-                                  {orderItems.slice(0, 3).map((prod: any) => (
-                                    <div
-                                      key={prod.id}
-                                      className="flex flex-col items-center"
-                                    >
-                                      <div className="w-24 h-24 relative">
-                                        <Image
-                                          src={
-                                            prod.product_image ||
-                                            "/placeholder.png"
-                                          }
-                                          alt={
-                                            prod.product_name || "Product Image"
-                                          }
-                                          width={96}
-                                          height={96}
-                                          className="w-24 h-24 object-cover rounded-lg"
-                                        />
-                                        <p className="absolute bottom-2 text-c12 font-MontserratNormal flex items-center justify-center left-4 translate-x-1/2 text-center bg-000000 rounded-c12 text-ffffff  w-7.5 h-6">
-                                          {`x${prod.fulfilled_quantity ?? prod.quantity}`}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                                <div>
-                                  <p className="font-MontserratSemiBold text-base mb-2 flex flex-wrap gap-1">
-                                    {orderItems
-                                      .slice(0, 3)
-                                      .map((prod: any, index: number) => (
-                                        <span
-                                          key={prod.id}
-                                          className="flex items-center"
-                                        >
-                                          <span
-                                            className="max-w-[110px] truncate inline-block align-middle"
-                                            title={prod.product_name}
-                                          >
-                                            {prod.product_name}
-                                          </span>
-                                          {index <
-                                            Math.min(orderItems.length, 3) -
-                                              1 && <span>,&nbsp;</span>}
-                                        </span>
-                                      ))}
-                                    {orderItems.length > 3 && <span>...</span>}
-                                  </p>
-                                  <p className="text-c12 font-MontserratMedium mb-3">
-                                    {item.manufacturer || item.seller_name}
-                                  </p>
-                                  <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {itemsCount}{" "}
-                                    <span className="pl-0.5">Items</span>
-                                  </p>
-                                  <p className="font-MontserratSemiBold text-c16 pt-3">
-                                    ₦{totalPrice.toLocaleString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex sm:hidden w-full items-start gap-4">
-                                {orderItems[0] && (
-                                  <Image
-                                    src={
-                                      orderItems[0].product_image ||
-                                      "/placeholder.png"
-                                    }
-                                    alt={
-                                      orderItems[0].product_name ||
-                                      "Product Image"
-                                    }
-                                    width={96}
-                                    height={96}
-                                    className="w-24 h-24 object-cover rounded-lg"
-                                  />
-                                )}
-                                <div className="w-full ">
-                                  <p className="font-MontserratSemiBold text-base mb-1 truncate max-w-[150px]">
-                                    {orderItems[0]?.product_name}
-                                  </p>
-                                  <p className="text-c12 font-MontserratMedium mb-2">
-                                    {item.manufacturer || item.seller_name}
-                                  </p>
-                                  <p className="rounded-c12 bg-000000/10 h-c32 py-2 w-fit min-w-24.5 px-4 text-center font-MontserratSemiBold text-c12 flex items-center justify-center text-000000/60">
-                                    {itemsCount}{" "}
-                                    <span className="pl-0.5">Items</span>
-                                  </p>
-                                  <p className="font-MontserratSemiBold text-c16 pt-2">
-                                    ₦{totalPrice.toLocaleString()}
-                                  </p>
-                                </div>
-                              </div>
+                              <OrderItemsGridSummary
+                                products={previewItems}
+                                sellerName={item.manufacturer || item.seller_name}
+                                itemCount={itemsCount}
+                                totalPrice={totalPrice}
+                                desktopImageClassName="w-24 h-24 object-cover rounded-lg"
+                                mobileImageClassName="w-24 h-24 object-cover rounded-lg"
+                              />
                             </Link>
-                            {MobileActions}
+                            <AllOrderMobileActions {...actionProps} />
                           </>
                         )}
-                        <div className="hidden w-full gap-4 pl-4 md:flex md:flex-col md:max-w-70 space-y-4">
-                          {(item.buyer_status?.toLowerCase() === "shipped" ||
-                            item.buyer_status?.toLowerCase() ===
-                              "shipped_to_buyer" ||
-                            item.buyer_status?.toLowerCase() ===
-                              "out_for_delivery") && (
-                            <>
-                              <Button
-                                onClick={() => handleClick(item.id)}
-                              >
-                                Confirm delivery
-                              </Button>
-                              <Button
-                                variant="secondary"
-                                key={item.id}
-                                onClick={() => handleTrackOrder(item.id)}
-                              >
-                                Track order
-                              </Button>
-                            </>
-                          )}
-
-                          {item.buyer_status === "Delivered" && (
-                            <>
-                              <Button
-                                className=""
-                                onClick={() => handleAddOrderItemToCart(item)}
-                              >
-                                Add to cart
-                              </Button>
-                              {reviewState.hasReviewableItems && (
-                                <Button
-                                  disabled={!reviewState.canReview}
-                                  onClick={() => handleReview(item.id)}
-                                  variant="secondary"
-                                  className=""
-                                >
-                                  {reviewState.allReviewed ? "Reviewed" : "Leave a review"}
-                                </Button>
-                              )}
-                            </>
-                          )}
-
-                          {(item.buyer_status === "Completed" ||
-                            item.buyer_status === "delivered" ||
-                            item.buyer_status === "Cancelled") && (
-                            <>
-                              <div></div>
-                              <Button
-                                className=""
-                                onClick={() => handleAddOrderItemToCart(item)}
-                              >
-                                Add to cart
-                              </Button>
-                            </>
-                          )}
-                          {item.buyer_status === "RECEIVED_AT_HUB" && (
-                            <>
-                              <Button
-                                variant="secondary"
-                                key={item.id}
-                                onClick={() => handleTrackOrder(item.id)}
-                              >
-                                Track order
-                              </Button>
-                            </>
-                          )}
-
-                          {item.buyer_status === "Processing" &&
-                            item.can_cancel && (
-                              <>
-                                {/* <Button
-                                onClick={() => handleEditAddress(item.id)}
-                              >
-                                Edit address
-                              </Button> */}
-                                <Button
-                                  variant="secondary"
-                                  onClick={() => {
-                                    setSelectedOrderId(item.id);
-                                    setOpenCancelModal(true);
-                                  }}
-                                >
-                                  Cancel order
-                                </Button>
-                              </>
-                            )}
-
-                          {item.buyer_status === "Processing" &&
-                            item.can_cancel && (
-                              <Button
-                                onClick={() => {
-                                  setSelectedOrderId(item.id);
-                                  setOpenCancelModal(true);
-                                }}
-                                variant="primary"
-                              >
-                                Cancel order
-                              </Button>
-                            )}
-
-                          {item.buyer_status === "AWAITING_PAYMENT" && (
-                            <>
-                              <Button
-                                variant="secondary"
-                                onClick={() => handleEditAddress(item.id)}
-                              >
-                                Edit address
-                              </Button>
-                              <Button
-                                disabled={repaying}
-                                onClick={() => {
-                                  handleRepay(item.id, item.total_price);
-                                }}
-                              >
-                                {repaying ? (
-                                  <LoadingSpinner />
-                                ) : (
-                                  "Confirm & pay"
-                                )}
-                              </Button>
-                            </>
-                          )}
-
-                          {/* Default fallback (optional)
-                          {![
-                            "Shipped",
-                            "To Ship",
-                            "Delivered",
-                            "Awaiting Payment",
-                          ].includes(item.buyer_status) && (
-                            <Button variant="secondary" className="">
-                              View details
-                            </Button>
-                          )} */}
-
-                          <div className="w-full hidden md:flex justify-center">
-                            <Link
-                              href={`/dashboard/buyer/orders/${item.id}?mode=${buyerStatus}`}
-                              className="text-c14 font-MontserratSemiBold text-ff715b"
-                            >
-                              Order details
-                            </Link>
-                          </div>
-                        </div>
+                        <AllOrderDesktopActions {...actionProps} />
                       </div>
                     </motion.div>
                   );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+        })}
+      </OrdersListView>
       <ConfirmModal
         isOpen={open}
         onClose={() => setOpen(false)}

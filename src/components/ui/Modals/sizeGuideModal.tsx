@@ -118,7 +118,7 @@ export default function SizeGuideModal({
   );
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-transparent overscroll-contain p-3">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-transparent overscroll-contain p-3">
       <div
         role="dialog"
         aria-modal="true"

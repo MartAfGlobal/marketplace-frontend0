@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -14,6 +14,8 @@ import ConfirmModal from "@/components/ui/Modals/comfirmation-modal";
 import { useSelector } from "react-redux";
 import { getBuyerOrderTrackingPath } from "@/utils/buyerOrderTracking";
 import { getBuyerOrderDateLabel } from "@/utils/buyerOrderDisplay";
+import OrdersListView from "./shared/OrdersListView";
+import OrderLineItemSummary from "./shared/OrderLineItemSummary";
 import { useFetchOrders } from "@/helpers/fetchOrders";
 import { useHttp } from "@/hooks/use-http";
 
@@ -113,51 +115,13 @@ export default function Shipped({ searchTerm }: OrdersProps) {
 
   return (
     <div className="space-y-c24 w-full px-6">
-      <div className="w-full">
-        <div className="w-full space-y-c24 mt-c32">
-          <AnimatePresence mode="wait">
-            {shipped.length === 0 ? (
-              <motion.div
-                key="empty-orders"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="w-full flex flex-col items-center gap-c32 justify-center h-75.5"
-              >
-                <p className="text-center text-000000/60 font-MontserratMedium text-c18">
-                  You haven’t made any orders yet
-                </p>
-                <Button className="w-51">Start shopping</Button>
-              </motion.div>
-            ) : filteredOrders.length === 0 ? (
-              <motion.div
-                key="no-search-results"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="w-full flex flex-col items-center justify-center h-60"
-              >
-                <p className="text-c16 font-MontserratMedium text-000000/60">
-                  No matching orders found
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="orders-list"
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.1 },
-                  },
-                }}
-                className="space-y-c24"
-              >
-                {filteredOrders.map((item: OrderItem) => {
+      <OrdersListView
+        hasOrders={shipped.length > 0}
+        hasResults={filteredOrders.length > 0}
+        emptyMessage="You haven’t made any orders yet"
+        noResultsMessage="No matching orders found"
+      >
+        {filteredOrders.map((item: OrderItem) => {
                   const orderItems =
                     item.order_items || (item as any).items || [];
                   const isSingleItemOrder = orderItems.length === 1;
@@ -210,30 +174,24 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                               className="flex flex-col md:flex-row gap-4 items-start  "
                             >
                               {orderItems.map((prod: any) => (
-                                <div
+                                <OrderLineItemSummary
                                   key={prod.id}
-                                  className="flex gap-4 items-start  w-full"
-                                >
-                                  <Image
-                                    src={prod?.product_image}
-                                    alt={prod.product_name || "Product Image"}
-                                    width={96}
-                                    height={96}
-                                    className="h-24 w-24 "
-                                  />
-                                  <div className="w-full">
-                                    <p className="font-MontserratSemiBold text-base mb-1">
-                                      {prod.product_name}
-                                    </p>
-                                    <p className=" text-c12 font-MontserratMedium mb-3">
-                                      {item.seller_name || item.manufacturer}
-                                    </p>
-                                    <p className="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center">
+                                  image={prod.product_image}
+                                  imageAlt={
+                                    prod.product_name || "Product Image"
+                                  }
+                                  productName={prod.product_name}
+                                  sellerName={
+                                    item.seller_name || item.manufacturer
+                                  }
+                                  details={
+                                    <>
                                       {prod.fulfilled_quantity ?? prod.quantity}
-                                      Pc,
-                                      {prod.variation_name || prod.product_name}
-                                    </p>
-                                    <p className="font-MontserratSemiBold text-c16 pt-3">
+                                      Pc, {prod.variation_name || prod.product_name}
+                                    </>
+                                  }
+                                  price={
+                                    <>
                                       ₦
                                       {(
                                         prod.price_at_purchase *
@@ -241,9 +199,11 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                                           prod.quantity ??
                                           0)
                                       ).toLocaleString()}
-                                    </p>
-                                  </div>
-                                </div>
+                                    </>
+                                  }
+                                  imageClassName="h-24 w-24 "
+                                  detailsClassName="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center"
+                                />
                               ))}
                             </Link>
                             <div className="w-full gap-4 pl md:hidden flex  md:max-w-70 ">
@@ -470,12 +430,8 @@ export default function Shipped({ searchTerm }: OrdersProps) {
                       </div>
                     </motion.div>
                   );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+        })}
+      </OrdersListView>
       <ConfirmModal
         isOpen={open}
         onClose={() => setOpen(false)}

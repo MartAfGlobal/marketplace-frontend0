@@ -21,7 +21,6 @@ export default function ProductDetailCategory({
 }: ProductProps) {
   const router = useRouter();
   const [openCategory, setOpenCategory] = useState<string | null>(null);
-  const [hasOpenedRatings, setHasOpenedRatings] = useState(false);
 
   const Categories: CategoryD[] = [
     {
@@ -150,16 +149,11 @@ export default function ProductDetailCategory({
 
   const toggleCategory = (name: string) => {
     if (name === "Ratings & Reviews") {
-      if (openCategory === name && hasOpenedRatings) {
-        // ✅ navigate to the full review page using slug
-        router.push(`/product/${slug}/review`);
-      } else {
-        setOpenCategory(name);
-        setHasOpenedRatings(true);
-      }
-    } else {
-      setOpenCategory((prev) => (prev === name ? null : name));
+      router.push(`/product/${slug}/review`);
+      return;
     }
+
+    setOpenCategory((prev) => (prev === name ? null : name));
   };
   return (
     <div className="w-full ">

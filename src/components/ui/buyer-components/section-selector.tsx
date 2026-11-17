@@ -50,7 +50,7 @@ export default function SectionSelector({
         duration: 0.6,
         ease: "easeOut",
       }}
-      className={`transform w-full max-w-66 rounded-2xl p-c24 circle-shadow z-40 ${
+      className={`transform w-full max-w-66 rounded-2xl p-c24 shadow-[0px_3px_8px_0px_#6A0DAD14] z-40 ${
         hideOnMobile ? "hidden sm:block" : ""
       }`}
     >

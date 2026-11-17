@@ -39,7 +39,9 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
 
   useEffect(() => {
     if (buyerAddresses.length > 0 && !selectedAddressId) {
-      const defaultAddr = buyerAddresses.find((a) => a.is_default || (a as any).defaultAddress);
+      const defaultAddr = buyerAddresses.find(
+        (a) => a.is_default || (a as any).defaultAddress,
+      );
       dispatch(
         buyerActions.setSelectedAddress(
           defaultAddr?.id ?? buyerAddresses[0].id,
@@ -52,8 +54,6 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
     dispatch(buyerActions.setSelectedAddress(addressId));
   };
 
-
-
   // const token = useSelector((state: RootState) => state.token?.token);
   const token = useSelector((state: RootState) => state.token.token);
   const checkoutItems = useSelector(
@@ -65,26 +65,44 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
   );
 
   const computedSubtotal = checkoutItems.reduce(
-    (acc, item) => acc + (Number(item.subtotal) || (Number(item.price) * (item.quantity || 1)) || 0),
-    0
+    (acc, item) =>
+      acc +
+      (Number(item.subtotal) || Number(item.price) * (item.quantity || 1) || 0),
+    0,
   );
 
   const formatAmount = (val: any, fallback: number = 0): string => {
     if (val === undefined || val === null || val === "") {
-      return fallback.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return fallback.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
     }
-    const num = typeof val === "number" ? val : parseFloat(String(val).replace(/,/g, ""));
+    const num =
+      typeof val === "number" ? val : parseFloat(String(val).replace(/,/g, ""));
     if (isNaN(num)) {
-      return fallback.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return fallback.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
     }
-    return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return num.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
-  const subtotalDisplay = formatAmount(checkoutSummary?.subtotal, computedSubtotal);
+  const subtotalDisplay = formatAmount(
+    checkoutSummary?.subtotal,
+    computedSubtotal,
+  );
   const discountDisplay = formatAmount(checkoutSummary?.discount_amount, 0);
   const shippingDisplay = formatAmount(checkoutSummary?.shipping_cost, 0);
   const totalDisplay = formatAmount(checkoutSummary?.total, computedSubtotal);
-  const totalItemCount = checkoutItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const totalItemCount = checkoutItems.reduce(
+    (acc, item) => acc + (item.quantity || 1),
+    0,
+  );
 
   const { loading: guestchecking, sendHttpRequest: saveRequest } = useHttp();
 
@@ -101,7 +119,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
   const handleCheckout = () => {
     const shipping_method_id = checkoutSummary?.shipping_methods?.[0]?.id || "";
 
-    console.log("addresss id", selectedAddressId)
+    console.log("addresss id", selectedAddressId);
 
     sendHttpRequest({
       requestConfig: {
@@ -223,9 +241,9 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
           ) : (
             <>
               <div className=" w-full pb-c32 flex md:flex-col md:max-w-207">
-                <div className=" border-b hidden w-full md:flex border-b-000000/5  mb-c32">
+                <div className=" border-b pb-c32 hidden w-full md:flex border-b-000000/5  mb-c32">
                   <div className="w-full">
-                    <div className="pb-c32 justify-between w-full flex ">
+                    <div className="pb-6 justify-between w-full flex ">
                       <p className="font-MontserratSemiBold text-c16 ">
                         Items details
                       </p>
@@ -265,20 +283,26 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
 
                           return (
                             <div key={uniqueKey} className="w-fit h-fit">
-                              <Image
-                                src={item.product_image || "/placeholder.png"}
-                                alt={item.product_name || "Product image"}
-                                width={96}
-                                height={96}
-                                className="rounded h-24 w-24"
-                              />
+                              <div className=" h-24 w-24 relative">
+                                <Image
+                                  src={item.product_image || "/placeholder.png"}
+                                  alt={item.product_name || "Product image"}
+                                  width={96}
+                                  height={96}
+                                  className=" h-full w-full"
+                                />
+                                <span className="absolute bottom-2 left-8.5 rounded-c12 bg-000000 px-2 py-1 text-white text-c12 font-MontserratNormal ">
+                                 x{item.quantity}
+                                </span>
+                              </div>
+
                               <p className="text-c12 font-MontserratSemiBold pt-4 text-161616">
                                 ₦{item.subtotal}
                               </p>
 
-                              <p className="text-c12 text-000000/70">
+                              {/* <p className="text-c12 text-000000/70">
                                 {item.product_name}
-                              </p>
+                              </p> */}
                             </div>
                           );
                         })}
@@ -292,7 +316,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                       <UserAddress
                         selectedAddressId={selectedAddressId ?? undefined}
                         onSelectAddress={handleSelectAddress}
-                        className="md:w-64.25 h-31 "
+                        className=" "
                       />
                     ) : (
                       <GuestUserAddress />
@@ -352,11 +376,7 @@ export default function CheckoutItems({ loadingState }: loadinProps) {
                 {token ? (
                   <Button
                     onClick={handleCheckout}
-                    disabled={
-                      loading ||
-                      !selectedAddressId ||
-                      TotalItems === 0 
-                    }
+                    disabled={loading || !selectedAddressId || TotalItems === 0}
                   >
                     {loading ? <LoadingSpinner /> : ` Checkout (${TotalItems})`}
                   </Button>

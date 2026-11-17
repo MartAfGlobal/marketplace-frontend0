@@ -114,7 +114,7 @@ export default function VariationSelector({
                             key={value}
                             type="button"
                             onClick={() => onSelectAttribute(name, value)}
-                            className={`w-c44 h-c47 border rounded-lg flex items-center justify-center text-sm font-MontserratSemiBold transition-colors ${
+                            className={`min-w-c44 p-2 h-c47 border rounded-lg flex items-center justify-center text-sm font-MontserratSemiBold transition-colors ${
                               isSelected
                                 ? "border-ff715b text-161616 shadow-xs"
                                 : "border-gray-300 text-161616 bg-white hover:border-gray-400"

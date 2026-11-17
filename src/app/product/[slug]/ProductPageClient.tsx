@@ -34,6 +34,7 @@ export default function ProductPageClient() {
         userType: "buyer",
       },
       successRes: (res) => {
+        console.log("row details", res)
         dispatch(setProduct(res.data));
       },
     });

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import Shoes from "@/assets/icons/user-dashboard/orderHistory/Shoes.png";
 import { BuyerDispute, OrderItem, TrackOrders } from "@/types/global";
@@ -13,6 +13,8 @@ import Link from "next/link";
 import { RootState } from "@/store";
 import { useRouter } from "next/navigation";
 import CancelOrderModal from "@/components/ui/Modals/cancelOrder";
+import OrdersListView from "./shared/OrdersListView";
+import OrderLineItemSummary from "./shared/OrderLineItemSummary";
 interface OrdersProps {
   searchTerm: string;
 }
@@ -58,51 +60,13 @@ export default function Disputes({ searchTerm }: OrdersProps) {
 
   return (
     <div className="space-y-c24 w-ful l px-6">
-      <div className="w-full">
-        <div className="w-full space-y-c24 mt-c32">
-          <AnimatePresence mode="wait">
-            {disputes.length === 0 ? (
-              <motion.div
-                key="empty-orders"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="w-full flex flex-col items-center gap-c32 justify-center h-75.5"
-              >
-                <p className="text-center text-000000/60 font-MontserratMedium text-c18">
-                  No item under Dispute
-                </p>
-                <Button className="w-51">Start shopping</Button>
-              </motion.div>
-            ) : filteredOrders.length === 0 ? (
-              <motion.div
-                key="no-search-results"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="w-full flex flex-col items-center justify-center h-60"
-              >
-                <p className="text-c16 font-MontserratMedium text-000000/60">
-                  No matching dispute item found
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="orders-list"
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.1 },
-                  },
-                }}
-                className="space-y-c24"
-              >
-                {filteredOrders.map((item: BuyerDispute) => {
+      <OrdersListView
+        hasOrders={disputes.length > 0}
+        hasResults={filteredOrders.length > 0}
+        emptyMessage="No item under Dispute"
+        noResultsMessage="No matching dispute item found"
+      >
+        {filteredOrders.map((item: BuyerDispute) => {
                   const MobileActions = (
                     <div className="w-full gap-4 text-c10 flex flex-row-reverse md:hidden mt-4 space-y-4">
                       
@@ -159,29 +123,16 @@ export default function Disputes({ searchTerm }: OrdersProps) {
                           href={`orders/dispute-details/${item.id}`}
                           className="flex flex-col md:flex-row gap-4 items-start  "
                         >
-                          <div className="flex gap-4 items-start w-full">
-                            <Image
-                              src={item.product_image || "/placeholder.png"}
-                              alt={item.product_name || "Product Image"}
-                              width={96}
-                              height={96}
-                              className="h-24 w-24"
-                            />
-                            <div className="w-full">
-                              <p className="font-MontserratSemiBold text-base mb-1">
-                                {item.product_name}
-                              </p>
-                              <p className="text-c12 font-MontserratMedium mb-3">
-                                {item.seller_name}
-                              </p>
-                              <p className="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center">
-                                {item.variant_name || item.product_name}
-                              </p>
-                              <p className="font-MontserratSemiBold text-c16 pt-3">
-                                ₦{item.requested_refund_amount}
-                              </p>
-                            </div>
-                          </div>
+                          <OrderLineItemSummary
+                            image={item.product_image || "/placeholder.png"}
+                            imageAlt={item.product_name || "Product Image"}
+                            productName={item.product_name}
+                            sellerName={item.seller_name}
+                            details={item.variant_name || item.product_name}
+                            price={`₦${item.requested_refund_amount}`}
+                            className="flex gap-4 items-start w-full"
+                            imageClassName="h-24 w-24"
+                          />
                         </Link>
                         {MobileActions}
                         <div className="w-full gap-4 pl hidden md:flex md:flex-col md:max-w-70 space-y-4">
@@ -201,12 +152,8 @@ export default function Disputes({ searchTerm }: OrdersProps) {
                       </div>
                     </motion.div>
                   );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+        })}
+      </OrdersListView>
       <CancelOrderModal
         isDispute={true}
         isOpen={openCancelModal}

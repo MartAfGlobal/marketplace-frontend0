@@ -105,7 +105,7 @@ const handleEditAddress = () => {
           whileHover={{ scale: 1.05 }}
           className={twMerge(
             "p-c24 h-40 w-full md:w-80.75 md:h-40 rounded-c12 flex flex-col gap-2 cursor-pointer relative transition-colors duration-300",
-            "md:bg-black bg-6a0dad text-ffffff shadow-inner",
+            "md:bg-black bg-6a0dad text-ffffff shadow-[inset_0px_1px_8px_0px_#FFFFFF9C]",
             className,
           )}
         >
@@ -155,7 +155,7 @@ const handleEditAddress = () => {
           whileHover={{ scale: 1.05 }}
           viewport={{ once: false, amount: 0.3 }}
           className={twMerge(
-            "p-c24 w-full hidden md:w-81 md:flex h-34.5 rounded-c12 flex-col justify-center items-center cursor-pointer bg-black/2 gap-c3 border-black text-black transition-colors duration-300",
+            "p-c24 w-full hidden  md:flex  md:w-80.75 md:h-40 rounded-c12 flex-col justify-center items-center cursor-pointer bg-black/2 gap-c3 border-black text-black transition-colors duration-300",
             className,
           )}
         >
