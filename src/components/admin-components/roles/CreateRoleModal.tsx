@@ -11,7 +11,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
 import DrawerWrapper from "@/components/ui/Modals/DrawerWrapper";
 import PermissionMatrixEditor from "./PermissionMatrixEditor";
-import { emptyPermissionMatrix } from "./permissionCategories";
+import { emptyPermissionMatrix, togglePermission } from "./permissionCategories";
 import type { AccessLevel, PermissionAction, PermissionCategoryKey, PermissionMatrix } from "@/types/admin";
 
 interface CreateRoleModalProps {
@@ -46,10 +46,7 @@ export default function CreateRoleModal({ isOpen, onClose, onCreated }: CreateRo
   }, [isOpen]);
 
   const handleToggle = (category: PermissionCategoryKey, action: PermissionAction) => {
-    setMatrix((prev) => ({
-      ...prev,
-      [category]: { ...prev[category], [action]: !prev[category][action] },
-    }));
+    setMatrix((prev) => togglePermission(prev, category, action));
   };
 
   const handleSubmit = () => {
