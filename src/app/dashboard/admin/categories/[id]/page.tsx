@@ -621,6 +621,9 @@ export default function AdminCategoryDetailsPage() {
         title={resultModalState.title}
         message={resultModalState.message}
         buttenText="Okay"
+        confirmButtonVariant={
+          resultModalState.result === "success" ? "secondary" : "primary"
+        }
         onConfirm={() => {
           const shouldRedirect = resultModalState.onConfirmRedirect;
           setResultModalState((prev) => ({ ...prev, isOpen: false }));

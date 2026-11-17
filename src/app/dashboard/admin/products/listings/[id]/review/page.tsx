@@ -933,17 +933,29 @@ export default function ProductReviewPage({
           result={resultModalState.result}
           title={resultModalState.title}
           message={resultModalState.message}
-          buttenText={resultModalState.result === "success" ? "Go to Products" : "Close"}
-          onConfirm={() => {
-            const isSuccess = resultModalState.result === "success";
-            setResultModalState((prev) => ({ ...prev, isOpen: false }));
-            if (isSuccess) {
-              router.push("/dashboard/admin/products?type=listings");
-            }
-          }}
-          onCancel={() => {
-            setResultModalState((prev) => ({ ...prev, isOpen: false }));
-          }}
+          buttenText={resultModalState.result === "error" ? "Close" : undefined}
+          secondaryButtonText={
+            resultModalState.result === "success" ? "Go to Products" : undefined
+          }
+          onSecondaryAction={
+            resultModalState.result === "success"
+              ? () => router.push("/dashboard/admin/products?type=listings")
+              : undefined
+          }
+          onConfirm={
+            resultModalState.result === "error"
+              ? () => {
+                  setResultModalState((prev) => ({ ...prev, isOpen: false }));
+                }
+              : undefined
+          }
+          onCancel={
+            resultModalState.result === "error"
+              ? () => {
+                  setResultModalState((prev) => ({ ...prev, isOpen: false }));
+                }
+              : undefined
+          }
         />
       </div>
     </div>

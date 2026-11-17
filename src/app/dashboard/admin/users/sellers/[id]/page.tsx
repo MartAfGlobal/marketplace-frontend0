@@ -142,6 +142,9 @@ export default function AdminSellerDetailsPage() {
         }}
         onCancel={() => setSuccessModalType(null)}
         result={successModalType === "error" ? "error" : "success"}
+        confirmButtonVariant={
+          successModalType === "error" ? "primary" : "secondary"
+        }
         title={
           successModalType === "error"
             ? "Action Failed"

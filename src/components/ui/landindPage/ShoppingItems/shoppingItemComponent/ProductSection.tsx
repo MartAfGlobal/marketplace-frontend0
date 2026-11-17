@@ -44,7 +44,7 @@ export default function ProductSection({
 
   return (
     <section className="mb-c64">
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex items-center justify-between mb-c32">
         <h2 className="text-lg font-MontserratMedium text-161616">
           {title}
         </h2>

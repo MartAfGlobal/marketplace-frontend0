@@ -137,10 +137,26 @@ export default function UpdateProductPage() {
     hasValidName &&
     (basePrice === undefined || basePrice === "" || Number(basePrice) > 0);
 
-  const handleImageChange = (file: File, index: number) => {
-    const newImages = [...images];
-    newImages[index] = file;
-    setImages(newImages);
+  const handleImageChange = (files: FileList | null, index: number) => {
+    if (!files?.length) return;
+
+    const selectedFiles = Array.from(files);
+    setImages((currentImages) => {
+      const newImages = [...currentImages];
+      let nextIndex = index;
+
+      for (const file of selectedFiles) {
+        while (nextIndex < newImages.length && newImages[nextIndex] !== null) {
+          nextIndex += 1;
+        }
+        if (nextIndex >= newImages.length) break;
+
+        newImages[nextIndex] = file;
+        nextIndex += 1;
+      }
+
+      return newImages;
+    });
   };
 
   const token = useSelector((state: RootState) => state.token?.token);
@@ -392,6 +408,31 @@ export default function UpdateProductPage() {
         const newImages = [...v.images];
         newImages[index] = null;
         return { ...v, images: newImages };
+      }),
+    );
+  };
+
+  const handleVariantImageChange = (
+    variantId: string,
+    files: FileList | null,
+  ) => {
+    if (!files?.length) return;
+
+    const selectedFiles = Array.from(files);
+    setVariants((prev) =>
+      prev.map((variant) => {
+        if (variant.id !== variantId) return variant;
+
+        const newImages: (File | string | null)[] = variant.images.filter(
+          (image): image is File | string => image !== null,
+        );
+        for (const file of selectedFiles) {
+          if (newImages.length >= 4) break;
+          newImages.push(file);
+        }
+        while (newImages.length < 4) newImages.push(null);
+
+        return { ...variant, images: newImages };
       }),
     );
   };
@@ -774,9 +815,9 @@ export default function UpdateProductPage() {
                       type="file"
                       className="hidden"
                       accept="image/*"
+                      multiple
                       onChange={(e) => {
-                        if (e.target.files && e.target.files[0])
-                          handleImageChange(e.target.files[0], i);
+                        handleImageChange(e.target.files, i);
                       }}
                     />
                     <Image src={Plus} alt="add" width={15} height={15} />
@@ -872,20 +913,9 @@ export default function UpdateProductPage() {
                       type="file"
                       className="absolute inset-0 opacity-0 cursor-pointer"
                       accept="image/*"
+                      multiple
                       onChange={(e) => {
-                        if (!e.target.files?.[0]) return;
-                        const newImages = [
-                          ...variant.images.filter(Boolean),
-                          e.target.files[0],
-                        ];
-                        while (newImages.length < 4) newImages.push(null);
-                        setVariants((prev) =>
-                          prev.map((v) =>
-                            v.id === variant.id
-                              ? { ...v, images: newImages }
-                              : v,
-                          ),
-                        );
+                        handleVariantImageChange(variant.id, e.target.files);
                       }}
                     />
                     <Image src={Plus} alt="add" width={15} height={15} />
@@ -1062,7 +1092,6 @@ export default function UpdateProductPage() {
         buttenText="Continue Editing"
         secondaryButtonText="Go to Products"
         isOpen={showDraftSuccess}
-        onConfirm={() => setShowDraftSuccess(false)}
         onCancel={() => setShowDraftSuccess(false)}
         onSecondaryAction={() => router.push("/dashboard/seller/products")}
       />
@@ -1074,7 +1103,6 @@ export default function UpdateProductPage() {
   
         secondaryButtonText="Go to Dashboard"
         isOpen={showLiveSuccess}
-        onConfirm={() => setShowLiveSuccess(false)}
         onCancel={() => setShowLiveSuccess(false)}
         onSecondaryAction={() => router.push("/dashboard/seller/products")}
       />

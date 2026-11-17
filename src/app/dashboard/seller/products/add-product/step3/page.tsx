@@ -260,7 +260,6 @@ export default function AddProductStep1Page() {
         buttenText="Continue"
         secondaryButtonText="Go back to products"
         isOpen={saveDraftSuccess}
-        onConfirm={() => setSaveDraftSuccess(false)}
         onCancel={() => setSaveDraftSuccess(false)}
         onSecondaryAction={() => router.push("/dashboard/seller/products")}
       />

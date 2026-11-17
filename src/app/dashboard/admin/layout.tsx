@@ -592,7 +592,7 @@ export default function AdminLayout({
                           <Link
                             key={sub.name}
                             href={sub.path}
-                            className={`group w-full flex items-center text-nowrap gap-2 px-6 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all ${
+                            className={`group w-full flex items-center text-nowrap gap-2 px-3 py-3.5 rounded-c24 text-sm font-MontserratSemiBold transition-all ${
                               isSubActive
                                 ? "text-white bg-[#6A0DAD] font-MontserratBold shadow-md shadow-[#6A0DAD]/15"
                                 : "text-000000/68 bg-ffffff hover:bg-[#6A0DAD]/12 hover:text-white"

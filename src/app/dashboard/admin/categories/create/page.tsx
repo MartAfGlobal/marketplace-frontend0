@@ -1004,7 +1004,14 @@ function CreateCategoryPageInner() {
         result={resultModalState.result}
         title={resultModalState.title}
         message={resultModalState.message}
-        buttenText="Okay"
+        buttenText={
+          resultModalState.result === "success"
+            ? "Go back to category"
+            : "Okay"
+        }
+        confirmButtonVariant={
+          resultModalState.result === "success" ? "secondary" : "primary"
+        }
         onConfirm={() => {
           const shouldRedirect = resultModalState.onConfirmRedirect;
           setResultModalState((prev) => ({ ...prev, isOpen: false }));

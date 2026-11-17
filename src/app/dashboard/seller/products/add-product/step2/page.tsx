@@ -148,6 +148,31 @@ export default function AddProductStep1Page() {
     );
   };
 
+  const handleVariantImageChange = (
+    variantId: string,
+    files: FileList | null,
+  ) => {
+    if (!files?.length) return;
+
+    const selectedFiles = Array.from(files);
+    setVariants((prev) =>
+      prev.map((variant) => {
+        if (variant.id !== variantId) return variant;
+
+        const newImages: (File | null)[] = variant.images.filter(
+          (image): image is File => image !== null,
+        );
+        for (const file of selectedFiles) {
+          if (newImages.length >= 4) break;
+          newImages.push(file);
+        }
+        while (newImages.length < 4) newImages.push(null);
+
+        return { ...variant, images: newImages };
+      }),
+    );
+  };
+
   /**
    * Validates a single variant before it can be saved or advanced.
    * A variant must include an image, the required attribute values, a positive price, and a positive stock count.
@@ -340,18 +365,9 @@ export default function AddProductStep1Page() {
                     type="file"
                     className="absolute inset-0 opacity-0 cursor-pointer"
                     accept="image/*"
+                    multiple
                     onChange={(e) => {
-                      if (!e.target.files?.[0]) return;
-                      const newImages = [
-                        ...variant.images.filter(Boolean),
-                        e.target.files[0],
-                      ];
-                      while (newImages.length < 4) newImages.push(null);
-                      setVariants((prev) =>
-                        prev.map((v) =>
-                          v.id === variant.id ? { ...v, images: newImages } : v,
-                        ),
-                      );
+                      handleVariantImageChange(variant.id, e.target.files);
                     }}
                   />
                   <Image src={Plus} alt="add" width={15} height={15} />
@@ -511,7 +527,6 @@ export default function AddProductStep1Page() {
         buttenText="Continue"
         secondaryButtonText="Go back to products"
         isOpen={showDraftSuccess}
-        onConfirm={() => setShowDraftSuccess(false)}
         onCancel={() => setShowDraftSuccess(false)}
         onSecondaryAction={() => router.push("/dashboard/seller/products")}
       />

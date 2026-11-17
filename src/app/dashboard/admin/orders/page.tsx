@@ -710,6 +710,9 @@ export default function AdminOrdersPage() {
         title={resultModalState.title}
         message={resultModalState.message}
         buttenText="Done"
+        confirmButtonVariant={
+          resultModalState.result === "success" ? "secondary" : "primary"
+        }
         onConfirm={() =>
           setResultModalState((prev) => ({ ...prev, isOpen: false }))
         }

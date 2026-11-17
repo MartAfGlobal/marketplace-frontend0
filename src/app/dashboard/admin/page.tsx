@@ -626,38 +626,45 @@ export default function AdminOverviewPage() {
                 {totalSupportTickets}
               </p>
             </div>
-            <span className="text-sm font-MontserratNormal text-[#FFAC06] bg-[#FFAC06]/12 px-3 py-2">
+            <span
+              className="max-w-[55%] truncate whitespace-nowrap text-sm font-MontserratNormal text-[#FFAC06] bg-[#FFAC06]/12 px-3 py-2"
+              title={`Total pending: ${pendingSupportTicketCount}`}
+            >
               Total pending: {pendingSupportTicketCount}
             </span>
           </div>
 
           {/* Tickets Table */}
           <div className="flex-1 overflow-x-auto lg:overflow-x-hidden">
-            <table className="w-full text-left border-collapse min-w-[450px] ">
+            <table className="w-full table-fixed text-left border-collapse">
               <thead className="pb-6">
                 <tr className="text-c12  tex t-000000/44 font-MontserratSemiBold  ">
-                  <th className=" pb-6">Ticket ID</th>
-                  <th className=" pb-6">Subject</th>
-                  <th className=" pb-6">Priority</th>
-                  <th className=" pb-6">Status</th>
-                  <th className=" pb-6">Date created</th>
+                  <th className="w-[24%] pb-6">Ticket ID</th>
+                  <th className="w-[29%] pb-6">Subject</th>
+                  <th className="w-[14%] pb-6">Priority</th>
+                  <th className="w-[15%] pb-6">Status</th>
+                  <th className="w-[18%] pb-6">Date created</th>
                 </tr>
               </thead>
               <tbody className="space-x-4 text-sm font-MontserratMedium">
                 {supportTickets.slice(0, 4).map((ticket) => (
                   <tr key={ticket.id} className=" transition-colors">
-                    <td className="pb-6 ">{ticket.reference}</td>
+                    <td className="truncate whitespace-nowrap pb-6" title={ticket.reference}>
+                      {ticket.reference}
+                    </td>
                     <td
-                      className="max-w-[140px] truncate pb-6"
+                      className="truncate whitespace-nowrap pb-6"
                       title={ticket.subject}
                     >
                       {ticket.subject}
                     </td>
-                    <td className="pb-6">
-                      <span className="pb-6">{ticket.priority}</span>
+                    <td className="truncate whitespace-nowrap pb-6" title={ticket.priority}>
+                      {ticket.priority}
                     </td>
-                    <td className="pb-6">{ticket.status}</td>
-                    <td className="pb-6">
+                    <td className="truncate whitespace-nowrap pb-6" title={ticket.status}>
+                      {ticket.status}
+                    </td>
+                    <td className="truncate whitespace-nowrap pb-6" title={formatSupportDate(ticket.createdAt)}>
                       {formatSupportDate(ticket.createdAt)}
                     </td>
                   </tr>

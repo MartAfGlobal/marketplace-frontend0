@@ -1067,6 +1067,9 @@ export default function AdminReturnDetailsPage() {
         title={resultModalState.title}
         message={resultModalState.message}
         buttenText="Done"
+        confirmButtonVariant={
+          resultModalState.result === "success" ? "secondary" : "primary"
+        }
         onConfirm={() =>
           setResultModalState((prev) => ({ ...prev, isOpen: false }))
         }
@@ -1096,6 +1099,7 @@ export default function AdminReturnDetailsPage() {
         message="The dispute has been successfully closed."
         discRescription="The seller has confirmed receipt of returned goods, and this dispute is now finalized and marked as Closed."
         buttenText="Okay"
+        confirmButtonVariant="secondary"
         onConfirm={() => setCloseSuccess(false)}
         onCancel={() => setCloseSuccess(false)}
       />

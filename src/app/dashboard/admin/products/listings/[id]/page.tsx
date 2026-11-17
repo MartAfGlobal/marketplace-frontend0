@@ -754,6 +754,9 @@ export default function ProductDetailsPage({
         result={resultModalState.result}
         title={resultModalState.title}
         message={resultModalState.message}
+        confirmButtonVariant={
+          resultModalState.result === "success" ? "secondary" : "primary"
+        }
         onCancel={() => setResultModalState((s) => ({ ...s, isOpen: false }))}
         onConfirm={() => setResultModalState((s) => ({ ...s, isOpen: false }))}
       />

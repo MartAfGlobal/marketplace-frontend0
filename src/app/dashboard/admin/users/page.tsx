@@ -853,6 +853,9 @@ export default function AdminUsersPage() {
         onConfirm={() => setSuccessModalType(null)}
         onCancel={() => setSuccessModalType(null)}
         result={successModalType === "error" ? "error" : "success"}
+        confirmButtonVariant={
+          successModalType === "error" ? "primary" : "secondary"
+        }
         title={
           successModalType === "error"
             ? "Action Failed"
@@ -883,6 +886,9 @@ export default function AdminUsersPage() {
         onConfirm={() => setBuyerSuspendSuccess(null)}
         onCancel={() => setBuyerSuspendSuccess(null)}
         result={buyerSuspendSuccess === "error" ? "error" : "success"}
+        confirmButtonVariant={
+          buyerSuspendSuccess === "error" ? "primary" : "secondary"
+        }
         title={
           buyerSuspendSuccess === "error"
             ? "Action Failed"
@@ -913,6 +919,9 @@ export default function AdminUsersPage() {
         onConfirm={() => setDeleteSuccessType(null)}
         onCancel={() => setDeleteSuccessType(null)}
         result={deleteSuccessType === "error" ? "error" : "success"}
+        confirmButtonVariant={
+          deleteSuccessType === "error" ? "primary" : "secondary"
+        }
         title={
           deleteSuccessType === "error"
             ? "Action Failed"

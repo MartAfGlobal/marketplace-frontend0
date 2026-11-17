@@ -166,7 +166,7 @@ export default function ProductActions({
         ) && (
           <Button variant="primary"
             onClick={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}${!published ? '?isPublish=false' : ''}`)}
-            className="w-full "
+            className="w-fit"
           >
             Edit product
           </Button>
@@ -277,7 +277,7 @@ export default function ProductActions({
         ) && (
           <Button variant="primary"
             onClick={() => router.push(`/dashboard/seller/products/add-product/updateProduct/${id}${!published ? '?isPublish=false' : ''}`)}
-            className="w-full "
+            className="w-fit"
           >
             Edit product
           </Button>

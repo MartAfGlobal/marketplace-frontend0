@@ -772,6 +772,9 @@ export default function AdminCategoriesPage() {
         title={resultModalState.title}
         message={resultModalState.message}
         buttenText="Okay"
+        confirmButtonVariant={
+          resultModalState.result === "success" ? "secondary" : "primary"
+        }
         onConfirm={() =>
           setResultModalState((prev) => ({ ...prev, isOpen: false }))
         }

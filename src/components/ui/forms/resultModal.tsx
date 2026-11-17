@@ -18,6 +18,7 @@ type ResultModalProps = {
   buttenText?: string;
   discRescription?: string;
   loading?: boolean;
+  confirmButtonVariant?: "primary" | "secondary";
   secondaryButtonText?: string;
   onSecondaryAction?: () => void;
   TertiaryButtonText?: string;
@@ -35,6 +36,7 @@ export default function ResultModal({
   buttenText,
   discRescription,
   loading,
+  confirmButtonVariant = "primary",
   secondaryButtonText,
   TertiaryButtonText,
   onTertiaryAction,
@@ -260,7 +262,7 @@ export default function ResultModal({
 
                 {onConfirm && (
                   <Button
-                    variant="primary"
+                    variant={confirmButtonVariant}
                     onClick={onConfirm}
                     disabled={loading}
                   >

@@ -54,7 +54,7 @@ export default function ProductPageClient() {
   }
 
   return (
-    <main className="px-4 md:px-6 lg:pl-c60 lg:pr-[43.95px] pb-c32 ">
+    <main className="px-4 md:px-6 lg:pl-c60 lg:pr-[43.95px] pb-c32 md:pb-0 ">
       <div className="hidden md:flex">
         <DetailPageNavbar
           productName={productDetails?.name || ""}
@@ -67,7 +67,7 @@ export default function ProductPageClient() {
 
       <div className="flex flex-col md:flex-row md:gap-c67 justify-center ">
         <div className="flex flex-col gap-c32 w-full ">
-          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-12   md:border-b md:border-gray-200 h-fit pb-1.5 ">
+          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-12    h-fit ">
             <ProductVariation isModal={false} selectedVariaton={variationId} />
           </div>
         </div>

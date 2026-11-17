@@ -14,7 +14,7 @@ import CartButton from "../cart/cartButton";
 import { Button } from "../Button/Button";
 import { useDispatch } from "react-redux";
 import { addToCart } from "@/store/cart/cartSlice";
-import { Product, ProductDetail } from "@/types/global";
+import { ProductDetail } from "@/types/global";
 import CartBtn from "@/assets/mobile/cart.png";
 
 type RatingKey = 1 | 2 | 3 | 4 | 5;
@@ -24,7 +24,7 @@ interface ProductProps {
   ProductDetail: ProductDetail | null;
 }
 
-export default function MoreDetailedPage({ProductDetail}:ProductProps) {
+export default function MoreDetailedPage({ ProductDetail }: ProductProps) {
   const dispatch = useDispatch();
 
 
@@ -321,9 +321,6 @@ export default function MoreDetailedPage({ProductDetail}:ProductProps) {
 
       
 
-      <section className="similar">
-
-      </section>
     </div>
   );
 }

@@ -82,10 +82,26 @@ export default function AddProductStep1Page() {
     hasValidName &&
     (basePrice === undefined || basePrice === "" || Number(basePrice) > 0);
 
-  const handleImageChange = (file: File, index: number) => {
-    const newImages = [...images];
-    newImages[index] = file;
-    setImages(newImages);
+  const handleImageChange = (files: FileList | null, index: number) => {
+    if (!files?.length) return;
+
+    const selectedFiles = Array.from(files);
+    setImages((currentImages) => {
+      const newImages = [...currentImages];
+      let nextIndex = index;
+
+      for (const file of selectedFiles) {
+        while (nextIndex < newImages.length && newImages[nextIndex] !== null) {
+          nextIndex += 1;
+        }
+        if (nextIndex >= newImages.length) break;
+
+        newImages[nextIndex] = file;
+        nextIndex += 1;
+      }
+
+      return newImages;
+    });
   };
 
   const token = useSelector((state: RootState) => state.token?.token);
@@ -353,9 +369,9 @@ export default function AddProductStep1Page() {
                       type="file"
                       className="hidden"
                       accept="image/*"
+                      multiple
                       onChange={(e) => {
-                        if (e.target.files && e.target.files[0])
-                          handleImageChange(e.target.files[0], i);
+                        handleImageChange(e.target.files, i);
                       }}
                     />
                     <Image src={Plus} alt="add" width={15} height={15} />
@@ -485,7 +501,6 @@ export default function AddProductStep1Page() {
         buttenText="Continue"
         secondaryButtonText="Go back to products"
         isOpen={showDraftSuccess}
-        onConfirm={() => setShowDraftSuccess(false)}
         onCancel={() => setShowDraftSuccess(false)}
         onSecondaryAction={() => router.push("/dashboard/seller/products")}
       />

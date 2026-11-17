@@ -505,7 +505,6 @@ export default function SellerProductDetailsPage() {
           message="Please complete all required fields before submitting."
           discRescription="Your product is missing required details like images, category, price, or variations."
           buttenText="Continue"
-          secondaryButtonText="Close"
           isOpen={showIncompleteModal}
           onConfirm={() =>
             router.push(
@@ -513,7 +512,6 @@ export default function SellerProductDetailsPage() {
             )
           }
           onCancel={() => setShowIncompleteModal(false)}
-          onSecondaryAction={() => setShowIncompleteModal(false)}
         />
 
         <ResultModal

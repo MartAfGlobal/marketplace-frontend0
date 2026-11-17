@@ -717,6 +717,7 @@ export default function DisputeDetailSideModal({
         message="The item return has been confirmed and the dispute has been resolved."
         discRescription="Both buyer and seller have been notified that the dispute is resolved."
         buttenText="Okay"
+        confirmButtonVariant="secondary"
         onConfirm={() => {
           setResolveSuccess(false);
           onClose();
@@ -733,6 +734,7 @@ export default function DisputeDetailSideModal({
         message="The dispute review decision has been recorded and the resolution process has been initiated."
         discRescription="Both buyer and seller have been notified of the resolution decision."
         buttenText="Okay"
+        confirmButtonVariant="secondary"
         onConfirm={() => {
           setReviewSucess(false);
           onClose();
@@ -749,6 +751,7 @@ export default function DisputeDetailSideModal({
         message="The return/refund request has been rejected and the process terminated."
         discRescription="Both buyer and seller have been notified of this rejection."
         buttenText="Okay"
+        confirmButtonVariant="secondary"
         onConfirm={() => {
           setRejectSuccess(false);
           onClose();
@@ -772,6 +775,7 @@ export default function DisputeDetailSideModal({
         message="The returned item has been confirmed as shipped back to the seller."
         discRescription="The seller has been notified and the dispute record has been updated."
         buttenText="Okay"
+        confirmButtonVariant="secondary"
         onConfirm={() => {
           setConfirmDeliverySuccess(false);
           onClose();
@@ -799,6 +803,7 @@ export default function DisputeDetailSideModal({
         message="The dispute has been successfully closed."
         discRescription="The seller has confirmed receipt of returned goods, and this dispute is now finalized and marked as Closed."
         buttenText="Okay"
+        confirmButtonVariant="secondary"
         onConfirm={() => {
           setCloseSuccess(false);
           onClose();
