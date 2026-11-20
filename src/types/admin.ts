@@ -113,6 +113,10 @@ export type RoleType = "SYSTEM" | "CUSTOM";
  *  effective matrix. Full admins (superusers) come back with everything true. */
 export interface AdminAccess {
   is_full_access: boolean;
+  /** True only for a real Django superuser (createsuperuser), not for
+   *  legacy is_staff or RBAC-created admins. The admin Settings area is
+   *  restricted to this flag. */
+  is_superuser?: boolean;
   role: string | null;
   permissions: PermissionMatrix;
 }

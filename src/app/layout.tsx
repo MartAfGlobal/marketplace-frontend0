@@ -7,6 +7,7 @@ import InstallButton from "@/components/ui/InstallButton";
 import ClientFcmWrapper from "@/components/ClientFcmWrapper";
 import AxiosInterceptor from "@/components/auth/AxiosInterceptor";
 import GoogleOAuthWrapper from "@/components/auth/GoogleOAuthWrapper";
+import MaintenanceGate from "@/components/ui/MaintenanceGate";
 
 
 export const metadata: Metadata = {
@@ -87,7 +88,7 @@ export default function RootLayout({
               <LayoutWrapper>
                 {/* <InstallButton /> */}
                 <Toaster richColors position="top-right" duration={2000} />
-                {children}
+                <MaintenanceGate>{children}</MaintenanceGate>
                 <ClientFcmWrapper />
               </LayoutWrapper>
             </AxiosInterceptor>

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import FooterCard from "../cards/FooterCard";
@@ -9,11 +11,22 @@ import Location from "@/assets/socialIcons/location.png";
 import customerCare from "@/assets/socialIcons/customerCare.png";
 import emailUs from "@/assets/socialIcons/emailUS.png";
 import Send from "@/assets/socialIcons/PaperPlaneTilt.png";
+import { usePublicSettings } from "@/helpers/usePublicSettings";
 
 export default function FooterPage() {
   const pathname = usePathname();
 
   const isSearch = pathname?.startsWith("/others");
+
+  // Contact block comes from admin General settings; fall back to the
+  // previous static copy until an admin fills those fields in.
+  const settings = usePublicSettings();
+  const addressText =
+    [settings?.city, settings?.state, settings?.country].filter(Boolean).join(", ") ||
+    "No 333 you and I street, Ikeja, Lagos State, Nigeria";
+  const phoneText = settings?.phone_number?.trim() || "+234 80123456789";
+  const emailText =
+    settings?.support_email?.trim() || settings?.general_email?.trim() || "info@martaf.com.ng";
 
   return (
     <div className="bg-212121 w-full h-fit pt-6 px-6 md:pt-c67 md:px-c60  ">
@@ -47,13 +60,11 @@ export default function FooterPage() {
         <FooterCard title="Contacts">
           <>
             <Link href="/">Address :</Link>
-            <Link href="/">
-              No 333 you and I street, Ikeja, Lagos State, Nigeria
-            </Link>
+            <Link href="/">{addressText}</Link>
             <Link href="/">Phone :</Link>
-            <Link href="/">+234 80123456789</Link>
+            <Link href={`tel:${phoneText}`}>{phoneText}</Link>
             <Link href="/">Email :</Link>
-            <Link href="/">info@martaf.com.ng</Link>
+            <Link href={`mailto:${emailText}`}>{emailText}</Link>
           </>
         </FooterCard>
 
@@ -94,7 +105,7 @@ export default function FooterPage() {
               <div className="w-6">
                 <Image src={Location} alt="location" width={24} height={24} />
               </div>
-              <span>No 333 you and I street, Ikeja, Lagos State, Nigeria</span>
+              <span>{addressText}</span>
             </div>
             <div className="flex gap-4">
               <Image
@@ -104,11 +115,11 @@ export default function FooterPage() {
                 height={20.25}
               />
 
-              <span>+234 80123456789</span>
+              <span>{phoneText}</span>
             </div>
             <div className="flex gap-4">
               <Image src={emailUs} alt="location" width={21} height={20.25} />
-              <span>info@martaf.com.ng</span>
+              <span>{emailText}</span>
             </div>
           </>
         </FooterCard>

@@ -181,7 +181,7 @@ export default function AdminLayout({
   useTokenExpiration();
   // Load the server-managed role permissions once for this admin session before exposing restricted navigation.
   useLoadAdminAccess();
-  const { loaded: accessLoaded, can, isFullAccess } = useAdminAccess();
+  const { loaded: accessLoaded, can, isFullAccess, isSuperUser } = useAdminAccess();
   const logout = useLogout(dispatch);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -392,7 +392,7 @@ export default function AdminLayout({
       ],
     },
     {
-      name: "Settings",
+      name: "Platform settings",
       icon: SettingsIcon,
       path: "/dashboard/admin/settings",
     },
@@ -427,6 +427,9 @@ export default function AdminLayout({
   const filteredSidebarItems = sidebarItems.filter(
     (item) =>
       (item.name !== "Waitlist" || isFullAccess) &&
+      // Platform settings is superuser-only (real Django superuser), not
+      // category-gated -- matches the backend's IsSuperUser enforcement.
+      (item.name !== "Platform settings" || isSuperUser) &&
       (!ITEM_CATEGORY[item.name] || can(ITEM_CATEGORY[item.name])),
   );
 
@@ -798,7 +801,8 @@ export default function AdminLayout({
         <main className="flex-1 min-w-0 w-full mx-auto">
           {(() => {
             const needed = requiredCategory(pathname);
-            if (!needed) return children;
+            const isSettings = pathname.startsWith("/dashboard/admin/settings");
+            if (!needed && !isSettings) return children;
             // Wait for the permission matrix before rendering protected routes, then show an explicit no-access state when denied.
             if (!accessLoaded) {
               return (
@@ -807,6 +811,11 @@ export default function AdminLayout({
                 </div>
               );
             }
+            // Platform settings is superuser-only.
+            if (isSettings) {
+              return isSuperUser ? children : <NoAccess />;
+            }
+            if (!needed) return children;
             if (pathname.startsWith("/dashboard/admin/waitlist")) {
               return isFullAccess ? children : <NoAccess />;
             }

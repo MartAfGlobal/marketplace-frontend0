@@ -1,48 +1,82 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import {
-  ShieldCheck,
-  ShoppingCart,
-  Package,
-  Gavel,
-  UserSquare2,
-  Wallet,
-  RotateCcw,
-  Truck,
-  Headset,
-  ListChecks,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, Search } from "lucide-react";
 import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
 import { AdminSettingsDetails } from "@/helpers/admin/adminSettingsHelper";
 import SettingsCard, { SettingsFieldSchema } from "@/components/admin-components/settings/SettingsCard";
 import ChecklistEditor from "@/components/admin-components/settings/ChecklistEditor";
 import ReasonsEditor from "@/components/admin-components/settings/ReasonsEditor";
+import GeneralSettings from "@/components/admin-components/settings/GeneralSettings";
 import type { PermissionCategoryKey } from "@/types/admin";
 import type { SettingsSectionKey } from "@/store/admin/settings/adminSettingsSlice";
 
-interface SectionDef {
+/* ───────────────────────── Navigation model ─────────────────────────
+ * The admin Settings area is grouped the way the new design lays it out
+ * (PLATFORM / USERS / MARKETPLACE / COMMERCE / SUPPORT). Each leaf maps to
+ * an existing RBAC PermissionCategory via `category` -- a leaf only shows
+ * if the viewer can("view") that category, so no new permission concept is
+ * introduced. `comingSoon` leaves are placeholders for sections the design
+ * includes but the backend doesn't cover yet.
+ */
+interface NavItem {
   id: string;
   label: string;
-  icon: React.ReactNode;
   category: PermissionCategoryKey;
+  comingSoon?: boolean;
+}
+interface NavGroup {
+  label: string;
+  items: NavItem[];
 }
 
-const NAV_SECTIONS: SectionDef[] = [
-  { id: "security", label: "Security", icon: <ShieldCheck className="w-4 h-4" />, category: "USERS" },
-  { id: "orders", label: "Order rules", icon: <ShoppingCart className="w-4 h-4" />, category: "ORDERS" },
-  { id: "products", label: "Product operations", icon: <Package className="w-4 h-4" />, category: "PRODUCTS" },
-  { id: "disputes", label: "Disputes", icon: <Gavel className="w-4 h-4" />, category: "ORDERS" },
-  { id: "staff", label: "Staff policy", icon: <UserSquare2 className="w-4 h-4" />, category: "STAFF" },
-  { id: "finance", label: "Fees & commission", icon: <Wallet className="w-4 h-4" />, category: "FINANCES" },
-  { id: "refunds", label: "Returns & refunds", icon: <RotateCcw className="w-4 h-4" />, category: "FINANCES" },
-  { id: "shipping", label: "Shipping operations", icon: <Truck className="w-4 h-4" />, category: "ORDERS" },
-  { id: "support", label: "Support SLA", icon: <Headset className="w-4 h-4" />, category: "SUPPORT" },
-  { id: "reasons", label: "Reasons & lists", icon: <ListChecks className="w-4 h-4" />, category: "ORDERS" },
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Platform",
+    items: [
+      { id: "general", label: "General", category: "STAFF" },
+      { id: "localisation", label: "Localisation", category: "STAFF", comingSoon: true },
+      { id: "notifications", label: "Notifications", category: "STAFF", comingSoon: true },
+      { id: "legal", label: "Legal pages", category: "STAFF", comingSoon: true },
+      { id: "integrations", label: "Integrations", category: "STAFF", comingSoon: true },
+    ],
+  },
+  {
+    label: "Users",
+    items: [{ id: "security", label: "Security", category: "USERS" }],
+  },
+  {
+    label: "Staff",
+    items: [{ id: "staff", label: "Staff policy", category: "STAFF" }],
+  },
+  {
+    label: "Marketplace",
+    items: [
+      { id: "orders", label: "Order rules", category: "ORDERS" },
+      { id: "products", label: "Product operations", category: "PRODUCTS" },
+      { id: "moderation", label: "Product moderation", category: "PRODUCTS" },
+      { id: "shipping", label: "Shipping operations", category: "ORDERS" },
+      { id: "disputes", label: "Disputes", category: "ORDERS" },
+      { id: "reasons", label: "Reasons & lists", category: "ORDERS" },
+    ],
+  },
+  {
+    label: "Commerce",
+    items: [
+      { id: "finance", label: "Fees & commission", category: "FINANCES" },
+      { id: "payouts", label: "Payouts", category: "FINANCES" },
+      { id: "refunds", label: "Returns & refunds", category: "FINANCES" },
+    ],
+  },
+  {
+    label: "Support",
+    items: [{ id: "support", label: "Support SLA", category: "SUPPORT" }],
+  },
 ];
 
+/* ───────────────────────── Field schemas ───────────────────────── */
 const SECURITY_FIELDS: SettingsFieldSchema[] = [
   { key: "otp_code_length", label: "OTP code length", type: "number", min: 4 },
   { key: "otp_expiry_minutes", label: "OTP expiry (minutes)", type: "number", min: 1 },
@@ -153,56 +187,61 @@ const SUPPORT_FIELDS: SettingsFieldSchema[] = [
   { key: "allow_assignment_to_unavailable_agents", label: "Allow assignment to unavailable agents", type: "boolean" },
 ];
 
+// Singleton sections pre-fetched on mount so switching between them is
+// instant. General / checklist / reasons self-fetch in their own components.
+const PREFETCH_KEYS: SettingsSectionKey[] = [
+  "security",
+  "orders",
+  "productOperations",
+  "productModeration",
+  "staffPolicy",
+  "finance",
+  "payouts",
+  "refunds",
+  "disputes",
+  "shippingOperations",
+  "support",
+];
+
 export default function AdminSettingsPage() {
-  const { can } = useAdminAccess();
+  const { can, loaded } = useAdminAccess();
   const { fetchSettingsSection, updateSettingsSection } = AdminSettingsDetails();
   const sections = useSelector((state: RootState) => state.adminSettings.sections);
-  const [activeNav, setActiveNav] = useState(NAV_SECTIONS[0].id);
 
-  const visibleNav = NAV_SECTIONS.filter((s) => can(s.category, "view"));
+  const [search, setSearch] = useState("");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  // Groups/leaves the viewer may see, after RBAC + search filtering.
+  const visibleGroups = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return NAV_GROUPS.map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) =>
+          can(item.category, "view") &&
+          (q === "" ||
+            item.label.toLowerCase().includes(q) ||
+            group.label.toLowerCase().includes(q)),
+      ),
+    })).filter((group) => group.items.length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, sections, loaded]);
+
+  const firstVisibleId = visibleGroups[0]?.items[0]?.id ?? "general";
+  const [active, setActive] = useState<string>(firstVisibleId);
+
+  // Keep `active` valid as permissions load / search narrows the list.
+  useEffect(() => {
+    const stillVisible = visibleGroups.some((g) => g.items.some((i) => i.id === active));
+    if (!stillVisible && visibleGroups.length > 0) {
+      setActive(visibleGroups[0].items[0].id);
+    }
+  }, [visibleGroups, active]);
 
   useEffect(() => {
-    const keys: SettingsSectionKey[] = [
-      "security",
-      "orders",
-      "productOperations",
-      "productModeration",
-      "staffPolicy",
-      "finance",
-      "payouts",
-      "refunds",
-      "disputes",
-      "shippingOperations",
-      "support",
-    ];
-    keys.forEach((k) => fetchSettingsSection(k));
+    PREFETCH_KEYS.forEach((k) => fetchSettingsSection(k));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActiveNav(entry.target.id);
-        });
-      },
-      { rootMargin: "-15% 0px -70% 0px", threshold: 0 },
-    );
-    NAV_SECTIONS.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, [visibleNav.length]);
-
-  const scrollTo = (id: string) => {
-    setActiveNav(id);
-    const el = document.getElementById(id);
-    if (el) {
-      const offset = el.getBoundingClientRect().top + window.scrollY - 96;
-      window.scrollTo({ top: offset, behavior: "smooth" });
-    }
-  };
 
   const save = (key: SettingsSectionKey) => (changed: Record<string, any>) =>
     new Promise<void>((resolve) => {
@@ -210,37 +249,78 @@ export default function AdminSettingsPage() {
     });
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 animate-in fade-in duration-300">
-      <aside className="lg:w-56 flex-shrink-0">
-        <div className="lg:sticky lg:top-24 bg-white rounded-2xl p-3 border border-000000/4 flex lg:flex-col gap-1 overflow-x-auto scrollbar-hide">
-          {visibleNav.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => scrollTo(s.id)}
-              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-c14 font-MontserratMedium whitespace-nowrap transition-colors ${
-                activeNav === s.id
-                  ? "bg-6a0dad/10 text-6a0dad"
-                  : "text-000000/60 hover:bg-000000/4"
-              }`}
-            >
-              {s.icon}
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </aside>
+    <div className="animate-in fade-in duration-300 bg-white rounded-2xl border border-000000/5 p-5 md:p-7">
+      <div className="mb-6">
+        <h1 className="text-c20 font-MontserratSemiBold text-161616">Settings</h1>
+        <p className="text-c14 text-000000/50 mt-1">
+          Platform wide configurations across buyers, sellers and admin platform.
+          Changes apply immediately and are recorded in the audit trail.
+        </p>
+      </div>
 
-      <div className="flex-1 space-y-6 min-w-0">
-        <div>
-          <h1 className="text-c20 font-MontserratSemiBold text-161616">Settings</h1>
-          <p className="text-c14 text-000000/50 mt-1">
-            Platform-wide rules. Changes here apply across buyer, seller and admin apps immediately and are logged in the audit trail.
-          </p>
-        </div>
+      <div className="flex flex-col lg:flex-row gap-0">
+        {/* Grouped section navigation */}
+        <aside className="lg:w-60 flex-shrink-0 lg:border-r lg:border-000000/6 lg:pr-5">
+          <div className="lg:sticky lg:top-24 space-y-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-000000/30 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search settings"
+                className="w-full h-11 pl-10 pr-3.5 rounded-xl border border-000000/8 bg-white text-c14 outline-none focus:border-ff715b"
+              />
+            </div>
 
-        {can("USERS", "view") && (
-          <div id="security">
+            <nav>
+              {visibleGroups.map((group) => {
+                const isCollapsed = !!collapsed[group.label];
+                return (
+                  <div key={group.label} className="mb-1 last:mb-0">
+                    <button
+                      onClick={() =>
+                        setCollapsed((prev) => ({ ...prev, [group.label]: !prev[group.label] }))
+                      }
+                      className="w-full flex items-center justify-between px-3 py-2 text-c12 font-MontserratSemiBold text-000000/40 uppercase tracking-wide"
+                    >
+                      {group.label}
+                      {isCollapsed ? (
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                    {!isCollapsed && (
+                      <div className="space-y-0.5">
+                        {group.items.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => setActive(item.id)}
+                            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-c14 font-MontserratMedium transition-colors ${
+                              active === item.id
+                                ? "bg-ff715b/10 text-ff715b"
+                                : "text-000000/70 hover:bg-000000/4"
+                            }`}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </nav>
+          </div>
+        </aside>
+
+        {/* Active section content */}
+        <div className="flex-1 min-w-0 lg:pl-8">
+          {active === "general" && <GeneralSettings />}
+
+          {active === "security" && (
             <SettingsCard
+              flush
               title="Security"
               description="Sign-in and account-security rules."
               category="USERS"
@@ -248,12 +328,11 @@ export default function AdminSettingsPage() {
               data={sections.security ?? null}
               onSave={save("security")}
             />
-          </div>
-        )}
+          )}
 
-        {can("ORDERS", "view") && (
-          <div id="orders">
+          {active === "orders" && (
             <SettingsCard
+              flush
               title="Order rules"
               description="Timing windows that govern order acceptance, fulfillment and payment."
               category="ORDERS"
@@ -261,12 +340,11 @@ export default function AdminSettingsPage() {
               data={sections.orders ?? null}
               onSave={save("orders")}
             />
-          </div>
-        )}
+          )}
 
-        {can("PRODUCTS", "view") && (
-          <div id="products" className="space-y-6">
+          {active === "products" && (
             <SettingsCard
+              flush
               title="Product operations"
               description="Seller-facing product and inventory rules."
               category="PRODUCTS"
@@ -274,81 +352,28 @@ export default function AdminSettingsPage() {
               data={sections.productOperations ?? null}
               onSave={save("productOperations")}
             />
-            <SettingsCard
-              title="Product moderation"
-              description="Review-checklist pass criteria and image rules."
-              category="PRODUCTS"
-              fields={PRODUCT_MODERATION_FIELDS}
-              data={sections.productModeration ?? null}
-              onSave={save("productModeration")}
-            />
-            <ChecklistEditor />
-          </div>
-        )}
+          )}
 
-        {can("ORDERS", "view") && (
-          <div id="disputes">
-            <SettingsCard
-              title="Disputes"
-              description="Rules for buyer/seller disputes."
-              category="ORDERS"
-              fields={DISPUTE_FIELDS}
-              data={sections.disputes ?? null}
-              onSave={save("disputes")}
-            />
-          </div>
-        )}
+          {active === "moderation" && (
+            <div>
+              <SettingsCard
+                flush
+                title="Product moderation"
+                description="Review-checklist pass criteria and image rules."
+                category="PRODUCTS"
+                fields={PRODUCT_MODERATION_FIELDS}
+                data={sections.productModeration ?? null}
+                onSave={save("productModeration")}
+              />
+              <div className="pt-6">
+                <ChecklistEditor />
+              </div>
+            </div>
+          )}
 
-        {can("STAFF", "view") && (
-          <div id="staff">
+          {active === "shipping" && (
             <SettingsCard
-              title="Staff policy"
-              description="Rules for staff accounts and invitations."
-              category="STAFF"
-              fields={STAFF_POLICY_FIELDS}
-              data={sections.staffPolicy ?? null}
-              onSave={save("staffPolicy")}
-            />
-          </div>
-        )}
-
-        {can("FINANCES", "view") && (
-          <div id="finance">
-            <SettingsCard
-              title="Fees & commission"
-              description="Platform commission and fee rates."
-              category="FINANCES"
-              fields={FINANCE_FIELDS}
-              data={sections.finance ?? null}
-              onSave={save("finance")}
-            />
-          </div>
-        )}
-
-        {can("FINANCES", "view") && (
-          <div id="refunds" className="space-y-6">
-            <SettingsCard
-              title="Payouts"
-              description="Withdrawal and bank-detail rules for sellers."
-              category="FINANCES"
-              fields={PAYOUT_FIELDS}
-              data={sections.payouts ?? null}
-              onSave={save("payouts")}
-            />
-            <SettingsCard
-              title="Returns & refunds"
-              description="Return window and refund timeline."
-              category="FINANCES"
-              fields={REFUND_FIELDS}
-              data={sections.refunds ?? null}
-              onSave={save("refunds")}
-            />
-          </div>
-        )}
-
-        {can("ORDERS", "view") && (
-          <div id="shipping">
-            <SettingsCard
+              flush
               title="Shipping operations"
               description="Warehouse and delivery rules."
               category="ORDERS"
@@ -356,12 +381,73 @@ export default function AdminSettingsPage() {
               data={sections.shippingOperations ?? null}
               onSave={save("shippingOperations")}
             />
-          </div>
-        )}
+          )}
 
-        {can("SUPPORT", "view") && (
-          <div id="support">
+          {active === "disputes" && (
             <SettingsCard
+              flush
+              title="Disputes"
+              description="Rules for buyer/seller disputes."
+              category="ORDERS"
+              fields={DISPUTE_FIELDS}
+              data={sections.disputes ?? null}
+              onSave={save("disputes")}
+            />
+          )}
+
+          {active === "staff" && (
+            <SettingsCard
+              flush
+              title="Staff policy"
+              description="Rules for staff accounts and invitations."
+              category="STAFF"
+              fields={STAFF_POLICY_FIELDS}
+              data={sections.staffPolicy ?? null}
+              onSave={save("staffPolicy")}
+            />
+          )}
+
+          {active === "reasons" && <ReasonsEditor />}
+
+          {active === "finance" && (
+            <SettingsCard
+              flush
+              title="Fees & commission"
+              description="Platform commission and fee rates."
+              category="FINANCES"
+              fields={FINANCE_FIELDS}
+              data={sections.finance ?? null}
+              onSave={save("finance")}
+            />
+          )}
+
+          {active === "payouts" && (
+            <SettingsCard
+              flush
+              title="Payouts"
+              description="Withdrawal and bank-detail rules for sellers."
+              category="FINANCES"
+              fields={PAYOUT_FIELDS}
+              data={sections.payouts ?? null}
+              onSave={save("payouts")}
+            />
+          )}
+
+          {active === "refunds" && (
+            <SettingsCard
+              flush
+              title="Returns & refunds"
+              description="Return window and refund timeline."
+              category="FINANCES"
+              fields={REFUND_FIELDS}
+              data={sections.refunds ?? null}
+              onSave={save("refunds")}
+            />
+          )}
+
+          {active === "support" && (
+            <SettingsCard
+              flush
               title="Support SLA"
               description="Agent workload caps and response-time targets."
               category="SUPPORT"
@@ -369,11 +455,16 @@ export default function AdminSettingsPage() {
               data={sections.support ?? null}
               onSave={save("support")}
             />
-          </div>
-        )}
+          )}
 
-        <div id="reasons">
-          <ReasonsEditor />
+          {["localisation", "notifications", "legal", "integrations"].includes(active) && (
+            <div className="py-16 text-center">
+              <p className="text-c16 font-MontserratSemiBold text-161616">Coming soon</p>
+              <p className="text-c14 text-000000/50 mt-1">
+                This section hasn’t been built yet.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

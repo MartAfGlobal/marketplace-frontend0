@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type SettingsSectionKey =
+  | "general"
   | "security"
   | "orders"
   | "productOperations"

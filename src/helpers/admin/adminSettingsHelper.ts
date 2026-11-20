@@ -12,6 +12,7 @@ import {
 
 // Section key -> backend endpoint, under /settings/.
 const SECTION_URLS: Record<SettingsSectionKey, string> = {
+  general: "/settings/general/",
   security: "/settings/security/",
   orders: "/settings/orders/",
   productOperations: "/settings/product-operations/",
@@ -228,6 +229,39 @@ export const AdminSettingsDetails = () => {
     });
   };
 
+  // Maintenance mode is never flipped by the plain /settings/general/ PATCH
+  // (that field is read-only server-side). It goes through the dedicated
+  // toggle endpoint, which also emails every buyer/seller. The confirm
+  // dialog lives in the UI; this just calls it and refreshes the section.
+  const toggleMaintenance = (
+    maintenance_mode: boolean,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: {
+        url: "/settings/general/maintenance/",
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: { maintenance_mode },
+        successMessage: maintenance_mode
+          ? "Maintenance mode turned on. Buyers and sellers are being notified."
+          : "Maintenance mode turned off. Buyers and sellers are being notified.",
+      },
+      successRes: (responseData: any) => {
+        // The toggle returns only the PUBLIC subset (maintenance_message is
+        // the resolved/default text, not the admin's raw value), so we do
+        // NOT dispatch it over the admin section. The caller re-fetches the
+        // authoritative /settings/general/ row instead.
+        callback?.(responseData?.data ?? responseData);
+      },
+      errorRes: (err: any) => errorCallback?.(err),
+    });
+  };
+
   return {
     loading,
     error,
@@ -239,5 +273,6 @@ export const AdminSettingsDetails = () => {
     createReason,
     updateReason,
     deleteReason,
+    toggleMaintenance,
   };
 };

@@ -13,8 +13,15 @@ import HandShake from "@/assets/icons/Contact-us/handshake.png";
 import timer1 from "@/assets/icons/Contact-us/time1.png";
 import timer2 from "@/assets/icons/Contact-us/time2.png";
 import timer3 from "@/assets/icons/Contact-us/time3.png";
+import { usePublicSettings } from "@/helpers/usePublicSettings";
 
 export default function GetIntouch() {
+  // Primary phone/email come from admin General settings; fall back to the
+  // previous static copy until those fields are filled in.
+  const settings = usePublicSettings();
+  const phoneText = settings?.phone_number?.trim() || "+234 9122098928";
+  const emailText =
+    settings?.support_email?.trim() || settings?.general_email?.trim() || "martafglobaltech@gmail.com";
   return (
     <div className=" w-full pr-c24" >
       <div className="pb-c64">
@@ -61,7 +68,7 @@ export default function GetIntouch() {
                   Phone:
                 </p>
                 <span className="text-base font-MontserratSemiBold leading-9 text-646464">
-                  +234 9122098928
+                  {phoneText}
                 </span>
               </div>
               <div className="flex gap-3 items-center">
@@ -72,7 +79,7 @@ export default function GetIntouch() {
                   Email:
                 </p>
                 <span className="text-base font-MontserratSemiBold leading-9 text-646464">
-                  martafglobaltech@gmail.com
+                  {emailText}
                 </span>
               </div>
               <div className="flex gap-3 items-center">
