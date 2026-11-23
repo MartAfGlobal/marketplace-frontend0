@@ -9,6 +9,7 @@ import profileImage from "@/assets/icons/profile-averter.svg";
 import SellerProfileImageModal from "@/components/ui/Modals/SellerProfileImageModal";
 import { Label } from "@/components/ui/forms/Label";
 import { Input } from "@/components/ui/forms/Input";
+import { CountrySelect } from "@/components/ui/forms/CountrySelect";
 
 export default function ProfileSection() {
   const sellerData = useSelector((state: RootState) => state.seller.data);
@@ -150,18 +151,12 @@ export default function ProfileSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-6">
         <div className="flex flex-col gap-2 font-MontserratMedium">
-          <Label className="">Country</Label>
-          <Input
-            type="text"
-            name="company_country"
+          <CountrySelect
+            label="Country"
             value={formData.company_country}
-            onChange={handleInputChange}
-            readOnly={!isEditing}
-            className={` transition-all ${
-              isEditing
-                ? " text-[#161616]"
-                : "bg-transparent border-[#e5e5e5] text-000000/44 cursor-not-allowed"
-            }`}
+            disabled={!isEditing}
+            sellableOnly
+            onChange={(val) => setFormData((prev) => ({ ...prev, company_country: val }))}
           />
         </div>
         <div className="flex flex-col gap-2 font-MontserratMedium">

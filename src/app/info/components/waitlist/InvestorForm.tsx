@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "@/lib/axios";
+import { useCountries } from "@/helpers/useCountries";
 import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
@@ -19,7 +20,7 @@ interface ApiItem {
 
 export default function InvestorForm({ onSuccess }: InvestorFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [countries, setCountries] = useState<ApiItem[]>([]);
+  const { countries } = useCountries();
   
   const [formData, setFormData] = useState({
     fullName: "",
@@ -33,18 +34,7 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
     interest: ""
   });
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await axios.get("/website/countries/");
-        const countryData = Array.isArray(response.data) ? response.data : response.data.results || [];
-        setCountries(countryData);
-      } catch (e) {
-        console.error("Failed to fetch countries", e);
-      }
-    };
-    fetchCountries();
-  }, []);
+  // Countries come from the managed Localisation list (see useCountries).
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,10 +141,9 @@ export default function InvestorForm({ onSuccess }: InvestorFormProps) {
           <DropdownInput
             placeholder="Select country"
             options={countries.map(c => c.name)}
-            value={countries.find(c => c.id === formData.countryId)?.name || ""}
+            value={formData.countryId}
             onChange={(name) => {
-              const id = countries.find(c => c.name === name)?.id || "";
-              setFormData({ ...formData, countryId: id });
+              setFormData({ ...formData, countryId: name });
             }}
             emptyState="No countries available"
           />

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "@/lib/axios";
+import { useCountries } from "@/helpers/useCountries";
 import { Input } from "@/components/ui/forms/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { DropdownInput } from "@/components/ui/forms/auth/sellers/registrastionSteps/registered-business/modals/business-type";
@@ -20,7 +21,7 @@ interface ApiItem {
 export default function BuyerForm({ onSuccess }: BuyerFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<ApiItem[]>([]);
-  const [countries, setCountries] = useState<ApiItem[]>([]);
+  const { countries } = useCountries();
   
   const [formData, setFormData] = useState({
     fullName: "",
@@ -37,17 +38,9 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [catRes, countryRes] = await Promise.all([
-          axios.get("/website/categories/"),
-          axios.get("/website/countries/")
-        ]);
-        
-        console.log("[BuyerForm] categories response:", catRes.data);
+        const catRes = await axios.get("/website/categories/");
         const catData = Array.isArray(catRes.data) ? catRes.data : catRes.data?.results || [];
         setCategories(catData);
-        
-        const countryData = Array.isArray(countryRes.data) ? countryRes.data : countryRes.data?.results || [];
-        setCountries(countryData);
       } catch (e) {
         console.error("Failed to fetch form data", e);
       }
@@ -139,10 +132,9 @@ export default function BuyerForm({ onSuccess }: BuyerFormProps) {
           <DropdownInput
             placeholder="Select country"
             options={countries.map(c => c.name)}
-            value={countries.find(c => c.id === formData.countryId)?.name || ""}
+            value={formData.countryId}
             onChange={(name) => {
-              const id = countries.find(c => c.name === name)?.id || "";
-              setFormData({ ...formData, countryId: id });
+              setFormData({ ...formData, countryId: name });
             }}
             emptyState="No countries available"
           />

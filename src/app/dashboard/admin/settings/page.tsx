@@ -10,6 +10,7 @@ import SettingsCard, { SettingsFieldSchema } from "@/components/admin-components
 import ChecklistEditor from "@/components/admin-components/settings/ChecklistEditor";
 import ReasonsEditor from "@/components/admin-components/settings/ReasonsEditor";
 import GeneralSettings from "@/components/admin-components/settings/GeneralSettings";
+import LocalisationSettings from "@/components/admin-components/settings/LocalisationSettings";
 import type { PermissionCategoryKey } from "@/types/admin";
 import type { SettingsSectionKey } from "@/store/admin/settings/adminSettingsSlice";
 
@@ -37,7 +38,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Platform",
     items: [
       { id: "general", label: "General", category: "STAFF" },
-      { id: "localisation", label: "Localisation", category: "STAFF", comingSoon: true },
+      { id: "localisation", label: "Localisation", category: "STAFF" },
       { id: "notifications", label: "Notifications", category: "STAFF", comingSoon: true },
       { id: "legal", label: "Legal pages", category: "STAFF", comingSoon: true },
       { id: "integrations", label: "Integrations", category: "STAFF", comingSoon: true },
@@ -45,34 +46,34 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Users",
-    items: [{ id: "security", label: "Security", category: "USERS" }],
-  },
-  {
-    label: "Staff",
-    items: [{ id: "staff", label: "Staff policy", category: "STAFF" }],
+    items: [
+      { id: "security", label: "Sign-in & security", category: "USERS" },
+      { id: "orders", label: "Buyer rules", category: "ORDERS" },
+      { id: "seller-kyc", label: "Seller onboarding & KYC", category: "VERIFICATIONS", comingSoon: true },
+      { id: "products", label: "Seller operations", category: "PRODUCTS" },
+      { id: "staff", label: "Staff rules", category: "STAFF" },
+    ],
   },
   {
     label: "Marketplace",
     items: [
-      { id: "orders", label: "Order rules", category: "ORDERS" },
-      { id: "products", label: "Product operations", category: "PRODUCTS" },
       { id: "moderation", label: "Product moderation", category: "PRODUCTS" },
-      { id: "shipping", label: "Shipping operations", category: "ORDERS" },
-      { id: "disputes", label: "Disputes", category: "ORDERS" },
       { id: "reasons", label: "Reasons & lists", category: "ORDERS" },
     ],
   },
   {
     label: "Commerce",
     items: [
+      { id: "payments", label: "Payments", category: "FINANCES", comingSoon: true },
       { id: "finance", label: "Fees & commission", category: "FINANCES" },
       { id: "payouts", label: "Payouts", category: "FINANCES" },
-      { id: "refunds", label: "Returns & refunds", category: "FINANCES" },
+      { id: "shipping", label: "Shipping & hubs", category: "ORDERS" },
+      { id: "returns", label: "Returns & disputes", category: "FINANCES" },
     ],
   },
   {
     label: "Support",
-    items: [{ id: "support", label: "Support SLA", category: "SUPPORT" }],
+    items: [{ id: "support", label: "Ticketing", category: "SUPPORT" }],
   },
 ];
 
@@ -318,6 +319,8 @@ export default function AdminSettingsPage() {
         <div className="flex-1 min-w-0 lg:pl-8">
           {active === "general" && <GeneralSettings />}
 
+          {active === "localisation" && <LocalisationSettings />}
+
           {active === "security" && (
             <SettingsCard
               flush
@@ -383,16 +386,27 @@ export default function AdminSettingsPage() {
             />
           )}
 
-          {active === "disputes" && (
-            <SettingsCard
-              flush
-              title="Disputes"
-              description="Rules for buyer/seller disputes."
-              category="ORDERS"
-              fields={DISPUTE_FIELDS}
-              data={sections.disputes ?? null}
-              onSave={save("disputes")}
-            />
+          {active === "returns" && (
+            <div>
+              <SettingsCard
+                flush
+                title="Returns & refunds"
+                description="Return window and refund timeline."
+                category="FINANCES"
+                fields={REFUND_FIELDS}
+                data={sections.refunds ?? null}
+                onSave={save("refunds")}
+              />
+              <SettingsCard
+                flush
+                title="Disputes"
+                description="Rules for buyer/seller disputes."
+                category="ORDERS"
+                fields={DISPUTE_FIELDS}
+                data={sections.disputes ?? null}
+                onSave={save("disputes")}
+              />
+            </div>
           )}
 
           {active === "staff" && (
@@ -433,18 +447,6 @@ export default function AdminSettingsPage() {
             />
           )}
 
-          {active === "refunds" && (
-            <SettingsCard
-              flush
-              title="Returns & refunds"
-              description="Return window and refund timeline."
-              category="FINANCES"
-              fields={REFUND_FIELDS}
-              data={sections.refunds ?? null}
-              onSave={save("refunds")}
-            />
-          )}
-
           {active === "support" && (
             <SettingsCard
               flush
@@ -457,7 +459,7 @@ export default function AdminSettingsPage() {
             />
           )}
 
-          {["localisation", "notifications", "legal", "integrations"].includes(active) && (
+          {["notifications", "legal", "integrations", "seller-kyc", "payments"].includes(active) && (
             <div className="py-16 text-center">
               <p className="text-c16 font-MontserratSemiBold text-161616">Coming soon</p>
               <p className="text-c14 text-000000/50 mt-1">

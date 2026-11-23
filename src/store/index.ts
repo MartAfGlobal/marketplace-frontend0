@@ -31,6 +31,7 @@ import adminInfoReducer from "@/store/admin/adminInfoSlice"
 import AdminStaffDetailReducer from "@/store/admin/staff/adminStaffDetailSlice"
 import AdminNotificationsReducer from "@/store/admin/notifications/adminNotificationsSlice"
 import AdminSettingsReducer from "@/store/admin/settings/adminSettingsSlice"
+import AdminLocalisationReducer from "@/store/admin/settings/adminLocalisationSlice"
 
 import productReducer from "./user-data/products/product-slice";
 import selectedProductReducer from "@/store/user-data/products/selectedProduct-slice";
@@ -223,6 +224,7 @@ const rootReducer = combineReducers({
  adminStaff:persistReducer(AdminStaffPersistConfig, AdminStaffReducer),
  adminAccess: AdminAccessReducer,
  adminSettings: AdminSettingsReducer,
+ adminLocalisation: AdminLocalisationReducer,
  adminInfo: persistReducer(adminInfoPersistConfig, adminInfoReducer),
  adminNotifications: AdminNotificationsReducer,
  adminStaffDetail:persistReducer(AdminStaffDetailPersistConfig, AdminStaffDetailReducer),
