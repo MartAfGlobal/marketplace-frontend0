@@ -11,6 +11,8 @@ import ChecklistEditor from "@/components/admin-components/settings/ChecklistEdi
 import ReasonsEditor from "@/components/admin-components/settings/ReasonsEditor";
 import GeneralSettings from "@/components/admin-components/settings/GeneralSettings";
 import LocalisationSettings from "@/components/admin-components/settings/LocalisationSettings";
+import NotificationsSettings from "@/components/admin-components/settings/NotificationsSettings";
+import IntegrationsSettings from "@/components/admin-components/settings/IntegrationsSettings";
 import type { PermissionCategoryKey } from "@/types/admin";
 import type { SettingsSectionKey } from "@/store/admin/settings/adminSettingsSlice";
 
@@ -39,9 +41,9 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "general", label: "General", category: "STAFF" },
       { id: "localisation", label: "Localisation", category: "STAFF" },
-      { id: "notifications", label: "Notifications", category: "STAFF", comingSoon: true },
+      { id: "notifications", label: "Notifications", category: "STAFF" },
       { id: "legal", label: "Legal pages", category: "STAFF", comingSoon: true },
-      { id: "integrations", label: "Integrations", category: "STAFF", comingSoon: true },
+      { id: "integrations", label: "Integrations", category: "STAFF" },
     ],
   },
   {
@@ -321,6 +323,10 @@ export default function AdminSettingsPage() {
 
           {active === "localisation" && <LocalisationSettings />}
 
+          {active === "notifications" && <NotificationsSettings />}
+
+          {active === "integrations" && <IntegrationsSettings />}
+
           {active === "security" && (
             <SettingsCard
               flush
@@ -459,7 +465,7 @@ export default function AdminSettingsPage() {
             />
           )}
 
-          {["notifications", "legal", "integrations", "seller-kyc", "payments"].includes(active) && (
+          {["legal", "seller-kyc", "payments"].includes(active) && (
             <div className="py-16 text-center">
               <p className="text-c16 font-MontserratSemiBold text-161616">Coming soon</p>
               <p className="text-c14 text-000000/50 mt-1">
