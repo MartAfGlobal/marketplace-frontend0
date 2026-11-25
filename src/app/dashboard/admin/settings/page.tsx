@@ -13,6 +13,8 @@ import GeneralSettings from "@/components/admin-components/settings/GeneralSetti
 import LocalisationSettings from "@/components/admin-components/settings/LocalisationSettings";
 import NotificationsSettings from "@/components/admin-components/settings/NotificationsSettings";
 import IntegrationsSettings from "@/components/admin-components/settings/IntegrationsSettings";
+import SignInSecuritySettings from "@/components/admin-components/settings/SignInSecuritySettings";
+import BuyerRulesSettings from "@/components/admin-components/settings/BuyerRulesSettings";
 import type { PermissionCategoryKey } from "@/types/admin";
 import type { SettingsSectionKey } from "@/store/admin/settings/adminSettingsSlice";
 
@@ -327,29 +329,9 @@ export default function AdminSettingsPage() {
 
           {active === "integrations" && <IntegrationsSettings />}
 
-          {active === "security" && (
-            <SettingsCard
-              flush
-              title="Security"
-              description="Sign-in and account-security rules."
-              category="USERS"
-              fields={SECURITY_FIELDS}
-              data={sections.security ?? null}
-              onSave={save("security")}
-            />
-          )}
+          {active === "security" && <SignInSecuritySettings />}
 
-          {active === "orders" && (
-            <SettingsCard
-              flush
-              title="Order rules"
-              description="Timing windows that govern order acceptance, fulfillment and payment."
-              category="ORDERS"
-              fields={ORDER_RULES_FIELDS}
-              data={sections.orders ?? null}
-              onSave={save("orders")}
-            />
-          )}
+          {active === "orders" && <BuyerRulesSettings />}
 
           {active === "products" && (
             <SettingsCard
