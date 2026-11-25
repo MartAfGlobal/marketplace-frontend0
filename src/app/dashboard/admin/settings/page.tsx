@@ -15,6 +15,13 @@ import NotificationsSettings from "@/components/admin-components/settings/Notifi
 import IntegrationsSettings from "@/components/admin-components/settings/IntegrationsSettings";
 import SignInSecuritySettings from "@/components/admin-components/settings/SignInSecuritySettings";
 import BuyerRulesSettings from "@/components/admin-components/settings/BuyerRulesSettings";
+import SellerOperationsSettings from "@/components/admin-components/settings/SellerOperationsSettings";
+import SellerOnboardingKYC from "@/components/admin-components/settings/SellerOnboardingKYC";
+import StaffRulesSettings from "@/components/admin-components/settings/StaffRulesSettings";
+import ProductModerationSettings from "@/components/admin-components/settings/ProductModerationSettings";
+import FeesCommissionSettings from "@/components/admin-components/settings/FeesCommissionSettings";
+import PayoutsSettings from "@/components/admin-components/settings/PayoutsSettings";
+import ShippingHubsSettings from "@/components/admin-components/settings/ShippingHubsSettings";
 import type { PermissionCategoryKey } from "@/types/admin";
 import type { SettingsSectionKey } from "@/store/admin/settings/adminSettingsSlice";
 
@@ -53,7 +60,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "security", label: "Sign-in & security", category: "USERS" },
       { id: "orders", label: "Buyer rules", category: "ORDERS" },
-      { id: "seller-kyc", label: "Seller onboarding & KYC", category: "VERIFICATIONS", comingSoon: true },
+      { id: "seller-kyc", label: "Seller onboarding & KYC", category: "VERIFICATIONS" },
       { id: "products", label: "Seller operations", category: "PRODUCTS" },
       { id: "staff", label: "Staff rules", category: "STAFF" },
     ],
@@ -95,11 +102,6 @@ const ORDER_RULES_FIELDS: SettingsFieldSchema[] = [
   { key: "seller_acceptance_window_hours", label: "Seller order-acceptance window (hours)", type: "number", min: 1 },
   { key: "seller_fulfillment_window_hours", label: "Seller fulfillment window (hours)", type: "number", min: 1 },
   { key: "unpaid_order_expiry_hours", label: "Unpaid order expiry (hours)", type: "number", min: 1 },
-];
-
-const PRODUCT_OPS_FIELDS: SettingsFieldSchema[] = [
-  { key: "low_stock_threshold", label: "Low-stock warning level", type: "number", min: 0 },
-  { key: "out_of_stock_threshold", label: "Out-of-stock level", type: "number", min: 0 },
 ];
 
 const PRODUCT_MODERATION_FIELDS: SettingsFieldSchema[] = [
@@ -333,46 +335,20 @@ export default function AdminSettingsPage() {
 
           {active === "orders" && <BuyerRulesSettings />}
 
-          {active === "products" && (
-            <SettingsCard
-              flush
-              title="Product operations"
-              description="Seller-facing product and inventory rules."
-              category="PRODUCTS"
-              fields={PRODUCT_OPS_FIELDS}
-              data={sections.productOperations ?? null}
-              onSave={save("productOperations")}
-            />
-          )}
+          {active === "products" && <SellerOperationsSettings />}
+
+          {active === "seller-kyc" && <SellerOnboardingKYC />}
 
           {active === "moderation" && (
             <div>
-              <SettingsCard
-                flush
-                title="Product moderation"
-                description="Review-checklist pass criteria and image rules."
-                category="PRODUCTS"
-                fields={PRODUCT_MODERATION_FIELDS}
-                data={sections.productModeration ?? null}
-                onSave={save("productModeration")}
-              />
-              <div className="pt-6">
+              <ProductModerationSettings />
+              <div className="pt-8 border-t border-000000/6 mt-8">
                 <ChecklistEditor />
               </div>
             </div>
           )}
 
-          {active === "shipping" && (
-            <SettingsCard
-              flush
-              title="Shipping operations"
-              description="Warehouse and delivery rules."
-              category="ORDERS"
-              fields={SHIPPING_FIELDS}
-              data={sections.shippingOperations ?? null}
-              onSave={save("shippingOperations")}
-            />
-          )}
+          {active === "shipping" && <ShippingHubsSettings />}
 
           {active === "returns" && (
             <div>
@@ -397,43 +373,13 @@ export default function AdminSettingsPage() {
             </div>
           )}
 
-          {active === "staff" && (
-            <SettingsCard
-              flush
-              title="Staff policy"
-              description="Rules for staff accounts and invitations."
-              category="STAFF"
-              fields={STAFF_POLICY_FIELDS}
-              data={sections.staffPolicy ?? null}
-              onSave={save("staffPolicy")}
-            />
-          )}
+          {active === "staff" && <StaffRulesSettings />}
 
           {active === "reasons" && <ReasonsEditor />}
 
-          {active === "finance" && (
-            <SettingsCard
-              flush
-              title="Fees & commission"
-              description="Platform commission and fee rates."
-              category="FINANCES"
-              fields={FINANCE_FIELDS}
-              data={sections.finance ?? null}
-              onSave={save("finance")}
-            />
-          )}
+          {active === "finance" && <FeesCommissionSettings />}
 
-          {active === "payouts" && (
-            <SettingsCard
-              flush
-              title="Payouts"
-              description="Withdrawal and bank-detail rules for sellers."
-              category="FINANCES"
-              fields={PAYOUT_FIELDS}
-              data={sections.payouts ?? null}
-              onSave={save("payouts")}
-            />
-          )}
+          {active === "payouts" && <PayoutsSettings />}
 
           {active === "support" && (
             <SettingsCard
@@ -447,7 +393,7 @@ export default function AdminSettingsPage() {
             />
           )}
 
-          {["legal", "seller-kyc", "payments"].includes(active) && (
+          {["legal", "payments"].includes(active) && (
             <div className="py-16 text-center">
               <p className="text-c16 font-MontserratSemiBold text-161616">Coming soon</p>
               <p className="text-c14 text-000000/50 mt-1">

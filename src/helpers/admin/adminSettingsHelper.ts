@@ -7,6 +7,7 @@ import {
   setSettingsSection,
   setSettingsChecklist,
   setSettingsReasons,
+  setKycRequirements,
   SettingsSectionKey,
 } from "@/store/admin/settings/adminSettingsSlice";
 
@@ -23,8 +24,12 @@ const SECTION_URLS: Record<SettingsSectionKey, string> = {
   refunds: "/settings/refunds/",
   disputes: "/settings/disputes/",
   shippingOperations: "/settings/shipping-operations/",
+  sellerVerification: "/settings/seller-verification/",
   support: "/support/configuration/",
 };
+
+// Seller onboarding & KYC table rows (required docs / accepted IDs / locked fields).
+const KYC_REQUIREMENTS_URL = "/settings/seller-verification/requirements/";
 
 // Reasons & Lists group -> backend URL prefix.
 const REASON_GROUP_URLS: Record<string, string> = {
@@ -33,6 +38,7 @@ const REASON_GROUP_URLS: Record<string, string> = {
   product: "/product-reasons/",
   verification: "/verification-reasons/",
   refund: "/refund-reasons/",
+  support: "/support-reasons/",
 };
 
 /**
@@ -229,6 +235,130 @@ export const AdminSettingsDetails = () => {
     });
   };
 
+  const fetchKycRequirements = (callback?: (data: any[]) => void) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: {
+        url: KYC_REQUIREMENTS_URL,
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "admin",
+        suppressErrorNotification: true,
+      },
+      successRes: (responseData: any) => {
+        const results = responseData?.data?.results ?? responseData?.data ?? [];
+        dispatch(setKycRequirements(results));
+        callback?.(results);
+      },
+    });
+  };
+
+  const createKycRequirement = (
+    payload: Record<string, any>,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: {
+        url: KYC_REQUIREMENTS_URL,
+        method: "POST",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+        successMessage: "Row added.",
+      },
+      successRes: (responseData: any) => callback?.(responseData?.data ?? responseData),
+      errorRes: (err: any) => errorCallback?.(err),
+    });
+  };
+
+  const updateKycRequirement = (
+    id: string,
+    payload: Record<string, any>,
+    callback?: (data: any) => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: {
+        url: `${KYC_REQUIREMENTS_URL}${id}/`,
+        method: "PATCH",
+        token,
+        isAuth: true,
+        userType: "admin",
+        body: payload,
+      },
+      successRes: (responseData: any) => callback?.(responseData?.data ?? responseData),
+      errorRes: (err: any) => errorCallback?.(err),
+    });
+  };
+
+  const deleteKycRequirement = (
+    id: string,
+    callback?: () => void,
+    errorCallback?: (err: any) => void,
+  ) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: {
+        url: `${KYC_REQUIREMENTS_URL}${id}/`,
+        method: "DELETE",
+        token,
+        isAuth: true,
+        userType: "admin",
+        successMessage: "Row removed.",
+      },
+      successRes: () => callback?.(),
+      errorRes: (err: any) => errorCallback?.(err),
+    });
+  };
+
+  // --- Shipping & hubs: warehouses live in the warehouse app (not /settings/) ---
+  const WAREHOUSES_URL = "/warehouse/admin/warehouses/";
+  const STATES_URL = "/warehouse/admin/states/";
+
+  const fetchWarehouses = (callback?: (data: any[]) => void) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: { url: WAREHOUSES_URL, method: "GET", token, isAuth: true, userType: "admin", suppressErrorNotification: true },
+      successRes: (r: any) => callback?.(r?.data?.results ?? r?.data ?? []),
+    });
+  };
+  const fetchStates = (callback?: (data: any[]) => void) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: { url: STATES_URL, method: "GET", token, isAuth: true, userType: "admin", suppressErrorNotification: true },
+      successRes: (r: any) => callback?.(r?.data?.results ?? r?.data ?? []),
+    });
+  };
+  const createWarehouse = (payload: Record<string, any>, cb?: (d: any) => void, err?: (e: any) => void) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: { url: WAREHOUSES_URL, method: "POST", token, isAuth: true, userType: "admin", body: payload, successMessage: "Warehouse added." },
+      successRes: (r: any) => cb?.(r?.data ?? r),
+      errorRes: (e: any) => err?.(e),
+    });
+  };
+  const updateWarehouse = (id: string, payload: Record<string, any>, cb?: (d: any) => void, err?: (e: any) => void) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: { url: `${WAREHOUSES_URL}${id}/`, method: "PATCH", token, isAuth: true, userType: "admin", body: payload, successMessage: "Warehouse updated." },
+      successRes: (r: any) => cb?.(r?.data ?? r),
+      errorRes: (e: any) => err?.(e),
+    });
+  };
+  const deleteWarehouse = (id: string, cb?: () => void, err?: (e: any) => void) => {
+    if (!token) return;
+    sendHttpRequest({
+      requestConfig: { url: `${WAREHOUSES_URL}${id}/`, method: "DELETE", token, isAuth: true, userType: "admin", successMessage: "Warehouse removed." },
+      successRes: () => cb?.(),
+      errorRes: (e: any) => err?.(e),
+    });
+  };
+
   // Maintenance mode is never flipped by the plain /settings/general/ PATCH
   // (that field is read-only server-side). It goes through the dedicated
   // toggle endpoint, which also emails every buyer/seller. The confirm
@@ -273,6 +403,15 @@ export const AdminSettingsDetails = () => {
     createReason,
     updateReason,
     deleteReason,
+    fetchKycRequirements,
+    createKycRequirement,
+    updateKycRequirement,
+    deleteKycRequirement,
+    fetchWarehouses,
+    fetchStates,
+    createWarehouse,
+    updateWarehouse,
+    deleteWarehouse,
     toggleMaintenance,
   };
 };
