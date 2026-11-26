@@ -21,7 +21,14 @@ export function useAdminAccess() {
     [access],
   );
 
-  return { access, loaded, role: access?.role ?? null, isFullAccess: !!access?.is_full_access, can };
+  return {
+    access,
+    loaded,
+    role: access?.role ?? null,
+    isFullAccess: !!access?.is_full_access,
+    isSuperUser: !!access?.is_superuser,
+    can,
+  };
 }
 
 /** Fetch the access matrix for the current session (call once, from the admin layout). */

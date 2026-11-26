@@ -30,6 +30,10 @@ interface SettingsCardProps {
   data: Record<string, any> | null;
   loading?: boolean;
   onSave: (changed: Record<string, any>) => Promise<void> | void;
+  /** Render as a flush section (no card chrome) inside a shared white
+   *  container, separated by a bottom divider -- matches the Settings
+   *  layout where everything lives on one rounded white surface. */
+  flush?: boolean;
 }
 
 function displayValue(field: SettingsFieldSchema, value: any) {
@@ -49,6 +53,7 @@ export default function SettingsCard({
   data,
   loading,
   onSave,
+  flush,
 }: SettingsCardProps) {
   const { can } = useAdminAccess();
   const canView = can(category, "view");
@@ -100,7 +105,13 @@ export default function SettingsCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-000000/4">
+    <div
+      className={
+        flush
+          ? "py-7 border-b border-000000/6 last:border-b-0"
+          : "bg-white rounded-2xl p-6 border border-000000/4"
+      }
+    >
       <div className="flex items-start justify-between mb-5">
         <div>
           <h3 className="text-c16 font-MontserratSemiBold text-161616">{title}</h3>
@@ -111,7 +122,7 @@ export default function SettingsCard({
         {canModify && !editing && (
           <button
             onClick={startEdit}
-            className="flex items-center gap-1.5 text-c12 font-MontserratMedium text-6a0dad hover:underline flex-shrink-0"
+            className="flex items-center gap-1.5 text-c12 font-MontserratMedium text-ff715b hover:underline flex-shrink-0"
           >
             <Pencil className="w-3.5 h-3.5" />
             Edit

@@ -8,6 +8,7 @@ import Xicon from "@/assets/FormIcon/xicon.svg";
 import { Label } from "@/components/ui/forms/Label";
 import { TextInput } from "./shared/text-input";
 import { FileInput } from "./shared/file-input";
+import { CountrySelect } from "@/components/ui/forms/CountrySelect";
 
 // ── ID type map ───────────────────────────────────────────────────
 const ID_TYPE_MAP: Record<string, string> = {
@@ -897,14 +898,12 @@ export default function BusinessInfoTab({
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="md:col-span-1">
-            <TextInput
+            <CountrySelect
               label="Country"
-              name="company_country"
-              type="text"
-              maxLength={60}
               value={formData.company_country}
               disabled={!isEditing}
-              onChange={(e) => onFieldChange("company_country", e.target.value)}
+              sellableOnly
+              onChange={(val) => onFieldChange("company_country", val)}
             />
           </div>
           <div className="md:col-span-1">

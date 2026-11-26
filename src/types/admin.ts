@@ -89,7 +89,11 @@ export function resolveImageUrl(imageUrlField: any): string | undefined {
 // ── Roles & Permissions (RBAC) ─────────────────────────────────────────────
 // Mirrors departments/serializers_rbac.py + accounts/models.py on the backend.
 
-export type PermissionAction = "view" | "create" | "modify" | "delete";
+// "view_all" widens "view" from own-records to all-records. It is only
+// meaningful for SUPPORT today (whole ticket queue vs. own tickets); the
+// matrix carries it on every category for uniformity but the editor only
+// exposes it where it applies (see VIEW_ALL_CATEGORIES).
+export type PermissionAction = "view" | "view_all" | "create" | "modify" | "delete";
 
 export type PermissionCategoryKey =
   | "USERS"
@@ -109,6 +113,10 @@ export type RoleType = "SYSTEM" | "CUSTOM";
  *  effective matrix. Full admins (superusers) come back with everything true. */
 export interface AdminAccess {
   is_full_access: boolean;
+  /** True only for a real Django superuser (createsuperuser), not for
+   *  legacy is_staff or RBAC-created admins. The admin Settings area is
+   *  restricted to this flag. */
+  is_superuser?: boolean;
   role: string | null;
   permissions: PermissionMatrix;
 }

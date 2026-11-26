@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type SettingsSectionKey =
+  | "general"
   | "security"
   | "orders"
   | "productOperations"
@@ -11,18 +12,21 @@ export type SettingsSectionKey =
   | "refunds"
   | "disputes"
   | "shippingOperations"
+  | "sellerVerification"
   | "support";
 
 interface AdminSettingsState {
   sections: Partial<Record<SettingsSectionKey, Record<string, any>>>;
   checklist: any[];
   reasons: Record<string, any[]>; // keyed by reason group: account | product | verification | refund | cancellation
+  kycRequirements: any[]; // Seller onboarding & KYC table rows (all categories)
 }
 
 const initialState: AdminSettingsState = {
   sections: {},
   checklist: [],
   reasons: {},
+  kycRequirements: [],
 };
 
 // Deliberately not persisted -- same reasoning as adminAccessSlice: these
@@ -48,6 +52,9 @@ const adminSettingsSlice = createSlice({
     ) {
       state.reasons[action.payload.group] = action.payload.data;
     },
+    setKycRequirements(state, action: PayloadAction<any[]>) {
+      state.kycRequirements = action.payload;
+    },
     clearAdminSettings() {
       return initialState;
     },
@@ -58,6 +65,7 @@ export const {
   setSettingsSection,
   setSettingsChecklist,
   setSettingsReasons,
+  setKycRequirements,
   clearAdminSettings,
 } = adminSettingsSlice.actions;
 export default adminSettingsSlice.reducer;

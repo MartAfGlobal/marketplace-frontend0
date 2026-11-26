@@ -13,6 +13,7 @@ import NigerianFlag from "@/assets/icons/user-dashboard/Flags/Nigeria.png";
 import { Label } from "@/components/ui/forms/Label";
 import { Button } from "@/components/ui/Button/Button";
 import { Country, State } from "country-state-city";
+import { useCountries } from "@/helpers/useCountries";
 import { useHttp } from "@/hooks/use-http";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -102,12 +103,18 @@ export default function Editaddreess() {
   const stateRef = useClickOutside<HTMLDivElement>(() => setStateOpen(false));
 
   const { loading, sendHttpRequest } = useHttp();
+  // Country dropdown is driven by the managed Localisation list (shippable
+  // countries only); country-state-city is still used for flags/phonecode/
+  // states, filtered down to the managed set.
+  const { countries: managedCountries } = useCountries({ shippableOnly: true });
 
   // -------------------------------
   // LOAD COUNTRIES + INITIAL COUNTRY
   // -------------------------------
 useEffect(() => {
-  const allCountries = Country.getAllCountries();
+  const managedCodes = new Set(managedCountries.map((m) => m.code));
+  const base = Country.getAllCountries();
+  const allCountries = managedCodes.size ? base.filter((c) => managedCodes.has(c.isoCode)) : base;
   setCountries(allCountries);
 
   // If no address or no address.country → default to Nigeria
@@ -127,7 +134,8 @@ useEffect(() => {
     country: savedCountry.name,
     phone: prev.phone || `+234 `, // auto phonecode for Nigeria
   }));
-}, [address]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [address, managedCountries]);
 ;
 
   // -------------------------------

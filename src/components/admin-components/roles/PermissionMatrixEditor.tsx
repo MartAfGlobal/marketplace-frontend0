@@ -3,7 +3,7 @@
 import { Check } from "lucide-react";
 import type { PermissionAction, PermissionMatrix } from "@/types/admin";
 import { useAdminAccess } from "@/helpers/admin/useAdminAccess";
-import { PERMISSION_ACTIONS, PERMISSION_CATEGORIES } from "./permissionCategories";
+import { PERMISSION_ACTIONS, PERMISSION_CATEGORIES, VIEW_ALL_CATEGORIES } from "./permissionCategories";
 
 interface PermissionMatrixEditorProps {
   matrix: PermissionMatrix;
@@ -13,10 +13,15 @@ interface PermissionMatrixEditorProps {
 
 const ACTION_LABELS: Record<PermissionAction, string> = {
   view: "View",
+  view_all: "View all",
   create: "Create",
   modify: "Modify",
   delete: "Delete",
 };
+
+// Tooltip explaining the Support-only view/view_all scope split.
+const VIEW_ALL_HINT =
+  "See all tickets (the whole queue). 'View' alone scopes a staff member to only the tickets they created or are assigned to.";
 
 export default function PermissionMatrixEditor({
   matrix,
@@ -43,15 +48,31 @@ export default function PermissionMatrixEditor({
             <tr key={key} className="h-13">
               <td className="py-3 pr-4 text-sm text-[#161616] font-MontserratMedium">{label}</td>
               {PERMISSION_ACTIONS.map((action) => {
+                // view_all only applies to certain categories (Support today).
+                // Elsewhere it's not a real choice — show N/A so the grid stays
+                // rectangular without implying a capability that does nothing.
+                if (action === "view_all" && !VIEW_ALL_CATEGORIES.has(key)) {
+                  return (
+                    <td key={action} className="py-3 px-3 text-center">
+                      <span className="text-gray-300 select-none" title="Only applies to Support">—</span>
+                    </td>
+                  );
+                }
+                const isViewAll = action === "view_all";
                 const checked = !!matrix[key]?.[action];
                 // You can't grant access you don't hold yourself (the server refuses it too).
                 const locked = !readOnly && !checked && !can(key, action);
+                const title = locked
+                  ? "You can't grant access you don't have yourself"
+                  : isViewAll
+                    ? VIEW_ALL_HINT
+                    : undefined;
                 return (
                   <td key={action} className="py-3 px-3 text-center">
                     <button
                       type="button"
                       disabled={readOnly || locked}
-                      title={locked ? "You can't grant access you don't have yourself" : undefined}
+                      title={title}
                       onClick={() => onToggle?.(key, action)}
                       aria-pressed={checked}
                       aria-label={`${label} — ${ACTION_LABELS[action]}`}

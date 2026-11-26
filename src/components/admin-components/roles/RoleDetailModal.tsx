@@ -19,7 +19,7 @@ import type {
   PermissionCategoryKey,
   PermissionMatrix,
 } from "@/types/admin";
-import { emptyPermissionMatrix } from "./permissionCategories";
+import { emptyPermissionMatrix, togglePermission } from "./permissionCategories";
 
 type Tab = "Details" | "Permissions" | "Staff assigned";
 
@@ -110,10 +110,7 @@ export default function RoleDetailModal({ isOpen, roleId, onClose, onChanged }: 
   }, [isOpen, roleId, activeTab, staffPage]);
 
   const handleTogglePermission = (category: PermissionCategoryKey, action: PermissionAction) => {
-    setMatrix((prev) => ({
-      ...prev,
-      [category]: { ...prev[category], [action]: !prev[category][action] },
-    }));
+    setMatrix((prev) => togglePermission(prev, category, action));
   };
 
   const handleSavePermissions = () => {
