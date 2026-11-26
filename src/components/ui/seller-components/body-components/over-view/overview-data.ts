@@ -12,6 +12,7 @@ export function toMetricNumber(value: unknown): number {
 export function getMetricSection(analytics: any, metric: OverviewMetricName) {
   const candidates = [
     analytics?.[metric],
+    metric === "products" ? analytics?.products_available : undefined,
     analytics?.[`${metric}_stats`],
     analytics?.[`${metric}_card`],
     analytics?.overview?.[metric],

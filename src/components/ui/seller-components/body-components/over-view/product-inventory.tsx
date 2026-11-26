@@ -13,12 +13,24 @@ import FullFilterButton from "../../tables/Filters/full-filterButton";
 import FilterDropdown from "./Filter-components/filterButton";
 import SellerSearch from "./Filter-components/SellerSearch";
 import { filterOptions } from "./Filter-components/filterOptions";
-import InventoryTable from "../../tables/inventory-table";
+import InventoryTable, { InventoryRow } from "../../tables/inventory-table";
 import FilterModal from "../../tables/Filters/filter-modal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { ChevronRight } from "lucide-react";
 import { downloadTableRows } from "@/utils/downloadTableRows";
+import { useHttp } from "@/hooks/use-http";
+
+function formatInventoryDate(value?: Date | string): string | undefined {
+  if (!value) return undefined;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function ProductInventory() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
@@ -26,18 +38,110 @@ export default function ProductInventory() {
   const [resultsPerPage, setResultsPerPage] = useState(4);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<{
+    date?: { start?: Date | string; end?: Date | string };
+    perc?: { from?: number; to?: number };
+    sku?: string;
+    qty?: { min?: number; max?: number };
+  }>({});
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [inventoryRows, setInventoryRows] = useState<InventoryRow[]>([]);
+  const [inventoryCount, setInventoryCount] = useState(0);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  
-  const product = useSelector((state: RootState) => state.sellerProduct.product) || [];
-  const totalRows = filteredCount !== null ? filteredCount : product.length;
+  const token = useSelector((state: RootState) => state.token?.token);
+  const { sendHttpRequest } = useHttp();
+  const totalRows = filteredCount !== null ? filteredCount : inventoryCount;
   const filteredDataCount = totalRows; 
 
   const startIndex = (currentPage - 1) * resultsPerPage + 1;
   const endIndex = Math.min(currentPage * resultsPerPage, filteredDataCount);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setFilteredCount(null);
+  }, [filters, searchQuery, resultsPerPage]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    let isCurrentRequest = true;
+    const timeout = setTimeout(() => {
+      sendHttpRequest({
+        requestConfig: {
+          url: "/products/manufacturer/inventory",
+          method: "GET",
+          token,
+          isAuth: true,
+          userType: "seller",
+          params: {
+            search: searchQuery || filters.sku || "",
+            page: currentPage,
+            page_size: resultsPerPage,
+            ...(filters.perc?.from !== undefined && {
+              percent_min: filters.perc.from,
+            }),
+            ...(filters.perc?.to !== undefined && {
+              percent_max: filters.perc.to,
+            }),
+            ...(filters.qty?.min !== undefined && {
+              quantity_min: filters.qty.min,
+            }),
+            ...(filters.qty?.max !== undefined && {
+              quantity_max: filters.qty.max,
+            }),
+            ...(formatInventoryDate(filters.date?.start) && {
+              date_from: formatInventoryDate(filters.date?.start),
+            }),
+            ...(formatInventoryDate(filters.date?.end) && {
+              date_to: formatInventoryDate(filters.date?.end),
+            }),
+          },
+        },
+        successRes: (response: any) => {
+          if (!isCurrentRequest) return;
+          const data = response?.data?.data ?? response?.data;
+          const responseRows = Array.isArray(data)
+            ? data
+            : data?.results ?? data?.items ?? data?.inventory ?? data?.products ?? [];
+          const rows = Array.isArray(responseRows) ? responseRows : [];
+          const normalizedRows = rows.map((row: any, index: number) => ({
+            ...row,
+            id: row.id ?? row.product_id ?? row.stockcode ?? row.sku ?? String(index),
+            name: row.name ?? row.product_name ?? row.title ?? "",
+            stockcode: row.stockcode ?? row.stock_code ?? row.sku ?? "",
+            sold: row.sold ?? row.quantity_sold ?? row.qty_sold ?? 0,
+            inventory:
+              row.inventory ??
+              row.quantity_in_stock ??
+              row.stock_quantity ??
+              row.available_stock ??
+              0,
+            sales_percentag:
+              row.sales_percentag ?? row.sales_percentage ?? row.sales_percent ?? 0,
+          }));
+          setInventoryRows(normalizedRows);
+          setInventoryCount(
+            Number(data?.count ?? data?.total ?? data?.total_count ?? rows.length),
+          );
+        },
+        errorRes: (error: unknown) => {
+          if (isCurrentRequest) {
+            console.warn(
+              "Seller product inventory unavailable:",
+              error instanceof Error ? error.message : error,
+            );
+          }
+        },
+      });
+    }, 300);
+
+    return () => {
+      isCurrentRequest = false;
+      clearTimeout(timeout);
+    };
+  }, [currentPage, filters, resultsPerPage, searchQuery, sendHttpRequest, token]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -51,7 +155,7 @@ export default function ProductInventory() {
   }, []);
 
   return (
-    <div className="w-full   mb-4 lg:mb-6 p-6 lg:px-8 lg:pt-6 bg-ffffff rounded-c16">
+    <div className="seller-overview-panel w-full mb-4 lg:mb-6 p-6 lg:px-8 lg:pt-6 bg-ffffff rounded-c16">
       <div className="mb-6">
         <p className="text-c18 font-MontserratMedium text-000000">Products Inventory</p>
       </div>
@@ -150,7 +254,9 @@ export default function ProductInventory() {
         <InventoryTable
           currentPage={currentPage}
           rowsPerPage={resultsPerPage}
-          filters={{ ...filters, sku: searchQuery }}
+          filters={filters}
+          products={inventoryRows}
+          totalCount={inventoryCount}
           onFilteredCount={setFilteredCount}
           onSelectionChange={setSelectedProducts}
         />

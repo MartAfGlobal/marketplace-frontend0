@@ -22,23 +22,41 @@ import Pagination from "../products/pignation-button";
 import FilterModal from "../../tables/Filters/filter-modal";
 import { useSelector } from "react-redux";
 import { downloadTableRows } from "@/utils/downloadTableRows";
+import { useHttp } from "@/hooks/use-http";
+import { RootState } from "@/store";
+
+function formatOrderDate(value?: Date | string): string | undefined {
+  if (!value) return undefined;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function OverviewOder() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+  const token = useSelector((state: RootState) => state.token?.token);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrders, setSelectedOrders] = useState<any[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const rowsPerPage = 10;
-  const totalRows = 5;
+  const rowsPerPage = 6;
+  const totalRows = orders.length;
   const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const dateFrom = formatOrderDate(filters.date?.start);
+  const dateTo = formatOrderDate(filters.date?.end);
+  const { sendHttpRequest } = useHttp();
 
-  // 🔴 optional: close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -53,16 +71,65 @@ export default function OverviewOder() {
   }, []);
 
   useEffect(() => {
-    setFilters((prev) => ({ ...prev, search: searchQuery }));
-  }, [searchQuery]);
+    if (!token) {
+      setOrders([]);
+      setIsLoading(false);
+      return;
+    }
+
+    let isCurrentRequest = true;
+    const timeout = setTimeout(() => {
+      setIsLoading(true);
+      sendHttpRequest({
+        requestConfig: {
+          url: "/orders/manufacturer/orders",
+          method: "GET",
+          token,
+          isAuth: true,
+          userType: "seller",
+          params: {
+            ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
+            ...(dateFrom ? { date_from: dateFrom } : {}),
+            ...(dateTo ? { date_to: dateTo } : {}),
+          },
+        },
+        successRes: (response: any) => {
+          if (!isCurrentRequest) return;
+          const data = response?.data?.data ?? response?.data;
+          const responseRows = Array.isArray(data)
+            ? data
+            : data?.orders ?? data?.results ?? data?.items ?? data?.data ?? [];
+          setOrders(Array.isArray(responseRows) ? responseRows : []);
+          setIsLoading(false);
+        },
+        errorRes: (error: unknown) => {
+          if (!isCurrentRequest) return;
+          setOrders([]);
+          setIsLoading(false);
+          console.warn(
+            "Seller orders unavailable:",
+            error instanceof Error ? error.message : error,
+          );
+        },
+      });
+    }, 300);
+
+    return () => {
+      isCurrentRequest = false;
+      clearTimeout(timeout);
+    };
+  }, [dateFrom, dateTo, searchQuery, sendHttpRequest, token]);
 
   return (
-    <div className="w-full max-w-214.5 bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8">
+    <div className="seller-overview-panel w-full max-w-214.5 bg-ffffff h-fit circle-shadow rounded-c16 py-6 px-8">
       <p className="text-c18 font-MontserratSemiBold">Orders</p>
       <div className="flex justify-between mt-6">
           <SellerSearch 
             value={searchQuery}
-            onChange={setSearchQuery}
+            onChange={(value) => {
+              setSearchQuery(value);
+              setCurrentPage(1);
+            }}
             onToggle={setIsSearchOpen}
             disabled={isIncomplete}
             placeholder="Search by ID, items, date..."
@@ -78,7 +145,10 @@ export default function OverviewOder() {
           {filterOpen && (
             <div className="absolute top-full left-0 mt-2 z-50   w-fit">
               <FilterModal
-                onFiltersChange={(newFilters) => setFilters(newFilters)}
+                onFiltersChange={(newFilters) => {
+                  setFilters(newFilters);
+                  setCurrentPage(1);
+                }}
                 onClose={() => setFilterOpen(false)}
               />
             </div>
@@ -162,11 +232,13 @@ export default function OverviewOder() {
       <OrderTable
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
-        filters={filters}
+        filters={{ ...filters, search: searchQuery }}
+        orders={orders}
+        isLoading={isLoading}
         onSelectionChange={setSelectedOrders}
       />
 
-      {totalRows > 10 && (
+      {totalRows > rowsPerPage && (
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

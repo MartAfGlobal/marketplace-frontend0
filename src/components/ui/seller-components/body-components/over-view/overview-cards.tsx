@@ -4,6 +4,8 @@ import ProductStockCard from "./cards/product-card";
 import SalesCard from "./cards/sales-card";
 
 export default function OverviewCards({ analytics }: { analytics: any }) {
+
+  console.log("OverviewCards analytics:", analytics); // Debugging line to check the analytics prop
   return (
     <div className="grid grid-cols-2 lg:flex w-full gap-4 lg:gap-c32 justify-center">
       <div className="col-span-2 lg:col-span-1 lg:flex-1">
@@ -20,7 +22,7 @@ export default function OverviewCards({ analytics }: { analytics: any }) {
       </div>
       <div className="col-span-1 lg:flex-1 hidden md:block">
         <CustomerCard analytics={analytics} />
-      </div>
+      </div> 
     </div>
   );
 }

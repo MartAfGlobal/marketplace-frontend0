@@ -3,75 +3,33 @@ import HandBug from "@/assets/Seller/handBug.png";
 import { useSelector } from "react-redux";
 import Empty from "@/assets/Seller/Empty.svg";
 import { ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useMobileViewport } from "@/hooks/useMobileViewport";
-
-const CATEGORY_DATA = [
-  { sn: "0021", category: "Fashion & Shoes", quantity: 120 },
-  { sn: "0022", category: "Electronics", quantity: 70 },
-  { sn: "0023", category: "Foodstuff", quantity: 50 },
-  { sn: "0024", category: "Accessories", quantity: 20 },
-  { sn: "0025", category: "Home & Garden", quantity: 15 },
-  { sn: "0026", category: "Sports", quantity: 10 },
-  { sn: "0027", category: "Beauty", quantity: 5 },
-];
+import type { CategoryRankingRow } from "../body-components/over-view/category-ranking";
 
 interface CategoryRankingTableProps {
   searchQuery?: string;
   resultsPerPage?: number;
-  filterValue?: string;
   currentPage?: number;
   onPageChange?: (page: number) => void;
-  totalCount?: number;
-  onSelectionChange?: (rows: (typeof CATEGORY_DATA)[number][]) => void;
+  rows?: CategoryRankingRow[];
+  isLoading?: boolean;
 }
 
 export default function CategoryRankingTable({
   searchQuery = "",
   resultsPerPage = 4,
-  filterValue = "Weekly",
   currentPage = 1,
   onPageChange,
-  onSelectionChange,
+  rows = [],
+  isLoading = false,
 }: CategoryRankingTableProps) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const isMobile = useMobileViewport();
-  const lastSelectionSignature = useRef("");
 
-  const filteredData = CATEGORY_DATA.filter((item) =>
+  const filteredData = rows.filter((item) =>
     item.category.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // Apply results per page slicing based on current page
   const startIndex = (currentPage - 1) * resultsPerPage;
   const displayedData = filteredData.slice(startIndex, startIndex + resultsPerPage);
-  const allPageSelected =
-    displayedData.length > 0 &&
-    displayedData.every((row) => selectedRows.includes(row.sn));
-
-  useEffect(() => {
-    const selectedCategories = isMobile
-      ? filteredData
-      : filteredData.filter((row) => selectedRows.includes(row.sn));
-    const signature = JSON.stringify(selectedCategories);
-    if (signature === lastSelectionSignature.current) return;
-    lastSelectionSignature.current = signature;
-    onSelectionChange?.(selectedCategories);
-  }, [filteredData, isMobile, onSelectionChange, selectedRows]);
-
-  const togglePage = () => {
-    if (allPageSelected) {
-      setSelectedRows((previous) =>
-        previous.filter((id) => !displayedData.some((row) => row.sn === id)),
-      );
-      return;
-    }
-    setSelectedRows((previous) => [
-      ...previous,
-      ...displayedData.map((row) => row.sn).filter((id) => !previous.includes(id)),
-    ]);
-  };
 
   const handleNext = () => {
     if (currentPage * resultsPerPage < filteredData.length) {
@@ -93,7 +51,7 @@ export default function CategoryRankingTable({
         ) : displayedData.length === 0 ? (
           <div className="flex flex-col justify-center items-center gap-3 py-10">
             <p className="text-base font-MontserratNormal text-000000/40">
-              No categories found
+              {isLoading ? "Loading categories..." : "No categories found"}
             </p>
           </div>
         ) : (
@@ -144,14 +102,6 @@ export default function CategoryRankingTable({
       <table className="hidden lg:table w-full">
         <thead className="text-ffffff font-MontserratSemiBold text-base bg-947fff w-full h-12 md:text-nowrap">
           <tr>
-            <th className="px-3 text-center">
-              <input
-                type="checkbox"
-                aria-label="Select all categories on this page"
-                checked={allPageSelected}
-                onChange={togglePage}
-              />
-            </th>
             <th className="px-4 text-center w-21">s/n</th>
             <th className="px-4 w-66 text-left">Category</th>
             <th className="px-4 w-33.5">Q. in stock</th>
@@ -162,7 +112,7 @@ export default function CategoryRankingTable({
           <tbody>
             <tr className="h-64.5 ">
               <td
-                colSpan={5}
+                colSpan={4}
                 className="text-center py-6 text-gray-500 text-sm"
               >
                 <div className="flex flex-col justify-center items-center gap-3">
@@ -178,10 +128,10 @@ export default function CategoryRankingTable({
           <tbody>
             <tr className="h-c48">
               <td
-                colSpan={5}
+                colSpan={4}
                 className="text-center py-10 text-gray-400 font-MontserratNormal"
               >
-                No matching categories found
+                {isLoading ? "Loading categories..." : "No matching categories found"}
               </td>
             </tr>
           </tbody>
@@ -192,20 +142,6 @@ export default function CategoryRankingTable({
                 key={index}
                 className="h-c48 border-b text-sm font-MontserratNormal border-b-000000/10"
               >
-                <td className="px-3 text-center">
-                  <input
-                    type="checkbox"
-                    aria-label={`Select ${item.category}`}
-                    checked={selectedRows.includes(item.sn)}
-                    onChange={() =>
-                      setSelectedRows((previous) =>
-                        previous.includes(item.sn)
-                          ? previous.filter((id) => id !== item.sn)
-                          : [...previous, item.sn],
-                      )
-                    }
-                  />
-                </td>
                 <td className="px-4 text-center">{item.sn}</td>
                 <td className="px-6">{item.category}</td>
                 <td className="px-4 text-center">{item.quantity}</td>

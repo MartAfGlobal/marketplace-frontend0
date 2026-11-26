@@ -21,8 +21,10 @@ import { downloadTableRows } from "@/utils/downloadTableRows";
 export type InventoryTableProps = {
   currentPage: number;
   rowsPerPage: number;
+  orders: any[];
+  isLoading?: boolean;
   filters?: {
-    date?: { start: string; end: string };
+    date?: { start: Date | string; end: Date | string };
     perc?: number;
     sku?: string;
     qty?: number;
@@ -53,11 +55,12 @@ const getPayoutStatusClass = (status: string) => {
 export default function OrderTable({
   currentPage,
   rowsPerPage,
+  orders,
+  isLoading = false,
   filters = {},
   onSelectionChange,
 }: InventoryTableProps) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
-  const ordersFromStore = useSelector((state: any) => state.orders.orders);
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
   const router = useRouter();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
@@ -72,12 +75,13 @@ export default function OrderTable({
     router.push(`/dashboard/seller/orders/order-details/${orderId}`);
   };
 
-  const allRows = ordersFromStore.map((order: any) => {
+  const allRows = orders.map((order: any) => {
     const realStatus = getSellerDetailedStatus(order);
     const tableStatus = getSellerTableStatus(order);
     return {
-      id: order.order_no || order.id,
-      orderId: order.id,
+      id: order.id || order.order_no || order.order_id,
+      databaseId: order.id,
+      orderId: order.order_id || order.order_no || order.id,
       product: order.items?.length > 1 
         ? "Multiple items" 
         : (order.items?.[0]?.product_name || "Not set"),
@@ -97,25 +101,6 @@ export default function OrderTable({
 
   // ✅ Apply filters
   let filteredRows = allRows;
-
-  if (filters.search) {
-    const term = filters.search.trim().toLowerCase();
-    filteredRows = filteredRows.filter(
-      (row: any) =>
-        String(row.orderId ?? "").toLowerCase().includes(term) ||
-        String(row.product ?? "").toLowerCase().includes(term) ||
-        String(row.date ?? "").toLowerCase().includes(term) ||
-        String(row.tableStatus ?? "").toLowerCase().includes(term) ||
-        String(row.realStatus ?? "").toLowerCase().includes(term) ||
-        String(row.payment ?? "").toLowerCase().includes(term)
-    );
-  }
-
-  if (filters.date?.start && filters.date?.end) {
-    filteredRows = filteredRows.filter(
-      (row: any) => row.date >= filters.date!.start && row.date <= filters.date!.end
-    );
-  }
 
   if (filters.perc) {
     filteredRows = filteredRows.filter((row: any) => row.perc >= filters.perc!);
@@ -204,7 +189,14 @@ export default function OrderTable({
                     }
                   />
                 </td>
-                <td className="text-center max-w-40 px-4 text-wrap">{order.id}</td>
+                <td className="px-4">
+                  <div
+                    className="block w-20 truncate whitespace-nowrap text-nowrap text-center"
+                    title={order.orderId}
+                  >
+                    {order.orderId}
+                  </div>
+                </td>
                 <td className="px-2 text-center">{order.date}</td>
                 <td className="px-2 text-center hidden md:table-cell">{order.country}</td>
                 <td className="px-4 w-fit max-w-69.25">
@@ -265,7 +257,7 @@ export default function OrderTable({
                         {/* More Details */}
                         <button
                           className="flex items-center gap-3 w-full text-ff715b hover:bg-gray-100"
-                          onClick={() => handleViewDetails(order.orderId)}
+                          onClick={() => handleViewDetails(order.databaseId)}
                         >
                           <Image
                             src={EyeIcon}
@@ -302,8 +294,14 @@ export default function OrderTable({
                 className="text-center py-6 text-gray-500 text-sm"
               >
                 <div className="flex flex-col justify-center items-center gap-3">
-                  <Image src={Empty} height={18} width={18} alt="empty" />
-                  <p className="text-base font-MontserratNormal text-000000/10">No data available</p>
+                  {isLoading ? (
+                    <p className="text-base font-MontserratNormal text-000000/40">Loading orders...</p>
+                  ) : (
+                    <>
+                      <Image src={Empty} height={18} width={18} alt="empty" />
+                      <p className="text-base font-MontserratNormal text-000000/10">No data available</p>
+                    </>
+                  )}
                 </div>
               </td>
             </tr>

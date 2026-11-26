@@ -5,13 +5,8 @@ import CustomersIcocn from "@/assets/Seller/customer.png";
 import inactiveCustomersIcon from "@/assets/Seller/customerWhite.png";
 import UsableCard from "./cardUse";
 import greenPointerIcon from "@/assets/Seller/greenPointer.png";
-import Custermer1 from "@/assets/Seller/customer1.png";
-import Custermer2 from "@/assets/Seller/customer2.png";
 import PointerUp from "@/assets/Seller/WhitePointer.png";
-import Custermer3 from "@/assets/Seller/customer3.png";
-import Custermer4 from "@/assets/Seller/customer4.png";
 import { useSelector } from "react-redux";
-import { TrendingUp } from "lucide-react";
 import { getChangeDirection, getChangeValue, getMetricArray, getMetricChange, getMetricSection, getMetricTotal, toMetricNumber } from "../overview-data";
 
 export default function CustomerCard({ analytics }: { analytics: any }) {
@@ -29,10 +24,24 @@ export default function CustomerCard({ analytics }: { analytics: any }) {
         totalCustomers - topCustomers.length,
     ),
   );
-  const customerAvatars = [Custermer1, Custermer2, Custermer3, Custermer4];
-  const getCustomerAvatar = (customer: any, index: number) =>
-    customer?.avatar_url ?? customer?.avatar ?? customer?.profile_image ?? customer?.image_url ?? customerAvatars[index];
+  const getCustomerAvatar = (customer: any): string | undefined => {
+    const avatar =
+      customer?.profile_picture ??
+      customer?.avatar_url ??
+      customer?.avatar ??
+      customer?.profile_image ??
+      customer?.image_url;
+    return typeof avatar === "string" && avatar.trim() ? avatar : undefined;
+  };
   const getCustomerName = (customer: any) => customer?.name ?? customer?.full_name ?? customer?.customer_name ?? "Top customer";
+  const getCustomerInitials = (name: string) =>
+    name
+      .trim()
+      .split(/\s+/)
+      .map((part: string) => part[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
 
   return (
     <>
@@ -101,20 +110,31 @@ export default function CustomerCard({ analytics }: { analytics: any }) {
             </div>
             <div className="w-40 h-19 relative mt-6">
               <h1 className="font-MontserratMedium text-c12">Top customers</h1>
-              {topCustomers.map((customer: any, index: number) => (
-                <div
-                  key={customer.id ?? customer.customer_id ?? index}
-                  className={`h-fit w-fit rounded-full absolute bottom-0 ${["z-30", "left-7 z-20", "left-14 z-10", "right-7"][index]}`}
-                >
-                  <Image
-                    src={getCustomerAvatar(customer, index)}
-                    alt={getCustomerName(customer)}
-                    height={48}
-                    width={48}
-                    unoptimized
-                  />
-                </div>
-              ))}
+              {topCustomers.map((customer: any, index: number) => {
+                const avatar = getCustomerAvatar(customer);
+                const name = getCustomerName(customer);
+                return (
+                  <div
+                    key={customer.id ?? customer.customer_id ?? index}
+                    className={`h-fit w-fit rounded-full absolute bottom-0 ${["z-30", "left-7 z-20", "left-14 z-10", "right-7"][index]}`}
+                  >
+                    {avatar ? (
+                      <Image
+                        src={avatar}
+                        alt={name}
+                        height={48}
+                        width={48}
+                        className="h-12 w-12 rounded-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-c12 font-MontserratMedium">
+                        {getCustomerInitials(name)}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
               <div className="h-12 w-12 text-c12 font-MontserratMedium rounded-full flex items-center justify-center bg-gray-200 text-000000 right-0 z-30 absolute bottom-0 ">
                 <span>+{overflowCount}</span>
               </div>

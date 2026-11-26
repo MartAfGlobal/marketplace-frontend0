@@ -11,13 +11,24 @@ import EditIcon from "@/assets/icons/edit.svg";
 import DeleteIcon from "@/assets/icons/deleteREd.svg";
 import EyeIcon from "@/assets/icons/eye.png";
 import { ChevronRight } from "lucide-react";
-import { useMobileViewport } from "@/hooks/useMobileViewport";
+export type InventoryRow = {
+  id: string;
+  name: string;
+  stockcode?: string;
+  sold?: number;
+  inventory?: number;
+  sales_percentag?: number;
+  created_at?: string;
+};
+
 export type InventoryTableProps = {
   currentPage: number;
   rowsPerPage: number;
+  products?: InventoryRow[];
+  totalCount?: number;
   filterValue?: string;
   filters?: {
-    date?: { start: string; end: string };
+    date?: { start?: Date | string; end?: Date | string };
     perc?: { from?: number; to?: number };
     sku?: string;
     qty?: { min?: number; max?: number };
@@ -29,21 +40,20 @@ export type InventoryTableProps = {
 export default function InventoryTable({
   currentPage,
   rowsPerPage,
+  products,
+  totalCount,
   filterValue = "all",
   filters = {},
   onFilteredCount,
   onSelectionChange,
 }: InventoryTableProps) {
-  // ✅ dataset simulation
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
-    const [activeRowId, setActiveRowId] = useState<string | null>(null);
-  const allRows = useSelector(
-        (state: RootState) => state.sellerProduct.product,
-      ) || [];
-const router = useRouter();
-const [selectedRows, setSelectedRows] = useState<string[]>([]);
-const isMobile = useMobileViewport();
-const lastSelectionSignature = useRef("");
+  const [activeRowId, setActiveRowId] = useState<string | null>(null);
+  const storedRows = useSelector((state: RootState) => state.sellerProduct.product);
+  const allRows = products ?? storedRows ?? [];
+  const hasServerProducts = products !== undefined;
+  const router = useRouter();
+  const lastRowsSignature = useRef("");
  
   // ✅ apply filters
   let filteredRows = allRows;
@@ -63,12 +73,18 @@ const lastSelectionSignature = useRef("");
       const from = filters.perc!.from ?? 0;
       const to = filters.perc!.to ?? 100;
       const total = row.inventory || 0;
-      const pct = total > 0 ? (row.sold / total) * 100 : 0;
+      const savedPercentage = row.sales_percentag;
+      const pct =
+        savedPercentage !== undefined
+          ? Number(savedPercentage)
+          : total > 0
+            ? ((row.sold ?? 0) / total) * 100
+            : 0;
       return pct >= from && pct <= to;
     });
   }
 
-  if (filters.sku) {
+  if (filters.sku && !hasServerProducts) {
     filteredRows = filteredRows.filter((row) =>
       row.stockcode?.toLowerCase().includes(filters.sku!.toLowerCase())
     );
@@ -83,38 +99,23 @@ const lastSelectionSignature = useRef("");
   }
   // ✅ report filtered count to parent
   useEffect(() => {
-    onFilteredCount?.(filteredRows.length);
-  }, [filteredRows.length, onFilteredCount]);
+    onFilteredCount?.(
+      hasServerProducts ? totalCount ?? filteredRows.length : filteredRows.length,
+    );
+  }, [filteredRows.length, hasServerProducts, onFilteredCount, totalCount]);
 
   // ✅ pagination
   const startIndex = (currentPage - 1) * rowsPerPage;
-  const currentRows = filteredRows.slice(startIndex, startIndex + rowsPerPage);
-  const allPageSelected =
-    currentRows.length > 0 && currentRows.every((row) => selectedRows.includes(row.id));
+  const currentRows = hasServerProducts
+    ? filteredRows
+    : filteredRows.slice(startIndex, startIndex + rowsPerPage);
 
   useEffect(() => {
-    const selectedProducts = isMobile
-      ? filteredRows
-      : filteredRows.filter((row) => selectedRows.includes(row.id));
-    const signature = JSON.stringify(selectedProducts);
-    if (signature === lastSelectionSignature.current) return;
-    lastSelectionSignature.current = signature;
-    onSelectionChange?.(selectedProducts);
-  }, [filteredRows, isMobile, onSelectionChange, selectedRows]);
-
-  const togglePage = () => {
-    if (allPageSelected) {
-      setSelectedRows((previous) =>
-        previous.filter((id) => !currentRows.some((row) => row.id === id)),
-      );
-      return;
-    }
-
-    setSelectedRows((previous) => [
-      ...previous,
-      ...currentRows.map((row) => row.id).filter((id) => !previous.includes(id)),
-    ]);
-  };
+    const signature = JSON.stringify(currentRows);
+    if (signature === lastRowsSignature.current) return;
+    lastRowsSignature.current = signature;
+    onSelectionChange?.(currentRows);
+  }, [currentRows, onSelectionChange]);
 
   const handleViewDetails = (id: string) => {
     console.log("View details for product ID:", id);
@@ -157,23 +158,23 @@ const lastSelectionSignature = useRef("");
       </div>
 
       {/* Desktop View */}
-      <table className="hidden lg:table w-full border-collapse">
+      <table className="hidden lg:table w-full table-fixed border-collapse">
+        <colgroup>
+          <col className="w-[20%]" />
+          <col className="w-[30%]" />
+          <col className="w-[12%]" />
+          <col className="w-[16%]" />
+          <col className="w-[12%]" />
+          <col className="w-[10%]" />
+        </colgroup>
         {/* Table Head */}
         <thead className="text-ffffff font-MontserratSemiBold text-nowrap text-base bg-947fff h-12">
           <tr>
-            <th className="px-3 text-center">
-              <input
-                type="checkbox"
-                aria-label="Select all products on this page"
-                checked={allPageSelected}
-                onChange={togglePage}
-              />
-            </th>
-            <th className="px-4 text-center">SKU</th>
-            <th className="px-4 text-left">Product name</th>
-            <th className="px-4 text-center">Q.sold</th>
-            <th className="px-4 text-center">Q. in stock</th>
-            <th className="px-4 text-center">Sales %</th>
+            <th className="px-2 text-center">SKU</th>
+            <th className="px-2 text-left">Product name</th>
+            <th className="px-2 text-center">Q.sold</th>
+            <th className="px-2 text-center">Q. in stock</th>
+            <th className="px-2 text-center">Sales %</th>
             <th></th>
           </tr>
         </thead>
@@ -186,25 +187,19 @@ const lastSelectionSignature = useRef("");
                 key={row.id}
                 className="h-c48 border-b border-b-000000/10 text-sm font-MontserratNormal"
               >
-                <td className="px-3 text-center">
-                  <input
-                    type="checkbox"
-                    aria-label={`Select ${row.name}`}
-                    checked={selectedRows.includes(row.id)}
-                    onChange={() =>
-                      setSelectedRows((previous) =>
-                        previous.includes(row.id)
-                          ? previous.filter((id) => id !== row.id)
-                          : [...previous, row.id],
-                      )
-                    }
-                  />
+                <td className="whitespace-nowrap px-2">
+                  <span className="block truncate" title={row.stockcode}>
+                    {row.stockcode}
+                  </span>
                 </td>
-                <td className="px-4 ">{row.stockcode}</td>
-                <td className="px-4 text-left">{row.name}</td>
-                <td className="px-4 text-center">{row.sold}</td>
-                <td className="px-4 text-center">{row.inventory}</td>
-                <td className="px-4 text-center">{row.sales_percentag}%</td>
+                <td className="whitespace-nowrap px-2 text-left">
+                  <span className="block truncate" title={row.name}>
+                    {row.name}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap px-2 text-center">{row.sold}</td>
+                <td className="whitespace-nowrap px-2 text-center">{row.inventory}</td>
+                <td className="whitespace-nowrap px-2 text-center">{row.sales_percentag}%</td>
                 <td className="px-4 text-center relative">
                   <button
                     className="w-6 h-6 flex-shrink-0"
@@ -262,7 +257,7 @@ const lastSelectionSignature = useRef("");
             ))
           ) : (
             <tr className="h-64.5 ">
-              <td colSpan={7} className="text-center py-6 text-gray-500 text-sm">
+              <td colSpan={6} className="text-center py-6 text-gray-500 text-sm">
                 <div className="flex flex-col justify-center items-center gap-3">
                   <Image src={Empty} height={18} width={18} alt="empty" />
                   <p className="text-base font-MontserratNormal text-000000/10">No data available</p>

@@ -126,7 +126,7 @@ export default function SalesChart() {
   return (
     <>
       {isIncomplete ? (
-        <div className="px-8 py-6 w-full  h-fit bg-white rounded-2xl circle-shadow">
+        <div className="seller-overview-panel px-8 py-6 w-full h-fit bg-white rounded-2xl circle-shadow">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-MontserratSemiBold">Sales</h2>
@@ -261,7 +261,7 @@ export default function SalesChart() {
           </div>
         </div>
       ) : (
-        <div className="px-8 py-6 w-full  h-fit bg-ffffff rounded-2xl circle-shadow">
+        <div className="seller-overview-panel px-8 py-6 w-full h-fit bg-ffffff rounded-2xl circle-shadow">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-MontserratSemiBold">Sales</h2>

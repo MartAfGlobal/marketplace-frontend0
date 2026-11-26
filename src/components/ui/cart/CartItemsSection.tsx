@@ -73,7 +73,7 @@ export default function CartItemsSection({
         )}
       </div>
 
-      <div className="flex px-6 md:px-0 w-full justify-between mb-15 md:mb-0">
+      <div className="flex px-6  w-full justify-between mb-15 md:mb-0">
         <motion.div
           initial="hidden"
           animate="visible"
@@ -110,7 +110,7 @@ export default function CartItemsSection({
                       alt={item.product_name || "Product image"}
                       width={96}
                       height={96}
-                      className="rounded md:h-24 md:w-24 w-c56 h-c56"
+                      className=" md:h-24 md:w-24 w-c56 h-c56"
                     />
                   )}
 

@@ -14,10 +14,11 @@ import OverviewSkeleton from "@/components/reloadSpinner/OverviewSkeleton";
 
 import { useState } from "react";
 import { useHttp } from "@/hooks/use-http";
+import { getMetricTotal } from "./overview-data";
 
 export default function OverviewBody() {
   const [initialLoading, setInitialLoading] = useState(true);
-  const [period, setPeriod] = useState<"month" | "year">("month");
+  const [period, setPeriod] = useState<"week" | "month" | "year">("month");
   const [overviewAnalytics, setOverviewAnalytics] = useState<unknown>(null);
   const token = useSelector((state: RootState) => state.token?.token);
 
@@ -31,6 +32,10 @@ export default function OverviewBody() {
   } = useFetchProducts();
   const product = useSelector(
     (state: RootState) => state.sellerProduct.product,
+  );
+  const sellerData = useSelector((state: RootState) => state.seller.data);
+  const sellerVerification = useSelector(
+    (state: RootState) => state.seller.verificationStatus,
   );
   const { sendHttpRequest: fetchOverviewAnalytics } = useHttp();
 
@@ -87,8 +92,34 @@ export default function OverviewBody() {
   if (initialLoading || (loading && (!product || product.length === 0)))
     return <OverviewSkeleton />;
 
+  const verificationPercentage =
+    sellerVerification?.percentage ??
+    sellerData?.profile?.verification_progress?.percentage;
+  const isUnapproved =
+    verificationPercentage !== undefined && verificationPercentage < 100;
+  const hasOverviewData =
+    (product?.length ?? 0) > 0 ||
+    (["sales", "orders", "products", "customers"] as const).some(
+      (metric) => getMetricTotal(overviewAnalytics, metric) > 0,
+    );
+  const isUnavailable = isUnapproved || (overviewAnalytics !== null && !hasOverviewData);
+
   return (
-    <div className="space-y-6 pb-c32 ">
+    <>
+      <style jsx global>{`
+        .seller-overview[data-unavailable="true"] .seller-overview-panel {
+          background: linear-gradient(0deg, #000000, #000000),
+            linear-gradient(
+              0deg,
+              rgba(255, 255, 255, 0.88),
+              rgba(255, 255, 255, 0.88)
+            ) !important;
+        }
+      `}</style>
+    <div
+      className="seller-overview space-y-6 pb-c32"
+      data-unavailable={isUnavailable}
+    >
       <div className ="w-full">
         <OverviewHeader period={period} onPeriodChange={setPeriod} />
       </div>
@@ -111,5 +142,6 @@ export default function OverviewBody() {
         <OverviewOder />
       </div>
     </div>
+    </>
   );
 }

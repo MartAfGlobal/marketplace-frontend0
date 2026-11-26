@@ -484,7 +484,7 @@ export default function Orders({ searchTerm }: OrdersProps) {
                                       ).toLocaleString()}
                                     </>
                                   }
-                                  imageClassName="h-24 w-24 object-cover rounded-lg"
+                                  imageClassName="h-24 w-24 object-cover "
                                   detailsClassName="rounded-c12 bg-000000/4 text-000000/68 py-2 px-4  w-fit font-MontserratSemiBold text-c10  md:text-c12 justify-center flex items-center "
                                 />
                               ))}

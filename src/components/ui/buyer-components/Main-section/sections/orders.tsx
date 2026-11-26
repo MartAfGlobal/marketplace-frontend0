@@ -398,7 +398,7 @@ const [itemId, setItemId] = useState("")
                             alt={productName}
                             width={96}
                             height={96}
-                            className="rounded-lg h-24 w-24 object-cover"
+                            className=" h-24 w-24 object-cover"
                           />
                         ) : (
                           <CartWithBoxesIcon

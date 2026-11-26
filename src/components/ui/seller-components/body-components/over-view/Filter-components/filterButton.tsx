@@ -51,21 +51,21 @@ export default function FilterDropdown({
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative w-full" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={isIncomplete}
-        className={`flex  text-c12 font-MontserratNormal text-ff715b bg-ffffff md:border-[0.5px] md:border-ff715b
-        items-center w-full max-w-fit p-3 text-nowrap rounded-c8 justify-between flex-shrink-0 gap-4.5 h-11 quickTrackShadow  ${isIncomplete? "cursor-not-allowed" : "cursor-pointer"} ${className}`}
+        className={`flex text-c12 font-MontserratNormal text-ff715b bg-ffffff  
+        items-center w-fit max-w-full p-3 min-w-0 rounded-c8 justify-between gap-4.5 h-11 quickTrackShadow ${isIncomplete ? "cursor-not-allowed" : "cursor-pointer"} ${className}`}
       >
-        <span>{selected}</span>
+        <p className="min-w-0 truncate">{selected}</p>
         <Image
           src={CaretDown}
           alt="dropdown"
           width={11}
           height={6}
-          className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 

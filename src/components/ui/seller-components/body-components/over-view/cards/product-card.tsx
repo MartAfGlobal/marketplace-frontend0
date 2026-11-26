@@ -29,7 +29,7 @@ export default function ProductStockCard({ analytics }: { analytics: any }) {
   return (
     <>
       {/* Mobile Card */}
-      <div className="lg:hidden bg-white rounded-c16 p-4  flex flex-col justify-between h-fit min-h-42 relative overflow-hidden">
+      <div className="seller-overview-panel lg:hidden bg-white rounded-c16 p-4 flex flex-col justify-between h-fit min-h-42 relative overflow-hidden">
         <div className="relative z-10">
           <p className="text-000000 text-base font-MontserratNormal mb-4">Products</p>
           <div className="flex items-center gap-2 mt-2">

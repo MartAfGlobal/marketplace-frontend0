@@ -84,9 +84,9 @@ export default function SalesCard({ analytics }: { analytics: any }) {
   return (
     <>
       {/* Mobile Card */}
-      <div className="lg:hidden w-full relative h-56.75 rounded-c16 overflow-hidden bg-6a0dad p-6 shadow-xl shadow-6a0dad/20">
+      <div className="seller-overview-panel lg:hidden w-full relative h-56.75 rounded-c16 overflow-hidden bg-6a0dad p-6 shadow-xl shadow-6a0dad/20">
         <div className="relative z-10">
-          <p className="text-white text-sm font-MontserratNormal md:font-MontserratMedium mb-3">
+          <p className="text-white text-sm font-MontserratNormal md:text-base md:font-MontserratMedium mb-3">
             Sales
           </p>
           <div className="flex items-center gap-3">
@@ -154,7 +154,7 @@ export default function SalesCard({ analytics }: { analytics: any }) {
           <UsableCard title="Sales">
             <div className="mt-4">
               <div className="flex gap-2.75 text-000000/10 mb-9">
-                <p className="flex gap-2.5 items-center">
+                <p className="flex gap-2.5 items-center " >
                   <span className="text-c18 font-MontserratMedium">$</span>
                   <span className="text-5xl font-MontserratSemiBold">0</span>
                 </p>

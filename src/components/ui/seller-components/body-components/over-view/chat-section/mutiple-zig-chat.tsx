@@ -1,4 +1,3 @@
-import React from "react";
 import { useSelector } from "react-redux";
 import {
   LineChart,
@@ -9,7 +8,14 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const data = [
+interface OrdersChartPoint {
+  month: string;
+  line1?: number | null;
+  line2?: number | null;
+  line3?: number | null;
+}
+
+const defaultData = [
   { month: "Jan", line1: 502, line2: 500, line3: 504 },
   { month: "Feb", line1: 496, line2: 504, line3: 498 },
   { month: "Mar", line1: 508, line2: 495, line3: 506 },
@@ -24,17 +30,34 @@ const data = [
   { month: "Dec", line1: 505, line2: 499, line3: 506 },
 ];
 
-export default function MultiLineZigZagChart() {
+export default function MultiLineZigZagChart({
+  data,
+}: {
+  data?: OrdersChartPoint[];
+}) {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+  const chartData = data ?? defaultData;
+  const maxValue = data
+    ? Math.max(
+        0,
+        ...data.flatMap((point) =>
+          [point.line1, point.line2, point.line3].filter(
+            (value): value is number => typeof value === "number" && Number.isFinite(value),
+          ),
+        ),
+      )
+    : 0;
+  const axisMax = Math.max(3, Math.ceil(maxValue / 3) * 3);
+  const axisTicks = Array.from({ length: 4 }, (_, index) => (axisMax / 3) * index);
   return (
     <>
     {isIncomplete ? (
 
-      <div className="w-full h-[230px] mt-4 lg:mt-c32 overflow-x-auto scrollbar-hide">
+      <div className="seller-overview-panel w-full h-[230px] mt-4 lg:mt-c32 overflow-x-auto scrollbar-hide">
         <div className="min-w-[700px] h-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={data}
+              data={chartData}
               margin={{
                 top: 20,
                 right: 30,
@@ -58,12 +81,12 @@ export default function MultiLineZigZagChart() {
                   fontFamily: "Montserrat-SemiBold",
                 }}
                 tickMargin={10}
-                interval={0}
+                interval={data ? "preserveStartEnd" : 0}
                 padding={{ left: 20, right: 20 }}
               />
               <YAxis
-                domain={[485, 515]}
-                ticks={[485, 490, 495, 500, 505, 510, 515]}
+                domain={data ? [0, axisMax] : [485, 515]}
+                ticks={data ? axisTicks : [485, 490, 495, 500, 505, 510, 515]}
                 interval={0}
                 axisLine={false}
                 tickLine={false}
@@ -73,7 +96,8 @@ export default function MultiLineZigZagChart() {
                   fill: "rgba(0, 0, 0, 0.56)",
                   fontFamily: "Montserrat-SemiBold",
                 }}
-                tickFormatter={(_, index) => (index % 2 === 0 ? "500" : "")}
+                tickFormatter={data ? undefined : (_, index) => (index % 2 === 0 ? "500" : "")}
+                allowDecimals={false}
               />
               <Line
                 type="linear"
@@ -105,11 +129,11 @@ export default function MultiLineZigZagChart() {
       </div>
     ):(
 
-      <div className="w-full  h-[158px] mt-8 bg-ffffff  overflow-x-auto scrollbar-hide">
+      <div className="seller-overview-panel w-full h-[158px] mt-8 bg-ffffff overflow-x-auto scrollbar-hide">
         <div className="W-full h-full  min-w-113.75">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
-              data={data}
+              data={chartData}
               margin={{
                 top: 20,
                 right: 30,
@@ -133,12 +157,12 @@ export default function MultiLineZigZagChart() {
                   fontFamily: "Montserrat-SemiBold",
                 }}
                 tickMargin={10}
-                interval={0}
+                interval={data ? "preserveStartEnd" : 0}
                 padding={{ left: 20, right: 20 }}
               />
               <YAxis
-                domain={[485, 515]}
-                ticks={[485, 490, 495, 500, 505, 510, 515]}
+                domain={data ? [0, axisMax] : [485, 515]}
+                ticks={data ? axisTicks : [485, 490, 495, 500, 505, 510, 515]}
                 interval={0}
                 axisLine={false}
                 tickLine={false}
@@ -148,7 +172,8 @@ export default function MultiLineZigZagChart() {
                   fill: "rgba(0, 0, 0, 0.56)",
                   fontFamily: "Montserrat-SemiBold",
                 }}
-                tickFormatter={(_, index) => (index % 2 === 0 ? "500" : "")}
+                tickFormatter={data ? undefined : (_, index) => (index % 2 === 0 ? "500" : "")}
+                allowDecimals={false}
               />
               <Line
                 type="linear"

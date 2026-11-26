@@ -7,11 +7,16 @@ export default function OverviewHeader({
   period,
   onPeriodChange,
 }: {
-  period: "month" | "year";
-  onPeriodChange: (period: "month" | "year") => void;
+  period: "week" | "month" | "year";
+  onPeriodChange: (period: "week" | "month" | "year") => void;
 }) {
-  const selectedPeriod = period === "year" ? "This Year" : "This Month";
-  const overviewPeriodOptions = ["This Month", "This Year"];
+  const selectedPeriod =
+    period === "week"
+      ? "This Week"
+      : period === "year"
+        ? "This Year"
+        : "This Month";
+  const overviewPeriodOptions = ["This Week", "This Month", "This Year"];
 
   return (
     <div className="relative flex w-full flex-col items-center justify-between gap-4 px-3 md:h-c48 md:flex-row md:gap-0">
@@ -25,7 +30,9 @@ export default function OverviewHeader({
           options={overviewPeriodOptions}
           defaultValue={selectedPeriod}
           onChange={(value) =>
-            onPeriodChange(value === "This Year" ? "year" : "month")
+            onPeriodChange(
+              value === "This Week" ? "week" : value === "This Year" ? "year" : "month",
+            )
           }
         />
       </div>
@@ -39,12 +46,14 @@ export default function OverviewHeader({
           />
         </div>
 
-        <div className="hidden lg:block">
+        <div className="hidden md:block">
           <FilterDropdown
             options={overviewPeriodOptions}
             defaultValue={selectedPeriod}
             onChange={(value) =>
-              onPeriodChange(value === "This Year" ? "year" : "month")
+              onPeriodChange(
+                value === "This Week" ? "week" : value === "This Year" ? "year" : "month",
+              )
             }
           />
         </div>

@@ -1,36 +1,108 @@
 import Image from "next/image";
 import downloadIcon from "@/assets/Seller/downloadIcon.svg";
-import SearchIcon from "@/assets/Seller/searchBtn.svg";
-import { ChevronDown } from "lucide-react";
-
 import FilterDropdown from "./Filter-components/filterButton";
-import { filterOptions } from "./Filter-components/filterOptions";
 import SellerSearch from "./Filter-components/SellerSearch";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CategoryRankingTable from "../../tables/category-ranking-table";
 import { useSelector } from "react-redux";
 import { downloadTableRows } from "@/utils/downloadTableRows";
+import { RootState } from "@/store";
+import { useHttp } from "@/hooks/use-http";
+
+export interface CategoryRankingRow {
+  sn: string;
+  category: string;
+  quantity: number;
+}
 
 export default function CategoryRanking() {
   const isIncomplete = useSelector((state: any) => state.seller.isIncomplete);
+  const token = useSelector((state: RootState) => state.token?.token);
   const [searchQuery, setSearchQuery] = useState("");
   const [resultsPerPage, setResultsPerPage] = useState(4);
   const [filterValue, setFilterValue] = useState("Weekly");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [categoryRows, setCategoryRows] = useState<CategoryRankingRow[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { sendHttpRequest } = useHttp();
 
   const timeFilterOptions = ["Weekly", "Monthly", "Yearly"];
-
-  // This is a mock count for the pagination display
-  const filteredDataCount = 16; 
-  
+  const period =
+    filterValue === "Monthly" ? "month" : filterValue === "Yearly" ? "year" : "week";
+  const filteredDataCount = categoryRows.filter((row) =>
+    row.category.toLowerCase().includes(searchQuery.toLowerCase()),
+  ).length;
   const startIndex = (currentPage - 1) * resultsPerPage + 1;
   const endIndex = Math.min(currentPage * resultsPerPage, filteredDataCount);
 
+  useEffect(() => {
+    if (!token) return;
+
+    let isCurrentRequest = true;
+    setIsLoading(true);
+    sendHttpRequest({
+      requestConfig: {
+        url: "/products/manufacturer/category-ranking",
+        method: "GET",
+        token,
+        isAuth: true,
+        userType: "seller",
+        params: { period },
+      },
+      successRes: (response: any) => {
+        if (!isCurrentRequest) return;
+        const data = response?.data?.data ?? response?.data;
+        const responseRows = Array.isArray(data)
+          ? data
+          : data?.results ??
+            data?.items ??
+            data?.categories ??
+            data?.category_ranking ??
+            data?.category_rankings ??
+            data?.ranking ??
+            data?.data ??
+            [];
+        const rows = Array.isArray(responseRows) ? responseRows : [];
+        setCategoryRows(
+          rows.map((row: any, index: number) => ({
+            sn: String(row.serial_number ?? row.sn ?? String(index + 1).padStart(4, "0")),
+            category:
+              typeof row.category === "string"
+                ? row.category
+                : row.category_name ?? row.category?.name ?? row.name ?? "",
+            quantity: Number(
+              row.quantity_in_stock ??
+                row.stock_quantity ??
+                row.in_stock ??
+                row.quantity ??
+                row.total_stock ??
+                  row.stock_count ??
+                0,
+            ),
+          })),
+        );
+        setIsLoading(false);
+      },
+      errorRes: (error: unknown) => {
+        if (!isCurrentRequest) return;
+        setCategoryRows([]);
+        setIsLoading(false);
+        console.warn(
+          "Seller category ranking unavailable:",
+          error instanceof Error ? error.message : error,
+        );
+      },
+    });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [period, sendHttpRequest, token]);
+
   return (
-    <div className="w-full lg:max-w-137.25 mb-4 lg:mb-6 p-6 lg:px-8 lg:pt-6 bg-ffffff rounded-c16">
+    <div className="seller-overview-panel w-full lg:max-w-137.25 mb-4 lg:mb-6 p-6 lg:px-8 lg:pt-6 bg-ffffff rounded-c16">
       <div className=" mb-6">
         <p className="text-c18 font-MontserratMedium text-000000">Category ranking</p>
       </div>
@@ -38,7 +110,10 @@ export default function CategoryRanking() {
         <div className="flex justify-between items-center gap-3">
           <SellerSearch 
             value={searchQuery}
-            onChange={setSearchQuery}
+            onChange={(value) => {
+              setSearchQuery(value);
+              setCurrentPage(1);
+            }}
             onToggle={setIsSearchOpen}
             disabled={isIncomplete}
             placeholder="Search category..."
@@ -49,18 +124,22 @@ export default function CategoryRanking() {
           >
             <FilterDropdown
               options={timeFilterOptions}
-              onChange={(value) => setFilterValue(value)}
+              defaultValue={filterValue}
+              onChange={(value) => {
+                setFilterValue(value);
+                setCurrentPage(1);
+              }}
             />
 
             <button
-              disabled={isIncomplete || selectedCategories.length === 0}
-              onClick={() => downloadTableRows(selectedCategories, "category-ranking")}
-              aria-label="Download selected categories"
+              disabled={isIncomplete || categoryRows.length === 0}
+              onClick={() => downloadTableRows(categoryRows, "category-ranking")}
+              aria-label="Download category ranking"
               className={`w-10 h-10 flex items-center justify-center bg-ff715b rounded-c8 ${
-                isIncomplete || selectedCategories.length === 0
+                isIncomplete || categoryRows.length === 0
                   ? "cursor-not-allowed opacity-50"
                   : "cursor-pointer"
-              }`}
+              } shrink-0`}
             >
               <Image
                 src={downloadIcon}
@@ -83,7 +162,7 @@ export default function CategoryRanking() {
             </p>
             <FilterDropdown 
               options={Array.from(new Set([4, 8, 12, filteredDataCount]))
-                .filter(n => n <= filteredDataCount)
+                .filter(n => n > 0 && (n <= filteredDataCount || n === resultsPerPage))
                 .sort((a, b) => a - b)
                 .map(String)}
               defaultValue={String(resultsPerPage)}
@@ -99,11 +178,10 @@ export default function CategoryRanking() {
         <CategoryRankingTable 
           searchQuery={searchQuery} 
           resultsPerPage={resultsPerPage} 
-          filterValue={filterValue} 
           currentPage={currentPage}
           onPageChange={setCurrentPage}
-          totalCount={filteredDataCount}
-          onSelectionChange={setSelectedCategories}
+          rows={categoryRows}
+          isLoading={isLoading}
         />
       </div>
     </div>
